@@ -1,0 +1,18 @@
+{
+  "dsh": {
+    "version": "0.1.5-alpha.1",
+    "commit": "5dda764ed3aa172535a7967b06ff95d9cbfe536a"
+  },
+  "srvIdentity": {
+    "version": "0.1.0-rc.1",
+    "artifact": "deps/hanamesh-server-identity-0.1.0-rc.1.tgz",
+    "sha256": "19b54a32841647a99ed04883833461c0702f2b073567204d718c2e042cdce557",
+    "contractsSha256": "fdcaefa73ac71347219e1c4603107ea4f4b19caee8a212d5afe280fbd949ab86"
+  },
+  "uiKit": {
+    "version": "0.1.0-rc.3",
+    "sourceCommit": "d1e1a50",
+    "artifact": null,
+    "sha256": null
+  }
+}

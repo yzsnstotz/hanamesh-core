@@ -1,0 +1,10 @@
+{"command":"node --version","exit":0,"output":"v22.16.0","error":null}
+{"command":"pnpm --version","exit":null,"output":null,"error":"ENOENT"}
+{"command":"tsc --version","exit":0,"output":"Version 5.8.3","error":null}
+{"command":"dsh --version","exit":null,"output":null,"error":"ENOENT"}
+{"command":"psql --version","exit":null,"output":null,"error":"ENOENT"}
+{"path":"~/work/projects/hanamesh/hanamesh-dsh-runtime","exists":false}
+{"path":"~/work/projects/hanamesh/hanamesh-ui-kit","exists":false}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/upstream","exists":false}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/rt","exists":false}
+{"os":"linux","arch":"x64","userProfileAccessed":false,"userPort3080Accessed":false,"databaseAccessed":false}

@@ -1,0 +1,8 @@
+{
+  "identityOrigin": "https://identity.example.invalid",
+  "deploymentId": "replace-with-authorized-deployment-id",
+  "requiredLogin": false,
+  "protectedPrefixes": ["/v1/identity"],
+  "timeoutMs": 10000,
+  "allowInsecureLoopback": false
+}

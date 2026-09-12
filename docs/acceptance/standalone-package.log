@@ -1,0 +1,23 @@
+{"command":"/opt/nvm/versions/node/v22.16.0/bin/node","args":["scripts/verify-inputs.mjs"],"cwd":"/tmp/hm-identity-package-Mg9Mnt/hanamesh-plugin-identity","exit":0,"error":null}
+{"srvIdentitySha256":"19b54a32841647a99ed04883833461c0702f2b073567204d718c2e042cdce557","verifiedPublicApiFiles":94,"uiKitArtifactPresent":false}
+
+{"command":"/opt/nvm/versions/node/v22.16.0/bin/node","args":["scripts/build.mjs","--offline"],"cwd":"/tmp/hm-identity-package-Mg9Mnt/hanamesh-plugin-identity","exit":0,"error":null}
+{"node":"v22.16.0","platform":"linux","arch":"x64","typescript":"Version 5.8.3","pnpm":null,"mode":"--offline"}
+Compiled portable TypeScript; checked adapter/UI JavaScript syntax. Host type gate is separate from offline compilation.
+
+{"command":"tsc","args":["--noEmit","--strict","--skipLibCheck","false","--target","ES2022","--module","NodeNext","--moduleResolution","NodeNext","test/public-contracts.ts"],"cwd":"/tmp/hm-identity-package-Mg9Mnt/hanamesh-plugin-identity","exit":0,"error":null}
+{"standaloneSourceRoot":"/tmp/hm-identity-package-Mg9Mnt/hanamesh-plugin-identity","siblingSourceDirectoriesPresent":false,"scope":"portable-core-and-public-types"}
+{"command":"npm","args":["install","--ignore-scripts","--legacy-peer-deps","--offline","--no-audit","--no-fund","/mnt/data/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.1.tgz"],"cwd":"/tmp/hm-identity-package-Mg9Mnt/consumer","exit":0,"error":null}
+
+added 1 package in 292ms
+
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'hanamesh-plugin-identity@0.1.0-rc.1',
+npm warn EBADENGINE   required: { node: '24.13.1' },
+npm warn EBADENGINE   current: { node: 'v22.16.0', npm: '10.9.2' }
+npm warn EBADENGINE }
+
+{"command":"/opt/nvm/versions/node/v22.16.0/bin/node","args":["smoke.mjs"],"cwd":"/tmp/hm-identity-package-Mg9Mnt/consumer","exit":0,"error":null}
+Package entrypoints and export fences loaded; apply not executed, runtime peers deliberately absent.
+
+{"artifact":"/mnt/data/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.1.tgz","sha256":"17e69910cf2a6fd74cd559975da1ccc333255bb22c806a62f7c53e26d3d3e957","scope":"package-entrypoint-only","hostApplyExecuted":false}

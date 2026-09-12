@@ -1,0 +1,18 @@
+{
+  "evidence": "REAL_PROCESS_FIXTURE_MEDIUM",
+  "killed": {
+    "checkpoint": "before-rename",
+    "pid": 1759,
+    "evidence": "SIGKILL_CONTRACT_FIXTURE",
+    "signal": "SIGKILL",
+    "exit": null
+  },
+  "stored": {
+    "schemaVersion": 1,
+    "revision": 0,
+    "status": "signed_out",
+    "observedAt": null,
+    "logoutPending": false
+  },
+  "assertion": "complete-image"
+}

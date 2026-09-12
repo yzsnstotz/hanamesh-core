@@ -1,0 +1,4 @@
+$ grep -RInE jwt\\.sign\|SignJWT\|createHmac\|createPrivateKey\|mintEntitlement\|issueGrant\|issueToken\|createSigner src
+grep_exit=1 (1 means no matches)
+$ grep synthetic credential bytes in acceptance outputs, excluding this output file
+grep_exit=1 (1 means no matches)

@@ -1,0 +1,238 @@
+TAP version 13
+# Subtest: five distinct session states; success only after verified principal and durable observation
+ok 1 - five distinct session states; success only after verified principal and durable observation
+  ---
+  duration_ms: 52.185885
+  type: 'test'
+  ...
+# Subtest: anonymous 401 means identity service reachable, not unavailable
+ok 2 - anonymous 401 means identity service reachable, not unavailable
+  ---
+  duration_ms: 1.472857
+  type: 'test'
+  ...
+# Subtest: required-login is configurable and never makes protected APIs anonymous
+ok 3 - required-login is configurable and never makes protected APIs anonymous
+  ---
+  duration_ms: 2.088303
+  type: 'test'
+  ...
+# Subtest: restored signed_in sidecar is expired and cannot make any authenticated call
+ok 4 - restored signed_in sidecar is expired and cannot make any authenticated call
+  ---
+  duration_ms: 0.574774
+  type: 'test'
+  ...
+# Subtest: forged sidecar with principal/token fields is rejected; private data is not deleted
+ok 5 - forged sidecar with principal/token fields is rejected; private data is not deleted
+  ---
+  duration_ms: 0.418109
+  type: 'test'
+  ...
+# Subtest: bad login input never reaches the remote
+ok 6 - bad login input never reaches the remote
+  ---
+  duration_ms: 0.804042
+  type: 'test'
+  ...
+# Subtest: login 401 / throttling are distinct from service outage
+ok 7 - login 401 / throttling are distinct from service outage
+  ---
+  duration_ms: 2.690701
+  type: 'test'
+  ...
+# Subtest: 200 login without an HttpOnly cookie never authenticates
+ok 8 - 200 login without an HttpOnly cookie never authenticates
+  ---
+  duration_ms: 1.690183
+  type: 'test'
+  ...
+# Subtest: foreign deployment and unexpected privilege scope are not accepted
+ok 9 - foreign deployment and unexpected privilege scope are not accepted
+  ---
+  duration_ms: 4.52228
+  type: 'test'
+  ...
+# Subtest: A reading B is sent to resource and rejected; identity remains signed in
+ok 10 - A reading B is sent to resource and rejected; identity remains signed in
+  ---
+  duration_ms: 3.236785
+  type: 'test'
+  ...
+# Subtest: revoked session is rechecked before each protected request
+ok 11 - revoked session is rechecked before each protected request
+  ---
+  duration_ms: 2.301786
+  type: 'test'
+  ...
+# Subtest: resource can revoke between identity check and resource request
+ok 12 - resource can revoke between identity check and resource request
+  ---
+  duration_ms: 2.864376
+  type: 'test'
+  ...
+# Subtest: outage blocks NEW protected operations without another remote call
+ok 13 - outage blocks NEW protected operations without another remote call
+  ---
+  duration_ms: 4.032232
+  type: 'test'
+  ...
+# Subtest: unconfirmed sign-out blocks business but allows revocation retry
+ok 14 - unconfirmed sign-out blocks business but allows revocation retry
+  ---
+  duration_ms: 2.560955
+  type: 'test'
+  ...
+# Subtest: cannot confirm an old revocation from a no-op sign-out after restart
+ok 15 - cannot confirm an old revocation from a no-op sign-out after restart
+  ---
+  duration_ms: 0.594307
+  type: 'test'
+  ...
+# Subtest: durability failure cannot publish authenticated state
+ok 16 - durability failure cannot publish authenticated state
+  ---
+  duration_ms: 0.976857
+  type: 'test'
+  ...
+# Subtest: storage already closing never prevents remote sign-out
+ok 17 - storage already closing never prevents remote sign-out
+  ---
+  duration_ms: 1.202392
+  type: 'test'
+  ...
+# Subtest: late login response cannot resurrect after sign-out (abort-ignoring fixture)
+ok 18 - late login response cannot resurrect after sign-out (abort-ignoring fixture)
+  ---
+  duration_ms: 0.795972
+  type: 'test'
+  ...
+# Subtest: late resource response is discarded after logout begins
+ok 19 - late resource response is discarded after logout begins
+  ---
+  duration_ms: 1.818196
+  type: 'test'
+  ...
+# Subtest: observer exceptions cannot roll back state; SDK is a frozen narrow facade
+ok 20 - observer exceptions cannot roll back state; SDK is a frozen narrow facade
+  ---
+  duration_ms: 0.854583
+  type: 'test'
+  ...
+# Subtest: dispose is idempotent, clears access and does not delete private work
+ok 21 - dispose is idempotent, clears access and does not delete private work
+  ---
+  duration_ms: 1.222601
+  type: 'test'
+  ...
+# Subtest: resource responses suppress cookies and token-shaped nested fields
+ok 22 - resource responses suppress cookies and token-shaped nested fields
+  ---
+  duration_ms: 1.577536
+  type: 'test'
+  ...
+# Subtest: revoking a new session cannot clear an older unconfirmed revocation
+ok 23 - revoking a new session cannot clear an older unconfirmed revocation
+  ---
+  duration_ms: 0.903029
+  type: 'test'
+  ...
+# Subtest: configuration fixes the origin, rejects remote plaintext, userinfo and invalid prefixes
+ok 24 - configuration fixes the origin, rejects remote plaintext, userinfo and invalid prefixes
+  ---
+  duration_ms: 3.879078
+  type: 'test'
+  ...
+# Subtest: path allowlist rejects traversal, forged headers, credential queries and generic auth routes
+ok 25 - path allowlist rejects traversal, forged headers, credential queries and generic auth routes
+  ---
+  duration_ms: 2.020889
+  type: 'test'
+  ...
+# Subtest: identity PATCH consumes only the locked displayName contract
+ok 26 - identity PATCH consumes only the locked displayName contract
+  ---
+  duration_ms: 47.364524
+  type: 'test'
+  ...
+# Subtest: account switch requires an explicit successful logout rather than discarding an active cookie
+ok 27 - account switch requires an explicit successful logout rather than discarding an active cookie
+  ---
+  duration_ms: 6.652964
+  type: 'test'
+  ...
+# Subtest: cookie parser refuses non-HttpOnly, cross-domain, bad prefixes, expiry and duplicate attributes
+ok 28 - cookie parser refuses non-HttpOnly, cross-domain, bad prefixes, expiry and duplicate attributes
+  ---
+  duration_ms: 4.61397
+  type: 'test'
+  ...
+# Subtest: cookie expiry and path scoping do not authenticate /me
+ok 29 - cookie expiry and path scoping do not authenticate /me
+  ---
+  duration_ms: 1.382375
+  type: 'test'
+  ...
+# Subtest: multiple cookies commit together; malformed auth and errors never import a cookie
+ok 30 - multiple cookies commit together; malformed auth and errors never import a cookie
+  ---
+  duration_ms: 1.949226
+  type: 'test'
+  ...
+# Subtest: timeout cannot import a late cookie even from an abort-ignoring implementation
+ok 31 - timeout cannot import a late cookie even from an abort-ignoring implementation
+  ---
+  duration_ms: 26.423973
+  type: 'test'
+  ...
+# Subtest: transport binds fetch receiver, rejects redirects and enforces response size/content type
+ok 32 - transport binds fetch receiver, rejects redirects and enforces response size/content type
+  ---
+  duration_ms: 11.507538
+  type: 'test'
+  ...
+# Subtest: UI routes distinguish method, exact path, origin and Fetch Metadata
+ok 33 - UI routes distinguish method, exact path, origin and Fetch Metadata
+  ---
+  duration_ms: 3.461868
+  type: 'test'
+  ...
+# Subtest: UI body limits, exact fields and error text never return secrets
+ok 34 - UI body limits, exact fields and error text never return secrets
+  ---
+  duration_ms: 3.489907
+  type: 'test'
+  ...
+# Subtest: diagnostics/state never expose password, remote cookie, email or raw auth
+ok 35 - diagnostics/state never expose password, remote cookie, email or raw auth
+  ---
+  duration_ms: 1.946592
+  type: 'test'
+  ...
+# Subtest: SDK is receiver-bound, same-origin and exposes no credential methods
+ok 36 - SDK is receiver-bound, same-origin and exposes no credential methods
+  ---
+  duration_ms: 1.796873
+  type: 'test'
+  ...
+# Subtest: all five views exist without unsafe markup/storage or simulated ui-kit tokens
+ok 37 - all five views exist without unsafe markup/storage or simulated ui-kit tokens
+  ---
+  duration_ms: 5.96458
+  type: 'test'
+  ...
+# Subtest: consistency declaration validates locally and covers one group and both boundaries
+ok 38 - consistency declaration validates locally and covers one group and both boundaries
+  ---
+  duration_ms: 1.309742
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 218.856705

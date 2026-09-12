@@ -1,0 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import assert from 'node:assert/strict';
+const locks = JSON.parse(await readFile('deps/LOCKS.json', 'utf8'));
+const digest = data => createHash('sha256').update(data).digest('hex');
+assert.equal(digest(await readFile(locks.srvIdentity.artifact)), locks.srvIdentity.sha256);
+assert.equal(digest(await readFile('vendor/srv-identity/contracts.d.ts')), locks.srvIdentity.contractsSha256);
+const files = JSON.parse(await readFile('deps/HOST_API.sha256.json', 'utf8'));
+for (const [file, expected] of Object.entries(files)) assert.equal(digest(await readFile(file)), expected, file);
+console.log(JSON.stringify({srvIdentitySha256: locks.srvIdentity.sha256, verifiedPublicApiFiles: Object.keys(files).length, uiKitArtifactPresent: locks.uiKit.artifact !== null}));

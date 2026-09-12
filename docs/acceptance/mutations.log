@@ -1,0 +1,6 @@
+
+> hanamesh-plugin-identity@0.1.0-rc.1 test:mutation
+> node scripts/mutation.mjs
+
+{"mutant":"remove-local-guard","evidence":"CONTRACT_FIXTURE","baselineExit":0,"mutantExit":1,"assertionFailure":true,"productionSha256":"ebe30a6e11e8f158040733ff4519fa53d026459f6773869bc6c0c609964134c5","mutantSha256":"34b5a98f46923e946eba0e16c89a43dd621fd304d0098ba44af91b645c33b0ff"}
+{"mutant":"accept-resource-403","evidence":"CONTRACT_FIXTURE","baselineExit":0,"mutantExit":1,"assertionFailure":true,"productionSha256":"ebe30a6e11e8f158040733ff4519fa53d026459f6773869bc6c0c609964134c5","mutantSha256":"76b146cd2ca2685d93c13c883b8cd668556b725956864115ddfc59e92e90e364"}

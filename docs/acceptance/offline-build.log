@@ -1,0 +1,6 @@
+
+> hanamesh-plugin-identity@0.1.0-rc.1 build:offline
+> node scripts/build.mjs --offline
+
+{"node":"v22.16.0","platform":"linux","arch":"x64","typescript":"Version 5.8.3","pnpm":null,"mode":"--offline"}
+Compiled portable TypeScript; checked adapter/UI JavaScript syntax. Host type gate is separate from offline compilation.

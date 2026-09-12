@@ -1,0 +1,26 @@
+{
+  "evidence": "REAL_PROCESS_FIXTURE_MEDIA",
+  "killed": {
+    "checkpoint": "local-completion-before-remote",
+    "pid": 1826,
+    "evidence": "SIGKILL_CONTRACT_FIXTURE",
+    "signal": "SIGKILL",
+    "exit": null
+  },
+  "local": {
+    "schemaVersion": 1,
+    "revision": 2,
+    "status": "signed_in",
+    "observedAt": "2026-09-12T21:42:51.602Z",
+    "logoutPending": false
+  },
+  "remote": {
+    "active": false,
+    "revoked": false
+  },
+  "checker": {
+    "exit": 1,
+    "assertionFailure": true
+  },
+  "restarted": "not-authenticated"
+}

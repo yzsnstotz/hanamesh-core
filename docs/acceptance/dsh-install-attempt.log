@@ -1,0 +1,14 @@
+{
+  "command": [
+    "dsh",
+    "plugin",
+    "add",
+    "/mnt/data/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.1.tgz"
+  ],
+  "DSH_HOME": "/tmp/hm-identity-dsh-probe-tljj4rmy",
+  "profile": "new isolated web profile required; not created because executable is absent",
+  "exit": null,
+  "error": "ENOENT",
+  "message": "[Errno 2] No such file or directory: 'dsh'",
+  "processStarted": false
+}

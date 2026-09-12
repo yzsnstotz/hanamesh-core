@@ -1,0 +1,156 @@
+[
+  {
+    "id": "hanamesh-plugin-identity@0.1.0-rc.1",
+    "name": "hanamesh-plugin-identity",
+    "version": "0.1.0-rc.1",
+    "size": 29256,
+    "unpackedSize": 87329,
+    "shasum": "ca07c7f2299c9c67158f4a4f077f5099c5623e5e",
+    "integrity": "sha512-XIMJEc2qPLPbEX4Zzl56BrHUhqRadOLH6uwJcZzT0p5OOc/WebGKbr7xQmfEBdwmJnYHAlcyeHSVSk9/Om1TMw==",
+    "filename": "hanamesh-plugin-identity-0.1.0-rc.1.tgz",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "size": 1857,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 7193,
+        "mode": 420
+      },
+      {
+        "path": "consistency.json",
+        "size": 1284,
+        "mode": 420
+      },
+      {
+        "path": "docs/API.md",
+        "size": 5791,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 4443,
+        "mode": 420
+      },
+      {
+        "path": "lib/client.d.ts",
+        "size": 457,
+        "mode": 420
+      },
+      {
+        "path": "lib/client.js",
+        "size": 2519,
+        "mode": 420
+      },
+      {
+        "path": "lib/contracts.d.ts",
+        "size": 3341,
+        "mode": 420
+      },
+      {
+        "path": "lib/contracts.js",
+        "size": 154,
+        "mode": 420
+      },
+      {
+        "path": "lib/controller.d.ts",
+        "size": 864,
+        "mode": 420
+      },
+      {
+        "path": "lib/controller.js",
+        "size": 13806,
+        "mode": 420
+      },
+      {
+        "path": "lib/dsh.mjs",
+        "size": 4092,
+        "mode": 420
+      },
+      {
+        "path": "lib/errors.d.ts",
+        "size": 555,
+        "mode": 420
+      },
+      {
+        "path": "lib/errors.js",
+        "size": 2265,
+        "mode": 420
+      },
+      {
+        "path": "lib/routes.d.ts",
+        "size": 588,
+        "mode": 420
+      },
+      {
+        "path": "lib/routes.js",
+        "size": 4191,
+        "mode": 420
+      },
+      {
+        "path": "lib/transport.d.ts",
+        "size": 657,
+        "mode": 420
+      },
+      {
+        "path": "lib/transport.js",
+        "size": 8832,
+        "mode": 420
+      },
+      {
+        "path": "lib/ui/login.js",
+        "size": 3995,
+        "mode": 420
+      },
+      {
+        "path": "lib/validation.d.ts",
+        "size": 937,
+        "mode": 420
+      },
+      {
+        "path": "lib/validation.js",
+        "size": 8110,
+        "mode": 420
+      },
+      {
+        "path": "lib/view.d.ts",
+        "size": 349,
+        "mode": 420
+      },
+      {
+        "path": "lib/view.js",
+        "size": 2697,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 2270,
+        "mode": 420
+      },
+      {
+        "path": "profile/identity.config.example.json",
+        "size": 241,
+        "mode": 420
+      },
+      {
+        "path": "types/index.d.ts",
+        "size": 623,
+        "mode": 420
+      },
+      {
+        "path": "vendor/srv-identity/API.md",
+        "size": 4019,
+        "mode": 420
+      },
+      {
+        "path": "vendor/srv-identity/contracts.d.ts",
+        "size": 1199,
+        "mode": 420
+      }
+    ],
+    "entryCount": 28,
+    "bundled": []
+  }
+]
