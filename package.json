@@ -51,7 +51,17 @@
     "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
-    "hanamesh-ui-kit": "0.1.0-rc.3",
+    "@hanamesh/ui-kit": "0.1.0-rc.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
+    "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
+    "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
+    "@hanamesh/ui-kit": "file:vendor/hanamesh-ui-kit-0.1.0-rc.3.tgz",
+    "@types/node": "24.13.4",
+    "typescript": "5.9.3",
     "zod": "4.4.3"
   },
   "overrides": {
