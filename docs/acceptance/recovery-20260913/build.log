@@ -1,0 +1,9 @@
+$ npm run build
+
+> hanamesh-plugin-identity@0.1.0-rc.1 build
+> node scripts/build.mjs --target
+
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":null,"pnpm":"10.33.0","mode":"--target"}
+TARGET_TOOLCHAIN_MISMATCH: Node 24.13.1, TypeScript 5.9.3 and pnpm 10.33.0 are required.
+
+EXIT_CODE=2

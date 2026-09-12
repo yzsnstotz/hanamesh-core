@@ -1,0 +1,7 @@
+$ npm ci --legacy-peer-deps
+
+up to date, audited 1 package in 307ms
+
+found 0 vulnerabilities
+
+EXIT_CODE=0

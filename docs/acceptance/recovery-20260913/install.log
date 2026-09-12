@@ -1,0 +1,19 @@
+$ npm ci
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: hanamesh-plugin-identity@0.1.0-rc.1
+npm warn Found: hanamesh-ui-kit@undefined
+npm warn node_modules/hanamesh-ui-kit
+npm warn   peer hanamesh-ui-kit@"0.1.0-rc.3" from the root project
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer hanamesh-ui-kit@"0.1.0-rc.3" from the root project
+npm error code E404
+npm error 404 Not Found - GET https://registry.npmjs.org/hanamesh-ui-kit - Not found
+npm error 404
+npm error 404  The requested resource 'hanamesh-ui-kit@0.1.0-rc.3' could not be found or you do not have permission to access it.
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: /Volumes/clawso-build/.npm-cache/_logs/2026-09-12T22_42_04_799Z-debug-0.log
+
+EXIT_CODE=1

@@ -1,0 +1,17 @@
+$ npm run preflight
+
+> hanamesh-plugin-identity@0.1.0-rc.1 preflight
+> node scripts/preflight.mjs
+
+{"command":"node --version","exit":0,"output":"v24.13.1","error":null}
+{"command":"pnpm --version","exit":0,"output":"10.33.0","error":null}
+{"command":"tsc --version","exit":0,"output":"Version 5.9.3","error":null}
+{"command":"dsh --version","exit":0,"output":"0.1.5-alpha.1","error":null}
+{"command":"psql --version","exit":null,"output":null,"error":"ENOENT"}
+{"path":"~/work/projects/hanamesh/hanamesh-dsh-runtime","exists":true}
+{"path":"~/work/projects/hanamesh/hanamesh-ui-kit","exists":true}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/upstream","exists":false}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/rt","exists":false}
+{"os":"darwin","arch":"arm64","userProfileAccessed":false,"userPort3080Accessed":false,"databaseAccessed":false}
+
+EXIT_CODE=0

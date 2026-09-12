@@ -1,0 +1,8 @@
+
+> hanamesh-plugin-identity@0.1.0-rc.1 build
+> node scripts/build.mjs --target
+
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":"Version 5.9.3","pnpm":"10.33.0","mode":"--target"}
+error TS2688: Cannot find type definition file for 'node'.
+  The file is in the program because:
+    Entry point of type library 'node' specified in compilerOptions
