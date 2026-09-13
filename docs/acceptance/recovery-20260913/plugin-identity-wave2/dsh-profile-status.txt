@@ -1,0 +1,2 @@
+profile_init_exit=0
+plugin_add_exit=0

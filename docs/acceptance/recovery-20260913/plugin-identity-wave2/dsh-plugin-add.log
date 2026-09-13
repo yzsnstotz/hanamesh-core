@@ -1,0 +1,26 @@
+Progress: resolved 0, reused 0, downloaded 1, added 0
+ WARN  Issues with peer dependencies found
+.
+└─┬ hanamesh-plugin-identity 0.1.0-rc.1
+  ├── ✕ missing peer @deepseek-ai/cordis@4.0.2
+  ├── ✕ missing peer @deepseek-ai/dsh-client-connection@0.1.5-alpha.1
+  ├── ✕ missing peer @deepseek-ai/dsh-host-webserver@0.1.5-alpha.1
+  ├── ✕ missing peer @deepseek-ai/dsh-storage-domain@0.1.5-alpha.1
+  ├── ✕ missing peer hanamesh-ui-kit@0.1.0-rc.3
+  └── ✕ missing peer zod@4.4.3
+Peer dependencies that should be installed:
+  @deepseek-ai/cordis@4.0.2
+  @deepseek-ai/dsh-client-connection@0.1.5-alpha.1
+  @deepseek-ai/dsh-host-webserver@0.1.5-alpha.1
+  @deepseek-ai/dsh-storage-domain@0.1.5-alpha.1
+  hanamesh-ui-kit@0.1.0-rc.3
+  zod@4.4.3
+
+dependencies:
++ hanamesh-plugin-identity file:/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.1.tgz
+
+Packages: +1
++
+Progress: resolved 1, reused 0, downloaded 1, added 1, done
+Done in 183ms using pnpm v10.33.0
+dsh: warning: hanamesh-plugin-identity declares no dsh.bundle — installed as a plain dependency, not a profile layer (a later update that gains one activates it automatically)

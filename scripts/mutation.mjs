@@ -6,7 +6,7 @@ const mutants=[
   {name:'accept-resource-403',apply:s=>s.replace(/if \(response\.status === 403\)\s*throw responseError\(403\); \/\/ MUTATION: resource-denial/,"if (response.status === 403) return Object.freeze({status:200,data:null}); // broken denial mapping")},
 ];
 const run=(lib)=>spawnSync(process.execPath,['--test','--test-reporter=tap','test/controller.test.mjs','test/edges.test.mjs'],{env:{...process.env,HM_TEST_LIB:lib},encoding:'utf8',timeout:20000});
-const baseline=run(resolve('lib'));const base=(baseline.stdout||'')+(baseline.stderr||'');await writeFile(join(evidence,'baseline.tap'),base);assert.equal(baseline.status,0,base);assert.match(base,/# tests 38/);
+const baseline=run(resolve('lib'));const base=(baseline.stdout||'')+(baseline.stderr||'');await writeFile(join(evidence,'baseline.tap'),base);assert.equal(baseline.status,0,base);assert.match(base,/# tests 39/);
 for(const mutant of mutants){
   const root=await mkdtemp(join(tmpdir(),'hm-identity-mutation-'));
   try{

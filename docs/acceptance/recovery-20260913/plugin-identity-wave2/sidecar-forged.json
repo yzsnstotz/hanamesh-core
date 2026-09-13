@@ -1,0 +1,14 @@
+{
+  "unit": {
+    "name": "hanamesh_identity",
+    "version": 1
+  },
+  "global": {
+    "schemaVersion": 1,
+    "revision": 1008,
+    "status": "signed_in",
+    "observedAt": "2030-01-01T00:00:00.000Z",
+    "logoutPending": false
+  },
+  "tables": {}
+}

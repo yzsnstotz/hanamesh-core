@@ -1,0 +1,27 @@
+{"command":"/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node","args":["scripts/verify-inputs.mjs"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-GWUZ6K/hanamesh-plugin-identity","exit":0,"error":null}
+{"srvIdentitySha256":"19b54a32841647a99ed04883833461c0702f2b073567204d718c2e042cdce557","verifiedPublicApiFiles":94,"uiKitArtifactPresent":false}
+
+{"command":"/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node","args":["scripts/build.mjs","--offline"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-GWUZ6K/hanamesh-plugin-identity","exit":2,"error":null}
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":null,"pnpm":"10.33.0","mode":"--offline"}
+
+TYPESCRIPT_EXECUTABLE_MISSING
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+2 !== 0
+
+    at run (file:///Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/scripts/check-package.mjs:6:298)
+    at file:///Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/scripts/check-package.mjs:11:3 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 2,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.13.1

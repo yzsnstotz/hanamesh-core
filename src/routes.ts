@@ -25,6 +25,18 @@ async function readJson(request: Request, limit: number): Promise<unknown> {
   try { return JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes)); }
   catch { throw new IdentityClientError('IDENTITY_INPUT_INVALID', 400); }
 }
+function sameCarrierOrigin(request: Request, url: URL): boolean {
+  const origin = request.headers.get('origin');
+  if (origin === null) return false;
+  const host = request.headers.get('host');
+  // DSH's authenticated HTTP bridge constructs Request.url with dsh.internal,
+  // while preserving the already-fenced external Host and Origin headers.
+  if (host === null) return origin === url.origin;
+  try {
+    const parsed = new URL(origin);
+    return parsed.origin === origin && (parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.host === host;
+  } catch { return false; }
+}
 /** Call only AFTER the carrier's Host/Origin fence and DSH browser authentication. */
 export function createRouteHandler(controller: IdentityController): (request: Request) => Promise<Response> {
   return async (request: Request): Promise<Response> => {
@@ -34,7 +46,7 @@ export function createRouteHandler(controller: IdentityController): (request: Re
       if (url.search || !(Object.values(ROUTES) as readonly string[]).includes(path)) return json({error: {code: 'IDENTITY_NOT_FOUND', message: '未找到接口。'}}, 404);
       const read = path === ROUTES.state || path === ROUTES.diagnostics;
       if (request.method !== (read ? 'GET' : 'POST')) return json({error: {code: 'REQUEST_NOT_ALLOWED', message: '请求方法不受支持。'}}, 405);
-      if (!read && (request.headers.get('origin') !== url.origin ||
+      if (!read && (!sameCarrierOrigin(request, url) ||
           ['cross-site', 'same-site'].includes(request.headers.get('sec-fetch-site') ?? ''))) throw new IdentityClientError('IDENTITY_ORIGIN_REJECTED', 403);
       if (path === ROUTES.state) return json(controller.getState());
       if (path === ROUTES.diagnostics) {

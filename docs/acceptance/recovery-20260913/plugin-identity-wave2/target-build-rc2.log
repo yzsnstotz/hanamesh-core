@@ -1,0 +1,6 @@
+
+> hanamesh-plugin-identity@0.1.0-rc.2 build
+> node scripts/build.mjs --target
+
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":"Version 5.9.3","pnpm":"10.33.0","mode":"--target"}
+Compiled portable TypeScript; checked adapter/UI JavaScript syntax. Host type gate is separate from offline compilation.

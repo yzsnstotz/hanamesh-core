@@ -1,0 +1,122 @@
+TAP version 13
+# Subtest: configuration fixes the origin, rejects remote plaintext, userinfo and invalid prefixes
+ok 1 - configuration fixes the origin, rejects remote plaintext, userinfo and invalid prefixes
+  ---
+  duration_ms: 0.648
+  type: 'test'
+  ...
+# Subtest: path allowlist rejects traversal, forged headers, credential queries and generic auth routes
+ok 2 - path allowlist rejects traversal, forged headers, credential queries and generic auth routes
+  ---
+  duration_ms: 0.390834
+  type: 'test'
+  ...
+# Subtest: identity PATCH consumes only the locked displayName contract
+ok 3 - identity PATCH consumes only the locked displayName contract
+  ---
+  duration_ms: 11.214
+  type: 'test'
+  ...
+# Subtest: account switch requires an explicit successful logout rather than discarding an active cookie
+ok 4 - account switch requires an explicit successful logout rather than discarding an active cookie
+  ---
+  duration_ms: 1.645208
+  type: 'test'
+  ...
+# Subtest: cookie parser refuses non-HttpOnly, cross-domain, bad prefixes, expiry and duplicate attributes
+ok 5 - cookie parser refuses non-HttpOnly, cross-domain, bad prefixes, expiry and duplicate attributes
+  ---
+  duration_ms: 1.002417
+  type: 'test'
+  ...
+# Subtest: cookie expiry and path scoping do not authenticate /me
+ok 6 - cookie expiry and path scoping do not authenticate /me
+  ---
+  duration_ms: 0.204583
+  type: 'test'
+  ...
+# Subtest: multiple cookies commit together; malformed auth and errors never import a cookie
+ok 7 - multiple cookies commit together; malformed auth and errors never import a cookie
+  ---
+  duration_ms: 0.294458
+  type: 'test'
+  ...
+# Subtest: timeout cannot import a late cookie even from an abort-ignoring implementation
+ok 8 - timeout cannot import a late cookie even from an abort-ignoring implementation
+  ---
+  duration_ms: 26.075167
+  type: 'test'
+  ...
+# Subtest: transport binds fetch receiver, rejects redirects and enforces response size/content type
+ok 9 - transport binds fetch receiver, rejects redirects and enforces response size/content type
+  ---
+  duration_ms: 1.989334
+  type: 'test'
+  ...
+# Subtest: UI routes distinguish method, exact path, origin and Fetch Metadata
+ok 10 - UI routes distinguish method, exact path, origin and Fetch Metadata
+  ---
+  duration_ms: 0.936
+  type: 'test'
+  ...
+# Subtest: DSH HTTP bridge accepts a fenced Host and Origin despite its internal Request URL
+not ok 11 - DSH HTTP bridge accepts a fenced Host and Origin despite its internal Request URL
+  ---
+  duration_ms: 0.416625
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/test/edges.test.mjs:91:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    403 !== 200
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 200
+  actual: 403
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/test/edges.test.mjs:95:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: UI body limits, exact fields and error text never return secrets
+ok 12 - UI body limits, exact fields and error text never return secrets
+  ---
+  duration_ms: 0.540958
+  type: 'test'
+  ...
+# Subtest: diagnostics/state never expose password, remote cookie, email or raw auth
+ok 13 - diagnostics/state never expose password, remote cookie, email or raw auth
+  ---
+  duration_ms: 0.339209
+  type: 'test'
+  ...
+# Subtest: SDK is receiver-bound, same-origin and exposes no credential methods
+ok 14 - SDK is receiver-bound, same-origin and exposes no credential methods
+  ---
+  duration_ms: 0.197916
+  type: 'test'
+  ...
+# Subtest: all five views exist without unsafe markup/storage or simulated ui-kit tokens
+ok 15 - all five views exist without unsafe markup/storage or simulated ui-kit tokens
+  ---
+  duration_ms: 1.991959
+  type: 'test'
+  ...
+# Subtest: consistency declaration validates locally and covers one group and both boundaries
+ok 16 - consistency declaration validates locally and covers one group and both boundaries
+  ---
+  duration_ms: 0.532458
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 15
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 82.271667

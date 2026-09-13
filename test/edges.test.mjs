@@ -88,6 +88,17 @@ test('UI routes distinguish method, exact path, origin and Fetch Metadata',async
     assert.equal((await route(post(ROUTES.signIn,login,headers))).status,403);
   }
 });
+test('DSH HTTP bridge accepts a fenced Host and Origin despite its internal Request URL',async()=>{
+  const {controller}=setup();const route=createRouteHandler(controller);
+  const bridged=new Request('http://dsh.internal'+ROUTES.signIn,{method:'POST',headers:{
+    host:'127.0.0.1:53110',origin:'http://127.0.0.1:53110','content-type':'application/json'},body:JSON.stringify(login)});
+  assert.equal((await route(bridged)).status,200);
+  for(const origin of ['http://attacker.invalid:53110','http://127.0.0.1:9999','null']){
+    const rejected=new Request('http://dsh.internal'+ROUTES.signIn,{method:'POST',headers:{
+      host:'127.0.0.1:53110',origin,'content-type':'application/json'},body:JSON.stringify(login)});
+    assert.equal((await route(rejected)).status,403);
+  }
+});
 test('UI body limits, exact fields and error text never return secrets',async()=>{
   const {controller}=setup();const route=createRouteHandler(controller);
   for(const [request,status] of [[post(ROUTES.signIn,login,{'content-type':'text/plain'}),415],[post(ROUTES.signIn,login,{'content-length':'999999'}),413],[post(ROUTES.signIn,{...login,token:secret}),400],[post(ROUTES.signIn,{email:'x',password:'x'.repeat(9000)}),413],[post(ROUTES.signOut,{token:secret}),400]]) {

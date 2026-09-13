@@ -1,0 +1,17 @@
+{"command":"/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node","args":["scripts/verify-inputs.mjs"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/hanamesh-plugin-identity","exit":0,"error":null}
+{"srvIdentitySha256":"19b54a32841647a99ed04883833461c0702f2b073567204d718c2e042cdce557","verifiedPublicApiFiles":94,"uiKitArtifactPresent":false}
+
+{"command":"/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node","args":["scripts/build.mjs","--offline"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/hanamesh-plugin-identity","exit":0,"error":null}
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":"Version 5.9.3","pnpm":"10.33.0","mode":"--offline"}
+Compiled portable TypeScript; checked adapter/UI JavaScript syntax. Host type gate is separate from offline compilation.
+
+{"command":"/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/node_modules/.bin/tsc","args":["--noEmit","--strict","--skipLibCheck","false","--target","ES2022","--module","NodeNext","--moduleResolution","NodeNext","test/public-contracts.ts"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/hanamesh-plugin-identity","exit":0,"error":null}
+{"standaloneSourceRoot":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/hanamesh-plugin-identity","siblingSourceDirectoriesPresent":false,"scope":"portable-core-and-public-types"}
+{"command":"npm","args":["install","--ignore-scripts","--legacy-peer-deps","--offline","--no-audit","--no-fund","/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.2.tgz"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/consumer","exit":0,"error":null}
+
+added 1 package in 3s
+
+{"command":"/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node","args":["smoke.mjs"],"cwd":"/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/hm-identity-package-awYq3L/consumer","exit":0,"error":null}
+Package entrypoints and export fences loaded; apply not executed, runtime peers deliberately absent.
+
+{"artifact":"/Users/yzliu/work/projects/hanamesh/hanamesh-plugin-identity/artifacts/hanamesh-plugin-identity-0.1.0-rc.2.tgz","sha256":"7d1fc640839a1c3b4dbd8bf64ddaf434f125b014b95d9b604e6edd6fd5fde653","scope":"package-entrypoint-only","hostApplyExecuted":false}

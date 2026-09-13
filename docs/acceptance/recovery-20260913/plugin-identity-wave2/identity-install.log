@@ -1,0 +1,7 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +90
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ERR_PNPM_NO_OFFLINE_TARBALL  A package is missing from the store but cannot download it in offline mode. The missing package may be downloaded from https://registry.npmjs.org/@types/node/-/node-22.20.2.tgz.
+
+This error happened while installing the dependencies of @hanamesh/server-identity@0.1.0-rc.1
+ at @types/pg@8.15.6

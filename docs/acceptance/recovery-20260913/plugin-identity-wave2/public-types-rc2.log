@@ -1,0 +1,4 @@
+
+> hanamesh-plugin-identity@0.1.0-rc.2 check:contracts
+> tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts
+

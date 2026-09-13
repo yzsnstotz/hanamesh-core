@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-plugin-identity",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.3",
   "description": "HanaMesh MOD-02: pinned DSH identity UI and credential-isolated client SDK",
   "private": true,
   "type": "module",

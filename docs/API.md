@@ -1,4 +1,4 @@
-# MOD-02 公共契约 · v0.1.0-rc.1 / protocolVersion 1
+# MOD-02 公共契约 · v0.1.0-rc.3 / protocolVersion 1
 
 ## 消费方式
 

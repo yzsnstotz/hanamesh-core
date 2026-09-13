@@ -1,8 +1,18 @@
 # hanamesh-plugin-identity
 
-**状态：PARTIAL · v0.1.0-rc.1。不是 DELIVERED / ACCEPTED；不是可直接投入生产的完整目标构建。**
+**当前状态：PARTIAL · v0.1.0-rc.3。目标构建和隔离 DSH／SRV-01 技术联验已通过；用户 ACCEPTED 与剩余视觉、介质门尚未完成。**
 
 HanaMesh MOD-02 的登录界面、五态会话观察和用户作用域 JSON API SDK。SRV-01 是唯一身份真相；本插件不签发其他服务必须接受的 token、grant、entitlement、会员或资源权限。每个资源操作仍由资源端独立授权，修改本地状态不会构成远端授权。
+
+## 2026-09-13 本机回收结果
+
+在 macOS arm64、Node 24.13.1、pnpm 10.33.0、TypeScript 5.9.3 上，干净副本 `npm ci --offline --ignore-scripts`、目标 `npm run build`（含 `skipLibCheck: false` 的宿主声明门）、44/44 源码测试及两项变异均退出 0。隔离 `DSH_HOME` 的 DSH 0.1.5-alpha.1 已安装并加载插件；隔离本机 PostgreSQL 17.6 上运行锁定的 `hanamesh-server-identity@0.1.0-rc.1` 包，两个合成账户完成真实登录、本人读取、跨主体拒绝、退出和伪造身份负测。Chrome 独立 profile 的真实页面表单也完成登录与本人读取。证据和精确命令见 `docs/acceptance/recovery-20260913/plugin-identity-wave2/REVIEW.md`。
+
+当前可安装候选是 `artifacts/hanamesh-plugin-identity-0.1.0-rc.3.tgz`；SHA-256 见 `artifacts/SHA256SUMS`。安装命令是 `dsh plugin --profile <隔离 profile> add <tarball> --offline`。此包未声明 `dsh.bundle`，需按 DSH 真实 `cordis.patch.yml` 的 `- insert:` 语法把插件和 `profile/identity.config.example.json` 配置加入隔离 profile。构建源仓的 `package-lock.json` 已可离线安装开发依赖；它不等于整个 DSH profile 的运行 lock。
+
+回收新增的 `@hanamesh/ui-kit@0.1.0-rc.3` 锁定 tarball 已用于目标依赖图，但页面尚未消费官方样式；D09 仍待完成。D07 的真实浏览器页面没有隐藏控件（强制显示改动数为 0），所以本轮只证明绕开 UI 直接请求在可见性调整前后均获 401，原文“去掉隐藏逻辑”步骤保持 PARTIAL。一次性本地资源与合成账户不代表生产环境；没有用户验收签字、远端创建或发布。
+
+## 原始交付轮次记录（历史，以下 rc.1 环境与阻塞状态以本节当时为准）
 
 ## 本轮实际环境与锁定基线
 

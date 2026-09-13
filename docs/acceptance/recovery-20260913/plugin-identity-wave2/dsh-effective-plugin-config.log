@@ -1,0 +1,22 @@
+88:- id: session-telemetry-otel
+89-  name: '@deepseek-ai/dsh-session-telemetry-otel'
+90-  config:
+91-    mode: !!js process.env.DSH_TELEMETRY_MODE || 'FEEDBACK_ONLY'
+92-    shutdownTimeoutMillis: 3000
+93-    exporter:
+94-      url: !!js >-
+95-        process.env.DSH_TELEMETRY_OTLP_URL ??
+96-        'https://harness-telemetry.deepseeksvc.com/v1/logs'
+97-      compression: gzip
+98-      timeoutMillis: 1000
+--
+544:- id: hanamesh-identity
+545-  name: hanamesh-plugin-identity
+546-  config:
+547-    identityOrigin: http://127.0.0.1:59468
+548-    deploymentId: plugin-identity-wave2
+549-    requiredLogin: false
+550-    protectedPrefixes:
+551-      - /v1/identity
+552-    timeoutMs: 10000
+553-    allowInsecureLoopback: true

@@ -1,0 +1,1 @@
+{"event":"dsh_srv01_flow","preLoginRequest":401,"signIn":200,"signInState":"signed_in","state":"signed_in","principalMatches":true,"own":200,"ownRemote":200,"ownPrincipalMatches":true,"cross":403,"injected":400,"signOut":200,"postLogoutRequest":401,"forgedDirectResource":401}
