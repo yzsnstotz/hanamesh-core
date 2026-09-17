@@ -1,3 +1,5 @@
+> **↗ RENAMED 2026-09-17：原 hanamesh-plugin-identity → hanamesh-core。Stage 1 的 Core 插件（登录态/会话、Server 连接、同意开关、侧栏入口 + 设置一段）。product-profile 的健康/受限状态机将并入。package.json 名与代码改名由路线 L3 完成。PRD v2.0 §4.2。**
+
 # hanamesh-plugin-identity
 
 **当前状态：PARTIAL · v0.1.0-rc.3。目标构建和隔离 DSH／SRV-01 技术联验已通过；用户 ACCEPTED 与剩余视觉、介质门尚未完成。**
