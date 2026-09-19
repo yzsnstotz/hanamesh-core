@@ -1,0 +1,28 @@
+{
+ "modalsLeft": [],
+ "url": "http://127.0.0.1:55111/",
+ "title": "DeepSeek Harness",
+ "bodyHasHanaMesh": true,
+ "sidebarTexts": [
+  "应用库",
+  "HanaMesh"
+ ],
+ "footerHint": [
+  "打开 HanaMesh 设置"
+ ],
+ "settingsNav": [
+  "General",
+  "Models",
+  "Plugins",
+  "供应商",
+  "应用库来源",
+  "Agent presets",
+  "HanaMesh"
+ ],
+ "coreSection": {
+  "state": "ready",
+  "text": "HanaMesh 套件与单包互斥：已单独安装 hanamesh-usage 或 @hanamesh/dsh-app-host 的用户，装 hanamesh-core 前先 dsh plugin remove 它们；已装套件后再单独安装它们同样会以 duplicate loader entry id 起不来。 设备身份 设备 id：VV2U4SL1… 注册：未连接 数据授权 允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话） 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 账号 绑定状态：绑定后在网站查看 去网站绑定 我的 Hana 可领权益 / 认领状态：绑定后在网站查看 去网站 本设备贡献累计 暂不可用：NOT_CONNECTED 组件 使用记录：已安装 0.2.0-rc.4 应用容器：已安装 0.1.0-rc.14 重新检查 关于 hanamesh-core 0.2.0-rc.10 · DSH 0.1.5-alpha.1 去网站"
+ },
+ "appHostSection": "供应商\n\n这里只显示来源、状态、提示与模型，不读取或展示密钥值。\n\n启用网关\n名称\t来源\t状态\tKey 提示\t模型\nanthropic\tdsh-models\tabsent\t—\t—\ndeepseek\tdsh-models\tabsent\t—\t—\ngoogle\tdsh-models\tabsent\t—\t—\nopenai\tdsh-models\tabsent\t—\t—",
+ "library": "应用库 关闭 CATALOG_SOURCE_REQUIRED"
+}

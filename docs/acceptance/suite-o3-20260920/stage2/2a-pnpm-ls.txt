@@ -1,0 +1,10 @@
+Legend: production dependency, optional only, dev only
+
+dsh-profile-core /private/tmp/hm-o3-070605/homes/2a/home/profiles/core (PRIVATE)
+│
+│   dependencies:
+└─┬ hanamesh-core@0.2.0-rc.11
+  ├── @hanamesh/dsh-app-host@0.1.0-rc.14
+  └── hanamesh-usage@0.2.0-rc.4
+
+3 packages
