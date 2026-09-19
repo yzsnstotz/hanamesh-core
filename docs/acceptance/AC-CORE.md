@@ -84,3 +84,12 @@ Evidence modes in this file are deliberately distinct. `SOURCE`/`FIXTURE` are re
 未验证（NOT_RUN）：隔离 DSH 真实宿主 `plugin add` rc.9（代码改动不触及 apply/存储路径，rc.8 的 REAL_HOST/X02/X03 证据保留；O3 用 rc.9 tgz 重装即覆盖）；网站端 `/me/bind` 带 cookie 的实际绑定往返（需 O2 阶段 3b/5 同源代理）；`authNonceSource:'server'`（identity 该版本 challenge 只接受 register/bind，保持默认 client）。
 
 rc.9 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：rc.9 tgz + usage rc.4 + app-host rc.13（+ Vibe rc.10）。
+
+## rc.10 · 本机耦合审计 2026-09-20（代码与 rc.9 相同）
+
+- 判定：app-host 去耦升 rc.14（删除其客户端对 `hanameshCore` 的死读取），本包 `dependencies` 精确钉随链重钉（DELIVERY_RULES §1.6）。
+- 补齐：`dependencies` / `suite.profile.json` versionRange / `vendor/siblings/` / `scripts/p1/publish.sh` / 测试常量 → app-host rc.14；`src/` 只改「关于」行版本号。
+- 证据：37/37、4/4 突变、契约、`verify:inputs` siblings 3、`check-package`；tgz `hanamesh-core-0.2.0-rc.10.tgz` SHA-256 `21ee2d82c23bf7715423968cdd0e3788b395f154b2921646c85a928070448595`。REAL_SERVER 沿用 rc.9（签名代码未动）。
+- 耦合审计结论（本包）：唯一跨包边是设计内的——`dependencies` 钉 usage/app-host（套件入口）、patch 三条、`ctx.get('hanameshUsage')` duck-type 可选读（P1 阶段 3 第 4 条）、health 读兄弟包 `package.json` 元数据（P1 阶段 2）；无 import、无跨 storage 单元、无跨路由前缀。
+
+rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage rc.4 + app-host rc.14（+ Vibe rc.11）。

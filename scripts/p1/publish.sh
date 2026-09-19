@@ -34,6 +34,6 @@ publish_if_missing() {
 }
 publish_if_missing @hanamesh/lib-provision 0.1.0-rc.1 ./vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz
 publish_if_missing hanamesh-usage 0.2.0-rc.4 ./vendor/siblings/hanamesh-usage-0.2.0-rc.4.tgz
-publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.13 ./vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.13.tgz
-publish_if_missing hanamesh-core 0.2.0-rc.9 ./artifacts/hanamesh-core-0.2.0-rc.9.tgz
+publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.14 ./vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz
+publish_if_missing hanamesh-core 0.2.0-rc.10 ./artifacts/hanamesh-core-0.2.0-rc.10.tgz
 printf '{"mode":"REAL_SIBLINGS","registry":"%s","packages":4}\n' "$REGISTRY"
