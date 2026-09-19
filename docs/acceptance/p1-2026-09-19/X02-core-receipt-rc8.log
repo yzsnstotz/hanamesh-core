@@ -1,0 +1,5 @@
+node=v24.13.1
+command=env -i HOME=<isolated> DSH_HOME=<isolated> ... HM_X02_KILL_PATH=hanamesh_core.json node <patched-copy>/@deepseek-ai/dsh/lib/bin.js --profile core --port 64886 --no-open
+pid=78401
+wait_exit=137
+signal=SIGKILL

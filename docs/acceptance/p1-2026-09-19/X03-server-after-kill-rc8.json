@@ -1,0 +1,13 @@
+[
+  {
+    "method": "POST",
+    "path": "/v1/identity/devices/challenge",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/v1/identity/devices",
+    "status": 201,
+    "deviceId": "p2etaYYcuXTG0VG9dxv1GWGY2x9VMm6Rt9yXnSua2Sc"
+  }
+]

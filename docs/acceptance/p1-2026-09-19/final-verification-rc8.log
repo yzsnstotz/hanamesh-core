@@ -1,0 +1,15 @@
+date=2026-09-19
+node=v24.13.1
+pnpm=10.33.0
+ripgrep=15.1.0
+pnpm_build=exit_0
+pnpm_test=33_pass_0_fail
+pnpm_check_contracts=exit_0
+mutation_domain_name=ERR_ASSERTION
+mutation_device_integrity=ERR_ASSERTION
+mutation_registration_device_id=ERR_ASSERTION
+mutation_registration_reverse_order=ERR_ASSERTION
+mutation_health_repair_priority=ERR_ASSERTION
+pnpm_test_crash=2_pass_0_fail
+pnpm_verify_inputs={"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true,"standin":2}
+check_package={"event":"check_package_ok","name":"hanamesh-core","version":"0.2.0-rc.8","inject":["connection","storageDomain","loader"],"bundlePatch":true,"dependencies":2,"sha256":"7f4fcc4f7a90a59757831b3e4f40a425b28961f0f6332d6ad85eb3f5f76ece15"}

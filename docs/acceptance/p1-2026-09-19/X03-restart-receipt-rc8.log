@@ -1,0 +1,9 @@
+node=v24.13.1
+command=env -i HOME=<isolated> DSH_HOME=<isolated> ... node <patched-copy>/@deepseek-ai/dsh/lib/bin.js --profile core --port 64886 --no-open
+pid=81179
+listener=ready
+token_exchange=303
+state=200
+server_registration_statuses=201,200
+snapshot={"deviceId":"p2etaYYcuXTG0VG9dxv1GWGY2x9VMm6Rt9yXnSua2Sc","registration":"registered","consent":"withheld","contributions":"ready"}
+graceful_wait_exit=0

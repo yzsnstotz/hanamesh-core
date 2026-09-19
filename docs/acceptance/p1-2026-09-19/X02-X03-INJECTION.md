@@ -1,6 +1,6 @@
 # X02/X03 injection evidence boundary
 
-Status: **PARTIAL**. These files preserve useful real-process observations, but the original shell command, exact PID, and wait status receipt were not written to the repository at run time. They therefore do not independently close X02 or X03.
+Status: **PASS after receipt rerun**. The original exploratory files below remain as provenance. The rc.8 rerun adds redacted command semantics, exact PID, `wait_exit=137`, kill marker, restart receipt and server replay summaries, independently closing X02 and X03.
 
 ## Runtime identity
 
@@ -26,4 +26,10 @@ if (process.env.HM_X02_KILL_PATH && path.endsWith(process.env.HM_X02_KILL_PATH))
 - X03 server log records challenge → register 201 → challenge → replay register 200 for the same device id.
 - X03 local JSON snapshots remain unregistered after the kill and become registered after restart.
 
-Because the command/PID/exit receipt is absent, the acceptance table intentionally marks both rows `PARTIAL` and requires a rerun for closure.
+## Receipt rerun
+
+- Core identity: `X02-core-receipt-rc8.log` + `X02-core-kill-rc8.log` + `X02-core-restart-receipt-rc8.log`.
+- Health snapshot: `X02-health-receipt-rc8.log` + `X02-health-kill-rc8.log` + `X02-health-restart-receipt-rc8.log`.
+- Registration replay: `X03-receipt-rc8.log` + `X03-kill-rc8.log` + `X03-restart-receipt-rc8.log` + the two `X03-server-*-rc8.json` summaries.
+
+Every kill receipt records `signal=SIGKILL` and `wait_exit=137`; every restart receipt records listener readiness, authenticated state HTTP 200 and graceful exit 0. X02 health preserves the same pre/post SHA-256, while X03 preserves the local/server ordering `unregistered + 201` before restart and `registered + 201,200` after restart.

@@ -1,0 +1,7 @@
+node=v24.13.1
+pid=79722
+listener=ready
+token_exchange=303
+state=200
+snapshot={"deviceId":"p2etaYYcuXTG0VG9dxv1GWGY2x9VMm6Rt9yXnSua2Sc","registration":"unregistered","consent":"withheld","health":{"mode":"normal","fault":null},"components":[{"id":"usage","status":"satisfied"},{"id":"app-host","status":"satisfied"}]}
+graceful_wait_exit=0
