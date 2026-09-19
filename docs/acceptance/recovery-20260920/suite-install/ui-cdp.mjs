@@ -1,0 +1,47 @@
+// Drive headless Chrome over CDP with Node's built-in WebSocket: open the isolated DSH host, read sidebar/settings DOM, screenshot.
+import {spawn} from 'node:child_process';
+import {writeFileSync} from 'node:fs';
+const [,, url, outDir] = process.argv;
+const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ['--headless=new', `--user-data-dir=${outDir}/chrome-profile-${Date.now()}`, '--no-first-run', '--disable-gpu', '--remote-debugging-port=0', '--window-size=1400,900', 'about:blank'], {stdio: ['ignore', 'pipe', 'pipe']});
+let devtools = ''; chrome.stderr.on('data', c => { devtools += c; });
+console.error('chrome pid', chrome.pid);
+const port = await new Promise((res, rej) => { const t = setInterval(() => { const m = /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)/.exec(devtools); if (m) { clearInterval(t); res(m[1]); } }, 100); setTimeout(() => rej(new Error('no devtools: ' + devtools)), 15000); });
+const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+const page = targets.find(t => t.type === 'page' && !t.url.startsWith('chrome-extension')) ?? targets.find(t => t.type === 'page');
+console.error('target', page.type, page.url);
+const ws = new WebSocket(page.webSocketDebuggerUrl);
+await new Promise(r => ws.onopen = r);
+let id = 0; const pending = new Map();
+ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
+const send = (method, params = {}) => new Promise((r, rej) => { const i = ++id; console.error('>', method, (params.expression||'').slice(0,60)); pending.set(i, r); ws.send(JSON.stringify({id: i, method, params})); setTimeout(() => { if (pending.has(i)) { pending.delete(i); console.error('TIMEOUT', method); r({}); } }, 15000); });
+const evalJs = async expr => (await send('Runtime.evaluate', {expression: expr, returnByValue: true, awaitPromise: true})).result?.result?.value;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+await send('Page.enable'); await send('Runtime.enable'); await send('Emulation.setDeviceMetricsOverride', {width: 1400, height: 900, deviceScaleFactor: 1, mobile: false});
+const shot = async name => { const d = (await send('Page.captureScreenshot', {format: 'png', fromSurface: true})).result?.data; if (d) writeFileSync(`${outDir}/shots/${name}.png`, Buffer.from(d, 'base64')); else console.error('no screenshot', name); };
+await send('Page.navigate', {url});
+await sleep(6000);
+const out = {};
+for (const label of ['Continue','Configure later']) { for (let i=0;i<3;i++){ const clicked = await evalJs(`(()=>{const b=[...document.querySelectorAll("button")].find(b=>b.textContent.trim()===${JSON.stringify(label)});if(!b)return false;b.click();return true})()`); if(!clicked) break; await sleep(800);} }
+out.modalsLeft = await evalJs('[...document.querySelectorAll("[role=dialog] h2, [role=dialog] h1")].map(h=>h.textContent.trim())');
+out.url = await evalJs('location.href.replace(/token=[^&]+/, "token=<redacted>")');
+out.title = await evalJs('document.title');
+out.bodyHasHanaMesh = await evalJs('document.body.innerText.includes("HanaMesh")');
+out.sidebarTexts = await evalJs('[...document.querySelectorAll("nav button, aside button, [role=navigation] button, button")].map(b=>b.textContent.trim()).filter(t=>/HanaMesh|应用库|Hana/.test(t)).slice(0,10)');
+out.footerHint = await evalJs('[...document.querySelectorAll("button")].map(b=>b.getAttribute("aria-label")||b.title||"").filter(t=>/HanaMesh|应用库/.test(t)).slice(0,5)');
+await shot('home');
+// open settings dialog and click the HanaMesh tab (same selector core's own client uses)
+await evalJs('document.querySelector("button[aria-haspopup=\\"dialog\\"]")?.click()'); await sleep(1200);
+out.settingsNav = await evalJs('[...document.querySelectorAll("[role=dialog] nav button")].map(b=>b.textContent.trim())');
+await evalJs('[...document.querySelectorAll("[role=dialog] nav button")].find(b=>b.textContent.trim()==="HanaMesh")?.click()'); await sleep(2500);
+out.coreSection = await evalJs('(()=>{const s=document.querySelector("section[data-hanamesh-core]");return s?{state:s.dataset.hanameshCore,text:s.innerText.replace(/\\s+/g," ").slice(0,900)}:null})()');
+await shot('settings-hanamesh');
+await evalJs('[...document.querySelectorAll("[role=dialog] nav button")].find(b=>/供应商|应用库|Provider/.test(b.textContent))?.click()'); await sleep(1500);
+out.appHostSection = await evalJs('(()=>{const el=document.querySelector(".hm-providers, .hm-library-sources, [data-hanamesh-app-host]");return el?el.innerText.slice(0,400):null})()');
+await shot('settings-apphost');
+await evalJs('[...document.querySelectorAll("[role=dialog] button")].find(b=>b.getAttribute("aria-label")==="Close"||b.textContent.trim()==="×")?.click()'); await sleep(500);
+await evalJs('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape"}))'); await sleep(500);
+await evalJs('[...document.querySelectorAll("button")].find(b=>b.textContent.trim()==="应用库")?.click()'); await sleep(2500);
+out.library = await evalJs('(()=>{const el=document.querySelector(".hm-library-overlay");return el?el.innerText.replace(/\\s+/g," ").slice(0,500):null})()');
+await shot('library');
+console.log(JSON.stringify(out, null, 1));
+ws.close(); chrome.kill('SIGTERM');
