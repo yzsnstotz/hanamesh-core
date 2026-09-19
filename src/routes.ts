@@ -1,65 +1,71 @@
-import { IdentityController } from './controller.js';
-import type { ScopedRequest } from './contracts.js';
-import { IdentityClientError, safeError } from './errors.js';
-import { object } from './validation.js';
-export const ROUTES = Object.freeze({state: '/api/hanamesh/identity/state', refresh: '/api/hanamesh/identity/refresh',
-  signIn: '/api/hanamesh/identity/sign-in', signOut: '/api/hanamesh/identity/sign-out', request: '/api/hanamesh/identity/request', diagnostics: '/api/hanamesh/identity/diagnostics'});
-function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {status, headers: {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'}});
+import {SessionController} from './controller.js';
+import {CoreError, safeError} from './errors.js';
+
+export const ROUTES = Object.freeze({
+  state: '/api/hanamesh/core/state',
+  consent: '/api/hanamesh/core/consent',
+  register: '/api/hanamesh/core/device/register',
+  health: '/api/hanamesh/core/health',
+  healthRecheck: '/api/hanamesh/core/health/recheck',
+  openExternal: '/api/hanamesh/core/open-external',
+  diagnostics: '/api/hanamesh/core/diagnostics',
+});
+const ROUTE_PATHS = new Set<string>(Object.values(ROUTES));
+
+function response(value: unknown, status = 200): Response {
+  return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
-async function readJson(request: Request, limit: number): Promise<unknown> {
-  if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) throw new IdentityClientError('IDENTITY_INPUT_INVALID', 415);
-  const length = request.headers.get('content-length');
-  if (length !== null && (!/^\d+$/.test(length) || Number(length) > limit)) throw new IdentityClientError('IDENTITY_INPUT_INVALID', 413);
-  const reader = request.body?.getReader(); if (!reader) throw new IdentityClientError('IDENTITY_INPUT_INVALID', 400);
-  const chunks: Uint8Array[] = []; let size = 0;
-  try {
-    while (true) {
-      const {value, done} = await reader.read(); if (done) break;
-      size += value.byteLength; if (size > limit) { await reader.cancel(); throw new IdentityClientError('IDENTITY_INPUT_INVALID', 413); }
-      chunks.push(value);
-    }
-  } finally { reader.releaseLock(); }
-  const bytes = new Uint8Array(size); let offset = 0;
-  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-  try { return JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes)); }
-  catch { throw new IdentityClientError('IDENTITY_INPUT_INVALID', 400); }
-}
-function sameCarrierOrigin(request: Request, url: URL): boolean {
-  const origin = request.headers.get('origin');
-  if (origin === null) return false;
-  const host = request.headers.get('host');
-  // DSH's authenticated HTTP bridge constructs Request.url with dsh.internal,
-  // while preserving the already-fenced external Host and Origin headers.
-  if (host === null) return origin === url.origin;
-  try {
-    const parsed = new URL(origin);
-    return parsed.origin === origin && (parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.host === host;
-  } catch { return false; }
-}
-/** Call only AFTER the carrier's Host/Origin fence and DSH browser authentication. */
-export function createRouteHandler(controller: IdentityController): (request: Request) => Promise<Response> {
-  return async (request: Request): Promise<Response> => {
+
+export function createRouteHandler(controller: SessionController): (request: Request) => Promise<Response> {
+  return async request => {
     try {
       const url = new URL(request.url);
-      const path = url.pathname;
-      if (url.search || !(Object.values(ROUTES) as readonly string[]).includes(path)) return json({error: {code: 'IDENTITY_NOT_FOUND', message: '未找到接口。'}}, 404);
-      const read = path === ROUTES.state || path === ROUTES.diagnostics;
-      if (request.method !== (read ? 'GET' : 'POST')) return json({error: {code: 'REQUEST_NOT_ALLOWED', message: '请求方法不受支持。'}}, 405);
-      if (!read && (!sameCarrierOrigin(request, url) ||
-          ['cross-site', 'same-site'].includes(request.headers.get('sec-fetch-site') ?? ''))) throw new IdentityClientError('IDENTITY_ORIGIN_REJECTED', 403);
-      if (path === ROUTES.state) return json(controller.getState());
-      if (path === ROUTES.diagnostics) {
-        const state = controller.getState();
-        return json({protocolVersion: state.protocolVersion, status: state.status, serviceReady: state.serviceReady,
-          reason: state.reason, persistence: state.persistence, logoutPending: state.logoutPending, privateWork: state.privateWork});
+      if (url.search || url.hash) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
+      if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
+      if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health) {
+        if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
+        if (url.pathname === ROUTES.state) return response(controller.state());
+        if (url.pathname === ROUTES.health) return response(controller.service.getHealth());
+        return response(controller.diagnostics());
       }
-      const input = await readJson(request, path === ROUTES.request ? 32768 : 8192);
-      if (path === ROUTES.signIn) return json(await controller.signIn(input));
-      if (path === ROUTES.request) return json(await controller.request(input as ScopedRequest));
-      if (!object(input) || Object.keys(input).length !== 0) throw new IdentityClientError('IDENTITY_INPUT_INVALID', 400);
-      if (path === ROUTES.signOut) return json(await controller.signOut());
-      return json(await controller.checkIdentity());
-    } catch (error) { const safe = safeError(error); return json(safe.toJSON(), safe.status); }
+      if (request.method !== 'POST') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
+      requireSameCarrierOrigin(request);
+      if (url.pathname === ROUTES.register) return response(await controller.register());
+      if (url.pathname === ROUTES.healthRecheck) return response(await controller.recheckHealth());
+      const contentType = request.headers.get('content-type')?.split(';', 1)[0]?.trim();
+      if (contentType !== 'application/json') throw new CoreError('CORE_INPUT_INVALID', 415);
+      const declaredLength = Number(request.headers.get('content-length') ?? '0');
+      if (Number.isFinite(declaredLength) && declaredLength > 4096) throw new CoreError('CORE_INPUT_INVALID', 413);
+      const body = await request.text();
+      if (Buffer.byteLength(body, 'utf8') > 4096) throw new CoreError('CORE_INPUT_INVALID', 413);
+      let parsed: unknown;
+      try { parsed = JSON.parse(body); } catch { throw new CoreError('CORE_INPUT_INVALID', 400); }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length !== 1) throw new CoreError('CORE_INPUT_INVALID', 400);
+      if (url.pathname === ROUTES.openExternal) {
+        const target = (parsed as {url?: unknown}).url;
+        if (typeof target !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
+        return response(controller.openExternal(target));
+      }
+      if (!('state' in parsed)) throw new CoreError('CORE_INPUT_INVALID', 400);
+      const state = (parsed as {state?: unknown}).state;
+      if (state !== 'granted' && state !== 'withheld') throw new CoreError('CORE_INPUT_INVALID', 400);
+      return response(await controller.setConsent(state));
+    } catch (error) {
+      const safe = safeError(error);
+      return response({error: {code: safe.code, message: safe.message}}, safe.status);
+    }
   };
+}
+
+export function requireSameCarrierOrigin(request: Request): void {
+  const origin = request.headers.get('origin');
+  const requestOrigin = new URL(request.url).origin;
+  const host = request.headers.get('host');
+  const fetchSite = request.headers.get('sec-fetch-site');
+  let parsedOrigin: URL | null = null;
+  try { parsedOrigin = origin ? new URL(origin) : null; } catch { /* rejected below */ }
+  const allowedProtocol = parsedOrigin?.protocol === 'http:' || parsedOrigin?.protocol === 'https:';
+  const canonicalOrigin = parsedOrigin !== null && origin === parsedOrigin.origin;
+  const carrierMatches = parsedOrigin !== null && (host ? parsedOrigin.host === host : parsedOrigin.origin === requestOrigin);
+  if (!allowedProtocol || !canonicalOrigin || !carrierMatches || (fetchSite !== null && fetchSite !== 'same-origin')) throw new CoreError('CORE_INPUT_INVALID', 403);
 }

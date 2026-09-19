@@ -1,0 +1,22 @@
+[
+  {
+    "method": "POST",
+    "path": "/v1/identity/devices/challenge",
+    "signed": false
+  },
+  {
+    "method": "POST",
+    "path": "/v1/identity/devices",
+    "signed": false
+  },
+  {
+    "method": "GET",
+    "path": "/v1/usage/me/contributions",
+    "signed": true
+  },
+  {
+    "method": "GET",
+    "path": "/requests",
+    "signed": false
+  }
+]

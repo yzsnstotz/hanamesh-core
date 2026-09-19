@@ -1,27 +1,54 @@
-/** Source-free package smoke test; not installation into a real DSH profile. */
-import {mkdtemp,writeFile,readFile,cp,rm,mkdir} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join,resolve} from 'node:path';import {spawnSync} from 'node:child_process';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
-const packageVersion=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
-const artifact=resolve(process.argv[2]||`artifacts/hanamesh-plugin-identity-${packageVersion}.tgz`);
-const compiler=resolve('node_modules/.bin/tsc');
-process.env.HM_TSC=compiler;
-const root=await mkdtemp(join(tmpdir(),'hm-identity-package-'));
-function run(command,args,cwd){const result=spawnSync(command,args,{cwd,encoding:'utf8',timeout:20000});console.log(JSON.stringify({command,args,cwd,exit:result.status,error:result.error?.code||null}));if(result.stdout)console.log(result.stdout);if(result.stderr)console.log(result.stderr);assert.equal(result.status,0);}
-try{
-  const staging=join(root,'hanamesh-plugin-identity');await mkdir(staging);
-  for(const path of ['src','types','vendor','deps','scripts','test','tsconfig.json','tsconfig.host.json','package.json','package-lock.json','consistency.json'])await cp(resolve(path),join(staging,path),{recursive:true});
-  run(process.execPath,['scripts/verify-inputs.mjs'],staging);
-  run(process.execPath,['scripts/build.mjs','--offline'],staging);
-  run(compiler,['--noEmit','--strict','--skipLibCheck','false','--target','ES2022','--module','NodeNext','--moduleResolution','NodeNext','test/public-contracts.ts'],staging);
-  console.log(JSON.stringify({standaloneSourceRoot:staging,siblingSourceDirectoriesPresent:false,scope:'portable-core-and-public-types'}));
-  const consume=join(root,'consumer');await mkdir(consume);await writeFile(join(consume,'package.json'),'{"private":true,"type":"module"}');
-  run('npm',['install','--ignore-scripts','--legacy-peer-deps','--offline','--no-audit','--no-fund',artifact],consume);
-  await writeFile(join(consume,'smoke.mjs'),`import assert from 'node:assert/strict';
-import {name,apply,inject} from 'hanamesh-plugin-identity';
-import {SESSION_STATUSES} from 'hanamesh-plugin-identity/contracts';
-import {BrowserIdentityClient} from 'hanamesh-plugin-identity/client';
-assert.equal(name,'hanamesh-plugin-identity');assert.equal(typeof apply,'function');assert.equal(SESSION_STATUSES.length,5);assert.equal(typeof BrowserIdentityClient,'function');assert.deepEqual(inject,['connection','webServer','storageDomain']);
-await assert.rejects(import('hanamesh-plugin-identity/lib/transport.js'),e=>e.code==='ERR_PACKAGE_PATH_NOT_EXPORTED');
-console.log('Package entrypoints and export fences loaded; apply not executed, runtime peers deliberately absent.');`);
-  run(process.execPath,['smoke.mjs'],consume);
-  console.log(JSON.stringify({artifact,sha256:createHash('sha256').update(await readFile(artifact)).digest('hex'),scope:'package-entrypoint-only',hostApplyExecuted:false}));
-}finally{await rm(root,{recursive:true,force:true});}
+/** Source-free package smoke test. It does not install into a real DSH profile. */
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {mkdtemp, readFile, rm, access} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join, resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {spawnSync} from 'node:child_process';
+
+const root = await mkdtemp(join(tmpdir(), 'hm-core-package-'));
+const source = JSON.parse(await readFile('package.json', 'utf8'));
+const artifact = resolve(process.argv[2] ?? `artifacts/hanamesh-core-${source.version}.tgz`);
+try {
+  const unpack = spawnSync('tar', ['-xzf', artifact, '-C', root], {encoding: 'utf8'});
+  assert.equal(unpack.status, 0, unpack.stderr);
+  const packageRoot = join(root, 'package');
+  const packed = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
+  assert.equal(packed.name, 'hanamesh-core');
+  assert.equal(packed.version, source.version);
+  assert.deepEqual(packed.dependencies, {'hanamesh-usage': '0.2.0-rc.1', '@hanamesh/dsh-app-host': '0.1.0-rc.8'});
+  assert.equal(packed.dsh.bundle.patch, './profile/cordis.patch.yml');
+  assert.ok(packed.exports['./contract']);
+  assert.ok(packed.exports['./client']);
+  assert.deepEqual(packed.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar']);
+  await access(join(packageRoot, 'profile/cordis.patch.yml'));
+  await access(join(packageRoot, 'profile/suite.profile.json'));
+  await access(join(packageRoot, 'profile.schema.json'));
+  await access(join(packageRoot, 'lib/client.js'));
+  await access(join(packageRoot, 'vendor/semver/index.js'));
+  const adapter = await import(pathToFileURL(join(packageRoot, 'lib/dsh.mjs')).href);
+  assert.equal(adapter.name, 'hanamesh-core');
+  assert.deepEqual(adapter.inject, ['connection', 'storageDomain', 'loader']);
+  assert.equal(packed.exports['./transport'], undefined);
+  const {SessionController} = await import(pathToFileURL(join(packageRoot, 'lib/controller.js')).href);
+  const {INITIAL_CORE_SNAPSHOT} = await import(pathToFileURL(join(packageRoot, 'lib/contracts.js')).href);
+  let value = structuredClone(INITIAL_CORE_SNAPSHOT);
+  const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, {read: () => value, publish: async next => { value = next; }, close: async () => undefined});
+  assert.deepEqual(Object.keys(controller.service).sort(), ['protocolVersion', 'getDeviceId', 'getPublicKey', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin', 'getHealth'].sort());
+  await controller.dispose();
+  const packedLib = await readFile(join(packageRoot, 'lib/dsh.mjs'), 'utf8');
+  assert.doesNotMatch(packedLib, /from ['"]hanamesh-usage|from ['"]@hanamesh\/dsh-app-host|import\(['"]hanamesh-usage/);
+  assert.equal(await readFile('src/dsh.mjs', 'utf8'), await readFile(join(packageRoot, 'lib/dsh.mjs'), 'utf8'));
+  console.log(JSON.stringify({
+    event: 'check_package_ok',
+    name: packed.name,
+    version: packed.version,
+    inject: adapter.inject,
+    bundlePatch: true,
+    dependencies: Object.keys(packed.dependencies).length,
+    sha256: createHash('sha256').update(await readFile(artifact)).digest('hex'),
+  }));
+} finally {
+  await rm(root, {recursive: true, force: true});
+}

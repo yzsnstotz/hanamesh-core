@@ -7,5 +7,5 @@
     "declaration": true, "rootDir": "src", "outDir": "lib",
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/*.ts"]
+  "include": ["src/**/*.ts"]
 }

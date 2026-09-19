@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
+not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
+  ---
+  duration_ms: 89.279375
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/adapter.test.mjs:2:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    TAP version 13
+    # (node:24976) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+    # --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./test/fixtures/host-loader.mjs", pathToFileURL("./")); register("./test/fixtures/host-loader.mjs", pathToFileURL("./"));'
+    # (Use `node --trace-warnings ...` to show where the warning was created)
+    # Subtest: adapter uses the core domain, core service name and no legacy web assets
+    not ok 1 - adapter uses the core domain, core service name and no legacy web assets
+      ---
+      duration_ms: 5.171625
+      type: 'test'
+      location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/fixtures/adapter-check.test.mjs:18:1'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly deep-equal:
+        + actual - expected
+
+          [
+        +   'hanamesh-core',
+        -   'hanamesh_core',
+            'hanamesh_core_health'
+          ]
+
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+        0: 'hanamesh_core'
+        1: 'hanamesh_core_health'
+      actual:
+        0: 'hanamesh-core'
+        1: 'hanamesh_core_health'
+      operator: 'deepStrictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/fixtures/adapter-check.test.mjs:20:10)
+        async Test.run (node:internal/test_runner/test:1110:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+      ...
+    # Subtest: adapter activation failures do not silently install an anonymous substitute
+    ok 2 - adapter activation failures do not silently install an anonymous substitute
+      ---
+      duration_ms: 1.605875
+      type: 'test'
+      ...
+    # Subtest: disposing after the storage facility closes still clears public access
+    ok 3 - disposing after the storage facility closes still clears public access
+      ---
+      duration_ms: 0.699333
+      type: 'test'
+      ...
+    1..3
+    # tests 3
+    # suites 0
+    # pass 2
+    # fail 1
+    # cancelled 0
+    # skipped 0
+    # todo 0
+    # duration_ms 64.254708
+
+
+    1 !== 0
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/adapter.test.mjs:8:43)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 120.120708

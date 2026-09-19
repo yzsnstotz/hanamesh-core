@@ -1,216 +1,234 @@
-import type { ErrorCode, IdentityCheck, IdentityClientService, ObservationStore, PluginConfig, PrincipalDTO, ScopedRequest, ScopedResponse, SessionSnapshot, SessionStatus } from './contracts.js';
-import { IdentityClientError, responseError, safeError } from './errors.js';
-import { configOf, loginOf, observationOf, principalOf, requestOf } from './validation.js';
-import { IdentityTransport } from './transport.js';
-/** Single owner per DSH profile. Not a multi-user server or plugin security sandbox. */
-export class IdentityController {
+import {createHash} from 'node:crypto';
+import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
+import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput} from './contract.js';
+import {createDevice, requestNonce, signWithDevice} from './device.js';
+import {CoreError, safeError} from './errors.js';
+import {registerDevice} from './registration.js';
+import {ServerTransport} from './transport.js';
+import {openExternal as openSystemExternal} from './external.js';
+import {configOf, publicJson, snapshotOf} from './validation.js';
+
+const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
+interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
+type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: 90; actions: {install: number; open: number; use: number; uninstall: number}};
+
+export class SessionController {
   readonly #config: Required<PluginConfig>;
-  readonly #store: ObservationStore;
-  readonly #transport: IdentityTransport;
-  #state: SessionSnapshot;
-  #revision = 0;
-  #generation = 0;
-  #abort = new AbortController();
-  #tail: Promise<unknown> = Promise.resolve();
-  #listeners = new Set<(snapshot: SessionSnapshot) => void>();
+  readonly #store: CoreStore;
+  readonly #transport: ServerTransport;
+  #state: StoredCoreSnapshot;
+  #publishTail: Promise<void> = Promise.resolve();
   #disposed = false;
-  #logoutPending = false;
-  #unconfirmedPriorRevocation = false;
-  readonly service: IdentityClientService;
-  constructor(config: PluginConfig, store: ObservationStore, fetcher?: typeof fetch) {
-    this.#config = configOf(config); this.#store = store;
-    this.#transport = new IdentityTransport(this.#config, fetcher);
-    this.#state = this.#snapshot('signed_out', null, null, null);
-    try {
-      const stored = observationOf(store.read());
-      this.#revision = stored.revision;
-      this.#logoutPending = stored.logoutPending;
-      this.#unconfirmedPriorRevocation = stored.logoutPending;
-      // Stored status is a breadcrumb, never a recovered login or a principal.
-      const status = stored.status === 'signed_out' ? 'signed_out' : 'expired';
-      this.#state = this.#snapshot(status, null, null, stored.logoutPending ? 'REVOCATION_UNCONFIRMED' : status === 'expired' ? 'SESSION_RESTARTED' : null);
-    } catch { this.#state = this.#snapshot('unavailable', null, false, 'STORAGE_UNAVAILABLE', 'unavailable'); }
+  #retryTimer: ReturnType<typeof setTimeout> | null = null;
+  #contributionsTimer: ReturnType<typeof setInterval> | null = null;
+  #health: HealthProvider | null = null;
+  #usageReady: (() => boolean) | null = null;
+  #contributions: Contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
+  #contributionsCheckedAt = 0;
+  readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
+  readonly service: HanaMeshCoreContract;
+  private constructor(config: PluginConfig, store: CoreStore, fetcher?: typeof fetch) {
+    this.#config = configOf(config);
+    this.#store = store;
+    this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher);
+    this.#state = snapshotOf(store.read());
     this.service = Object.freeze({
-      getState: () => this.#state,
-      subscribe: (listener: (snapshot: SessionSnapshot) => void) => this.subscribe(listener),
-      checkIdentity: () => this.checkIdentity(),
-      request: (request: ScopedRequest) => this.request(request),
-      checkLocalAccess: (kind: 'local' | 'protected') => Object.freeze({
-        allowed: (kind === 'local' || kind === 'protected') && !this.#disposed && ((kind === 'local' && !this.#config.requiredLogin) || this.#state.status === 'signed_in'),
-        resourceAuthorization: 'not-evaluated' as const,
-      }),
+      protocolVersion: '1' as const,
+      getDeviceId: () => this.#device().deviceId,
+      getPublicKey: () => this.#device().publicKey,
+      sign: (bytes: Uint8Array) => signWithDevice(this.#device(), bytes),
+      signRequest: (input: RequestSignatureInput) => this.#signRequest(input),
+      getConsent: () => this.#state.consent.state,
+      onConsentChange: (listener: (state: 'granted' | 'withheld', changedAt: string) => void) => {
+        this.#consentListeners.add(listener);
+        return () => { this.#consentListeners.delete(listener); };
+      },
+      getSession: () => this.#session(),
+      getServerOrigin: () => this.#config.serverOrigin,
+      getHealth: () => this.#health?.getHealth() ?? COLD_HEALTH,
     });
   }
-  getState(): SessionSnapshot { return this.#state; }
-  subscribe(listener: (snapshot: SessionSnapshot) => void): () => void {
-    if (this.#disposed) throw new IdentityClientError('DISPOSED');
-    this.#listeners.add(listener);
-    try { listener(this.#state); } catch { /* Observers do not affect committed state. */ }
-    return () => { this.#listeners.delete(listener); };
-  }
-  #snapshot(status: SessionStatus, principal: PrincipalDTO | null, serviceReady: boolean | null, reason: ErrorCode | null,
-    persistence: 'ready' | 'unavailable' = 'ready'): SessionSnapshot {
-    return Object.freeze({protocolVersion: '1', status, serviceReady, principal: status === 'signed_in' ? principal : null,
-      checkedAt: status === 'signed_in' ? new Date().toISOString() : null, reason,
-      requiredLogin: this.#config.requiredLogin, protectedOperations: status === 'signed_in' ? 'resource-check-required' : 'blocked',
-      privateWork: 'preserved', logoutPending: this.#logoutPending, persistence});
-  }
-  #emit(): void { for (const fn of this.#listeners) { try { fn(this.#state); } catch { /* isolate observer */ } } }
-  #check(generation: number): void {
-    if (this.#disposed) throw new IdentityClientError('DISPOSED');
-    if (generation !== this.#generation || this.#abort.signal.aborted) throw new IdentityClientError('OPERATION_SUPERSEDED', 409);
-  }
-  #fence(status: SessionStatus, reason: ErrorCode | null): number {
-    if (this.#disposed) throw new IdentityClientError('DISPOSED');
-    ++this.#generation; this.#abort.abort(); this.#abort = new AbortController();
-    this.#state = this.#snapshot(status, null, this.#state.serviceReady, reason, this.#state.persistence); this.#emit();
-    return this.#generation;
-  }
-  #enqueue<T>(action: () => Promise<T>): Promise<T> {
-    const result = this.#tail.then(action); this.#tail = result.catch(() => undefined); return result;
-  }
-  async #publish(generation: number, status: SessionStatus, principal: PrincipalDTO | null, ready: boolean | null, reason: ErrorCode | null): Promise<void> {
-    this.#check(generation);
-    try {
-      await this.#store.publish({schemaVersion: 1, revision: this.#revision + 1, status, observedAt: new Date().toISOString(), logoutPending: this.#logoutPending});
-      ++this.#revision;
-    } catch {
-      this.#check(generation);
-      this.#state = this.#snapshot('unavailable', null, false, 'STORAGE_UNAVAILABLE', 'unavailable'); this.#emit();
-      throw new IdentityClientError('STORAGE_UNAVAILABLE');
+
+  static async create(config: PluginConfig, store: CoreStore, options: {fetcher?: typeof fetch} = {}): Promise<SessionController> {
+    const controller = new SessionController(config, store, options.fetcher);
+    if (controller.#state.device === null) {
+      await controller.#publish(current => ({...current, revision: current.revision + 1, device: createDevice()}));
     }
-    this.#check(generation);
-    this.#state = this.#snapshot(status, principal, ready, reason); this.#emit();
+    return controller;
   }
-  async #fail(generation: number, error: unknown, login = false): Promise<never> {
-    this.#check(generation);
-    const safe = safeError(error);
-    if (safe.code === 'OPERATION_SUPERSEDED' || safe.code === 'DISPOSED') throw safe;
-    if (safe.code === 'STORAGE_UNAVAILABLE') throw safe;
-    if (safe.status === 401 || safe.status === 403) {
-      this.#transport.clear();
-      await this.#publish(generation, login ? 'signed_out' : 'expired', null, true,
-        login && safe.status === 401 ? 'IDENTITY_AUTH_FAILED' : safe.code);
-    } else if (login && [400, 404, 429].includes(safe.status)) {
-      await this.#publish(generation, 'signed_out', null, true, safe.code);
-    } else {
-      await this.#publish(generation, 'unavailable', null, false, safe.code);
+
+  #device() {
+    if (this.#disposed) throw new CoreError('CORE_DISPOSED', 503);
+    if (!this.#state.device) throw new CoreError('CORE_NOT_READY', 503);
+    return this.#state.device;
+  }
+
+  async #publish(update: StoredCoreSnapshot | ((current: StoredCoreSnapshot) => StoredCoreSnapshot)): Promise<void> {
+    const publish = this.#publishTail.then(async () => {
+      if (this.#disposed) throw new CoreError('CORE_DISPOSED', 503);
+      const next = typeof update === 'function' ? update(this.#state) : update;
+      await this.#store.publish(next);
+      this.#state = snapshotOf(next);
+    });
+    this.#publishTail = publish.catch(() => undefined);
+    await publish;
+  }
+
+  #session() {
+    const device = this.#device();
+    return Object.freeze({
+      protocolVersion: '1' as const,
+      deviceId: device.deviceId,
+      registration: this.#state.registration.status,
+      principalId: this.#state.registration.principalId,
+      bound: null,
+      serverReachable: this.#state.serverObservation.reachable,
+      checkedAt: this.#state.serverObservation.checkedAt,
+      reason: this.#state.registration.lastError,
+    });
+  }
+
+  async #signRequest(input: RequestSignatureInput) {
+    if (!input || typeof input.method !== 'string' || typeof input.path !== 'string' || (input.body !== null && !(input.body instanceof Uint8Array))) throw new CoreError('CORE_INPUT_INVALID', 400);
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    let nonce = requestNonce();
+    if (this.#config.authNonceSource === 'server') {
+      const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'auth'})});
+      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const challenge = await response.json() as {nonce?: unknown};
+      if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      nonce = challenge.nonce;
     }
-    throw safe;
-  }
-  /** Owner/UI-only. Not exported on ctx.hanameshIdentity or the ordinary plugin SDK. */
-  signIn(input: unknown): Promise<SessionSnapshot> {
-    let login: {email: string; password: string};
-    try { login = loginOf(input); } catch (error) { return Promise.reject(error); }
-    if (this.#transport.hasCredentials()) return Promise.reject(new IdentityClientError('REVOCATION_UNCONFIRMED', 409)); // Revoke the current credential before switching accounts.
-    if (this.#logoutPending) this.#unconfirmedPriorRevocation = true;
-    const generation = this.#fence('signing_in', null);
-    this.#transport.clear();
-    return this.#enqueue(async () => {
-      this.#check(generation);
-      await this.#publish(generation, 'signing_in', null, null, null);
-      try {
-        const result = await this.#transport.auth('login', JSON.stringify(login), this.#abort.signal);
-        login = {email: '', password: ''};
-        this.#check(generation);
-        if (result.status !== 200) throw responseError(result.status);
-        if (!this.#transport.hasCredentials()) throw new IdentityClientError('UPSTREAM_INVALID_RESPONSE');
-        const verified = await this.#transport.readPrincipal(this.#abort.signal);
-        this.#check(generation);
-        if (verified.status !== 200) throw responseError(verified.status);
-        const principal = principalOf(verified.data, this.#config.deploymentId);
-        // Preserve a previous unconfirmed revocation breadcrumb; new login is not proof of old revocation.
-        await this.#publish(generation, 'signed_in', principal, true, null);
-        return this.#state;
-      } catch (error) {
-        if (generation === this.#generation) this.#transport.clear();
-        return this.#fail(generation, error, true);
-      } finally { login = {email: '', password: ''}; }
+    const bodyHash = createHash('sha256').update(input.body ?? new Uint8Array()).digest('hex');
+    const canonical = new TextEncoder().encode(`${input.method.toUpperCase()}\n${input.path}\n${timestamp}\n${nonce}\n${bodyHash}`);
+    return Object.freeze({
+      'x-hm-device-id': this.#device().deviceId,
+      'x-hm-timestamp': timestamp,
+      'x-hm-nonce': nonce,
+      'x-hm-signature': Buffer.from(signWithDevice(this.#device(), canonical)).toString('base64url'),
     });
   }
-  signOut(): Promise<SessionSnapshot> {
-    this.#logoutPending = true;
-    const generation = this.#fence('expired', 'REVOCATION_UNCONFIRMED');
-    return this.#enqueue(async () => {
-      this.#check(generation);
-      // Deny immediately even if the domain is already closing; keep the credential
-      // privately only for a revocation retry, never for a protected request.
-      let persistenceFailed = false;
-      try { await this.#publish(generation, 'expired', null, this.#state.serviceReady, 'REVOCATION_UNCONFIRMED'); }
-      catch (error) { if (safeError(error).code !== 'STORAGE_UNAVAILABLE') throw error; persistenceFailed = true; }
-      try {
-        const hadCredential = this.#transport.hasCredentials();
-        const result = await this.#transport.auth('logout', '{}', this.#abort.signal);
-        this.#check(generation);
-        if (result.status !== 200) throw responseError(result.status);
-        this.#transport.clear();
-        // With no memory credential (e.g. after restart), a no-op sign-out cannot
-        // prove revocation of the earlier server-side session.
-        if (hadCredential && !this.#unconfirmedPriorRevocation) this.#logoutPending = false;
-        if (persistenceFailed) throw new IdentityClientError('STORAGE_UNAVAILABLE');
-        await this.#publish(generation, 'expired', null, true, this.#logoutPending ? 'REVOCATION_UNCONFIRMED' : 'SIGNED_OUT');
-        return this.#state;
-      } catch (error) { return this.#fail(generation, error); }
-    });
+
+  async setConsent(state: 'granted' | 'withheld'): Promise<{state: 'granted' | 'withheld'; changedAt: string}> {
+    if (state !== 'granted' && state !== 'withheld') throw new CoreError('CORE_INPUT_INVALID', 400);
+    const changedAt = new Date().toISOString();
+    await this.#publish(current => ({...current, revision: current.revision + 1, consent: {state, changedAt}}));
+    for (const listener of this.#consentListeners) {
+      try { listener(state, changedAt); } catch { /* listener isolation is part of the contract */ }
+    }
+    return {state, changedAt};
   }
-  async #refresh(generation: number): Promise<PrincipalDTO | null> {
-    this.#check(generation);
-    if (this.#logoutPending && this.#state.status !== 'signed_in' && this.#transport.hasCredentials()) throw new IdentityClientError('REVOCATION_UNCONFIRMED', 409);
+
+  async register(): Promise<ReturnType<HanaMeshCoreContract['getSession']>> {
+    if (this.#retryTimer) { clearTimeout(this.#retryTimer); this.#retryTimer = null; }
+    const attempts = this.#state.registration.attempts + 1;
+    const checkedAt = new Date().toISOString();
     try {
-      const result = await this.#transport.readPrincipal(this.#abort.signal);
-      this.#check(generation);
-      if (result.status === 401) {
-        this.#transport.clear();
-        const status = this.#state.status === 'signed_out' ? 'signed_out' : 'expired';
-        await this.#publish(generation, status, null, true, status === 'expired' ? 'AUTH_REQUIRED' : null);
-        return null;
+      if (!this.#transport.configured) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const result = await registerDevice(this.#transport, this.#device());
+      await this.#publish(current => ({...current, revision: current.revision + 1,
+        registration: {status: 'registered', principalId: result.principalId, registeredAt: checkedAt, lastError: null, attempts},
+        serverObservation: {reachable: true, checkedAt},
+      }));
+      return this.#session();
+    } catch (error) {
+      const safe = safeError(error);
+      await this.#publish(current => ({...current, revision: current.revision + 1,
+        registration: {...current.registration, status: 'failed', lastError: safe.code, attempts},
+        serverObservation: {reachable: safe.code === 'CORE_DEVICE_ID_MISMATCH', checkedAt},
+      }));
+      if (this.#transport.configured && !this.#disposed) {
+        const delay = Math.min(15, 2 ** Math.max(0, attempts - 1)) * 60_000;
+        this.#retryTimer = setTimeout(() => { this.#retryTimer = null; void this.startRegistration().catch(() => undefined); }, delay);
+        this.#retryTimer.unref();
       }
-      if (result.status !== 200) throw responseError(result.status);
-      if (!this.#transport.hasCredentials()) throw new IdentityClientError('UPSTREAM_INVALID_RESPONSE');
-      const principal = principalOf(result.data, this.#config.deploymentId);
-      await this.#publish(generation, 'signed_in', principal, true, null);
-      return principal;
-    } catch (error) { return this.#fail(generation, error); }
+      throw safe;
+    }
   }
-  checkIdentity(): Promise<IdentityCheck> {
-    const generation = this.#generation;
-    return this.#enqueue(async () => {
-      const principal = await this.#refresh(generation);
-      return Object.freeze({serviceReady: true, authenticated: principal !== null, resourceAuthorization: 'not-evaluated' as const});
-    });
+
+  async startRegistration(): Promise<void> {
+    if (!this.#transport.configured || this.#disposed) return;
+    await this.register();
+    this.startContributions();
   }
-  request(input: ScopedRequest): Promise<ScopedResponse> {
-    let request: ReturnType<typeof requestOf>;
-    try { request = requestOf(input, this.#config); } catch (error) { return Promise.reject(error); }
-    const generation = this.#generation;
-    return this.#enqueue(async () => {
-      this.#check(generation);
-      if (this.#state.status !== 'signed_in') throw new IdentityClientError(this.#state.status === 'unavailable' ? 'AUTH_UNAVAILABLE' : 'AUTH_REQUIRED', this.#state.status === 'unavailable' ? 503 : 401); // MUTATION: local-guard
-      const principal = await this.#refresh(generation);
-      if (!principal) throw new IdentityClientError('AUTH_REQUIRED', 401);
-      this.#check(generation);
-      let response;
-      try { response = await this.#transport.resource(request.url, request.method, request.body, this.#abort.signal); }
-      catch (error) { return this.#fail(generation, error); }
-      this.#check(generation);
-      if (response.status === 401) return this.#fail(generation, responseError(401));
-      if (response.status === 403) throw responseError(403); // MUTATION: resource-denial
-      if (response.status >= 500) return this.#fail(generation, responseError(response.status));
-      if (response.status < 200 || response.status >= 300) throw responseError(response.status);
-      // Identity DTOs use the locked, narrow contract. Arbitrary resource JSON has
-      // already passed the transport's credential suppression and size limit.
-      if (request.url.pathname.startsWith('/v1/identity/')) {
-        const p = principalOf(response.data, this.#config.deploymentId);
-        if (p.principalId !== principal.principalId) throw new IdentityClientError('UPSTREAM_INVALID_RESPONSE');
-        return Object.freeze({status: response.status, data: {principal: {...p, scopes: [...p.scopes]}}});
+
+  startContributions(): void {
+    if (!this.#transport.configured || this.#disposed || this.#contributionsTimer) return;
+    void this.refreshContributions();
+    this.#contributionsTimer = setInterval(() => { void this.refreshContributions(); }, 60_000);
+    this.#contributionsTimer.unref();
+  }
+
+  attachHealth(provider: HealthProvider): void {
+    if (this.#health) throw new CoreError('CORE_INPUT_INVALID', 409);
+    this.#health = provider;
+  }
+
+  attachUsageProbe(probe: () => boolean): void {
+    if (this.#usageReady) throw new CoreError('CORE_INPUT_INVALID', 409);
+    this.#usageReady = probe;
+  }
+
+  recheckHealth(): Promise<HealthSnapshot> {
+    if (!this.#health) throw new CoreError('CORE_NOT_READY', 503);
+    return this.#health.recheck();
+  }
+
+  openExternal(url: string): {opened: boolean; reason?: 'DISABLED'} {
+    return openSystemExternal(url, this.#config.websiteOrigin, this.#config.allowSystemBrowser);
+  }
+
+  async refreshContributions(): Promise<Contributions> {
+    if (!this.#transport.configured) {
+      this.#contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
+      return this.#contributions;
+    }
+    if (Date.now() - this.#contributionsCheckedAt < 60_000 && this.#contributions.status === 'ready') return this.#contributions;
+    const to = new Date();
+    const from = new Date(to.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const path = `/v1/usage/me/contributions?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
+    try {
+      const headers = await this.#signRequest({method: 'GET', path, body: null});
+      const response = await this.#transport.request(path, {method: 'GET', headers});
+      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const payload = await response.json() as {byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
+      if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const actions = {install: 0, open: 0, use: 0, uninstall: 0};
+      for (const row of payload.byHana) for (const key of Object.keys(actions) as Array<keyof typeof actions>) {
+        const value = row.actions?.[key];
+        if (!Number.isSafeInteger(value) || (value as number) < 0) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+        actions[key] += value as number;
       }
-      return Object.freeze(response);
-    });
+      this.#contributions = Object.freeze({status: 'ready', windowDays: 90, actions: Object.freeze(actions)});
+      this.#contributionsCheckedAt = Date.now();
+    } catch (error) {
+      this.#contributions = Object.freeze({status: 'unavailable', reason: safeError(error).code});
+    }
+    return this.#contributions;
+  }
+
+  state(): unknown {
+    const device = this.#device();
+    const health = this.service.getHealth();
+    const components = health.components.map(component => component && typeof component === 'object' && (component as {id?: unknown}).id === 'usage'
+      ? {...component, serviceReady: this.#usageReady?.() ?? false}
+      : component);
+    return publicJson({deviceId: device.deviceId, publicKey: device.publicKey, registration: this.#state.registration, consent: this.#state.consent,
+      session: this.#session(), serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
+      health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
+  }
+  diagnostics(): unknown {
+    return publicJson({protocolVersion: '1', disposed: this.#disposed, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin});
   }
   async dispose(): Promise<void> {
     if (this.#disposed) return;
-    this.#disposed = true; ++this.#generation; this.#abort.abort(); this.#transport.clear();
-    this.#state = this.#snapshot('unavailable', null, false, 'DISPOSED'); this.#emit(); this.#listeners.clear();
-    try { await this.#tail; } finally { await this.#store.close(); }
+    this.#disposed = true;
+    if (this.#retryTimer) clearTimeout(this.#retryTimer);
+    if (this.#contributionsTimer) clearInterval(this.#contributionsTimer);
+    this.#retryTimer = null;
+    this.#contributionsTimer = null;
+    this.#consentListeners.clear();
+    await this.#publishTail;
+    await this.#store.close();
   }
 }

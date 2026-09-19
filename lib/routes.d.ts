@@ -1,11 +1,12 @@
-import { IdentityController } from './controller.js';
+import { SessionController } from './controller.js';
 export declare const ROUTES: Readonly<{
-    state: "/api/hanamesh/identity/state";
-    refresh: "/api/hanamesh/identity/refresh";
-    signIn: "/api/hanamesh/identity/sign-in";
-    signOut: "/api/hanamesh/identity/sign-out";
-    request: "/api/hanamesh/identity/request";
-    diagnostics: "/api/hanamesh/identity/diagnostics";
+    state: "/api/hanamesh/core/state";
+    consent: "/api/hanamesh/core/consent";
+    register: "/api/hanamesh/core/device/register";
+    health: "/api/hanamesh/core/health";
+    healthRecheck: "/api/hanamesh/core/health/recheck";
+    openExternal: "/api/hanamesh/core/open-external";
+    diagnostics: "/api/hanamesh/core/diagnostics";
 }>;
-/** Call only AFTER the carrier's Host/Origin fence and DSH browser authentication. */
-export declare function createRouteHandler(controller: IdentityController): (request: Request) => Promise<Response>;
+export declare function createRouteHandler(controller: SessionController): (request: Request) => Promise<Response>;
+export declare function requireSameCarrierOrigin(request: Request): void;

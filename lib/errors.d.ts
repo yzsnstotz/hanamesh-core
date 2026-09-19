@@ -1,15 +1,7 @@
-import type { ErrorCode } from './contracts.js';
-export declare class IdentityClientError extends Error {
-    readonly code: ErrorCode;
+export type CoreErrorCode = 'CORE_INPUT_INVALID' | 'CORE_ORIGIN_REJECTED' | 'CORE_NOT_READY' | 'CORE_STORAGE_UNAVAILABLE' | 'CORE_DEVICE_CORRUPT' | 'CORE_DEVICE_ID_MISMATCH' | 'CORE_UPSTREAM_UNAVAILABLE' | 'CORE_URL_NOT_ALLOWED' | 'CORE_DISPOSED';
+export declare class CoreError extends Error {
+    readonly code: CoreErrorCode;
     readonly status: number;
-    constructor(code: ErrorCode, status?: number);
-    toJSON(): {
-        error: {
-            code: ErrorCode;
-            message: string;
-        };
-    };
+    constructor(code: CoreErrorCode, status?: number);
 }
-export declare function safeError(error: unknown): IdentityClientError;
-/** Never trusts remote error messages and never retains the original cause. */
-export declare function responseError(status: number): IdentityClientError;
+export declare function safeError(error: unknown): CoreError;

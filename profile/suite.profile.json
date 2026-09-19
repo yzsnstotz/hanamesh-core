@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "hanamesh-suite",
+  "version": "0.2.0-rc.8",
+  "label": "HanaMesh 套件",
+  "runningTaskPolicy": "preserve-and-pause",
+  "components": [
+    {
+      "id": "usage",
+      "moduleName": "hanamesh-usage",
+      "loaderEntryId": "hanamesh-usage",
+      "label": "使用记录",
+      "versionRange": "0.2.0-rc.1",
+      "onFailure": "notice",
+      "impact": "不采集、不上报使用记录；设备身份与同意开关不受影响"
+    },
+    {
+      "id": "app-host",
+      "moduleName": "@hanamesh/dsh-app-host",
+      "loaderEntryId": "hanamesh-app-host",
+      "label": "应用容器",
+      "versionRange": "0.1.0-rc.8",
+      "onFailure": "notice",
+      "impact": "无法打开 HanaMesh 应用；设备身份与同意开关不受影响"
+    }
+  ]
+}

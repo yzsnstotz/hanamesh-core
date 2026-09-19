@@ -1,0 +1,37 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+
+   ╭─────────────────────────────────────────╮
+   │                                         │
+   │   Update available! 10.33.0 → 12.4.2.   │
+   │   Changelog: https://pnpm.io/v/12.4.2   │
+   │    To update, run: pnpm add -g pnpm     │
+   │                                         │
+   ╰─────────────────────────────────────────╯
+
+Progress: resolved 2, reused 0, downloaded 0, added 0
+ WARN  Issues with peer dependencies found
+.
+└─┬ hanamesh-core 0.2.0-rc.7
+  ├── ✕ missing peer @deepseek-ai/cordis@4.0.2
+  ├── ✕ missing peer @deepseek-ai/dsh-client-connection@0.1.5-alpha.1
+  ├── ✕ missing peer @deepseek-ai/dsh-storage-domain@0.1.5-alpha.1
+  ├── ✕ missing peer @deepseek-ai/dsh-client-ui-settings@0.1.5-alpha.1
+  ├── ✕ missing peer @deepseek-ai/dsh-client-ui-sidebar@0.1.5-alpha.1
+  ├── ✕ missing peer react@18.3.1
+  └── ✕ missing peer zod@4.4.3
+Peer dependencies that should be installed:
+  @deepseek-ai/cordis@4.0.2
+  @deepseek-ai/dsh-client-connection@0.1.5-alpha.1
+  @deepseek-ai/dsh-client-ui-settings@0.1.5-alpha.1
+  @deepseek-ai/dsh-client-ui-sidebar@0.1.5-alpha.1
+  @deepseek-ai/dsh-storage-domain@0.1.5-alpha.1
+  react@18.3.1
+  zod@4.4.3
+
+dependencies:
++ hanamesh-core 0.2.0-rc.7
+
+Packages: +3
++++
+Progress: resolved 3, reused 0, downloaded 3, added 3, done
+Done in 1.7s using pnpm v10.33.0

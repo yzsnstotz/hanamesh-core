@@ -1,8 +1,7 @@
 {
-  "name": "hanamesh-plugin-identity",
-  "version": "0.1.0-rc.3",
-  "description": "HanaMesh MOD-02: pinned DSH identity UI and credential-isolated client SDK",
-  "private": true,
+  "name": "hanamesh-core",
+  "version": "0.2.0-rc.8",
+  "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint. Remove separately installed suite packages first to avoid duplicate loader entry id.",
   "type": "module",
   "main": "./lib/dsh.mjs",
   "types": "./types/index.d.ts",
@@ -11,12 +10,12 @@
       "types": "./types/index.d.ts",
       "default": "./lib/dsh.mjs"
     },
-    "./contracts": {
-      "types": "./lib/contracts.d.ts",
-      "default": "./lib/contracts.js"
+    "./contract": {
+      "types": "./lib/contract.d.ts",
+      "default": "./lib/contract.js"
     },
     "./client": {
-      "types": "./lib/client.d.ts",
+      "types": "./lib/client/index.d.ts",
       "default": "./lib/client.js"
     },
     "./package.json": "./package.json"
@@ -24,13 +23,15 @@
   "files": [
     "lib",
     "types",
-    "vendor/srv-identity/contracts.d.ts",
-    "vendor/srv-identity/API.md",
-    "AGENTS.md",
+    "profile",
+    "profile.schema.json",
     "consistency.json",
+    "docs/CORE_CONTRACT.md",
     "docs/API.md",
     "docs/SECURITY.md",
-    "profile"
+    "vendor/semver",
+    "vendor/SHA256SUMS",
+    "vendor/srv-identity"
   ],
   "engines": {
     "node": "24.13.1"
@@ -40,40 +41,69 @@
     "build": "node scripts/build.mjs --target",
     "build:offline": "node scripts/build.mjs --offline",
     "test": "node --test --test-reporter=tap test/*.test.mjs",
-    "test:mutation": "node scripts/mutation.mjs",
+    "test:mutations": "node scripts/mutation.mjs",
     "test:crash": "node --test --test-reporter=tap test/crash.test.mjs",
     "verify:inputs": "node scripts/verify-inputs.mjs",
     "preflight": "node scripts/preflight.mjs",
     "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts"
   },
+  "dependencies": {
+    "hanamesh-usage": "0.2.0-rc.1",
+    "@hanamesh/dsh-app-host": "0.1.0-rc.8"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.2",
     "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
-    "@hanamesh/ui-kit": "0.1.0-rc.3",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.5-alpha.1",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.1.5-alpha.1",
+    "react": "18.3.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.2",
     "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
-    "@hanamesh/ui-kit": "file:vendor/hanamesh-ui-kit-0.1.0-rc.3.tgz",
+    "hanamesh-usage": "file:vendor/standin/hanamesh-usage-0.2.0-rc.1.tgz",
+    "@hanamesh/dsh-app-host": "file:vendor/standin/hanamesh-dsh-app-host-0.1.0-rc.8.tgz",
     "@types/node": "24.13.4",
+    "@types/react": "18.3.12",
+    "react": "18.3.1",
     "typescript": "5.9.3",
     "zod": "4.4.3"
   },
-  "overrides": {
-    "@deepseek-ai/cordis": "4.0.2",
-    "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-host-webserver": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-storage": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-invariants": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-credentials": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-llm": "0.1.5-alpha.1",
-    "@deepseek-ai/dsh-attachment": "0.1.5-alpha.1"
+  "pnpm": {
+    "overrides": {
+      "hanamesh-usage": "file:vendor/standin/hanamesh-usage-0.2.0-rc.1.tgz",
+      "@hanamesh/dsh-app-host": "file:vendor/standin/hanamesh-dsh-app-host-0.1.0-rc.8.tgz",
+      "@deepseek-ai/cordis": "4.0.2",
+      "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-storage": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-invariants": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-credentials": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-llm": "0.1.5-alpha.1",
+      "@deepseek-ai/dsh-attachment": "0.1.5-alpha.1"
+    }
   },
-  "license": "UNLICENSED"
+  "dsh": {
+    "bundle": {
+      "patch": "./profile/cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ],
+      "platform": "web",
+      "external": [
+        "react"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yzsnstotz/hanamesh-core.git"
+  },
+  "license": "MIT"
 }

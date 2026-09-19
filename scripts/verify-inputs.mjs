@@ -7,4 +7,12 @@ assert.equal(digest(await readFile(locks.srvIdentity.artifact)), locks.srvIdenti
 assert.equal(digest(await readFile('vendor/srv-identity/contracts.d.ts')), locks.srvIdentity.contractsSha256);
 const files = JSON.parse(await readFile('deps/HOST_API.sha256.json', 'utf8'));
 for (const [file, expected] of Object.entries(files)) assert.equal(digest(await readFile(file)), expected, file);
-console.log(JSON.stringify({srvIdentitySha256: locks.srvIdentity.sha256, verifiedPublicApiFiles: Object.keys(files).length, uiKitArtifactPresent: locks.uiKit.artifact !== null}));
+const semverRows = (await readFile('vendor/SHA256SUMS', 'utf8')).trim().split('\n');
+for (const row of semverRows) {
+  const match = /^([a-f0-9]{64})  (vendor\/semver\/.+)$/.exec(row);
+  assert.ok(match, row);
+  assert.equal(digest(await readFile(match[2])), match[1], match[2]);
+}
+const standins = ['vendor/standin/hanamesh-usage-0.2.0-rc.1.tgz', 'vendor/standin/hanamesh-dsh-app-host-0.1.0-rc.8.tgz'];
+for (const artifact of standins) assert.match(digest(await readFile(artifact)), /^[a-f0-9]{64}$/);
+console.log(JSON.stringify({event: 'inputs_verified', hostApi: Object.keys(files).length, srvIdentity: true, semver: semverRows.length > 0, standin: standins.length}));

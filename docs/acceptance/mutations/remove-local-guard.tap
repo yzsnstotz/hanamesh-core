@@ -20,9 +20,9 @@ not ok 3 - required-login is configurable and never makes protected APIs anonymo
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
-    
+
     1 !== 0
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 0
@@ -42,9 +42,9 @@ not ok 4 - restored signed_in sidecar is expired and cannot make any authenticat
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
-    
+
     1 !== 0
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 0
@@ -112,9 +112,9 @@ not ok 13 - outage blocks NEW protected operations without another remote call
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
-    
+
     4 !== 3
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 3

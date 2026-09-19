@@ -1,0 +1,8 @@
+{
+  "name": "@hanamesh/dsh-app-host",
+  "version": "0.1.0-rc.8",
+  "type": "module",
+  "main": "./lib/dsh.mjs",
+  "exports": {"./dsh": "./lib/dsh.mjs"},
+  "files": ["lib", "README.md"]
+}

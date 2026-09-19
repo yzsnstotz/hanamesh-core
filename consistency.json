@@ -1,26 +1,26 @@
 {
-  "module": "plugin-identity",
+  "module": "hanamesh-core",
   "exempt": false,
   "groups": [
     {
-      "name": "会话观察完整镜像",
-      "facts": ["status", "revision", "observedAt", "logoutPending"],
-      "medium": "storage-domain:hanamesh_identity",
-      "why": "仅一条 global；single 布局；每次转移只调用一次 global.set 发布完整镜像，不进行多次字段写入。状态不是授权。"
+      "name": "设备密钥、注册观察与同意状态完整镜像",
+      "facts": ["device", "registration", "consent", "serverObservation"],
+      "medium": "storage-domain:hanamesh_core",
+      "why": "single 布局；每次转移以一次 global.set 发布完整镜像。"
+    },
+    {
+      "name": "组件健康完整快照",
+      "facts": ["snapshot.profile.digest", "snapshot.revision", "snapshot.components", "snapshot.mode", "snapshot.newProtectedOperations", "snapshot.runningTaskPolicy"],
+      "medium": "storage-domain:hanamesh_core_health",
+      "why": "每次检查以一次 global.set 发布完整快照；内存与 UI 仅是可重算的诊断投影。"
     }
   ],
   "boundaries": [
     {
-      "name": "远端登录确认与本地已登录观察",
-      "sides": ["remote:srv_identity_session", "storage-domain:hanamesh_identity"],
-      "safeDirection": "remote:srv_identity_session",
-      "why": "先远端登录并读取经验证主体，再发布已登录观察。允许远端存在本机未记录的会话；崩溃丢失内存 cookie，重启绝不从 sidecar 恢复权限。"
-    },
-    {
-      "name": "远端撤销确认与本地登出完成观察",
-      "sides": ["remote:srv_identity_revocation", "storage-domain:hanamesh_identity"],
-      "safeDirection": "remote:srv_identity_revocation",
-      "why": "立即在内存拒绝新操作并记录 logoutPending；等待远端撤销成功后才发布 logoutPending=false。允许远端已撤销而本地仍显示待确认；不允许提前宣称远端撤销完成。"
+      "name": "远端设备注册与本地注册观察",
+      "sides": ["remote:srv_identity_device", "storage-domain:hanamesh_core"],
+      "safeDirection": "remote:srv_identity_device",
+      "why": "只在远端返回 201 或幂等 200 后写 registered；崩溃时允许远端已注册而本地仍未注册。"
     }
   ]
 }

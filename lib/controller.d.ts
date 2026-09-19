@@ -1,15 +1,46 @@
-import type { IdentityCheck, IdentityClientService, ObservationStore, PluginConfig, ScopedRequest, ScopedResponse, SessionSnapshot } from './contracts.js';
-/** Single owner per DSH profile. Not a multi-user server or plugin security sandbox. */
-export declare class IdentityController {
+import type { CoreStore, PluginConfig } from './contracts.js';
+import type { HanaMeshCoreContract, HealthSnapshot } from './contract.js';
+interface HealthProvider {
+    getHealth(): HealthSnapshot;
+    recheck(): Promise<HealthSnapshot>;
+}
+type Contributions = {
+    status: 'unavailable';
+    reason: string;
+} | {
+    status: 'ready';
+    windowDays: 90;
+    actions: {
+        install: number;
+        open: number;
+        use: number;
+        uninstall: number;
+    };
+};
+export declare class SessionController {
     #private;
-    readonly service: IdentityClientService;
-    constructor(config: PluginConfig, store: ObservationStore, fetcher?: typeof fetch);
-    getState(): SessionSnapshot;
-    subscribe(listener: (snapshot: SessionSnapshot) => void): () => void;
-    /** Owner/UI-only. Not exported on ctx.hanameshIdentity or the ordinary plugin SDK. */
-    signIn(input: unknown): Promise<SessionSnapshot>;
-    signOut(): Promise<SessionSnapshot>;
-    checkIdentity(): Promise<IdentityCheck>;
-    request(input: ScopedRequest): Promise<ScopedResponse>;
+    readonly service: HanaMeshCoreContract;
+    private constructor();
+    static create(config: PluginConfig, store: CoreStore, options?: {
+        fetcher?: typeof fetch;
+    }): Promise<SessionController>;
+    setConsent(state: 'granted' | 'withheld'): Promise<{
+        state: 'granted' | 'withheld';
+        changedAt: string;
+    }>;
+    register(): Promise<ReturnType<HanaMeshCoreContract['getSession']>>;
+    startRegistration(): Promise<void>;
+    startContributions(): void;
+    attachHealth(provider: HealthProvider): void;
+    attachUsageProbe(probe: () => boolean): void;
+    recheckHealth(): Promise<HealthSnapshot>;
+    openExternal(url: string): {
+        opened: boolean;
+        reason?: 'DISABLED';
+    };
+    refreshContributions(): Promise<Contributions>;
+    state(): unknown;
+    diagnostics(): unknown;
     dispose(): Promise<void>;
 }
+export {};

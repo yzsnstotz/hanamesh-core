@@ -1,0 +1,10 @@
+{
+  "deviceId": "TbUEdRtKZoQv5e0TmDxZoONUH8P69iyUHk4iCQUBrGw",
+  "registration": {
+    "status": "registered",
+    "principalId": "fixture:TbUEdRtKZoQv",
+    "registeredAt": "2026-09-19T06:17:56.480Z",
+    "lastError": null,
+    "attempts": 1
+  }
+}

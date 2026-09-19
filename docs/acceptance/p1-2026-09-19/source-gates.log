@@ -1,0 +1,266 @@
+node=v24.13.1
+pnpm=10.33.0
+
+> hanamesh-core@0.2.0-rc.8 build /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/build.mjs --target
+
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":"Version 5.9.3","pnpm":"10.33.0","mode":"--target"}
+Compiled portable TypeScript; checked adapter JavaScript syntax. Host type gate is separate from offline compilation.
+
+> hanamesh-core@0.2.0-rc.8 test /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node --test --test-reporter=tap test/*.test.mjs
+
+TAP version 13
+# Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
+ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
+  ---
+  duration_ms: 123.318833
+  type: 'test'
+  ...
+# Subtest: open-external rejects foreign origins and reports disabled native opening
+ok 2 - open-external rejects foreign origins and reports disabled native opening
+  ---
+  duration_ms: 25.393542
+  type: 'test'
+  ...
+# Subtest: contribution aggregation preserves unavailable versus real zero
+ok 3 - contribution aggregation preserves unavailable versus real zero
+  ---
+  duration_ms: 6.541
+  type: 'test'
+  ...
+# Subtest: server responses larger than 1 MiB are rejected before JSON parsing
+ok 4 - server responses larger than 1 MiB are rejected before JSON parsing
+  ---
+  duration_ms: 8.246583
+  type: 'test'
+  ...
+# Subtest: client distribution declares native slots and avoids forbidden layout/link fallbacks
+ok 5 - client distribution declares native slots and avoids forbidden layout/link fallbacks
+  ---
+  duration_ms: 6.584291
+  type: 'test'
+  ...
+# Subtest: consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+ok 6 - consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+  ---
+  duration_ms: 3.217791
+  type: 'test'
+  ...
+# Subtest: a delayed registration publish cannot restore consent after the user withdraws it
+ok 7 - a delayed registration publish cannot restore consent after the user withdraws it
+  ---
+  duration_ms: 18.473125
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+ok 8 - LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+  ---
+  duration_ms: 88.4435
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+ok 9 - LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+  ---
+  duration_ms: 52.922
+  type: 'test'
+  ...
+# Subtest: first initialization publishes one complete device snapshot and restart preserves id
+ok 10 - first initialization publishes one complete device snapshot and restart preserves id
+  ---
+  duration_ms: 7.03025
+  type: 'test'
+  ...
+# Subtest: sign returns a verifiable Ed25519 signature and private key never reaches public projections
+ok 11 - sign returns a verifiable Ed25519 signature and private key never reaches public projections
+  ---
+  duration_ms: 1.895042
+  type: 'test'
+  ...
+# Subtest: tampered public key makes every signature path fail closed
+ok 12 - tampered public key makes every signature path fail closed
+  ---
+  duration_ms: 0.656334
+  type: 'test'
+  ...
+# Subtest: health provider feeds the contract, state and explicit recheck route
+ok 13 - health provider feeds the contract, state and explicit recheck route
+  ---
+  duration_ms: 15.899833
+  type: 'test'
+  ...
+# Subtest: state projects health faults and duck-typed usage service readiness
+ok 14 - state projects health faults and duck-typed usage service readiness
+  ---
+  duration_ms: 0.712458
+  type: 'test'
+  ...
+# Subtest: duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+ok 15 - duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+  ---
+  duration_ms: 2.721875
+  type: 'test'
+  ...
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 16 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 6.62
+  type: 'test'
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 17 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 1.106667
+  type: 'test'
+  ...
+# Subtest: suite component versions are locked to package dependencies
+ok 18 - suite component versions are locked to package dependencies
+  ---
+  duration_ms: 3.212958
+  type: 'test'
+  ...
+# Subtest: real DSH include-prefixed ids and package subpath names match suite components
+ok 19 - real DSH include-prefixed ids and package subpath names match suite components
+  ---
+  duration_ms: 0.618125
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 20 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 6.830417
+  type: 'test'
+  ...
+# Subtest: registration challenge flow succeeds and repeated registration stays idempotent
+ok 21 - registration challenge flow succeeds and repeated registration stays idempotent
+  ---
+  duration_ms: 20.662583
+  type: 'test'
+  ...
+# Subtest: device id mismatch and upstream failure are persisted as failed observations
+ok 22 - device id mismatch and upstream failure are persisted as failed observations
+  ---
+  duration_ms: 1.125792
+  type: 'test'
+  ...
+# Subtest: offline configuration never emits a request
+ok 23 - offline configuration never emits a request
+  ---
+  duration_ms: 0.257791
+  type: 'test'
+  ...
+# Subtest: registration is never published before the remote registration response
+ok 24 - registration is never published before the remote registration response
+  ---
+  duration_ms: 1.924416
+  type: 'test'
+  ...
+# Subtest: automatic contributions start only after registration succeeds
+ok 25 - automatic contributions start only after registration succeeds
+  ---
+  duration_ms: 13.374708
+  type: 'test'
+  ...
+# Subtest: service contract has exactly ten frozen keys
+ok 26 - service contract has exactly ten frozen keys
+  ---
+  duration_ms: 3.76975
+  type: 'test'
+  ...
+# Subtest: state, consent and diagnostics routes preserve method, origin and secret fences
+ok 27 - state, consent and diagnostics routes preserve method, origin and secret fences
+  ---
+  duration_ms: 14.13325
+  type: 'test'
+  ...
+# Subtest: DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+ok 28 - DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+  ---
+  duration_ms: 0.637833
+  type: 'test'
+  ...
+# Subtest: package metadata exposes the core bundle and only the two suite dependencies
+ok 29 - package metadata exposes the core bundle and only the two suite dependencies
+  ---
+  duration_ms: 3.892792
+  type: 'test'
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 30 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 1.120875
+  type: 'test'
+  ...
+# Subtest: suite patch declares one insert containing the three canonical ids
+ok 31 - suite patch declares one insert containing the three canonical ids
+  ---
+  duration_ms: 2.019708
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 32 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 18.929
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 33 - consistency declaration is renamed to core
+  ---
+  duration_ms: 0.347875
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 187.574292
+
+> hanamesh-core@0.2.0-rc.8 check:contracts /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts
+
+
+> hanamesh-core@0.2.0-rc.8 test:mutations /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/mutation.mjs
+
+{"mutant":"domain-name","mutantExit":1,"assertionFailure":true}
+{"mutant":"device-integrity","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-device-id","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-reverse-order","mutantExit":1,"assertionFailure":true}
+{"mutant":"health-repair-priority","mutantExit":1,"assertionFailure":true}
+
+> hanamesh-core@0.2.0-rc.8 test:crash /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node --test --test-reporter=tap test/crash.test.mjs
+
+TAP version 13
+# Subtest: LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+ok 1 - LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+  ---
+  duration_ms: 64.214917
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+ok 2 - LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+  ---
+  duration_ms: 55.06625
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 151.580375
+
+> hanamesh-core@0.2.0-rc.8 verify:inputs /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/verify-inputs.mjs
+
+{"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true,"standin":2}
+{"event":"check_package_ok","name":"hanamesh-core","version":"0.2.0-rc.8","inject":["connection","storageDomain","loader"],"bundlePatch":true,"dependencies":2,"sha256":"7f4fcc4f7a90a59757831b3e4f40a425b28961f0f6332d6ad85eb3f5f76ece15"}
+7f4fcc4f7a90a59757831b3e4f40a425b28961f0f6332d6ad85eb3f5f76ece15  artifacts/hanamesh-core-0.2.0-rc.8.tgz

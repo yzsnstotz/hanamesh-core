@@ -1,0 +1,2 @@
+dsh web: http://127.0.0.1:54813/ [one-time credential redacted]
+{"event":"x02_real_kill","target":"hanamesh_core.json","stage":"temp-fsynced-before-rename"}
