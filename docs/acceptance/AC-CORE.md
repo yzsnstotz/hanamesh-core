@@ -99,3 +99,8 @@ rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage
 - 判定：用户本机 dsh-tauri 0.15.5（profile 装有 dsh-better-sidebar，设置为整页）上，侧栏底部「HanaMesh」按钮打开设置后停在 General：`openHanaMeshSettings` 只找 `[role=dialog] nav button`。
 - 补齐：`src/client/index.ts` `findHanaMeshSettingsEntry()` 同时支持对话框与整页两种形态（排除本包 footer 自身），触发器兼容 `aria-haspopup=dialog` 与文本为 Settings/设置 的按钮；其余零改动。
 - 证据：37/37、4/4 突变、契约、包门；tgz `hanamesh-core-0.2.0-rc.11.tgz` SHA-256 `ca0836dcdb32c7efcd29a7433f3071f8bb8461f4728c01ca1dcccf3e26b139f9`；`recovery-20260920/tauri-desktop/`（REAL_DESKTOP：三件在用户真实 0.15.5 桌面、内核 0.1.5-rc.2 上加载并可用）。
+
+## rc.12 · 重钉 usage rc.5（2026-09-20，代码同 rc.11）
+
+- 判定：O3 S06 真宿主门发现 usage rc.4 上传契约与 O1 不一致（见 usage AC-USAGE rc.5）；usage rc.5 修复后本包 `dependencies` 随链重钉。
+- 证据：37/37、4/4 突变、契约、inputs、包门；tgz `hanamesh-core-0.2.0-rc.12.tgz` SHA-256 `39bff0105620b75818da4bce0f5e608bbe7badff9bae625374fc5916ba2a7530`；`suite-o3-20260920/stage3/s06.jsonl`：core rc.12 + usage rc.5 + app-host rc.14 在真实 `hanamesh-server@0.2.0-rc.2` 上 SI14/SI15/SI16 全过。

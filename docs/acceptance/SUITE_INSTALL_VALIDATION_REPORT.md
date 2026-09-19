@@ -1,7 +1,7 @@
 # HanaMesh 三件套 · 套件集成验证报告（O3）
 
-> 本机 session · 2026-09-20 · 状态 **⚠️ PARTIAL**：阶段 1（一次安装）与阶段 2（T10 生命周期）全过；阶段 3（S06 授权边界，需 O1 宿主）与阶段 4（首轮演示）**NOT_RUN**。🧪 只有用户能签的 ACCEPTED 之前的上限；本报告不冒充阶段 3/4。
-> 可重跑：`scripts/p1/verdaccio.sh <root> 4879` → `scripts/p1/publish.sh <root> real 4879`（+ 手动发 core 前一 rc 供升级场景）→ `scripts/o3/t10.sh <root> 4879`。
+> 本机 session · 2026-09-20 · 状态 **⚠️ PARTIAL**：阶段 1（一次安装）、阶段 2（T10 生命周期）、阶段 3（S06 授权边界，真实 O1 宿主）全过；阶段 4（首轮演示）**NOT_RUN**。🧪 只有用户能签的 ACCEPTED 之前的上限；本报告不冒充阶段 3/4。
+> 可重跑：`scripts/p1/verdaccio.sh <root> 4879` → `scripts/p1/publish.sh <root> real 4879`（+ 手动发 core 前一 rc 供升级场景）→ `scripts/o3/t10.sh <root> 4879` → `CORE_VER=<ver> node scripts/o3/s06.mjs <root> 4879`（一次性 PG + `hanamesh-server@0.2.0-rc.2`）。
 
 ## ① 环境与版本表
 
@@ -10,10 +10,10 @@
 | DSH | `0.1.5-alpha.1`（`hanamesh-dsh-runtime/runtime`，钉版）；真实桌面另见 ⑥ |
 | Node / pnpm | 24.13.1 / 10.33.0 |
 | 本地 npm 仓 | verdaccio 6.10.3 @ 127.0.0.1:4879（临时，proxy npmjs） |
-| `hanamesh-core` | 0.2.0-rc.11 · sha256 `ca0836dcdb32c7efcd29a7433f3071f8bb8461f4728c01ca1dcccf3e26b139f9`（升级场景基线 rc.10 `21ee2d82…48595`） |
-| `hanamesh-usage` | 0.2.0-rc.4 · `f8488b0797165b70cabf7542b4bb97b217bd547a62efbcf4e1499e0820d107a1` |
+| `hanamesh-core` | 阶段 1/2：0.2.0-rc.11 `ca0836dc…b139f9`（升级基线 rc.10 `21ee2d82…48595`）；阶段 3：**0.2.0-rc.12** `39bff0105620b75818da4bce0f5e608bbe7badff9bae625374fc5916ba2a7530`（= rc.11 + 重钉 usage rc.5） |
+| `hanamesh-usage` | 阶段 1/2：0.2.0-rc.4 `f8488b07…d107a1`；阶段 3：**0.2.0-rc.5** `d0e66da926174e5bf8843a850601fdd39225bb69dd9e0da60ef67935ce2575b4`（S06 暴露的契约缺口修复） |
 | `@hanamesh/dsh-app-host` | 0.1.0-rc.14 · `169c63d812efea0c1b64a6527d52c64b5f454046b18a7f4cb14467e390d7304c` |
-| O1 宿主 | 阶段 1/2 未接（`serverOrigin: null`）；阶段 3 需 `hanamesh-server@0.2.0-rc.2` |
+| O1 宿主 | 阶段 1/2 未接（`serverOrigin: null`）；阶段 3：`hanamesh-server@0.2.0-rc.2` + 一次性 PostgreSQL 17.6（23 迁移），core patch `serverOrigin` 指向它，usage `uploadIntervalMs: 5000` |
 | 端口 | 每个 HOME 随机回环端口；3080 是用户桌面自己的 DSH（本报告未占用） |
 
 ## ② 阶段 1 · 一次安装三件（SI01–SI06）
@@ -41,11 +41,18 @@
 
 ## ④ 阶段 3 · S06 授权边界（SI14–SI19）
 
-| ID | 结果 |
-|---|---|
-| SI14 未同意零上传 / SI15 同意后上传 / SI16 撤回 / SI17 iframe 边界 | **NOT_RUN**（需 O1 宿主 rc.2 + 一次性 PG；core rc.9 的 REAL_SERVER 门已证明设备注册/签名读贡献可用，但 usage 上报与撤回未在真宿主跑） |
-| SI18 不强制钱包 | PASS：三 tgz grep `wallet|metamask|ethers|web3|mnemonic` 只命中 core `vendor/srv-identity/contracts.d.ts` 一条注释「never implies … wallet permission」；设置段截图只有「去网站」 |
-| SI19 日志无密钥 / `~/.dsh` / 3080 | 本报告所有 HOME 日志 grep `apikey|api_key|secret|bearer` = 0；隔离 HOME 未碰 `~/.dsh`；3080 由用户桌面占用，本报告随机端口。（用户当日另授权在真实桌面 `~/.dsh` 安装，见 ⑥） |
+`stage3/s06.jsonl`（REAL_SERVER + REAL_DB + REAL_HOST）：
+
+| ID | 结果 | 证据 |
+|---|---|---|
+| SI14 未同意零上传 | **PASS** | 起宿主后 core 已 `registered`；`consent=withheld` 期间 12 s + 装入一个应用包再启动 8 s，服务端 `usage.events` 计数 0，outbox `stopped/pending 0` |
+| SI15 同意后上传 | **PASS（第二次）** | 第一次（usage rc.4）：同意后 153 条待传全部 `UPLOAD_UNAVAILABLE`、sent 0 → 根因两处契约缺口（body 信封、签名键序）→ usage rc.5 修复；第二次（core rc.12 + usage rc.5）：同意后 ≤3 s 服务端收下 **148 条**，每条 `deviceId/hanaRef/action/occurredAt/eventId/nonce/signature`（服务端验签通过）；`sourceHanaRef/targetRef` 不上线。重发得 duplicates 未单独触发（服务端幂等由 O1 E01 已证） |
+| SI16 撤回 | **PASS** | 撤回后 usage `DELETE /v1/usage/me/devices/:id/events` 恰 1 次（attempts 1，`deletedEvents: 148`），服务端计数 0，outbox `pending 0`，本地事件 0 |
+| SI17 iframe 边界 | PARTIAL | 未开应用；只有匿名 `GET /hanamesh/apps` → 401 `UNAUTHENTICATED`（阶段 1 探针）。完整 403 `FRAME_CONTROL_DENIED` 留阶段 4 |
+| SI18 不强制钱包 | PASS | 三 tgz grep `wallet|metamask|ethers|web3|mnemonic` 只命中 core `vendor/srv-identity/contracts.d.ts` 一条注释「never implies … wallet permission」；设置段只有「去网站」 |
+| SI19 日志无密钥 / `~/.dsh` / 3080 | PASS | 所有隔离 HOME 日志 grep `apikey|api_key|secret|bearer` = 0；隔离 HOME 未碰 `~/.dsh`；3080 由用户桌面占用，本报告随机端口 |
+
+**观察（写进 P2 已知行为）：** 同意后首批上传的是「已装插件发现」得到的 148 条 `install` 事件——包括 `@deepseek-ai/*` 宿主自带包。这是 P2「已装插件发现」的设计（Loader 投影），但对用户意味着「同意」即上报本机全部已装插件名；简报 §A.4 口径下可接受，建议 P2 后续只上报非 `@deepseek-ai/*` 条目或在同意文案里写明。
 
 ## ⑤ 阶段 4 · 首轮演示（SI20–SI23）
 
@@ -59,6 +66,8 @@ NOT_RUN：未配置目录源/`nodeBinary`、未接 Server/网站；Vibe 打开�
 
 | 发现 | 归属 | 处理 |
 |---|---|---|
+| usage 上传 body 用 `{events:[…]}` 信封、签名键序用码点排序，与 O1 冻结契约（裸数组、固定六键顺序）不一致，真宿主全拒 | **P2** | usage rc.5 已修（本日）；core rc.12 重钉 |
+| 同意后上报 148 条含 `@deepseek-ai/*` 宿主包的 install 事件 | P2（观察） | 记录；建议过滤或写进同意文案 |
 | core 侧栏底部按钮在整页设置形态停在 General | P1 | core rc.11 已修（本日） |
 | `file:<tgz>` 依赖被 dsh-tauri 启动自愈当悬空卸掉 | O4/部署文档 | 用目录型 `file:`；写进 O4 与 P3 安装说明 |
 | dsh-tauri 壳 `link:` 进 .app 的包在命令行 pnpm 下 chmod EPERM（macOS App Management） | O4 | 壳内安装不受影响；命令行安装需绕过；O4 fork 阶段评估 |
@@ -67,6 +76,6 @@ NOT_RUN：未配置目录源/`nodeBinary`、未接 Server/网站；Vibe 打开�
 ## ⑧ Checkpoint
 
 - 做了什么：阶段 1 + 阶段 2 全部场景在钉版 DSH 隔离 HOME 跑通并留原始日志；脚本 `scripts/o3/t10.sh` 可重跑；真实 Tauri 桌面一次安装补证。
-- 下一步：阶段 3 用 `hanamesh-server@0.2.0-rc.2` + 一次性 PG 跑 SI14–SI17；阶段 4 待 O2 部署与 O4 目录源。
-- 什么还没验证：SI14–SI17、SI20–SI23。
+- 下一步：阶段 4（首轮演示：Vibe 打开、两处使用记录一致、去网站）待 O2 部署与 O4 目录源/`nodeBinary`。
+- 什么还没验证：SI17 完整 iframe 边界、SI20–SI23。
 - 新阻塞：无实现阻塞。

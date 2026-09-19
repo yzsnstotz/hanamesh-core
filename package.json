@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.2.0-rc.11",
+  "version": "0.2.0-rc.12",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint. Remove separately installed suite packages first to avoid duplicate loader entry id.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -48,7 +48,7 @@
     "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts"
   },
   "dependencies": {
-    "hanamesh-usage": "0.2.0-rc.4",
+    "hanamesh-usage": "0.2.0-rc.5",
     "@hanamesh/dsh-app-host": "0.1.0-rc.14"
   },
   "peerDependencies": {
@@ -64,7 +64,7 @@
     "@deepseek-ai/cordis": "4.0.2",
     "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
     "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
-    "hanamesh-usage": "file:vendor/siblings/hanamesh-usage-0.2.0-rc.4.tgz",
+    "hanamesh-usage": "file:vendor/siblings/hanamesh-usage-0.2.0-rc.5.tgz",
     "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz",
     "@hanamesh/lib-provision": "file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz",
     "@types/node": "24.13.4",
@@ -76,7 +76,7 @@
   "pnpm": {
     "overrides": {
       "@hanamesh/lib-provision": "file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz",
-      "hanamesh-usage": "file:vendor/siblings/hanamesh-usage-0.2.0-rc.4.tgz",
+      "hanamesh-usage": "file:vendor/siblings/hanamesh-usage-0.2.0-rc.5.tgz",
       "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz",
       "@deepseek-ai/cordis": "4.0.2",
       "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",

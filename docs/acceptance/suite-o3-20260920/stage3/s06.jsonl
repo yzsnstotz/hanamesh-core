@@ -1,0 +1,28 @@
+{"step":"migrate","applied":"23"}
+{"step":"host","version":"0.2.0-rc.2","origin":"http://127.0.0.1:52835"}
+{"step":"boot-1","status":0}
+{"step":"core-registered","registration":"registered","principalId":"string","deviceId":"cH3f8Qtu"}
+{"step":"usage-health-initial","consent":"withheld","core":"present","pending":0,"outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":null,"lastError":null},"localEvents":0}
+{"step":"SI14-zero-upload-while-withheld","serverEvents":0,"consent":"withheld","outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":null,"lastError":null}}
+{"step":"extra-plugin-add","status":0,"tail":["+ @hanamesh/app-vibe-trading 0.1.0-rc.11","+","Done in 451ms using pnpm v10.33.0"]}
+{"step":"boot-2","status":0}
+{"step":"local-events-after-install","total":0,"sample":[]}
+{"step":"SI14b-still-zero-before-consent","serverEvents":0}
+{"step":"consent-granted","status":200,"body":{"state":"granted","changedAt":"2026-09-19T22:14:48.349Z"}}
+{"step":"SI15-upload-after-consent","serverEvents":0,"rows":[""],"outbox":{"state":"backoff","pending":153,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":"2026-09-19T22:15:53.446Z","lastError":"UPLOAD_UNAVAILABLE"},"pending":0}
+{"step":"SI16-withdraw","status":200,"serverEventsAfter":0,"withdrawal":{"requestedAt":"2026-09-19T22:15:25.320Z","deviceId":"cH3f8QtuUcJn8-ZziXamkLoW3ovd_EjL4GJkq792sts","state":"sent","attempts":1,"deletedEvents":0,"lastError":null},"outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":null,"lastError":null},"pending":0,"localEvents":0}
+{"gate":"O3-S06","result":"DONE"}
+{"step":"migrate","applied":"23"}
+{"step":"host","version":"0.2.0-rc.2","origin":"http://127.0.0.1:54455"}
+{"step":"boot-1","status":0}
+{"step":"core-registered","registration":"registered","principalId":"string","deviceId":"85JZ7XuJ"}
+{"step":"usage-health-initial","consent":"withheld","core":"present","pending":0,"outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":null,"lastError":null},"localEvents":0}
+{"step":"SI14-zero-upload-while-withheld","serverEvents":0,"consent":"withheld","outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":null,"nextAttemptAt":null,"lastError":null}}
+{"step":"extra-plugin-add","status":0,"tail":["+ @hanamesh/app-vibe-trading 0.1.0-rc.11","+","Done in 389ms using pnpm v10.33.0"]}
+{"step":"boot-2","status":0}
+{"step":"local-events-after-install","total":0,"sample":[]}
+{"step":"SI14b-still-zero-before-consent","serverEvents":0}
+{"step":"consent-granted","status":200,"body":{"state":"granted","changedAt":"2026-09-19T22:19:46.937Z"}}
+{"step":"SI15-upload-after-consent","serverEvents":148,"rows":[{"device_id":"85JZ7XuJ1tqjcXcQ2gHQIAZSTJ75TRyfdNGZRWM9_mI","hana_ref":"@deepseek-ai/cordis-plugin-hmr","action":"install","occurred_at":"2026-09-19T22:19:46.944+00:00","event_id":"af3ed45e-1edf-5c03-86f8-577647edddd4","nonce":"6RL-iK-WBupMcsmkLbKc8A","signature_len":86},{"device_id":"85JZ7XuJ1tqjcXcQ2gHQIAZSTJ75TRyfdNGZRWM9_mI","hana_ref":"@deepseek-ai/cordis-plugin-timer","action":"install","occurred_at":"2026-09-19T22:19:46.944+00:00","event_id":"6fed41e1-4b21-5aa2-89e5-f51d0509abd4","nonce":"3ejB5RxRCum1vnMUlFtCKA","signature_len":86},{"device_id":"85JZ7XuJ1tqjcXcQ2gHQIAZSTJ75TRyfdNGZRWM9_mI","hana_ref":"@deepseek-ai/dsh-agent","action":"install","occurred_at":"2026-09-19T22:19:46.944+00:00","event_id":"4324e797-b22f-5ad1-88c2-8f672a09e0b1","nonce":"XYhF-uT7TzhRTersQwvZBA","signature_len":86}],"outbox":{"state":"idle","pending":0,"sent":148,"duplicate":0,"rejected":5,"lastUploadAt":"2026-09-19T22:19:52.112Z","nextAttemptAt":null,"lastError":null},"pending":0}
+{"step":"SI16-withdraw","status":200,"serverEventsAfter":0,"withdrawal":{"requestedAt":"2026-09-19T22:19:53.145Z","deviceId":"85JZ7XuJ1tqjcXcQ2gHQIAZSTJ75TRyfdNGZRWM9_mI","state":"sent","attempts":1,"deletedEvents":148,"lastError":null},"outbox":{"state":"stopped","pending":0,"sent":0,"duplicate":0,"rejected":0,"lastUploadAt":"2026-09-19T22:19:52.112Z","nextAttemptAt":null,"lastError":null},"pending":0,"localEvents":0}
+{"gate":"O3-S06","result":"DONE"}

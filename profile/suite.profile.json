@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
-  "version": "0.2.0-rc.11",
+  "version": "0.2.0-rc.12",
   "label": "HanaMesh 套件",
   "runningTaskPolicy": "preserve-and-pause",
   "components": [
@@ -10,7 +10,7 @@
       "moduleName": "hanamesh-usage",
       "loaderEntryId": "hanamesh-usage",
       "label": "使用记录",
-      "versionRange": "0.2.0-rc.4",
+      "versionRange": "0.2.0-rc.5",
       "onFailure": "notice",
       "impact": "不采集、不上报使用记录；设备身份与同意开关不受影响"
     },

@@ -23,7 +23,7 @@ test('state projects health faults and duck-typed usage service readiness', asyn
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store);
   controller.attachHealth({
     getHealth: () => ({revision: 1, mode: 'repair', fault: 'PERSISTENCE_UNAVAILABLE', components: [
-      {id: 'usage', label: '使用记录', status: 'satisfied', version: '0.2.0-rc.4', requiredRange: '0.2.0-rc.4', nextStep: null},
+      {id: 'usage', label: '使用记录', status: 'satisfied', version: '0.2.0-rc.5', requiredRange: '0.2.0-rc.5', nextStep: null},
       {id: 'app-host', label: '应用容器', status: 'incompatible', version: '0.0.1', requiredRange: '0.1.0-rc.14', nextStep: 'restore-pinned-component'},
     ]}),
     recheck: async () => ({revision: 2, mode: 'repair', components: []}),
