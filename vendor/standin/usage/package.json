@@ -1,7 +1,0 @@
-{
-  "name": "hanamesh-usage",
-  "version": "0.2.0-rc.1",
-  "type": "module",
-  "main": "./lib/dsh.mjs",
-  "files": ["lib", "README.md"]
-}

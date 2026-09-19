@@ -8,8 +8,8 @@ import {HealthService} from '../lib/health/service.js';
 import {inspectPackage, LoaderObservationSource} from '../lib/health/loader.js';
 
 const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.1', phase: 'active'}));
-active[1].version = '0.1.0-rc.8';
+const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.4', phase: 'active'}));
+active[1].version = '0.1.0-rc.13';
 
 test('notice components distinguish present, missing and disabled without restricting healthy core', async () => {
   for (const [name, observations, expected] of [
@@ -42,14 +42,16 @@ test('suite component versions are locked to package dependencies', async () => 
   for (const component of profile.components) assert.equal(component.versionRange, pkg.dependencies[component.moduleName]);
 });
 
-test('real DSH include-prefixed ids and package subpath names match suite components', async () => {
-  const entries = [
-    {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
-    {id: 'include:hanamesh-app-host', options: {name: '@hanamesh/dsh-app-host/dsh'}, fiber: {state: 2}},
-  ];
-  const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.1' : '0.1.0-rc.8'}));
-  const observations = await source.observe(profile.components);
-  assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']]);
+test('real DSH include-prefixed ids and package root or subpath names match suite components', async () => {
+  for (const appHostName of ['@hanamesh/dsh-app-host', '@hanamesh/dsh-app-host/dsh']) {
+    const entries = [
+      {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
+      {id: 'include:hanamesh-app-host', options: {name: appHostName}, fiber: {state: 2}},
+    ];
+    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.4' : '0.1.0-rc.13'}));
+    const observations = await source.observe(profile.components);
+    assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']], appHostName);
+  }
 });
 
 test('package integrity accepts the loader subpath when the package root is not exported', async () => {

@@ -59,3 +59,28 @@ Evidence modes in this file are deliberately distinct. `SOURCE`/`FIXTURE` are re
 - 下一步：O3 integrator 使用 rc.8 tgz 与登记 SHA，替换 STANDIN 为 P2/P3 真包，验证一次安装、无重复 host peer、新标签呈现及套件生命周期。用户验收仍由用户按最终清单亲跑并签。
 - 什么还没验证：真实 O1、真实 usage/app-host sibling、in-app browser 可见的新标签、无 host-peer warning 的 DSH profile manifest、非 macOS。
 - 新阻塞：无 P1 源码阻塞。已知环境限制是 DSH profile 的 host-peer warning 与 session browser 不暴露子标签；两项均已移交 O3 做集成层验证。
+
+## rc.9 · 本机回收 2026-09-19（审核整合发现的 O1 集成缺口）
+
+判定（对 rc.8）：
+- 缺 X：设备签名线上格式与 O1 identity `0.2.0-rc.1` 不一致（注册签 raw 公钥字节 vs 服务端验 base64url 字符串；请求头 `\n` 分隔 + 秒 vs 服务端 `|` + 毫秒；PATH 含 query vs 服务端按路由路径验签；POST 不带 `Origin` vs identity 强制精确 Origin）。真实 Server 下注册与所有设备签名请求必然 401/403。
+- 缺 Y：`dependencies` 仍钉 STANDIN 版本（usage rc.1 / app-host rc.8），`dsh plugin add hanamesh-core` 会解析到空壳而不是 STATUS §5 登记的真件；patch 第三条 `name` 用 `/dsh` 子路径，与 app-host rc.10+ 的包根 entry（P3-DIFF）不一致，套件下 app-host 客户端席位不会被发现。
+- 缺 Z：网站 `/me/bind` 需要 `deviceId&nonce&signature`（O2 阶段 3a 已实现），rc.8 只打开裸路径；H-14 要求的设置段顶部互斥提示缺席；`getSession().bound` 恒 null 而 O1 贡献响应已含 `bound`。
+
+补齐：
+- `src/registration.ts`、`src/controller.ts#signRequest`、`src/transport.ts`：按 identity `docs/API.md` 重写（详见 `docs/API.md` 末节）；新增 `bindLink()` 与 `POST /api/hanamesh/core/bind-link`；贡献响应 `bound` 进 session。
+- `package.json` / `profile/suite.profile.json` / `profile/cordis.patch.yml`：钉 `hanamesh-usage@0.2.0-rc.4`、`@hanamesh/dsh-app-host@0.1.0-rc.13`（真件 tgz 在 `vendor/siblings/`，含 app-host 私有 peer `@hanamesh/lib-provision@0.1.0-rc.1`），第三条 name 改包根；`scripts/p1/publish.sh` 改为 REAL_SIBLINGS 模式。
+- `src/client/index.ts`：顶部互斥提示（`data-hanamesh-core-hint="bundle-exclusive"`）、绑定按钮改走 bind-link、绑定状态三态。
+
+证据：
+| 门 | 结果 | 介质 | 备注 |
+|---|---|---|---|
+| 单测 | 37/37 PASS | SOURCE | 新增 `test/wire-format.test.mjs`（4 项：注册消息、请求头格式+毫秒+pathname、bind-link、bound） |
+| 突变 | 4/4 `ERR_ASSERTION` | SOURCE | `test:mutations` |
+| 契约 | PASS | SOURCE | `check:contracts`（10 键不变） |
+| 包 | PASS | PACKAGE | `check-package`：deps = usage rc.4 / app-host rc.13；tgz `hanamesh-core-0.2.0-rc.9.tgz` SHA-256 `a92478537d5471efa5110e8c300e7eb7a792f1b2babb762de990801db5737921` |
+| **REAL_SERVER** | PASS | REAL_SERVER + REAL_DB | `recovery-20260919/real-server-gate.mjs` → `real-server.log`：一次性 PostgreSQL 17.6（tmpfs、随机回环端口、用完删）+ `hanamesh-server@0.2.0-rc.1`（21 迁移）；core `lib/` 真实代码：注册 201→`registered`、幂等且 principal 相同、`GET /v1/identity/me` 200（scope `identity:device`）、`GET /v1/usage/me/contributions` 200 且 `bound:false` 进 session、bind 挑战返回 43 字符 nonce；篡改签名 401；**rc.8 旧格式（`\n`+秒）401**，证明修复是必要的 |
+
+未验证（NOT_RUN）：隔离 DSH 真实宿主 `plugin add` rc.9（代码改动不触及 apply/存储路径，rc.8 的 REAL_HOST/X02/X03 证据保留；O3 用 rc.9 tgz 重装即覆盖）；网站端 `/me/bind` 带 cookie 的实际绑定往返（需 O2 阶段 3b/5 同源代理）；`authNonceSource:'server'`（identity 该版本 challenge 只接受 register/bind，保持默认 client）。
+
+rc.9 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：rc.9 tgz + usage rc.4 + app-host rc.13（+ Vibe rc.10）。

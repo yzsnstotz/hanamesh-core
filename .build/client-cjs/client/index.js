@@ -1,4 +1,8 @@
-import { createElement, useEffect, useState } from 'react';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.inject = exports.name = void 0;
+exports.apply = apply;
+const react_1 = require("react");
 const styleText = `
 .hm-core-section{display:flex;flex-direction:column;gap:0;color:var(--dsw-alias-label-primary);font:14px/1.55 system-ui,sans-serif}
 .hm-core-section h2{font-size:20px;margin:0 0 8px}.hm-core-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8)}
@@ -30,11 +34,11 @@ function componentText(row) {
     return `需修复${row.nextStep ? `：${row.nextStep}` : ''}`;
 }
 function Row({ label, children }) {
-    return createElement('div', { className: 'hm-core-row' }, createElement('strong', null, label), createElement('div', { className: 'hm-core-copy' }, children));
+    return (0, react_1.createElement)('div', { className: 'hm-core-row' }, (0, react_1.createElement)('strong', null, label), (0, react_1.createElement)('div', { className: 'hm-core-copy' }, children));
 }
 function HanaMeshSection() {
-    const [state, setState] = useState(null);
-    const [error, setError] = useState(null);
+    const [state, setState] = (0, react_1.useState)(null);
+    const [error, setError] = (0, react_1.useState)(null);
     const load = async () => {
         try {
             setState(await jsonRequest('/api/hanamesh/core/state'));
@@ -44,7 +48,7 @@ function HanaMeshSection() {
             setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE');
         }
     };
-    useEffect(() => { void load(); const timer = window.setInterval(() => void load(), 10_000); return () => window.clearInterval(timer); }, []);
+    (0, react_1.useEffect)(() => { void load(); const timer = window.setInterval(() => void load(), 10_000); return () => window.clearInterval(timer); }, []);
     const post = async (path, body) => {
         try {
             await jsonRequest(path, { method: 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
@@ -74,12 +78,12 @@ function HanaMeshSection() {
         void post('/api/hanamesh/core/open-external', { url });
     };
     if (!state)
-        return createElement('section', { className: 'hm-core-section', 'data-hanamesh-core': 'loading' }, createElement('h2', null, 'HanaMesh'), createElement('p', { className: error ? 'hm-core-error' : 'hm-core-muted' }, error ? `未能读取：${error}` : '正在读取…'));
+        return (0, react_1.createElement)('section', { className: 'hm-core-section', 'data-hanamesh-core': 'loading' }, (0, react_1.createElement)('h2', null, 'HanaMesh'), (0, react_1.createElement)('p', { className: error ? 'hm-core-error' : 'hm-core-muted' }, error ? `未能读取：${error}` : '正在读取…'));
     const registration = state.serverOrigin === null ? '未连接' : state.registration.status === 'registered' ? '已注册' : state.registration.status === 'failed' ? `注册失败：${state.registration.lastError ?? '未知'}` : '未注册';
     const contributions = state.contributions.status === 'ready'
         ? `install ${state.contributions.actions.install} · open ${state.contributions.actions.open} · use ${state.contributions.actions.use} · uninstall ${state.contributions.actions.uninstall}　窗口：近 ${state.contributions.windowDays} 天`
         : `暂不可用：${state.contributions.reason}`;
-    return createElement('section', { className: 'hm-core-section', 'data-hanamesh-core': 'ready' }, createElement('h2', null, 'HanaMesh'), createElement('p', { className: 'hm-core-muted', 'data-hanamesh-core-hint': 'bundle-exclusive' }, '套件与单包互斥：已单独安装 hanamesh-usage 或 @hanamesh/dsh-app-host 的用户，装 hanamesh-core 前先 dsh plugin remove 它们；已装套件后再单独安装它们同样会以 duplicate loader entry id 起不来。'), error && createElement('p', { className: 'hm-core-error', role: 'alert' }, `未能保存：${error}`), createElement(Row, { label: '设备身份' }, createElement('div', { className: 'hm-core-actions' }, createElement('span', null, `设备 id：${state.deviceId.slice(0, 8)}…　注册：${registration}`), state.serverOrigin && state.registration.status !== 'registered' && createElement('button', { type: 'button', onClick: () => void post('/api/hanamesh/core/device/register') }, '重试注册'))), createElement(Row, { label: '数据授权' }, createElement('label', { className: 'hm-core-switch' }, createElement('input', { type: 'checkbox', checked: state.consent.state === 'granted', onChange: event => void post('/api/hanamesh/core/consent', { state: event.currentTarget.checked ? 'granted' : 'withheld' }) }), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'), createElement('span', null, `当前：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`), createElement('small', { className: 'hm-core-muted' }, '撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。')), createElement(Row, { label: '账号' }, createElement('div', { className: 'hm-core-actions' }, createElement('span', null, `绑定状态：${state.session.bound === true ? '已绑定' : state.session.bound === false ? '未绑定' : '绑定后在网站查看'}`), createElement('button', { type: 'button', onClick: () => void bind() }, '去网站绑定'))), createElement(Row, { label: '我的 Hana' }, createElement('div', { className: 'hm-core-actions' }, createElement('span', null, '可领权益 / 认领状态：绑定后在网站查看'), createElement('button', { type: 'button', onClick: () => visit('/me') }, '去网站'))), createElement(Row, { label: '本设备贡献累计' }, createElement('span', null, contributions)), createElement(Row, { label: '组件' }, createElement('div', { className: 'hm-core-components' }, state.health.fault && createElement('span', { className: 'hm-core-error' }, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', { key: row.id }, `${row.label}：${componentText(row)}`)), createElement('button', { type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck') }, '重新检查'))), createElement(Row, { label: '关于' }, createElement('div', { className: 'hm-core-actions' }, createElement('span', null, 'hanamesh-core 0.2.0-rc.9 · DSH 0.1.5-alpha.1'), createElement('button', { type: 'button', onClick: () => visit('/') }, '去网站'))));
+    return (0, react_1.createElement)('section', { className: 'hm-core-section', 'data-hanamesh-core': 'ready' }, (0, react_1.createElement)('h2', null, 'HanaMesh'), (0, react_1.createElement)('p', { className: 'hm-core-muted', 'data-hanamesh-core-hint': 'bundle-exclusive' }, '套件与单包互斥：已单独安装 hanamesh-usage 或 @hanamesh/dsh-app-host 的用户，装 hanamesh-core 前先 dsh plugin remove 它们；已装套件后再单独安装它们同样会以 duplicate loader entry id 起不来。'), error && (0, react_1.createElement)('p', { className: 'hm-core-error', role: 'alert' }, `未能保存：${error}`), (0, react_1.createElement)(Row, { label: '设备身份' }, (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('span', null, `设备 id：${state.deviceId.slice(0, 8)}…　注册：${registration}`), state.serverOrigin && state.registration.status !== 'registered' && (0, react_1.createElement)('button', { type: 'button', onClick: () => void post('/api/hanamesh/core/device/register') }, '重试注册'))), (0, react_1.createElement)(Row, { label: '数据授权' }, (0, react_1.createElement)('label', { className: 'hm-core-switch' }, (0, react_1.createElement)('input', { type: 'checkbox', checked: state.consent.state === 'granted', onChange: event => void post('/api/hanamesh/core/consent', { state: event.currentTarget.checked ? 'granted' : 'withheld' }) }), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'), (0, react_1.createElement)('span', null, `当前：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`), (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。')), (0, react_1.createElement)(Row, { label: '账号' }, (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('span', null, `绑定状态：${state.session.bound === true ? '已绑定' : state.session.bound === false ? '未绑定' : '绑定后在网站查看'}`), (0, react_1.createElement)('button', { type: 'button', onClick: () => void bind() }, '去网站绑定'))), (0, react_1.createElement)(Row, { label: '我的 Hana' }, (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('span', null, '可领权益 / 认领状态：绑定后在网站查看'), (0, react_1.createElement)('button', { type: 'button', onClick: () => visit('/me') }, '去网站'))), (0, react_1.createElement)(Row, { label: '本设备贡献累计' }, (0, react_1.createElement)('span', null, contributions)), (0, react_1.createElement)(Row, { label: '组件' }, (0, react_1.createElement)('div', { className: 'hm-core-components' }, state.health.fault && (0, react_1.createElement)('span', { className: 'hm-core-error' }, `检查未完成（${state.health.fault}）`), ...state.components.map(row => (0, react_1.createElement)('span', { key: row.id }, `${row.label}：${componentText(row)}`)), (0, react_1.createElement)('button', { type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck') }, '重新检查'))), (0, react_1.createElement)(Row, { label: '关于' }, (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('span', null, 'hanamesh-core 0.2.0-rc.9 · DSH 0.1.5-alpha.1'), (0, react_1.createElement)('button', { type: 'button', onClick: () => visit('/') }, '去网站'))));
 }
 function openHanaMeshSettings() {
     const trigger = document.querySelector('button[aria-haspopup="dialog"]');
@@ -95,11 +99,11 @@ function openHanaMeshSettings() {
     window.requestAnimationFrame(select);
 }
 function FooterAction({ wide }) {
-    return createElement('button', { type: 'button', className: 'hm-core-footer', 'data-wide': String(wide), title: 'HanaMesh', 'aria-label': '打开 HanaMesh 设置', onClick: openHanaMeshSettings }, wide ? 'HanaMesh' : 'H');
+    return (0, react_1.createElement)('button', { type: 'button', className: 'hm-core-footer', 'data-wide': String(wide), title: 'HanaMesh', 'aria-label': '打开 HanaMesh 设置', onClick: openHanaMeshSettings }, wide ? 'HanaMesh' : 'H');
 }
-export const name = 'hanamesh-core-client';
-export const inject = ['slots'];
-export function apply(ctx) {
+exports.name = 'hanamesh-core-client';
+exports.inject = ['slots'];
+function apply(ctx) {
     ctx.effect(() => {
         const style = document.createElement('style');
         style.dataset['hanameshCore'] = 'client';

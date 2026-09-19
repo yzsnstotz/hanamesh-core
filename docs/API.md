@@ -10,9 +10,10 @@
 | `GET` | `health` | 当前 `hanamesh_core_health` 快照 |
 | `POST` | `health/recheck` | 重新读取 Loader 与包元数据并发布一个完整快照 |
 | `POST` | `open-external` | 请求 `{url}`；只允许 `url.origin === websiteOrigin`；系统打开器默认关闭 |
+| `POST` | `bind-link` | 无 body；向 Server 取 `bind` 挑战并用设备私钥签 `utf8(nonce)`，返回 `{url, expiresAt}`，`url` = `websiteOrigin` + `/me/bind?deviceId&nonce&signature`（O2 绑定落地页；identity `POST /v1/identity/me/devices/bind` 验签 nonce）；未配置 `serverOrigin` 或 `websiteOrigin` → 409 `CORE_URL_NOT_ALLOWED` |
 | `GET` | `diagnostics` | 生命周期与 origin 诊断；再次经过秘密字段过滤 |
 
-设备注册签名是 Ed25519 `utf8(nonce) || rawPublicKey`。`signRequest` 的 canonical bytes 是 `METHOD + '\n' + path + '\n' + unixSeconds + '\n' + nonce + '\n' + hex(sha256(body || ''))`，输出四个 `x-hm-*` 头；默认客户端随机 nonce，配置可切服务端 auth challenge。
+设备注册签名是 Ed25519 `utf8(nonce ‖ publicKey字符串)`；`signRequest` 的 canonical bytes 是 `METHOD + '|' + pathname + '|' + unixMilliseconds + '|' + nonce + '|' + hex(sha256(body || ''))`（rc.9 起，见文末「与 O1 identity 的线上格式」），输出四个 `x-hm-*` 头；默认客户端随机 nonce，配置可切服务端 auth challenge（identity 0.2.0-rc.1 的 challenge 只接受 `register|bind`，`authNonceSource:'server'` 在该版本会被拒绝，保持默认 `'client'`）。
 
 ## 客户端席位
 
@@ -29,3 +30,10 @@
 - `CORE_UPSTREAM_UNAVAILABLE`：Server 未配置、网络失败或响应不合法。
 - `CORE_URL_NOT_ALLOWED`：外链不是配置的 Website origin。
 - `CORE_NOT_READY` / `CORE_DISPOSED`：服务尚未准备或已释放。
+
+## 与 O1 identity 的线上格式（rc.9 定稿，以 identity `docs/API.md` 为准）
+
+- 注册：`signature = base64url(ed25519(utf8(nonce ‖ publicKey)))`，`publicKey` 是发送的 base64url 字符串本身，不是原始 32 字节。
+- 请求头：`x-hm-timestamp` 为 Unix **毫秒**；签名串 `METHOD|PATH|TIMESTAMP|NONCE|hex(sha256(body))`，`PATH` = 路径名（不含 query/fragment，O1 usage/identity 均按路由路径验签），含 `|` 的路径拒绝。
+- 所有请求带 `Origin = serverOrigin`（identity 对 POST/PATCH 强制精确 Origin）。
+- 证据：`docs/acceptance/recovery-20260919/real-server.log`（真实 `hanamesh-server@0.2.0-rc.1` + PostgreSQL 17.6：注册 201/幂等 200、`/v1/identity/me` 200、贡献 200 含 `bound`、篡改与 rc.8 旧格式均 401）。

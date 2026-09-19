@@ -1,5 +1,5 @@
 import type {StoredDevice} from './device.js';
-import {rawPublicKey, signWithDevice} from './device.js';
+import {signWithDevice} from './device.js';
 import {CoreError} from './errors.js';
 import {ServerTransport} from './transport.js';
 
@@ -17,7 +17,8 @@ export async function registerDevice(transport: ServerTransport, device: StoredD
     method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'register'}),
   }));
   if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-  const signed = Buffer.concat([Buffer.from(challenge.nonce, 'utf8'), rawPublicKey(device)]);
+  // O1 identity docs/API.md: signature = ed25519(utf8(nonce ‖ publicKey)) where publicKey is the base64url string as sent (P1 A1-1: identity API.md is authoritative).
+  const signed = Buffer.from(challenge.nonce + device.publicKey, 'utf8');
   const result = await jsonOf<RegistrationResponse>(await transport.request('/v1/identity/devices', {
     method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({
       publicKey: device.publicKey,

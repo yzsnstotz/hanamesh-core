@@ -1,0 +1,11 @@
+{"step":"migrate","applied":"21"}
+{"step":"host-listening","version":"0.2.0-rc.1","origin":"http://127.0.0.1:63675"}
+{"step":"device-register","mode":"REAL_SERVER","registration":"registered","principalId":"string","deviceId":"3ITyY5vR"}
+{"step":"device-register-idempotent","registration":"registered","samePrincipal":true}
+{"step":"device-auth-me","status":200,"body":{"scopes":["identity:device"]}}
+{"step":"contributions-raw","status":200,"body":"{\"byHana\":[],\"sources\":{\"events\":0,\"rollups\":0},\"availability\":\"available\",\"window\":{\"from\":\"2026-06-21T14:03:43.699Z\",\"to\":\"2026-09-19T14:03:43.699Z\"},\"canonicalPrincipalId\":\"b7f4d0fb-3987-481f-b42f-a30a6ec36973\",\"bound\":false,\"deviceCount\":1}"}
+{"step":"contributions-signed","status":"ready","reason":null,"bound":false}
+{"step":"bind-link","origin":"https://market.example/me/bind","params":["deviceId","nonce","signature"],"nonceLen":43}
+{"step":"device-auth-tampered","status":401,"code":"IDENTITY_DEVICE_SIGNATURE_INVALID"}
+{"step":"rc8-wire-format-rejected","status":401,"code":"IDENTITY_DEVICE_SIGNATURE_INVALID"}
+{"gate":"P1-REAL_SERVER","result":"DONE"}

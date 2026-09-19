@@ -6,6 +6,7 @@ export declare const ROUTES: Readonly<{
     health: "/api/hanamesh/core/health";
     healthRecheck: "/api/hanamesh/core/health/recheck";
     openExternal: "/api/hanamesh/core/open-external";
+    bindLink: "/api/hanamesh/core/bind-link";
     diagnostics: "/api/hanamesh/core/diagnostics";
 }>;
 export declare function createRouteHandler(controller: SessionController): (request: Request) => Promise<Response>;

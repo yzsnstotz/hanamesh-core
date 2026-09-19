@@ -38,6 +38,11 @@ export declare class SessionController {
         opened: boolean;
         reason?: 'DISABLED';
     };
+    /** Website bind landing (O2 `/me/bind?deviceId&nonce&signature`): a server `bind` challenge nonce signed by this device. */
+    bindLink(): Promise<{
+        url: string;
+        expiresAt: string;
+    }>;
     refreshContributions(): Promise<Contributions>;
     state(): unknown;
     diagnostics(): unknown;

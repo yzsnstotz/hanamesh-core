@@ -25,6 +25,7 @@ export class SessionController {
   #usageReady: (() => boolean) | null = null;
   #contributions: Contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
   #contributionsCheckedAt = 0;
+  #bound: boolean | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
   readonly service: HanaMeshCoreContract;
   private constructor(config: PluginConfig, store: CoreStore, fetcher?: typeof fetch) {
@@ -81,7 +82,7 @@ export class SessionController {
       deviceId: device.deviceId,
       registration: this.#state.registration.status,
       principalId: this.#state.registration.principalId,
-      bound: null,
+      bound: this.#bound,
       serverReachable: this.#state.serverObservation.reachable,
       checkedAt: this.#state.serverObservation.checkedAt,
       reason: this.#state.registration.lastError,
@@ -90,7 +91,7 @@ export class SessionController {
 
   async #signRequest(input: RequestSignatureInput) {
     if (!input || typeof input.method !== 'string' || typeof input.path !== 'string' || (input.body !== null && !(input.body instanceof Uint8Array))) throw new CoreError('CORE_INPUT_INVALID', 400);
-    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const timestamp = Date.now().toString(); // identity: Unix milliseconds, ±300 s
     let nonce = requestNonce();
     if (this.#config.authNonceSource === 'server') {
       const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'auth'})});
@@ -100,7 +101,11 @@ export class SessionController {
       nonce = challenge.nonce;
     }
     const bodyHash = createHash('sha256').update(input.body ?? new Uint8Array()).digest('hex');
-    const canonical = new TextEncoder().encode(`${input.method.toUpperCase()}\n${input.path}\n${timestamp}\n${nonce}\n${bodyHash}`);
+    // O1 servers verify over the bare route path (identity `/v1/identity/me`, usage `/v1/usage/me/contributions`): PATH = pathname, no query/fragment.
+    const pathname = input.path.replace(/[?#].*$/u, '');
+    if (!pathname.startsWith('/') || pathname.includes('|')) throw new CoreError('CORE_INPUT_INVALID', 400);
+    // identity docs/API.md: `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)` (P1 A1-1: identity API.md is authoritative).
+    const canonical = new TextEncoder().encode(`${input.method.toUpperCase()}|${pathname}|${timestamp}|${nonce}|${bodyHash}`);
     return Object.freeze({
       'x-hm-device-id': this.#device().deviceId,
       'x-hm-timestamp': timestamp,
@@ -178,6 +183,23 @@ export class SessionController {
     return openSystemExternal(url, this.#config.websiteOrigin, this.#config.allowSystemBrowser);
   }
 
+  /** Website bind landing (O2 `/me/bind?deviceId&nonce&signature`): a server `bind` challenge nonce signed by this device. */
+  async bindLink(): Promise<{url: string; expiresAt: string}> {
+    const device = this.#device();
+    if (!this.#transport.configured || !this.#config.websiteOrigin) throw new CoreError('CORE_URL_NOT_ALLOWED', 409);
+    const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'bind'})});
+    if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+    let challenge: {nonce?: unknown; expiresAt?: unknown};
+    try { challenge = await response.json() as {nonce?: unknown; expiresAt?: unknown}; } catch { throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503); }
+    if (typeof challenge.nonce !== 'string' || !challenge.nonce || typeof challenge.expiresAt !== 'string') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+    const signature = Buffer.from(signWithDevice(device, Buffer.from(challenge.nonce, 'utf8'))).toString('base64url');
+    const url = new URL('/me/bind', this.#config.websiteOrigin);
+    url.searchParams.set('deviceId', device.deviceId);
+    url.searchParams.set('nonce', challenge.nonce);
+    url.searchParams.set('signature', signature);
+    return Object.freeze({url: url.href, expiresAt: challenge.expiresAt});
+  }
+
   async refreshContributions(): Promise<Contributions> {
     if (!this.#transport.configured) {
       this.#contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
@@ -191,7 +213,7 @@ export class SessionController {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
       const response = await this.#transport.request(path, {method: 'GET', headers});
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
+      const payload = await response.json() as {bound?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
       if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const actions = {install: 0, open: 0, use: 0, uninstall: 0};
       for (const row of payload.byHana) for (const key of Object.keys(actions) as Array<keyof typeof actions>) {
@@ -201,6 +223,7 @@ export class SessionController {
       }
       this.#contributions = Object.freeze({status: 'ready', windowDays: 90, actions: Object.freeze(actions)});
       this.#contributionsCheckedAt = Date.now();
+      this.#bound = typeof payload.bound === 'boolean' ? payload.bound : null;
     } catch (error) {
       this.#contributions = Object.freeze({status: 'unavailable', reason: safeError(error).code});
     }

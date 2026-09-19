@@ -12,5 +12,5 @@
         maxPending: 128
         allowExport: false
     - id: hanamesh-app-host
-      name: '@hanamesh/dsh-app-host/dsh'
+      name: '@hanamesh/dsh-app-host'
       config: {}

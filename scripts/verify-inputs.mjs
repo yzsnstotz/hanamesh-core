@@ -13,6 +13,12 @@ for (const row of semverRows) {
   assert.ok(match, row);
   assert.equal(digest(await readFile(match[2])), match[1], match[2]);
 }
-const standins = ['vendor/standin/hanamesh-usage-0.2.0-rc.1.tgz', 'vendor/standin/hanamesh-dsh-app-host-0.1.0-rc.8.tgz'];
-for (const artifact of standins) assert.match(digest(await readFile(artifact)), /^[a-f0-9]{64}$/);
-console.log(JSON.stringify({event: 'inputs_verified', hostApi: Object.keys(files).length, srvIdentity: true, semver: semverRows.length > 0, standin: standins.length}));
+// Real sibling artifacts (STATUS §5 registered digests): hanamesh-usage 0.2.0-rc.4, @hanamesh/dsh-app-host 0.1.0-rc.13.
+const siblingRows = (await readFile('vendor/siblings/SHA256SUMS', 'utf8')).trim().split('\n');
+assert.equal(siblingRows.length, 3);
+for (const row of siblingRows) {
+  const match = /^([a-f0-9]{64})  (hanamesh-usage-0\.2\.0-rc\.4\.tgz|hanamesh-dsh-app-host-0\.1\.0-rc\.13\.tgz|hanamesh-lib-provision-0\.1\.0-rc\.1\.tgz)$/.exec(row);
+  assert.ok(match, row);
+  assert.equal(digest(await readFile(`vendor/siblings/${match[2]}`)), match[1], match[2]);
+}
+console.log(JSON.stringify({event: 'inputs_verified', hostApi: Object.keys(files).length, srvIdentity: true, semver: semverRows.length > 0, siblings: siblingRows.length}));

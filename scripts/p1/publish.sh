@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT=${1:?usage: publish.sh ROOT standin [PORT]}
-MODE=${2:?usage: publish.sh ROOT standin [PORT]}
+ROOT=${1:?usage: publish.sh ROOT real [PORT]}
+MODE=${2:?usage: publish.sh ROOT real [PORT]}
 REGISTRY_PORT=${3:-4873}
 REGISTRY="http://127.0.0.1:$REGISTRY_PORT"
-if [[ "$MODE" != standin ]]; then
-  echo "Only the explicitly labelled STANDIN mode is available until P2/P3 artifacts are recorded." >&2
+if [[ "$MODE" != real ]]; then
+  echo "rc.9+: only REAL_SIBLINGS mode (STATUS §5 registered P2/P3 tgz in vendor/siblings/); standin mode was removed." >&2
   exit 2
 fi
 mkdir -p "$ROOT/npm-cache"
@@ -32,7 +32,8 @@ publish_if_missing() {
     npm publish "$source" --registry "$REGISTRY" --access public --tag rc
   fi
 }
-publish_if_missing hanamesh-usage 0.2.0-rc.1 ./vendor/standin/usage
-publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.8 ./vendor/standin/app-host
-publish_if_missing hanamesh-core 0.2.0-rc.8 ./artifacts/hanamesh-core-0.2.0-rc.8.tgz
-printf '{"mode":"STANDIN","registry":"%s","packages":3}\n' "$REGISTRY"
+publish_if_missing @hanamesh/lib-provision 0.1.0-rc.1 ./vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz
+publish_if_missing hanamesh-usage 0.2.0-rc.4 ./vendor/siblings/hanamesh-usage-0.2.0-rc.4.tgz
+publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.13 ./vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.13.tgz
+publish_if_missing hanamesh-core 0.2.0-rc.9 ./artifacts/hanamesh-core-0.2.0-rc.9.tgz
+printf '{"mode":"REAL_SIBLINGS","registry":"%s","packages":4}\n' "$REGISTRY"

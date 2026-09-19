@@ -8,6 +8,7 @@ export const ROUTES = Object.freeze({
   health: '/api/hanamesh/core/health',
   healthRecheck: '/api/hanamesh/core/health/recheck',
   openExternal: '/api/hanamesh/core/open-external',
+  bindLink: '/api/hanamesh/core/bind-link',
   diagnostics: '/api/hanamesh/core/diagnostics',
 });
 const ROUTE_PATHS = new Set<string>(Object.values(ROUTES));
@@ -32,6 +33,7 @@ export function createRouteHandler(controller: SessionController): (request: Req
       requireSameCarrierOrigin(request);
       if (url.pathname === ROUTES.register) return response(await controller.register());
       if (url.pathname === ROUTES.healthRecheck) return response(await controller.recheckHealth());
+      if (url.pathname === ROUTES.bindLink) return response(await controller.bindLink());
       const contentType = request.headers.get('content-type')?.split(';', 1)[0]?.trim();
       if (contentType !== 'application/json') throw new CoreError('CORE_INPUT_INVALID', 415);
       const declaredLength = Number(request.headers.get('content-length') ?? '0');

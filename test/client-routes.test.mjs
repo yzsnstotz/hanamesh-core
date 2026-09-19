@@ -30,7 +30,7 @@ test('contribution aggregation preserves unavailable versus real zero', async ()
   assert.deepEqual(totals, {status: 'ready', windowDays: 90, actions: {install: 3, open: 3, use: 9, uninstall: 1}});
   assert.equal(calls.length, 1);
   assert.match(calls[0].url, /^https:\/\/server\.example\/v1\/usage\/me\/contributions\?/);
-  assert.ok(calls[0].init.headers['x-hm-signature']);
+  assert.ok(new Headers(calls[0].init.headers).get('x-hm-signature'));
   assert.deepEqual(controller.state().contributions, totals);
   const offline = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
   assert.deepEqual(await offline.refreshContributions(), {status: 'unavailable', reason: 'NOT_CONNECTED'});
