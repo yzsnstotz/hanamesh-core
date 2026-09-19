@@ -93,3 +93,9 @@ rc.9 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：rc.9 tgz + usage rc
 - 耦合审计结论（本包）：唯一跨包边是设计内的——`dependencies` 钉 usage/app-host（套件入口）、patch 三条、`ctx.get('hanameshUsage')` duck-type 可选读（P1 阶段 3 第 4 条）、health 读兄弟包 `package.json` 元数据（P1 阶段 2）；无 import、无跨 storage 单元、无跨路由前缀。
 
 rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage rc.4 + app-host rc.14（+ Vibe rc.11）。
+
+## rc.11 · 真实 Tauri 桌面门后的修复（2026-09-20）
+
+- 判定：用户本机 dsh-tauri 0.15.5（profile 装有 dsh-better-sidebar，设置为整页）上，侧栏底部「HanaMesh」按钮打开设置后停在 General：`openHanaMeshSettings` 只找 `[role=dialog] nav button`。
+- 补齐：`src/client/index.ts` `findHanaMeshSettingsEntry()` 同时支持对话框与整页两种形态（排除本包 footer 自身），触发器兼容 `aria-haspopup=dialog` 与文本为 Settings/设置 的按钮；其余零改动。
+- 证据：37/37、4/4 突变、契约、包门；tgz `hanamesh-core-0.2.0-rc.11.tgz` SHA-256 `ca0836dcdb32c7efcd29a7433f3071f8bb8461f4728c01ca1dcccf3e26b139f9`；`recovery-20260920/tauri-desktop/`（REAL_DESKTOP：三件在用户真实 0.15.5 桌面、内核 0.1.5-rc.2 上加载并可用）。

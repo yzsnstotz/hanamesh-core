@@ -1,0 +1,44 @@
+2026-09-19 15:56:16.702Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 15:56:17.234Z  INFO main::service::plugin::internal: Reinstalling internal preset plugins: ["dsh-tauri-model-config", "dsh-tauri-turnrewind"]
+2026-09-19 15:56:17.235Z  INFO main::service::cli::core: dsh/pnpm shims ensured at /Users/yzliu/.local/bin
+2026-09-19 15:56:18.914Z  WARN main::service::plugin::install: pnpm store incompatibility detected during plugin install: The profile's node_modules was created by a different pnpm major version: it is linked from the store at "/Users/yzliu
+2026-09-19 15:56:19.031Z  WARN main::service::workflow::launch: ensure internal plugins failed: INTERNAL_PLUGIN_INSTALL_FAILED: PREINSTALL_FAILED: dsh plugin exited with code 1 (The profile's node_modules was created by a different pnpm maj
+2026-09-19 15:56:19.043Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dsh-tauri-model-config -> /Applications/Deepse
+2026-09-19 15:56:19.044Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dsh-tauri-turnrewind -> /Applications/Deepseek
+2026-09-19 15:56:19.045Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/@openmaic/dsh-openmaic -> /Users/yzliu/.dsh/pr
+2026-09-19 15:56:19.045Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dsh-ai4scholar -> /Users/yzliu/.dsh/profiles/t
+2026-09-19 15:56:19.045Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dsh-better-sidebar -> /Users/yzliu/.dsh/profil
+2026-09-19 15:56:19.045Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dshmarket -> /Users/yzliu/.dsh/profiles/tauri/
+2026-09-19 15:56:19.045Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 15:56:19.045Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 15:56:19.045Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/dsh-coding-subscription-oauth -> /Users/yzliu/
+2026-09-19 15:56:21.942Z  INFO main::service::workflow::launch: Harness process started successfully: pid=39259, port=3080
+2026-09-19 15:57:54.655Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 15:57:54.836Z  INFO main::service::plugin::internal: Reinstalling internal preset plugins: ["dsh-tauri", "dsh-tauri-model-config", "dsh-tauri-turnrewind", "dsh-tauri-ui", "dsh-tauri-worktree", "dsh-tauri-panel-extension", "dsh-ta
+2026-09-19 15:57:54.842Z  INFO main::service::cli::core: dsh/pnpm shims ensured at /Users/yzliu/.local/bin
+2026-09-19 15:59:03.971Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 15:59:03.972Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 15:59:06.777Z  INFO main::service::workflow::launch: Harness process started successfully: pid=46123, port=3080
+2026-09-19 21:52:47.128Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 21:52:47.261Z  WARN main::service::plugin::internal: INTERNAL_PLUGIN_DANGLING_LINK_UNINSTALLING: hanamesh-core（本地链接目标已不存在，卸载失效依赖）
+2026-09-19 21:52:47.261Z  INFO main::service::plugin::recovery: Recovery uninstall removed plugin hanamesh-core from profile manifest
+2026-09-19 21:52:47.435Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 21:52:47.435Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 21:52:50.244Z  INFO main::service::workflow::launch: Harness process started successfully: pid=53218, port=3080
+2026-09-19 21:53:52.289Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 21:53:52.621Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 21:53:52.621Z  INFO main::service::core::runtime: CORE_PLUGIN_LINKED: /Users/yzliu/Library/Application Support/io.github.hairyf.deepseek-harness-desktop/dependencies/dsh/node_modules/hanamesh-core -> /Users/yzliu/.dsh/profiles/ta
+2026-09-19 21:53:52.622Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 21:53:55.444Z  INFO main::service::workflow::launch: Harness process started successfully: pid=54195, port=3080
+2026-09-19 21:58:24.674Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 21:58:25.007Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 21:58:25.008Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 21:58:27.815Z  INFO main::service::workflow::launch: Harness process started successfully: pid=56723, port=3080
+2026-09-19 21:58:53.006Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 21:58:53.309Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 21:58:53.309Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 21:58:56.118Z  INFO main::service::workflow::launch: Harness process started successfully: pid=57105, port=3080
+2026-09-19 22:00:05.208Z  INFO main::service::cli::core: dsh/pnpm CLI links ensured at /Users/yzliu/.local/bin
+2026-09-19 22:00:05.514Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-web-app is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@d
+2026-09-19 22:00:05.514Z  WARN main::service::core::runtime: CORE_PLUGIN_PROFILE_ENTRY_MISSING: @deepseek-ai/dsh-base is referenced by /Users/yzliu/.dsh/profiles/tauri/package.json, source /Users/yzliu/.dsh/profiles/tauri/node_modules/@deep
+2026-09-19 22:00:08.329Z  INFO main::service::workflow::launch: Harness process started successfully: pid=57887, port=3080

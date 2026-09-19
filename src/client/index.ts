@@ -90,19 +90,31 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '我的 Hana'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, '可领权益 / 认领状态：绑定后在网站查看'), createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站'))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: '组件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.10 · DSH 0.1.5-alpha.1'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.11 · DSH 0.1.5-alpha.1'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
+/** Settings nav entry named "HanaMesh" — the DSH default dialog (`[role=dialog] nav button`) or a full-page settings layout
+ *  (e.g. dsh-better-sidebar renders Settings as a page with a "Back to app" nav). Our own sidebar footer is excluded. */
+function findHanaMeshSettingsEntry(): HTMLButtonElement | undefined {
+  const inDialog = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] nav button')].find(node => node.textContent?.trim() === 'HanaMesh');
+  if (inDialog) return inDialog;
+  const candidates = [...document.querySelectorAll<HTMLButtonElement>('button, [role="tab"], a')].filter(node => node.textContent?.trim() === 'HanaMesh' && !node.classList.contains('hm-core-footer') && !node.closest('.hm-core-section'));
+  return candidates.at(-1) as HTMLButtonElement | undefined;
+}
+
 function openHanaMeshSettings(): void {
-  const trigger = document.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]');
+  const direct = findHanaMeshSettingsEntry();
+  if (direct) { direct.click(); return; }
+  const trigger = document.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')
+    ?? [...document.querySelectorAll<HTMLButtonElement>('button')].find(node => /^(Settings|设置)$/.test(node.textContent?.trim() ?? ''));
   trigger?.click();
   let attempts = 0;
   const select = (): void => {
-    const button = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] nav button')].find(node => node.textContent?.trim() === 'HanaMesh');
-    if (button) button.click(); else if (++attempts < 10) window.requestAnimationFrame(select);
+    const button = findHanaMeshSettingsEntry();
+    if (button) button.click(); else if (++attempts < 30) window.setTimeout(select, 100);
   };
-  window.requestAnimationFrame(select);
+  window.setTimeout(select, 100);
 }
 
 function FooterAction({wide}: {wide: boolean}): ReactNode {
