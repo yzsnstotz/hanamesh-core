@@ -7,7 +7,7 @@ settings:
 overrides:
   '@hanamesh/lib-provision': file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz
   hanamesh-usage: file:vendor/siblings/hanamesh-usage-0.2.0-rc.5.tgz
-  '@hanamesh/dsh-app-host': file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz
+  '@hanamesh/dsh-app-host': file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz
   '@deepseek-ai/cordis': 4.0.2
   '@deepseek-ai/dsh-client-connection': 0.1.5-alpha.1
   '@deepseek-ai/dsh-storage-domain': 0.1.5-alpha.1
@@ -28,8 +28,8 @@ importers:
         specifier: 0.1.5-alpha.1
         version: 0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)
       '@hanamesh/dsh-app-host':
-        specifier: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz
-        version: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-storage-domain@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)))(@deepseek-ai/schemastery@3.18.2)(@hanamesh/lib-provision@file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz)
+        specifier: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz
+        version: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-storage-domain@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)))(@deepseek-ai/schemastery@3.18.2)(@hanamesh/lib-provision@file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz)
       hanamesh-usage:
         specifier: file:vendor/siblings/hanamesh-usage-0.2.0-rc.5.tgz
         version: file:vendor/siblings/hanamesh-usage-0.2.0-rc.5.tgz(5796c109226a58bf221c7103eda637ce)
@@ -203,9 +203,9 @@ packages:
   '@deepseek-ai/schemastery@3.18.2':
     resolution: {integrity: sha512-njDtZsznjYxok7KLLlHOPyuv2efdWVbSflAHgztSfbMsg+CVraEoRe2DjOCgClYv3ZCSm7WXoaUkbB/+RY7tWQ==}
 
-  '@hanamesh/dsh-app-host@file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz':
-    resolution: {integrity: sha512-SZeL3zObxxL0y+SDKU5rMSKTZ2mcl5k5j/066Nd5dWr+70+NNImGMRpVv7L8rsY0J1eb2+4JEDUsYxTpjSmEjw==, tarball: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz}
-    version: 0.1.0-rc.14
+  '@hanamesh/dsh-app-host@file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz':
+    resolution: {integrity: sha512-rB5M4yV2aEJFyAakYbUYjGXZ/GlZMEbMMHUkH7r8MeKN06KeS2hsij/8/bUy63r6u/itWpyCwga+5d1cvES5UA==, tarball: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz}
+    version: 0.1.0-rc.15
     engines: {node: '>=24.13.1 <25'}
     peerDependencies:
       '@deepseek-ai/cordis': 4.0.2
@@ -420,7 +420,7 @@ snapshots:
       '@deepseek-ai/cosmokit': 1.8.3
       '@standard-schema/spec': 1.1.0
 
-  '@hanamesh/dsh-app-host@file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.14.tgz(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-storage-domain@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)))(@deepseek-ai/schemastery@3.18.2)(@hanamesh/lib-provision@file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz)':
+  '@hanamesh/dsh-app-host@file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.15.tgz(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-storage-domain@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)))(@deepseek-ai/schemastery@3.18.2)(@hanamesh/lib-provision@file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz)':
     dependencies:
       '@deepseek-ai/cordis': 4.0.2
       '@deepseek-ai/dsh-storage-domain': 0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))
