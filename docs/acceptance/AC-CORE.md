@@ -112,3 +112,13 @@ rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage
 ## rc.14 · 重钉 app-host rc.16（2026-09-20，代码同 rc.11）
 
 - app-host rc.16（应用库 q/category/cursor）→ 本包 dependencies 随链重钉；37/37、契约、inputs、包门；tgz sha256 见 artifacts/SHA256SUMS。
+
+## rc.16 · O4 网站绑定回跳刷新（2026-09-20）
+
+- 根因：O4 冻结路线要求 `hanamesh://bound` 只转发一次同源 `POST /api/hanamesh/core/refresh`；rc.15 具备贡献/绑定状态刷新能力，但未暴露该路由，因此真实桌面回跳落到 404。
+- 修复：新增同源保护的 `POST /api/hanamesh/core/refresh`，显式调用绕过 60 秒贡献缓存并返回最新公开状态；不解析回跳 query，不增加服务契约键。
+- SOURCE：Node `v24.13.1`、pnpm `10.33.0`；38/38 单测、`check:contracts`、`verify:inputs`、build 全过。回归测试先稳定复现 404，再验证二次贡献请求与 `session.bound: true`。
+- PACKAGE：`artifacts/hanamesh-core-0.2.0-rc.16.tgz`，99 files，SHA-256 `f967197fecc5c4383b7744a5a39e9b5980617458f305ae224805322576213053`；只发布到本机 fixture Verdaccio，未发布公共 npm。
+- REAL_TAURI：HanaMesh rc.2 隔离 profile 从 localhost fixture registry 安装 rc.16，与 tether 0.1.14、coding OAuth 0.8.5 同时启动为 66/66 client modules ready；设置页显示 rc.16；同源 refresh 返回 HTTP 200，随后 `hanamesh://bound?source=o4-rc16-acceptance` 写入 `HANAMESH_BOUND_ACCEPTED`。
+
+rc.16 上限仍为 🧪，不是用户 ACCEPTED；公共 npm 发布仍是用户门。

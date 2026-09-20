@@ -230,6 +230,12 @@ export class SessionController {
     return this.#contributions;
   }
 
+  async refresh(): Promise<unknown> {
+    this.#contributionsCheckedAt = 0;
+    await this.refreshContributions();
+    return this.state();
+  }
+
   state(): unknown {
     const device = this.#device();
     const health = this.service.getHealth();

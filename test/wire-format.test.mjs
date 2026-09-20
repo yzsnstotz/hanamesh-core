@@ -85,3 +85,27 @@ test('contributions response `bound` flows into getSession().bound', async () =>
   await controller.refreshContributions();
   assert.equal(controller.service.getSession().bound, true);
 });
+
+test('POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback', async () => {
+  let bound = false;
+  let contributionCalls = 0;
+  const fetcher = async url => {
+    if (!String(url).includes('/v1/usage/me/contributions')) return Response.json({}, {status: 500});
+    contributionCalls += 1;
+    return Response.json({window: {}, bound, deviceCount: 1, byHana: [{hanaRef: 'x', actions: {install: 1, open: 0, use: 0, uninstall: 0}, devices: 1}], sources: {events: 1, rollups: 0}});
+  };
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
+  await controller.refreshContributions();
+  assert.equal(controller.service.getSession().bound, false);
+  bound = true;
+
+  const handler = createRouteHandler(controller);
+  const result = await handler(new Request('http://127.0.0.1:34580/api/hanamesh/core/refresh', {
+    method: 'POST',
+    headers: {origin: 'http://127.0.0.1:34580', host: '127.0.0.1:34580', 'sec-fetch-site': 'same-origin'},
+  }));
+
+  assert.equal(result.status, 200);
+  assert.equal(contributionCalls, 2, 'explicit refresh must not reuse the 60-second cache');
+  assert.equal((await result.json()).session.bound, true);
+});

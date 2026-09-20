@@ -44,6 +44,7 @@ export declare class SessionController {
         expiresAt: string;
     }>;
     refreshContributions(): Promise<Contributions>;
+    refresh(): Promise<unknown>;
     state(): unknown;
     diagnostics(): unknown;
     dispose(): Promise<void>;
