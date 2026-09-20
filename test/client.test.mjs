@@ -16,3 +16,12 @@ test('client distribution declares native slots and avoids forbidden layout/link
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.match(bundle, /window\.__ModuleLoader__\.load/);
 });
+
+test('account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)', async () => {
+  const source = await readFile('src/client/index.ts', 'utf8');
+  assert.match(source, /state\.session\.bound === true\s*\?\s*createElement\('button'[^\n]*visit\('\/me'\)[^\n]*在网站查看账号与设备/);
+  assert.match(source, /'去网站绑定'/);
+  assert.match(source, /已绑定到网站账号/);
+  assert.match(source, /'\/api\/hanamesh\/core\/refresh', \{method: 'POST'\}/); // post-bind polling uses the host refresh route
+  assert.match(source, /state\.session\.bound === true \? '可领权益 \/ 认领状态：已绑定/); // row follows the bound flag
+});
