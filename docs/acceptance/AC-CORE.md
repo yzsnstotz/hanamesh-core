@@ -122,3 +122,12 @@ rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage
 - REAL_TAURI：HanaMesh rc.2 隔离 profile 从 localhost fixture registry 安装 rc.16，与 tether 0.1.14、coding OAuth 0.8.5 同时启动为 66/66 client modules ready；设置页显示 rc.16；同源 refresh 返回 HTTP 200，随后 `hanamesh://bound?source=o4-rc16-acceptance` 写入 `HANAMESH_BOUND_ACCEPTED`。
 
 rc.16 上限仍为 🧪，不是用户 ACCEPTED；公共 npm 发布仍是用户门。
+
+## rc.18 · peer 范围化 + 重钉 usage rc.6 / app-host rc.17（2026-09-20，基线 260ace1 = rc.17，代码同 rc.17）
+
+- 改动：`peerDependencies` 的 `@deepseek-ai/dsh-*` `0.1.5-alpha.1` → `>=0.1.5-alpha.1 <0.2.0`、`@deepseek-ai/cordis` `4.0.2` → `>=4.0.2 <5`（laws/environment-matrix.md §2 peer 策略）；`dependencies` 精确钉 `hanamesh-usage 0.2.0-rc.6`、`@hanamesh/dsh-app-host 0.1.0-rc.17`（两者同样只改 peer 范围）；`vendor/siblings/` 换真件并更新 SHA256SUMS；`pnpm.overrides` 补钉 `dsh-client-ui-settings/sidebar` alpha.1（构建闭包不随 peer 范围漂移）。
+- SOURCE：Node `v24.13.1`、pnpm `10.33.0`、TS 5.9.3；`pnpm install --frozen-lockfile` 过；38/38 单测、5/5 变异 ERR_ASSERTION、`check:contracts`、`verify:inputs`、`check-package` 全过。
+- PACKAGE：`artifacts/hanamesh-core-0.2.0-rc.18.tgz`，SHA-256 见 `artifacts/SHA256SUMS`；只发布到本机私有 Verdaccio（`latest`），未发布公共 npm。
+- REAL_HOST ×2：内核 `0.1.5-alpha.1`（隔离 `DSH_HOME`）与 `0.1.5-rc.2`（用户官方 dsh-tauri 0.15.5 运行时，只读；隔离 `DSH_HOME`、端口 34590、`~/.dsh` 前后快照零差异）上 `plugin add hanamesh-core@0.2.0-rc.18` 各一条装三件、`--dump-config` 恰三条、health `normal`、usage/app-host `satisfied`、三路由 200。pnpm `missing peer` WARN 仍在（C20，与范围无关）。证据：`docs/acceptance/peer-range-20260920/`。
+
+rc.18 上限仍为 🧪，不是用户 ACCEPTED。

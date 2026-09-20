@@ -1,0 +1,2 @@
+diff exit=0 (0 = no change)
+snapshot: find ~/.dsh -type f (excluding node_modules) with mtime+size, before and after the isolated rc.2 run; 52 entries before, 52 after; node_modules file count 24926 -> 24926

@@ -1,0 +1,11 @@
+Legend: production dependency, optional only, dev only
+
+dsh-profile-core /private/tmp/claude-501/-Users-yzliu-work-projects-hanamesh/ca5cd8dc-203e-464b-beb9-80aae92a6ea2/scratchpad/a1/home/profiles/core (PRIVATE)
+│
+│   dependencies:
+└─┬ hanamesh-core@0.2.0-rc.18
+  ├── @hanamesh/dsh-app-host@0.1.0-rc.17
+  ├── hanamesh-usage@0.2.0-rc.6
+  └── zod@4.5.4 peer
+
+4 packages

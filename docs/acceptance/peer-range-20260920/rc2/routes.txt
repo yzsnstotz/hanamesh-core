@@ -1,0 +1,3 @@
+/api/hanamesh/usage/health 200
+/hanamesh/apps 200
+/api/hanamesh/core/state 200
