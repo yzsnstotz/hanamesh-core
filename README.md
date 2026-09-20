@@ -1,6 +1,6 @@
 # hanamesh-core
 
-> 🧪 `0.2.0-rc.16`（2026-09-20：新增冻结 O4 回跳所需的 `POST /api/hanamesh/core/refresh`，显式刷新会绕过 60 秒贡献缓存并返回最新公开状态）。rc.15 让出厂 `serverOrigin`/`websiteOrigin` 指向生产 `api.hanamesh.com` / `market.hanamesh.com`、`allowSystemBrowser: true`；此前 rc.14 出厂为空，全新安装点「去网站绑定」必报 `CORE_URL_NOT_ALLOWED`。隔离测试用 profile `cordis.patch.yml` 的 `- id: hanamesh-core` 覆盖。固定 Node `24.13.1`、pnpm `10.33.0`、DSH `0.1.5-alpha.1`；状态与验收结论只看 HanaMesh 文档仓 `STATUS.md`。
+> 🧪 `0.2.0-rc.17`（2026-09-20：将 core 的精确 Zod peer 对齐到 usage rc.5 的 `4.5.4`，供 O4 客户端携带自洽离线闭包）。rc.16 新增冻结 O4 回跳所需的 `POST /api/hanamesh/core/refresh`，显式刷新会绕过 60 秒贡献缓存并返回最新公开状态。隔离测试用 profile `cordis.patch.yml` 的 `- id: hanamesh-core` 覆盖。固定 Node `24.13.1`、pnpm `10.33.0`、DSH `0.1.5-alpha.1`；状态与验收结论只看 HanaMesh 文档仓 `STATUS.md`。
 
 收录不代表审核或推荐。
 
