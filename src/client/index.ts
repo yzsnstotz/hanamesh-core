@@ -90,7 +90,7 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '我的 Hana'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, '可领权益 / 认领状态：绑定后在网站查看'), createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站'))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: '组件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.14 · DSH 0.1.5-alpha.1'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.15 · DSH 0.1.5-alpha.1'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 

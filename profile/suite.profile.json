@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
-  "version": "0.2.0-rc.14",
+  "version": "0.2.0-rc.15",
   "label": "HanaMesh 套件",
   "runningTaskPolicy": "preserve-and-pause",
   "components": [

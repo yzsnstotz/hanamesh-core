@@ -2,9 +2,11 @@
     - id: hanamesh-core
       name: hanamesh-core
       config:
-        serverOrigin: null
-        websiteOrigin: null
-        allowSystemBrowser: false
+        # rc.15: 出厂即指向生产环境；隔离测试/自建服务在 profile 的 cordis.patch.yml 里用 `- id: hanamesh-core` 覆盖。
+        serverOrigin: https://api.hanamesh.com
+        websiteOrigin: https://market.hanamesh.com
+        # open-external 只放行 websiteOrigin 同源 URL，所以默认允许系统浏览器打开绑定/网站链接。
+        allowSystemBrowser: true
     - id: hanamesh-usage
       name: hanamesh-usage
       config:
