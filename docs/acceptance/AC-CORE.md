@@ -131,3 +131,9 @@ rc.16 上限仍为 🧪，不是用户 ACCEPTED；公共 npm 发布仍是用户�
 - REAL_HOST ×2：内核 `0.1.5-alpha.1`（隔离 `DSH_HOME`）与 `0.1.5-rc.2`（用户官方 dsh-tauri 0.15.5 运行时，只读；隔离 `DSH_HOME`、端口 34590、`~/.dsh` 前后快照零差异）上 `plugin add hanamesh-core@0.2.0-rc.18` 各一条装三件、`--dump-config` 恰三条、health `normal`、usage/app-host `satisfied`、三路由 200。pnpm `missing peer` WARN 仍在（C20，与范围无关）。证据：`docs/acceptance/peer-range-20260920/`。
 
 rc.18 上限仍为 🧪，不是用户 ACCEPTED。
+
+## rc.20 · 重钉 app-host rc.18（2026-09-20，基线 f26234e = rc.19，代码同 rc.19）
+
+- app-host rc.18（应用库安装/供给/卸载反馈 UI，宿主逻辑不变）→ 本包 dependencies / vendor / SHA256SUMS / profile / 「关于」串 / 测试断言 / publish.sh 随链重钉；usage rc.6、lib-provision rc.1 不动。
+- 门：frozen-lockfile、verify:inputs、build、39/39、5/5 mutation、契约、check-package 全过；tgz sha256 `b54e883fc4b223f75ac247b1bed9c2f20084ea25ba79e322ce41e316d7641a95`。
+- 真实门：`docs/acceptance/rc20-repin-20260920/`（registry 发布 + dist-tag latest；alpha.1 内核隔离 `DSH_HOME` 安装 → 三条 loader → 宿主 state app-host `satisfied 0.1.0-rc.18`、usage `satisfied 0.2.0-rc.6`）。rc.2 内核 NOT_RUN（宿主逻辑与 peer 范围未变）。

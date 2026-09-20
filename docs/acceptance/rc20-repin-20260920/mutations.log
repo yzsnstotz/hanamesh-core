@@ -1,0 +1,9 @@
+
+> hanamesh-core@0.2.0-rc.20 test:mutations /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/mutation.mjs
+
+{"mutant":"domain-name","mutantExit":1,"assertionFailure":true}
+{"mutant":"device-integrity","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-device-id","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-reverse-order","mutantExit":1,"assertionFailure":true}
+{"mutant":"health-repair-priority","mutantExit":1,"assertionFailure":true}

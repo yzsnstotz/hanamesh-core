@@ -34,6 +34,6 @@ publish_if_missing() {
 }
 # @hanamesh/lib-provision is private:true and inlined into app-host dist/provision; it stays a dev-only vendor tgz (app-host peer is satisfied at runtime by the inlined copy, DSH profiles do not auto-install peers).
 publish_if_missing hanamesh-usage 0.2.0-rc.6 ./vendor/siblings/hanamesh-usage-0.2.0-rc.6.tgz
-publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.17 ./vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.17.tgz
-publish_if_missing hanamesh-core 0.2.0-rc.19 ./artifacts/hanamesh-core-0.2.0-rc.19.tgz
+publish_if_missing @hanamesh/dsh-app-host 0.1.0-rc.18 ./vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.18.tgz
+publish_if_missing hanamesh-core 0.2.0-rc.20 ./artifacts/hanamesh-core-0.2.0-rc.20.tgz
 printf '{"mode":"REAL_SIBLINGS","registry":"%s","packages":3}\n' "$REGISTRY"

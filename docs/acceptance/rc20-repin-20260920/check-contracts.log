@@ -1,0 +1,4 @@
+
+> hanamesh-core@0.2.0-rc.20 check:contracts /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts
+

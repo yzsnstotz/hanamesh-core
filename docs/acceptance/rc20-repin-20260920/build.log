@@ -1,0 +1,6 @@
+
+> hanamesh-core@0.2.0-rc.20 build /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/build.mjs --target
+
+{"node":"v24.13.1","platform":"darwin","arch":"arm64","typescript":"Version 5.9.3","pnpm":"10.33.0","mode":"--target"}
+Compiled portable TypeScript; checked adapter JavaScript syntax. Host type gate is separate from offline compilation.

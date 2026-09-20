@@ -1,0 +1,4 @@
+hanamesh-core latest: 0.2.0-rc.20 rc: 0.2.0-rc.20 
+@hanamesh/dsh-app-host latest: 0.1.0-rc.18 rc: 0.1.0-rc.18 
+@hanamesh/app-vibe-trading latest: 0.1.0-rc.15 rc: 0.1.0-rc.15 
+hanamesh-usage latest: 0.2.0-rc.6 rc: 0.2.0-rc.6 
