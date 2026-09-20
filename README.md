@@ -8,7 +8,7 @@
 
 Core 本身只拥有：本机设备密钥和设备 id、注册观察、同意状态、组件健康快照、DSH 设置/侧栏入口。它不采集事件、不实现应用容器、不做钱包、认领或奖励计算。
 
-开发环境用 `vendor/siblings/` 里 STATUS §5 登记的真件 tgz（`hanamesh-usage-0.2.0-rc.4`、`hanamesh-dsh-app-host-0.1.0-rc.15`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
+开发环境用 `vendor/siblings/` 里 STATUS §5 登记的真件 tgz（`hanamesh-usage-0.2.0-rc.4`、`hanamesh-dsh-app-host-0.1.0-rc.16`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
 
 当前套件模式为 `REAL_SIBLINGS`（依赖解析层面）：三件真实互动（一次安装、互斥、生命周期）仍归 O3 验证，本仓只证明 Core 自身、三条 Loader insert 与真实 Server 往返。
 

@@ -108,3 +108,7 @@ rc.10 上限仍为 🧪，不是用户 ACCEPTED。O3 输入：core rc.10 + usage
 ## rc.13 · 重钉 app-host rc.15（2026-09-20，代码同 rc.12）
 
 - 判定：app-host rc.15 修线上目录条目校验（`updatedAt`），本包 `dependencies` 随链重钉。37/37、契约、inputs、包门；tgz `hanamesh-core-0.2.0-rc.13.tgz` SHA-256 见 `artifacts/SHA256SUMS`。
+
+## rc.14 · 重钉 app-host rc.16（2026-09-20，代码同 rc.11）
+
+- app-host rc.16（应用库 q/category/cursor）→ 本包 dependencies 随链重钉；37/37、契约、inputs、包门；tgz sha256 见 artifacts/SHA256SUMS。
