@@ -145,3 +145,7 @@ rc.21 = rc.20 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.19`（网
 ## rc.22（2026-09-21，本机）
 
 rc.22 = rc.21 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.20`（引导 303 保留 Referer + `frameAncestors`），代码不变。39/39、变异 killed、contracts、check-package、verify-inputs；隔离固定内核 0.1.5-alpha.1 从本机 registry `plugin add hanamesh-core@0.2.0-rc.22` 一次得三件、app-host rc.20 落地（`rc22-repin-20260921/plugin-add.log`）。tgz `7deda7a5…ebb6`。
+
+## rc.23（2026-09-21，本机）
+
+rc.23 = rc.22 + 「组件」行加一句支持依赖说明（lib-provision / zod 不是插件，DSH Market 显示 Installed, not active 属正常；用户 2026-09-21 定「接受可见 + 说明」）+ `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.21`（Router 自动路由）。39/39、变异 killed、contracts、check-package；隔离固定内核一装三件（`rc23-repin-20260921/plugin-add.log`）。tgz `2d139d09…b86a`。
