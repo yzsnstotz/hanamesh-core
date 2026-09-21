@@ -2,19 +2,19 @@ TAP version 13
 # Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
 not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
   ---
-  duration_ms: 81.424417
+  duration_ms: 78.982333
   type: 'test'
   location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/adapter.test.mjs:2:1'
   failureType: 'testCodeFailure'
   error: |-
     TAP version 13
-    # (node:32196) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+    # (node:64418) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
     # --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./test/fixtures/host-loader.mjs", pathToFileURL("./")); register("./test/fixtures/host-loader.mjs", pathToFileURL("./"));'
     # (Use `node --trace-warnings ...` to show where the warning was created)
     # Subtest: adapter uses the core domain, core service name and no legacy web assets
     not ok 1 - adapter uses the core domain, core service name and no legacy web assets
       ---
-      duration_ms: 4.389125
+      duration_ms: 4.335375
       type: 'test'
       location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/fixtures/adapter-check.test.mjs:18:1'
       failureType: 'testCodeFailure'
@@ -45,13 +45,13 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
     # Subtest: adapter activation failures do not silently install an anonymous substitute
     ok 2 - adapter activation failures do not silently install an anonymous substitute
       ---
-      duration_ms: 1.523875
+      duration_ms: 1.508959
       type: 'test'
       ...
     # Subtest: disposing after the storage facility closes still clears public access
     ok 3 - disposing after the storage facility closes still clears public access
       ---
-      duration_ms: 0.781125
+      duration_ms: 0.7575
       type: 'test'
       ...
     1..3
@@ -62,7 +62,7 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
     # cancelled 0
     # skipped 0
     # todo 0
-    # duration_ms 57.857875
+    # duration_ms 56.704541
     
     
     1 !== 0
@@ -85,4 +85,4 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 109.612292
+# duration_ms 106.5375

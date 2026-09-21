@@ -141,3 +141,7 @@ rc.18 上限仍为 🧪，不是用户 ACCEPTED。
 ## rc.21（2026-09-21，本机）
 
 rc.21 = rc.20 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.19`（网关在嵌入式 webview 丢弃第三方 cookie 时改用 Fetch Metadata 授权，修桌面壳打开应用空白），代码不变。39/39、变异 6/6 killed、contracts、check-package；隔离固定内核 0.1.5-alpha.1 从本机 registry `plugin add hanamesh-core@0.2.0-rc.21` 一次得三件（`rc21-repin-20260921/plugin-add.log`），启动无错误，`/api/hanamesh/core/state` 注册成功（`boot.log`）。tgz `856bb80b…3d03`。
+
+## rc.22（2026-09-21，本机）
+
+rc.22 = rc.21 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.20`（引导 303 保留 Referer + `frameAncestors`），代码不变。39/39、变异 killed、contracts、check-package、verify-inputs；隔离固定内核 0.1.5-alpha.1 从本机 registry `plugin add hanamesh-core@0.2.0-rc.22` 一次得三件、app-host rc.20 落地（`rc22-repin-20260921/plugin-add.log`）。tgz `7deda7a5…ebb6`。
