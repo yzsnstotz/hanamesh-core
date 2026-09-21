@@ -17,7 +17,7 @@ try {
   const packed = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
   assert.equal(packed.name, 'hanamesh-core');
   assert.equal(packed.version, source.version);
-  assert.deepEqual(packed.dependencies, {'hanamesh-usage': '0.2.0-rc.6', '@hanamesh/dsh-app-host': '0.1.0-rc.21'});
+  assert.deepEqual(packed.dependencies, {'hanamesh-usage': '0.2.0-rc.6', '@hanamesh/dsh-app-host': '0.1.0-rc.23'});
   assert.equal(packed.dsh.bundle.patch, './profile/cordis.patch.yml');
   assert.ok(packed.exports['./contract']);
   assert.ok(packed.exports['./client']);
