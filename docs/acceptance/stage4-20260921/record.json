@@ -1,0 +1,47 @@
+[
+ {
+  "step": "core 设置段",
+  "shot": "01-core-settings.png",
+  "real": "ready",
+  "detail": [
+   "设备身份设备 id：hjDLHyjH… 注册：已注册",
+   "数据授权允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）当前：已关闭撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。",
+   "账号未绑定：绑定后网站才能把本设备的贡献记到你的账号去网站绑定",
+   "我的 Hana可领权益 / 认领状态：绑定后在网站查看去网站",
+   "本设备贡献累计install 0 · open 0 · use 0 · uninstall 0 窗口：近 90 天",
+   "组件使用记录：已安装 0.2.0-rc.6应用容器：已安装 0.1.0-rc.26支持依赖：@hanamesh/lib-provision、zod（不是插件，DSH Market 里会显示为「Installed, not active」，属正常，无需操作）重新检查",
+   "关于hanamesh-core 0.2.0-rc.28 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）去网站"
+  ]
+ },
+ {
+  "step": "usage 只读页",
+  "shot": "02-usage-view.png",
+  "real": "real",
+  "detail": "本地使用记录\n\n匹配 0 条，当前页 0 条。以下摘要不取代原始 session。\n\n执行者  结果 \n全部\ncompleted\nfailed\ninterrupted\nunavailable\n 最早结束时间（Unix 毫秒） 最晚结束时间（Unix 毫秒） 来源 \n全部\nregistry-session-log\n 筛选\n用量 · 不混合来源\n筛选后所有记录；不是当前页合计\n指标\treported（条数）\testimated（条数）\tunavailable 条数\ninputTokens\t— 无 reported 值 (0)\t— 无 estimated 值 (0)\t0\noutputTokens\t—"
+ },
+ {
+  "step": "打开 Vibe",
+  "shot": "04-vibe-open.png",
+  "real": "iframe rendered",
+  "detail": {
+   "clicked": "补齐运行时",
+   "frames": [
+    {
+     "src": "http://127.0.0.1:56625/__hanamesh_bootstrap/3bc954bd7b9e0ca9f7b5c07f91d2ece84486",
+     "w": 1384,
+     "h": 658
+    }
+   ],
+   "text": "New Session\nWorkspaces\nNo sessions yet\n应用库\nHanaMesh\nSettings\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start\n应用库\n关闭\n搜索\n只看应用\nvibe-trading\n关闭视图\nAdd an API key to get "
+  }
+ },
+ {
+  "step": "去网站",
+  "shot": "05-go-website.png",
+  "real": "button present (opens system browser via core open-external; not clicked to avoid opening the user browser)",
+  "detail": {
+   "goBtn": "<button type=\"button\">去网站</button>",
+   "websiteOrigin": "https://market.hanamesh.com"
+  }
+ }
+]
