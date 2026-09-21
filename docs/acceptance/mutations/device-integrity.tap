@@ -2,15 +2,15 @@ TAP version 13
 # Subtest: corrupt device rejected
 not ok 1 - corrupt device rejected
   ---
-  duration_ms: 5.9445
+  duration_ms: 2.854958
   type: 'test'
-  location: '/private/tmp/hm-core-mutation-WYwfbZ/device-integrity.test.mjs:1:130'
+  location: '/private/tmp/hm-core-mutation-Qh9Fsg/device-integrity.test.mjs:1:130'
   failureType: 'testCodeFailure'
   error: 'Missing expected exception.'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
-    TestContext.<anonymous> (file:///private/tmp/hm-core-mutation-WYwfbZ/device-integrity.test.mjs:1:252)
+    TestContext.<anonymous> (file:///private/tmp/hm-core-mutation-Qh9Fsg/device-integrity.test.mjs:1:252)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1103:25)
     Test.start (node:internal/test_runner/test:1000:17)
@@ -24,4 +24,4 @@ not ok 1 - corrupt device rejected
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 43.916916
+# duration_ms 38.479709

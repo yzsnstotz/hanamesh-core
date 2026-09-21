@@ -7,13 +7,13 @@ const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 test('package metadata exposes the core bundle and only the two suite dependencies', async () => {
   const pkg = await readJson('package.json');
   assert.equal(pkg.name, 'hanamesh-core');
-  assert.equal(pkg.version, '0.2.0-rc.24');
+  assert.equal(pkg.version, '0.2.0-rc.25');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
   assert.equal(pkg.repository?.url, 'https://github.com/yzsnstotz/hanamesh-core.git');
   assert.deepEqual(pkg.dependencies, {
     'hanamesh-usage': '0.2.0-rc.6',
-    '@hanamesh/dsh-app-host': '0.1.0-rc.23',
+    '@hanamesh/dsh-app-host': '0.1.0-rc.24',
   });
   assert.equal(pkg.dsh?.bundle?.patch, './profile/cordis.patch.yml');
   assert.ok(pkg.exports?.['./contract']);

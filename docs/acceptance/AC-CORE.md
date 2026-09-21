@@ -153,3 +153,7 @@ rc.23 = rc.22 + 「组件」行加一句支持依赖说明（lib-provision / zod
 ## rc.24（2026-09-21，本机）
 
 rc.24 = rc.23 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.23`（Router 不再替应用选模型——`{{model|默认}}` 落到应用声明默认值，派生槽位不自动路由；rc.22 供应商页两张表、无网关开关/自管开关），代码不变。39/39、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核 0.1.5-alpha.1 从本机 registry `plugin add hanamesh-core@0.2.0-rc.24` 一次得三件、app-host rc.23 落地（`rc24-repin-20260921/plugin-add.log`）。tgz `aeb65414…49ce`。
+
+## rc.25（2026-09-21，本机）
+
+rc.25 = rc.24 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.24`（模型随路由：路由表「模型」列 + `POST /hanamesh/router/model`），代码不变。39/39、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件、app-host rc.24 落地（`rc25-repin-20260921/plugin-add.log`）。tgz `71fc9fbd…7ca7`。

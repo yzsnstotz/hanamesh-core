@@ -9,7 +9,7 @@ import {inspectPackage, LoaderObservationSource} from '../lib/health/loader.js';
 
 const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
 const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.6', phase: 'active'}));
-active[1].version = '0.1.0-rc.23';
+active[1].version = '0.1.0-rc.24';
 
 test('notice components distinguish present, missing and disabled without restricting healthy core', async () => {
   for (const [name, observations, expected] of [
@@ -48,7 +48,7 @@ test('real DSH include-prefixed ids and package root or subpath names match suit
       {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
       {id: 'include:hanamesh-app-host', options: {name: appHostName}, fiber: {state: 2}},
     ];
-    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.6' : '0.1.0-rc.23'}));
+    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.6' : '0.1.0-rc.24'}));
     const observations = await source.observe(profile.components);
     assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']], appHostName);
   }
