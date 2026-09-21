@@ -11,6 +11,12 @@ import {configOf, publicJson, snapshotOf} from './validation.js';
 const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
 type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: 90; actions: {install: number; open: number; use: number; uninstall: number}};
+/** usage >=0.2.0-rc.3 contributions `account`: the GitHub account name of the bound canonical principal. Older servers omit it -> null. */
+type LinkedAccount = {provider: 'github'; displayName: string};
+const linkedAccount = (value: unknown): LinkedAccount | null => {
+  const v = value as {provider?: unknown; displayName?: unknown} | null | undefined;
+  return v && v.provider === 'github' && typeof v.displayName === 'string' && v.displayName.length > 0 && v.displayName.length <= 120 ? Object.freeze({provider: 'github', displayName: v.displayName}) : null;
+};
 
 export class SessionController {
   readonly #config: Required<PluginConfig>;
@@ -26,6 +32,7 @@ export class SessionController {
   #contributions: Contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
   #contributionsCheckedAt = 0;
   #bound: boolean | null = null;
+  #account: LinkedAccount | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
   readonly service: HanaMeshCoreContract;
   private constructor(config: PluginConfig, store: CoreStore, fetcher?: typeof fetch) {
@@ -213,7 +220,7 @@ export class SessionController {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
       const response = await this.#transport.request(path, {method: 'GET', headers});
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {bound?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
+      const payload = await response.json() as {bound?: unknown; account?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
       if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const actions = {install: 0, open: 0, use: 0, uninstall: 0};
       for (const row of payload.byHana) for (const key of Object.keys(actions) as Array<keyof typeof actions>) {
@@ -224,6 +231,7 @@ export class SessionController {
       this.#contributions = Object.freeze({status: 'ready', windowDays: 90, actions: Object.freeze(actions)});
       this.#contributionsCheckedAt = Date.now();
       this.#bound = typeof payload.bound === 'boolean' ? payload.bound : null;
+      this.#account = this.#bound === true ? linkedAccount(payload.account) : null;
     } catch (error) {
       this.#contributions = Object.freeze({status: 'unavailable', reason: safeError(error).code});
     }
@@ -243,7 +251,7 @@ export class SessionController {
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
     return publicJson({deviceId: device.deviceId, publicKey: device.publicKey, registration: this.#state.registration, consent: this.#state.consent,
-      session: this.#session(), serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
+      session: this.#session(), account: this.#account, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
       health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
   }
   diagnostics(): unknown {

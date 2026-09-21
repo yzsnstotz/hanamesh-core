@@ -86,6 +86,27 @@ test('contributions response `bound` flows into getSession().bound', async () =>
   assert.equal(controller.service.getSession().bound, true);
 });
 
+test('B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null', async () => {
+  let payload = {window: {}, bound: true, deviceCount: 1, account: {provider: 'github', displayName: 'yzsnstotz', token: 'must-not-leak'}, byHana: [], sources: {events: 0, rollups: 0}};
+  const fetcher = async url => String(url).includes('/v1/usage/me/contributions') ? Response.json(payload) : Response.json({}, {status: 500});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
+  assert.equal(controller.state().account, null);
+  await controller.refresh();
+  assert.deepEqual(controller.state().account, {provider: 'github', displayName: 'yzsnstotz'});
+  assert.equal(controller.state().session.bound, true);
+  for (const account of [undefined, null, 'yzsnstotz', {provider: 'email', displayName: 'x'}, {provider: 'github'}, {provider: 'github', displayName: ''}, {provider: 'github', displayName: 'x'.repeat(121)}]) {
+    payload = {...payload, ...(account === undefined ? {account: undefined} : {account})};
+    await controller.refresh();
+    assert.equal(controller.state().account, null, JSON.stringify(account));
+    assert.equal(controller.state().session.bound, true, 'bound itself is unaffected by the account shape');
+  }
+  payload = {...payload, bound: false, account: {provider: 'github', displayName: 'yzsnstotz'}};
+  await controller.refresh();
+  assert.equal(controller.state().account, null, 'an account name never shows for an unbound device');
+  const snapshotKeys = Object.keys(controller.service.getSession());
+  assert.equal(snapshotKeys.includes('account'), false, 'the cross-plugin SessionSnapshot contract is unchanged');
+});
+
 test('POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback', async () => {
   let bound = false;
   let contributionCalls = 0;

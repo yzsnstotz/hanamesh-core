@@ -12,6 +12,8 @@ type CoreState = {
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
   consent: {state: 'withheld' | 'granted'};
   session: {bound: boolean | null};
+  /** usage rc.3+: GitHub account name of the bound principal; null when unbound or the server predates it. */
+  account: {provider: 'github'; displayName: string} | null;
   serverOrigin: string | null;
   websiteOrigin: string | null;
   health: {mode: 'normal' | 'restricted' | 'blocked' | 'repair'; fault: string | null};
@@ -98,7 +100,9 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '数据授权'}, createElement('label', {className: 'hm-core-switch'}, createElement('input', {type: 'checkbox', checked: state.consent.state === 'granted', onChange: event => void post('/api/hanamesh/core/consent', {state: event.currentTarget.checked ? 'granted' : 'withheld'})}), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'), createElement('span', null, `当前：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`), createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。')),
     createElement(Row, {label: '账号'}, createElement('div', {className: 'hm-core-actions'},
       state.session.bound === true
-        ? createElement('span', {'data-hanamesh-core-bound': 'true'}, `已绑定到网站账号（设备 ${state.deviceId.slice(0, 8)}… 已关联你的 GitHub 登录）`)
+        ? createElement('span', {'data-hanamesh-core-bound': 'true', ...(state.account ? {'data-hanamesh-core-account': state.account.displayName} : {})}, state.account?.provider === 'github'
+          ? `已绑定到 GitHub 账号 ${state.account.displayName}（设备 ${state.deviceId.slice(0, 8)}…）`
+          : `已绑定到网站账号（设备 ${state.deviceId.slice(0, 8)}… 已关联你的 GitHub 登录）`)
         : createElement('span', {'data-hanamesh-core-bound': String(state.session.bound)}, state.session.bound === false ? '未绑定：绑定后网站才能把本设备的贡献记到你的账号' : state.serverOrigin === null ? '未连接服务端' : '绑定状态读取中…'),
       state.session.bound === true
         ? createElement('button', {type: 'button', onClick: () => visit('/me')}, '在网站查看账号与设备')
@@ -106,7 +110,7 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '我的 Hana'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, state.session.bound === true ? '可领权益 / 认领状态：已绑定，在网站「我的」页查看' : '可领权益 / 认领状态：绑定后在网站查看'), createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站'))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: '组件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('span', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'support-dependencies'}, '支持依赖：@hanamesh/lib-provision、zod（不是插件，DSH Market 里会显示为「Installed, not active」，属正常，无需操作）'), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.25 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.26 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 

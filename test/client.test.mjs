@@ -25,3 +25,13 @@ test('account row is state-aware: bound hides the bind button and names the acco
   assert.match(source, /'\/api\/hanamesh\/core\/refresh', \{method: 'POST'\}/); // post-bind polling uses the host refresh route
   assert.match(source, /state\.session\.bound === true \? '可领权益 \/ 认领状态：已绑定/); // row follows the bound flag
 });
+
+test('B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it', async () => {
+  const source = await readFile('src/client/index.ts', 'utf8');
+  assert.match(source, /account: \{provider: 'github'; displayName: string\} \| null;/); // CoreState mirrors GET state
+  assert.match(source, /state\.account\?\.provider === 'github'\s*\?\s*`已绑定到 GitHub 账号 \$\{state\.account\.displayName\}/);
+  assert.match(source, /:\s*`已绑定到网站账号（设备 \$\{state\.deviceId\.slice\(0, 8\)\}… 已关联你的 GitHub 登录）`/); // fallback for usage <= rc.2
+  assert.match(source, /'data-hanamesh-core-account': state\.account\.displayName/); // hook for the AX/headless acceptance read
+  const bundle = await readFile('lib/client.js', 'utf8');
+  assert.match(bundle, /已绑定到 GitHub 账号/);
+});

@@ -157,3 +157,7 @@ rc.24 = rc.23 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.23`（Rou
 ## rc.25（2026-09-21，本机）
 
 rc.25 = rc.24 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.24`（模型随路由：路由表「模型」列 + `POST /hanamesh/router/model`），代码不变。39/39、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件、app-host rc.24 落地（`rc25-repin-20260921/plugin-add.log`）。tgz `71fc9fbd…7ca7`。
+
+## rc.26（2026-09-21，本机）
+
+rc.26 = rc.25 + **B6 设备标签 + B7 账号显示名**（STATUS `DEVICE-PER-PROFILE`、UI/UX 清单 #4）。注册体多可选 `label {hostname: os.hostname(), os: `${platform}-${arch}`, shell: HANAMESH_SHELL ?? 'dsh'}`（各自去控制字符并截到 64/32/48；桌面壳并行改动会设 `HANAMESH_SHELL=hanamesh-desktop/<version>`）；identity rc.2 对未知键 400 且不消费 nonce → core 取新挑战、不带 label 重注册一次，所以对现网 rc.2 无回归。贡献响应带 `account {provider:'github', displayName}`（usage rc.3）且 `bound===true` 时 `GET state` 多 `account`，「账号」行显示「已绑定到 GitHub 账号 <名>（设备 …）」；缺省/形状不对 → `null`，沿用 rc.19 文案。跨插件 `SessionSnapshot` 契约不变（`account` 只在 HTTP state）。45/45（新增 6：label 取值与上限、注册体含 label、rc.2 400 退回、无 label 400 不重试、account 进/不进 state 的 8 种形状、UI 源文案与 bundle）、变异 5/5 killed、contracts、check-package、verify-inputs。依赖未动（usage rc.6 / app-host rc.24）。tgz `48a2ab0a…b39a`。**未做**：隔离固定内核 `plugin add` 落地与真实 rc.3 服务端联跑（宿主尚未 vendor identity/usage rc.3），归主 session 重钉后。
