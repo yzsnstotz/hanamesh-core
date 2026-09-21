@@ -1,0 +1,18 @@
+[
+ {
+  "action": "open",
+  "hanaRef": "@hanamesh/app-vibe-trading",
+  "source": "seat",
+  "sourcePlugin": "@hanamesh/dsh-app-host",
+  "occurredAt": "2026-09-21T14:02:21.658Z",
+  "eventId": "c8933bb8-8179-58f3-8091-64ed1eb9c355"
+ },
+ {
+  "action": "use",
+  "hanaRef": "@hanamesh/app-vibe-trading",
+  "source": "seat",
+  "sourcePlugin": "@hanamesh/dsh-app-host",
+  "occurredAt": "2026-09-21T14:02:21.838Z",
+  "eventId": "ff138906-cddb-5f8d-8b65-41393e871e15"
+ }
+]

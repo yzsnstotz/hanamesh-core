@@ -169,3 +169,7 @@ rc.27 = rc.26 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.25`（运
 ## rc.28（2026-09-21，本机）
 
 rc.28 = rc.27 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.26`（官方 DSH 无壳时应用库默认目录源 + profile 位置推断），代码不变。45/45、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件、app-host rc.26 落地（`rc28-repin-20260921/plugin-add.log`）。tgz `2eadfc61…cf89`。
+
+## rc.29（2026-09-21，本机）
+
+rc.29 = rc.28 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.27`（应用 open/use 经 usage 席位上报），代码不变。45/45、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件（`rc29-repin-20260921/plugin-add.log`）。**真实门**：全新官方 DSH profile + Vibe rc.24，打开同意 → 补齐运行时 → 真实 Chrome 打开 Vibe → 本地账本出现 `open` + `use`（hanaRef `@hanamesh/app-vibe-trading`，sourcePlugin `@hanamesh/dsh-app-host`，已签名；`usage-open-use-events.json`）。发现：`POST /hanamesh/library/provision` 缺 `packageName/runtimeItem` 时 TypeError → `LIBRARY_OPERATION_FAILED` 而非 400（`LIB-PROVISION-INPUT`，非阻塞）。
