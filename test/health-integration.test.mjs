@@ -24,7 +24,7 @@ test('state projects health faults and duck-typed usage service readiness', asyn
   controller.attachHealth({
     getHealth: () => ({revision: 1, mode: 'repair', fault: 'PERSISTENCE_UNAVAILABLE', components: [
       {id: 'usage', label: '使用记录', status: 'satisfied', version: '0.2.0-rc.6', requiredRange: '0.2.0-rc.6', nextStep: null},
-      {id: 'app-host', label: '应用容器', status: 'incompatible', version: '0.0.1', requiredRange: '0.1.0-rc.25', nextStep: 'restore-pinned-component'},
+      {id: 'app-host', label: '应用容器', status: 'incompatible', version: '0.0.1', requiredRange: '0.1.0-rc.26', nextStep: 'restore-pinned-component'},
     ]}),
     recheck: async () => ({revision: 2, mode: 'repair', components: []}),
   });
@@ -32,7 +32,7 @@ test('state projects health faults and duck-typed usage service readiness', asyn
   const state = controller.state();
   assert.deepEqual(state.health, {mode: 'repair', fault: 'PERSISTENCE_UNAVAILABLE'});
   assert.equal(state.components[0].serviceReady, false);
-  assert.equal(state.components[1].requiredRange, '0.1.0-rc.25');
+  assert.equal(state.components[1].requiredRange, '0.1.0-rc.26');
 });
 
 test('duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge', async () => {

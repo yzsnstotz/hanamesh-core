@@ -165,3 +165,7 @@ rc.26 = rc.25 + **B6 设备标签 + B7 账号显示名**（STATUS `DEVICE-PER-PR
 ## rc.27（2026-09-21，本机）
 
 rc.27 = rc.26 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.25`（运行时锁死主接管），代码不变。45/45、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件、app-host rc.25 落地（`rc27-repin-20260921/plugin-add.log`）。tgz `ecd43b4e…2673`。
+
+## rc.28（2026-09-21，本机）
+
+rc.28 = rc.27 + `dependencies` 重钉 `@hanamesh/dsh-app-host 0.1.0-rc.26`（官方 DSH 无壳时应用库默认目录源 + profile 位置推断），代码不变。45/45、变异 5/5 killed、contracts、check-package、verify-inputs；隔离固定内核一装三件、app-host rc.26 落地（`rc28-repin-20260921/plugin-add.log`）。tgz `2eadfc61…cf89`。
