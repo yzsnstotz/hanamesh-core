@@ -30,6 +30,8 @@ export interface StoredCoreSnapshot {
         readonly reachable: boolean | null;
         readonly checkedAt: string | null;
     };
+    /** T2: ISO timestamp of the one-time "bind to keep your pending points" prompt. Optional so rc.30 snapshots stay loadable. */
+    readonly pointsBindPromptShownAt?: string | null;
 }
 export interface CoreStore {
     read(): unknown;

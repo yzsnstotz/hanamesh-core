@@ -55,6 +55,11 @@ try {
       mutate: code => code.replace("['damaged', 'unreadable', 'failed', 'ambiguous']", "['unreadable', 'failed', 'ambiguous']"),
       probe: `import test from 'node:test';import assert from 'node:assert/strict';import {evaluate} from './lib/health/evaluate.js';const p={schemaVersion:1,id:'suite',version:'1.0.0',label:'Suite',runningTaskPolicy:'preserve-and-pause',components:[{id:'x',moduleName:'x',label:'X',versionRange:'1.0.0',onFailure:'notice',impact:'none'}]};test('damage repairs',()=>assert.equal(evaluate(p,[{kind:'damaged'}],1).mode,'repair'));`,
     },
+    {
+      name: 'points-prompt-once', file: 'controller.js',
+      mutate: code => code.replace("const show = points.pendingTotal > 0 && this.#bound !== true && shownAt === null;", 'const show = true;'),
+      probe: `import test from 'node:test';import assert from 'node:assert/strict';import {SessionController} from './lib/controller.js';import {INITIAL_CORE_SNAPSHOT} from './lib/contracts.js';test('bind prompt shows at most once',async()=>{let value=structuredClone(INITIAL_CORE_SNAPSHOT);const store={read:()=>structuredClone(value),publish:async next=>{value=structuredClone(next)},close:async()=>{}};const c=await SessionController.create({serverOrigin:null,websiteOrigin:null},store);await c.markPointsPromptShown();const seen=JSON.parse(JSON.stringify(await c.points()));assert.equal(seen.prompt.show,false);});`,
+    },
   ];
   for (const mutant of mutants) {
     const target = join(tempLib, mutant.file);

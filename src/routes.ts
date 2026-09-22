@@ -6,6 +6,8 @@ export const ROUTES = Object.freeze({
   consent: '/api/hanamesh/core/consent',
   register: '/api/hanamesh/core/device/register',
   health: '/api/hanamesh/core/health',
+  points: '/api/hanamesh/core/points',
+  pointsPromptShown: '/api/hanamesh/core/points/prompt-shown',
   healthRecheck: '/api/hanamesh/core/health/recheck',
   refresh: '/api/hanamesh/core/refresh',
   openExternal: '/api/hanamesh/core/open-external',
@@ -24,10 +26,11 @@ export function createRouteHandler(controller: SessionController): (request: Req
       const url = new URL(request.url);
       if (url.search || url.hash) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
       if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
-      if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health) {
+      if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health || url.pathname === ROUTES.points) {
         if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
         if (url.pathname === ROUTES.state) return response(controller.state());
         if (url.pathname === ROUTES.health) return response(controller.service.getHealth());
+        if (url.pathname === ROUTES.points) return response(await controller.points());
         return response(controller.diagnostics());
       }
       if (request.method !== 'POST') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
@@ -36,6 +39,7 @@ export function createRouteHandler(controller: SessionController): (request: Req
       if (url.pathname === ROUTES.healthRecheck) return response(await controller.recheckHealth());
       if (url.pathname === ROUTES.refresh) return response(await controller.refresh());
       if (url.pathname === ROUTES.bindLink) return response(await controller.bindLink());
+      if (url.pathname === ROUTES.pointsPromptShown) return response(await controller.markPointsPromptShown());
       const contentType = request.headers.get('content-type')?.split(';', 1)[0]?.trim();
       if (contentType !== 'application/json') throw new CoreError('CORE_INPUT_INVALID', 415);
       const declaredLength = Number(request.headers.get('content-length') ?? '0');

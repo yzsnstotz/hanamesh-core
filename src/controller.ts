@@ -11,6 +11,27 @@ import {configOf, publicJson, snapshotOf} from './validation.js';
 const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
 type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: 90; actions: {install: number; open: number; use: number; uninstall: number}};
+/** T2 custody `GET /v1/custody/me/points`: every number is 分 (points), never a token amount. `pending` is this device's
+ *  unbound-device balance, which the server moves into the account the moment the device is bound. */
+const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'creatorMirror', 'launchInitiator'] as const);
+type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
+export type HanaPoints = {hanaId: string; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
+type Points =
+  | {status: 'unavailable'; reason: string; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
+  | {status: 'ready'; reason: null; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
+const MAX_HANA_ROWS = 200;
+const pointsUnavailable = (reason: string): Points => Object.freeze({status: 'unavailable', reason, totalPoints: 0, pendingTotal: 0, hanas: Object.freeze([] as HanaPoints[])} as const);
+const amount = (value: unknown): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  return value;
+};
+function hanaPoints(value: unknown): HanaPoints {
+  const row = value as {hanaId?: unknown; points?: unknown; pending?: unknown; breakdown?: Record<string, unknown>} | null;
+  if (!row || typeof row !== 'object' || typeof row.hanaId !== 'string' || !row.hanaId || row.hanaId.length > 200) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  const breakdown = {} as Record<BreakdownKey, number>;
+  for (const key of BREAKDOWN_KEYS) breakdown[key] = row.breakdown?.[key] === undefined ? 0 : amount(row.breakdown[key]);
+  return Object.freeze({hanaId: row.hanaId, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
+}
 /** usage >=0.2.0-rc.3 contributions `account`: the GitHub account name of the bound canonical principal. Older servers omit it -> null. */
 type LinkedAccount = {provider: 'github'; displayName: string};
 const linkedAccount = (value: unknown): LinkedAccount | null => {
@@ -31,6 +52,8 @@ export class SessionController {
   #usageReady: (() => boolean) | null = null;
   #contributions: Contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
   #contributionsCheckedAt = 0;
+  #points: Points = pointsUnavailable('NOT_CONNECTED');
+  #pointsCheckedAt = 0;
   #bound: boolean | null = null;
   #account: LinkedAccount | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
@@ -124,6 +147,7 @@ export class SessionController {
   async setConsent(state: 'granted' | 'withheld'): Promise<{state: 'granted' | 'withheld'; changedAt: string}> {
     if (state !== 'granted' && state !== 'withheld') throw new CoreError('CORE_INPUT_INVALID', 400);
     const changedAt = new Date().toISOString();
+    this.#pointsCheckedAt = 0;
     await this.#publish(current => ({...current, revision: current.revision + 1, consent: {state, changedAt}}));
     for (const listener of this.#consentListeners) {
       try { listener(state, changedAt); } catch { /* listener isolation is part of the contract */ }
@@ -240,8 +264,52 @@ export class SessionController {
 
   async refresh(): Promise<unknown> {
     this.#contributionsCheckedAt = 0;
+    this.#pointsCheckedAt = 0;
     await this.refreshContributions();
+    await this.refreshPoints();
     return this.state();
+  }
+
+  /** T2 "我的 Hana": the device-signed read of the unified points ledger. Consent and registration are checked first so a
+   *  user who never opted in gets a readable empty state instead of an upstream error. */
+  async refreshPoints(): Promise<Points> {
+    if (!this.#transport.configured) return (this.#points = pointsUnavailable('NOT_CONNECTED'));
+    if (this.#state.consent.state !== 'granted') return (this.#points = pointsUnavailable('CONSENT_WITHHELD'));
+    if (this.#state.registration.status !== 'registered') return (this.#points = pointsUnavailable('NOT_REGISTERED'));
+    if (Date.now() - this.#pointsCheckedAt < 60_000 && this.#points.status === 'ready') return this.#points;
+    const path = '/v1/custody/me/points';
+    try {
+      const headers = await this.#signRequest({method: 'GET', path, body: null});
+      const response = await this.#transport.request(path, {method: 'GET', headers});
+      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const payload = await response.json() as {hanas?: unknown; totalPoints?: unknown};
+      if (!Array.isArray(payload.hanas) || payload.hanas.length > MAX_HANA_ROWS) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const hanas = payload.hanas.map(hanaPoints);
+      const pendingTotal = hanas.reduce((sum, row) => sum + row.pending, 0);
+      this.#points = Object.freeze({status: 'ready', reason: null, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(hanas)} as const);
+      this.#pointsCheckedAt = Date.now();
+    } catch (error) {
+      this.#points = pointsUnavailable(safeError(error).code);
+    }
+    return this.#points;
+  }
+
+  /** Public JSON for `GET /api/hanamesh/core/points`. `prompt.show` is decided here, never in the client bundle:
+   *  pending points exist, this device is not bound, and the one-time prompt has never been shown. */
+  async points(): Promise<unknown> {
+    const points = await this.refreshPoints();
+    const shownAt = this.#state.pointsBindPromptShownAt ?? null;
+    const show = points.pendingTotal > 0 && this.#bound !== true && shownAt === null;
+    return publicJson({...points, bound: this.#bound, deviceId: this.#device().deviceId, prompt: {show, shownAt}});
+  }
+
+  /** Idempotent: the first call stamps the marker, later calls (restart, reinstall of the same profile) return it unchanged. */
+  async markPointsPromptShown(): Promise<{shownAt: string}> {
+    const existing = this.#state.pointsBindPromptShownAt ?? null;
+    if (existing !== null) return {shownAt: existing};
+    const shownAt = new Date().toISOString();
+    await this.#publish(current => ({...current, revision: current.revision + 1, pointsBindPromptShownAt: shownAt}));
+    return {shownAt};
   }
 
   state(): unknown {

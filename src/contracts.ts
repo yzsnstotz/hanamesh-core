@@ -25,6 +25,8 @@ export interface StoredCoreSnapshot {
   };
   readonly consent: {readonly state: 'withheld' | 'granted'; readonly changedAt: string | null};
   readonly serverObservation: {readonly reachable: boolean | null; readonly checkedAt: string | null};
+  /** T2: ISO timestamp of the one-time "bind to keep your pending points" prompt. Optional so rc.30 snapshots stay loadable. */
+  readonly pointsBindPromptShownAt?: string | null;
 }
 
 export interface CoreStore {
@@ -40,4 +42,5 @@ export const INITIAL_CORE_SNAPSHOT: StoredCoreSnapshot = Object.freeze({
   registration: Object.freeze({status: 'unregistered', principalId: null, registeredAt: null, lastError: null, attempts: 0}),
   consent: Object.freeze({state: 'withheld', changedAt: null}),
   serverObservation: Object.freeze({reachable: null, checkedAt: null}),
+  pointsBindPromptShownAt: null,
 });

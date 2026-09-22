@@ -1,4 +1,6 @@
-# hanamesh-core · 0.2.0-rc.30
+# hanamesh-core · 0.2.0-rc.31
+
+> rc.31（2026-09-22，T2 客户端 + T9 core 入口）：设置页「我的 Hana」改为真实数值——新增宿主侧 `GET /api/hanamesh/core/points`，用**设备签名**读服务端 `GET /v1/custody/me/points`（客户端 bundle 只走本包 HTTP 路由，不 `ctx.get` 宿主服务，DELIVERY_RULES §1.6），显示总分、各 Hana 的分与待绑定分、六项 breakdown（安装/打开/使用/认领/创作镜像/发起），单位只出现「分」「%」并标注「分不是代币」；未连接 / 未同意上报 / 未注册 / 服务端不可达各有可读空态。新增「可领权益」一次性引导层：待绑定分 > 0 且本设备未绑定且从未弹过时，侧栏挂载的原生 `<dialog>` 弹一次「你已累计 X 分，绑定后归入账号」+「去网站绑定」/「以后再说」，弹出即经 `POST /api/hanamesh/core/points/prompt-shown` 把 storage-domain 标记 `pointsBindPromptShownAt` 落盘，升级/重启/再开都不再弹（标记在 schema 里是 **optional**，rc.30 的旧快照照常加载）。「账号」行新增 T9「邮箱绑定」入口，打开网站 `/me`；core 不做邮箱表单。套件依赖不变（`hanamesh-usage 0.2.0-rc.7`、`@hanamesh/dsh-app-host 0.1.0-rc.31`）。
 
 > rc.30（2026-09-22）：套件依赖重钉 `hanamesh-usage 0.2.0-rc.7`（事件归因字段 + 使用回执）与 `@hanamesh/dsh-app-host 0.1.0-rc.31`（HanaMesh 市场 + Router 回执），core 自身代码不变。
 

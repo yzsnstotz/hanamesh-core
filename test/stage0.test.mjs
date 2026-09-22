@@ -7,7 +7,7 @@ const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 test('package metadata exposes the core bundle and only the two suite dependencies', async () => {
   const pkg = await readJson('package.json');
   assert.equal(pkg.name, 'hanamesh-core');
-  assert.equal(pkg.version, '0.2.0-rc.30');
+  assert.equal(pkg.version, '0.2.0-rc.31');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
   assert.equal(pkg.repository?.url, 'https://github.com/yzsnstotz/hanamesh-core.git');
@@ -20,6 +20,8 @@ test('package metadata exposes the core bundle and only the two suite dependenci
   assert.equal(pkg.peerDependencies?.['@hanamesh/ui-kit'], undefined);
   assert.equal(pkg.peerDependencies?.['@deepseek-ai/dsh-host-webserver'], undefined);
   assert.match(await readFile('lib/client/index.js', 'utf8'), new RegExp(`hanamesh-core ${pkg.version.replaceAll('.', '\\.')}`));
+  // The suite profile version is the health snapshot's profile identity; it must not drift from the package it ships in.
+  assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
 });
 
 test('real-host boot uses a clean allowlisted environment', async () => {
