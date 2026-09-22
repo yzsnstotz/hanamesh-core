@@ -1,8 +1,10 @@
-# hanamesh-core · 0.2.0-rc.31
+# hanamesh-core · 0.2.0-rc.32
 
-> rc.31（2026-09-22，T2 客户端 + T9 core 入口）：设置页「我的 Hana」改为真实数值——新增宿主侧 `GET /api/hanamesh/core/points`，用**设备签名**读服务端 `GET /v1/custody/me/points`（客户端 bundle 只走本包 HTTP 路由，不 `ctx.get` 宿主服务，DELIVERY_RULES §1.6），显示总分、各 Hana 的分与待绑定分、六项 breakdown（安装/打开/使用/认领/创作镜像/发起），单位只出现「分」「%」并标注「分不是代币」；未连接 / 未同意上报 / 未注册 / 服务端不可达各有可读空态。新增「可领权益」一次性引导层：待绑定分 > 0 且本设备未绑定且从未弹过时，侧栏挂载的原生 `<dialog>` 弹一次「你已累计 X 分，绑定后归入账号」+「去网站绑定」/「以后再说」，弹出即经 `POST /api/hanamesh/core/points/prompt-shown` 把 storage-domain 标记 `pointsBindPromptShownAt` 落盘，升级/重启/再开都不再弹（标记在 schema 里是 **optional**，rc.30 的旧快照照常加载）。「账号」行新增 T9「邮箱绑定」入口，打开网站 `/me`；core 不做邮箱表单。套件依赖不变（`hanamesh-usage 0.2.0-rc.7`、`@hanamesh/dsh-app-host 0.1.0-rc.31`）。
+> rc.32（2026-09-23）：套件依赖重钉 `@hanamesh/dsh-app-host 0.1.0-rc.32`（客户端 `market` 席位 + dshmarket 互斥），core 自身代码不变。
 
-> rc.30（2026-09-22）：套件依赖重钉 `hanamesh-usage 0.2.0-rc.7`（事件归因字段 + 使用回执）与 `@hanamesh/dsh-app-host 0.1.0-rc.31`（HanaMesh 市场 + Router 回执），core 自身代码不变。
+> rc.31（2026-09-22，T2 客户端 + T9 core 入口）：设置页「我的 Hana」改为真实数值——新增宿主侧 `GET /api/hanamesh/core/points`，用**设备签名**读服务端 `GET /v1/custody/me/points`（客户端 bundle 只走本包 HTTP 路由，不 `ctx.get` 宿主服务，DELIVERY_RULES §1.6），显示总分、各 Hana 的分与待绑定分、六项 breakdown（安装/打开/使用/认领/创作镜像/发起），单位只出现「分」「%」并标注「分不是代币」；未连接 / 未同意上报 / 未注册 / 服务端不可达各有可读空态。新增「可领权益」一次性引导层：待绑定分 > 0 且本设备未绑定且从未弹过时，侧栏挂载的原生 `<dialog>` 弹一次「你已累计 X 分，绑定后归入账号」+「去网站绑定」/「以后再说」，弹出即经 `POST /api/hanamesh/core/points/prompt-shown` 把 storage-domain 标记 `pointsBindPromptShownAt` 落盘，升级/重启/再开都不再弹（标记在 schema 里是 **optional**，rc.30 的旧快照照常加载）。「账号」行新增 T9「邮箱绑定」入口，打开网站 `/me`；core 不做邮箱表单。套件依赖不变（`hanamesh-usage 0.2.0-rc.7`、`@hanamesh/dsh-app-host 0.1.0-rc.32`）。
+
+> rc.30（2026-09-22）：套件依赖重钉 `hanamesh-usage 0.2.0-rc.7`（事件归因字段 + 使用回执）与 `@hanamesh/dsh-app-host 0.1.0-rc.32`（HanaMesh 市场 + Router 回执），core 自身代码不变。
 
 > 🧪 `0.2.0-rc.29`（2026-09-21：rc.29 = rc.28 + 重钉 app-host rc.27（应用 open/use 经 usage 席位上报）。2026-09-21：rc.28 = rc.27 + 重钉 app-host rc.26（官方 DSH 无壳：应用库默认目录源 + profile 位置推断）。2026-09-21：rc.27 = rc.26 + 重钉 app-host rc.25（运行时锁死主接管）。2026-09-21：rc.26 = B6 设备标签 + B7 账号显示名——注册时随 `POST /v1/identity/devices` 发送 `label {hostname: os.hostname(), os: platform-arch, shell: HANAMESH_SHELL ?? 'dsh'}`（identity rc.3 接受；rc.2 以 400 拒绝时自动退回无 label 重注册，不影响现网）；贡献响应带 `account {provider:'github', displayName}`（usage rc.3）时「账号」行显示「已绑定到 GitHub 账号 <名>」，缺省沿用旧文案。rc.25 = rc.24 + 重钉 app-host rc.24（模型随路由：路由表「模型」列）。rc.24 = rc.23 + 重钉 app-host rc.23（Router 不替应用猜模型；供应商页改为「来源目录 + 应用×槽位路由表」，去掉 gateway 开关与 app 自管开关），代码不变。2026-09-20：rc.20 = rc.19 + 重钉 app-host rc.18（应用库安装反馈），代码不变。rc.19 = 账户行随绑定状态变化 + 绑定后经 `/core/refresh` 轮询刷新。rc.18：`peerDependencies` 里的 `@deepseek-ai/dsh-*` 从精确钉 `0.1.5-alpha.1` 改为已实测范围 `>=0.1.5-alpha.1 <0.2.0`，`@deepseek-ai/cordis` 改 `>=4.0.2 <5`；`dependencies` 精确钉 usage `0.2.0-rc.7`、app-host `0.1.0-rc.17`（同样范围化的同链 rc）；代码不变）。**已实测内核：0.1.5-alpha.1、0.1.5-rc.2。** rc.17 将 core 的精确 Zod peer 对齐到 usage 的 `4.5.4`，供 O4 客户端携带自洽离线闭包。rc.16 新增冻结 O4 回跳所需的 `POST /api/hanamesh/core/refresh`，显式刷新会绕过 60 秒贡献缓存并返回最新公开状态。隔离测试用 profile `cordis.patch.yml` 的 `- id: hanamesh-core` 覆盖。固定 Node `24.13.1`、pnpm `10.33.0`；构建/离线闭包钉 DSH `0.1.5-alpha.1`（`devDependencies`/`pnpm.overrides`），运行 peer 为上述范围；状态与验收结论只看 HanaMesh 文档仓 `STATUS.md`。
 
@@ -12,7 +14,7 @@
 
 Core 本身只拥有：本机设备密钥和设备 id、注册观察、同意状态、组件健康快照、DSH 设置/侧栏入口。它不采集事件、不实现应用容器、不做钱包、认领或奖励计算。
 
-开发环境用 `vendor/siblings/` 里 STATUS §5 登记的真件 tgz（`hanamesh-usage-0.2.0-rc.7`、`hanamesh-dsh-app-host-0.1.0-rc.31`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
+开发环境用 `vendor/siblings/` 里 STATUS §5 登记的真件 tgz（`hanamesh-usage-0.2.0-rc.7`、`hanamesh-dsh-app-host-0.1.0-rc.32`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
 
 当前套件模式为 `REAL_SIBLINGS`（依赖解析层面）：三件真实互动（一次安装、互斥、生命周期）仍归 O3 验证，本仓只证明 Core 自身、三条 Loader insert 与真实 Server 往返。
 
