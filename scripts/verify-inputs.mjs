@@ -13,7 +13,7 @@ for (const row of semverRows) {
   assert.ok(match, row);
   assert.equal(digest(await readFile(match[2])), match[1], match[2]);
 }
-// Real sibling artifacts (STATUS §5 registered digests): hanamesh-usage 0.2.0-rc.6, @hanamesh/dsh-app-host 0.1.0-rc.27.
+// Real sibling artifacts (STATUS §5 registered digests): hanamesh-usage 0.2.0-rc.7, @hanamesh/dsh-app-host 0.1.0-rc.31.
 const siblingRows = (await readFile('vendor/siblings/SHA256SUMS', 'utf8')).trim().split('\n');
 assert.equal(siblingRows.length, 3);
 for (const row of siblingRows) {
