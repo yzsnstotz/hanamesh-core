@@ -1,0 +1,22 @@
+{
+  "checkedAtUTC": "2026-09-29T07:59:33.250151+00:00",
+  "repository": "yzsnstotz/hanamesh-core",
+  "fetchURL": "https://github.com/yzsnstotz/hanamesh-core.git",
+  "pushURL": "https://github.com/yzsnstotz/hanamesh-core.git",
+  "githubAPI": {
+    "private": false,
+    "visibility": "public",
+    "default_branch": "main"
+  },
+  "remoteHead": "d8680d59e2a6dde3e898482568d584c94df7eb3b",
+  "remoteMain": "d8680d59e2a6dde3e898482568d584c94df7eb3b",
+  "remoteCandidateBranch": null,
+  "localCandidateBranch": "codex/core-usage-rc8",
+  "localCandidateCodeCommit": "722234aa604d6852a03a24fcc5f04d54eedbd4dc",
+  "localStatusBeforeCloseoutReport": "clean",
+  "decision": "PUBLIC_ORIGIN_PUSH_BLOCKED",
+  "pushAttempted": false,
+  "visibilityChanged": false,
+  "releaseTagCreated": false,
+  "publishAttempted": false
+}
