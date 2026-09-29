@@ -1,0 +1,25 @@
+Recreating /Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/consent-points/core-worktree/node_modules
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +38
+++++++++++++++++++++++++++++++++++++++
+Progress: resolved 38, reused 3, downloaded 35, added 38, done
+
+dependencies:
++ @deepseek-ai/dsh-client-ui-settings 0.1.5-alpha.1
++ @deepseek-ai/dsh-client-ui-sidebar 0.1.5-alpha.1
++ @hanamesh/dsh-app-host 0.1.0-rc.36
++ hanamesh-usage 0.2.0-rc.9
+
+devDependencies:
++ @deepseek-ai/cordis 4.0.2
++ @deepseek-ai/dsh-client-connection 0.1.5-alpha.1
++ @deepseek-ai/dsh-storage-domain 0.1.5-alpha.1
++ @hanamesh/lib-provision 0.1.0-rc.1
++ @types/node 24.13.4
++ @types/react 18.3.12
++ react 18.3.1
++ typescript 5.9.3
++ zod 4.5.4
+
+Done in 996ms using pnpm v10.33.0

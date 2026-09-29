@@ -7,13 +7,13 @@ const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 test('package metadata exposes the core bundle and only the two suite dependencies', async () => {
   const pkg = await readJson('package.json');
   assert.equal(pkg.name, 'hanamesh-core');
-  assert.equal(pkg.version, '0.2.0-rc.37');
+  assert.equal(pkg.version, '0.2.0-rc.38');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
   assert.equal(pkg.repository?.url, 'https://github.com/yzsnstotz/hanamesh-core.git');
   assert.deepEqual(pkg.dependencies, {
     'hanamesh-usage': '0.2.0-rc.9',
-    '@hanamesh/dsh-app-host': '0.1.0-rc.35',
+    '@hanamesh/dsh-app-host': '0.1.0-rc.36',
   });
   assert.equal(pkg.dsh?.bundle?.patch, './profile/cordis.patch.yml');
   assert.ok(pkg.exports?.['./contract']);
@@ -22,6 +22,13 @@ test('package metadata exposes the core bundle and only the two suite dependenci
   assert.match(await readFile('lib/client/index.js', 'utf8'), new RegExp(`hanamesh-core ${pkg.version.replaceAll('.', '\\.')}`));
   // The suite profile version is the health snapshot's profile identity; it must not drift from the package it ships in.
   assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
+  assert.equal(pkg.devDependencies['@hanamesh/dsh-app-host'], 'file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.36.tgz');
+  assert.equal(pkg.pnpm.overrides['@hanamesh/dsh-app-host'], pkg.devDependencies['@hanamesh/dsh-app-host']);
+  assert.equal((await readJson('profile/suite.profile.json')).components.find(row => row.id === 'app-host').versionRange, pkg.dependencies['@hanamesh/dsh-app-host']);
+  assert.match(await readFile('vendor/siblings/SHA256SUMS', 'utf8'), /^[a-f0-9]{64}  hanamesh-dsh-app-host-0\.1\.0-rc\.36\.tgz$/m);
+  const lock = await readFile('pnpm-lock.yaml', 'utf8');
+  assert.match(lock, /'@hanamesh\/dsh-app-host@file:vendor\/siblings\/hanamesh-dsh-app-host-0\.1\.0-rc\.36\.tgz'/);
+  assert.doesNotMatch(lock, /hanamesh-dsh-app-host-0\.1\.0-rc\.35\.tgz/);
 });
 
 test('real-host boot uses a clean allowlisted environment', async () => {
