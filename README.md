@@ -1,4 +1,6 @@
-# hanamesh-core · 0.2.0-rc.34
+# hanamesh-core · 0.2.0-rc.35
+
+> rc.35（2026-09-29，本机有限组合候选）：套件依赖重钉 `@hanamesh/dsh-app-host 0.1.0-rc.33`（owned 回收与启动分阶段预算），保留 USAGE rc.9 / PROVISION rc.1。完整产品验证由隔离产品 profile 执行。
 
 > rc.34（2026-09-29，本机有限组合候选）：套件依赖重钉 `hanamesh-usage 0.2.0-rc.9`（Loader 导出子路径安装归因），保留 APPHOST rc.32 / PROVISION rc.1。完整产品验证由隔离产品 profile 执行。
 
@@ -18,7 +20,7 @@
 
 Core 本身只拥有：本机设备密钥和设备 id、注册观察、同意状态、组件健康快照、DSH 设置/侧栏入口。它不采集事件、不实现应用容器、不做钱包、认领或奖励计算。
 
-开发环境用 `vendor/siblings/` 里的固定真件 tgz（`hanamesh-usage-0.2.0-rc.9`、`hanamesh-dsh-app-host-0.1.0-rc.32`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
+开发环境用 `vendor/siblings/` 里的固定真件 tgz（`hanamesh-usage-0.2.0-rc.9`、`hanamesh-dsh-app-host-0.1.0-rc.33`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
 
 当前套件模式为 `REAL_SIBLINGS`（依赖解析层面）：三件真实互动（一次安装、互斥、生命周期）仍归 O3 验证，本仓只证明 Core 自身、三条 Loader insert 与真实 Server 往返。
 

@@ -1,0 +1,1 @@
+{"event":"check_package_ok","name":"hanamesh-core","version":"0.2.0-rc.35","inject":["connection","storageDomain","loader"],"bundlePatch":true,"dependencies":2,"sha256":"a37aed664fdaee934e823a4395439cb12a376ef863215d00250d303820c80485"}
