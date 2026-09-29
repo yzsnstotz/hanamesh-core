@@ -1,0 +1,15 @@
+{
+  "base": "698f6a200fe25688d9c8880903e8e834e5c417c5",
+  "version": "0.2.0-rc.36",
+  "sha256": "ac9b2516a16e47c4c55dc7973f7070387abb978e1531ab130e9071a760b5afd0",
+  "sourceGeneratedOnlyAboutVersionLiteral": [
+    ".build/client-cjs/client/index.js",
+    "lib/client.js",
+    "lib/client/index.js",
+    "src/client/index.ts"
+  ],
+  "apphost34sha256": "49e7bd7d454ec9428d978d063990fe644e9634799199c20f386dbc37682c2273",
+  "usage9Provision1Unchanged": true,
+  "cordisPatchUnchanged": true,
+  "siblingsNotIncludedInPackage": true
+}
