@@ -1,0 +1,15 @@
+
+> hanamesh-core@0.2.0-rc.33 test:mutations
+> node scripts/mutation.mjs
+
+{"mutant":"domain-name","mutantExit":1,"assertionFailure":true}
+{"mutant":"device-integrity","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-device-id","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-reverse-order","mutantExit":1,"assertionFailure":true}
+{"mutant":"health-repair-priority","mutantExit":1,"assertionFailure":true}
+{"mutant":"points-prompt-once","mutantExit":1,"assertionFailure":true}
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.20.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.20.0
+npm notice To update run: npm install -g npm@11.20.0
+npm notice

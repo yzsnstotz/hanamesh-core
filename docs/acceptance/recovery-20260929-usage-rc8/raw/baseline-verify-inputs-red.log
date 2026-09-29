@@ -1,0 +1,15 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 40fc5d2aab0845ae7922669d9378337a2399fae65c629405002a8cb2887867e8  hanamesh-dsh-app-host-0.1.0-rc.32.tgz
+    at file:///Users/yzliu/work/projects/hanamesh/_deliveries/product-flow-20260929/branches/consent-points/core-worktree/scripts/verify-inputs.mjs:21:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.13.1
