@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@hanamesh/lib-provision': file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz
-  hanamesh-usage: file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz
+  hanamesh-usage: file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz
   '@hanamesh/dsh-app-host': file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.39.tgz
   '@deepseek-ai/cordis': 4.0.2
   '@deepseek-ai/dsh-client-connection': 0.1.5-alpha.1
@@ -33,8 +33,8 @@ importers:
         specifier: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.39.tgz
         version: file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.39.tgz(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-storage-domain@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)(@deepseek-ai/dsh-invariants@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2))(@deepseek-ai/dsh-storage@0.1.5-alpha.1(@deepseek-ai/cordis@4.0.2)))(@deepseek-ai/schemastery@3.18.2)(@hanamesh/lib-provision@file:vendor/siblings/hanamesh-lib-provision-0.1.0-rc.1.tgz)
       hanamesh-usage:
-        specifier: file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz
-        version: file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz(310e6c505c940e815b3edb4bbff1afb1)
+        specifier: file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz
+        version: file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz(310e6c505c940e815b3edb4bbff1afb1)
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: 4.0.2
@@ -240,9 +240,9 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  hanamesh-usage@file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz:
-    resolution: {integrity: sha512-6jGii3ZWrDhIHGysVJReDO2NNPDBbg3h028ZFo06Z4U0jyNDscdUnIzZNEXULRpJAm0+ZrcZQhgO3IDHafXiDg==, tarball: file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz}
-    version: 0.2.0-rc.9
+  hanamesh-usage@file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz:
+    resolution: {integrity: sha512-YCGjQitBffurghL5qtKBS3oLYij5TK0IIlK9UeBgDv8qz21sP4yxaI4OZhCVHDHxsqoPBtctyavrv0CHhXvRIQ==, tarball: file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz}
+    version: 0.2.0-rc.10
     engines: {node: '>=24.13.1 <25'}
     peerDependencies:
       '@deepseek-ai/cordis': 4.0.2
@@ -446,7 +446,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  hanamesh-usage@file:vendor/siblings/hanamesh-usage-0.2.0-rc.9.tgz(310e6c505c940e815b3edb4bbff1afb1):
+  hanamesh-usage@file:vendor/siblings/hanamesh-usage-0.2.0-rc.10.tgz(310e6c505c940e815b3edb4bbff1afb1):
     dependencies:
       '@deepseek-ai/cordis': 4.0.2
       '@deepseek-ai/dsh-agent': 0.1.5-alpha.1(609ef940a21bebe00caad4f11feac684)
