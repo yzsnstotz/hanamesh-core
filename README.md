@@ -1,4 +1,6 @@
-# hanamesh-core · 0.2.0-rc.45
+# hanamesh-core · 0.2.0-rc.46
+
+> rc.46（2026-10-01，P01-U05-RI 组合钉版）：仅将 AppHost 固定包从 `0.1.0-rc.40` 更新到 `0.1.0-rc.41`，消费其运行时 Python 缓存卸载清理修复。Core 身份、同意、积分、事件展示行为保持 rc.45；需隔离原生重装与不同 validator 验证。
 
 > rc.45（2026-10-01，P01-U02/U05 组合钉版）：只把套件依赖、内置组件版本和固定 sibling 包从 AppHost `0.1.0-rc.39` 重钉到 `0.1.0-rc.40`，供原生客户端在长闲置后重开应用视图和冷恢复时消费。Core 的身份、同意、积分和事件展示行为保持 rc.44；完整 P01 由不同 validator 在 `MAC-COMPOSE` 实测。
 
@@ -36,7 +38,7 @@
 
 Core 本身只拥有：本机设备密钥和设备 id、注册观察、同意状态、组件健康快照、DSH 设置/侧栏入口。它不采集事件、不实现应用容器、不做钱包、认领或奖励计算。
 
-开发环境用 `vendor/siblings/` 里的固定真件 tgz（`hanamesh-usage-0.2.0-rc.10`、`hanamesh-dsh-app-host-0.1.0-rc.40`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
+开发环境用 `vendor/siblings/` 里的固定真件 tgz（`hanamesh-usage-0.2.0-rc.10`、`hanamesh-dsh-app-host-0.1.0-rc.41`，以及 app-host 的私有 peer `hanamesh-lib-provision-0.1.0-rc.1`）让 pnpm 离线解析依赖，`vendor/siblings/SHA256SUMS` 由 `verify:inputs` 校验；rc.8 之前的 `vendor/standin/` 空壳已删除。
 
 当前套件模式为 `REAL_SIBLINGS`（依赖解析层面）：三件真实互动（一次安装、互斥、生命周期）仍归 O3 验证，本仓只证明 Core 自身、三条 Loader insert 与真实 Server 往返。
 
