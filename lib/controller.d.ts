@@ -23,6 +23,7 @@ declare const BREAKDOWN_KEYS: readonly ["install", "open", "use", "claimBonus", 
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
 export type HanaPoints = {
     hanaId: string;
+    displayName: string | null;
     points: number;
     pending: number;
     breakdown: Record<BreakdownKey, number>;
@@ -39,6 +40,23 @@ type Points = {
     totalPoints: number;
     pendingTotal: number;
     hanas: readonly HanaPoints[];
+};
+type ActivityAction = 'install' | 'open' | 'use' | 'uninstall';
+type ActivityItem = {
+    hanaRef: string;
+    action: ActivityAction;
+    occurredAt: string;
+};
+type ActivityWindow = {
+    from: string;
+    to: string;
+};
+type ActivityPage = {
+    status: 'ready' | 'unavailable';
+    reason: string | null;
+    items: readonly ActivityItem[];
+    nextAfter: string | null;
+    window: ActivityWindow | null;
 };
 export declare class SessionController {
     #private;
@@ -71,6 +89,12 @@ export declare class SessionController {
     /** T2 "我的 Hana": the device-signed read of the unified points ledger. Consent and registration are checked first so a
      *  user who never opted in gets a readable empty state instead of an upstream error. */
     refreshPoints(): Promise<Points>;
+    /** Usage's device-signed raw events are observations, not a per-event points ledger. */
+    activity(query?: {
+        from?: string;
+        to?: string;
+        after?: string;
+    }): Promise<ActivityPage>;
     /** Public JSON for `GET /api/hanamesh/core/points`. `prompt.show` is decided here, never in the client bundle:
      *  pending points exist, this device is not bound, and the one-time prompt has never been shown. */
     points(): Promise<unknown>;

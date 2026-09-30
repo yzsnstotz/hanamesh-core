@@ -5,6 +5,7 @@ export declare const ROUTES: Readonly<{
     register: "/api/hanamesh/core/device/register";
     health: "/api/hanamesh/core/health";
     points: "/api/hanamesh/core/points";
+    activity: "/api/hanamesh/core/activity";
     pointsPromptShown: "/api/hanamesh/core/points/prompt-shown";
     healthRecheck: "/api/hanamesh/core/health/recheck";
     refresh: "/api/hanamesh/core/refresh";

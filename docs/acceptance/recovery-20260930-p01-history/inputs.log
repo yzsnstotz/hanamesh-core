@@ -1,0 +1,10 @@
+
+> hanamesh-core@0.2.0-rc.42 verify:inputs
+> node scripts/verify-inputs.mjs
+
+{"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true,"siblings":3}
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.20.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.20.0
+npm notice To update run: npm install -g npm@11.20.0
+npm notice

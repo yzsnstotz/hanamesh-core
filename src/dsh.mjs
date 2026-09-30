@@ -62,7 +62,7 @@ export async function apply(ctx, config) {
     const handler = createRouteHandler(controller);
     disposers.push(ctx.provide('hanameshCore', controller.service));
     for (const path of Object.values(ROUTES)) {
-      const methods = path === ROUTES.state || path === ROUTES.diagnostics || path === ROUTES.health || path === ROUTES.points ? /** @type {const} */ (['GET']) : /** @type {const} */ (['POST']);
+      const methods = path === ROUTES.state || path === ROUTES.diagnostics || path === ROUTES.health || path === ROUTES.points || path === ROUTES.activity ? /** @type {const} */ (['GET']) : /** @type {const} */ (['POST']);
       disposers.push(ctx.connection.fetch.register({path, methods, requestBody: 'buffered', fetch: handler}));
     }
     healthTimer = setInterval(() => { void ownedHealth.recheck(); }, config.checkIntervalMs ?? 3000);

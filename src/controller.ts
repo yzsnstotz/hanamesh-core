@@ -15,7 +15,7 @@ type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready';
  *  unbound-device balance, which the server moves into the account the moment the device is bound. */
 const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'creatorMirror', 'launchInitiator'] as const);
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
-export type HanaPoints = {hanaId: string; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
+export type HanaPoints = {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type Points =
   | {status: 'unavailable'; reason: string; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
   | {status: 'ready'; reason: null; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
@@ -30,8 +30,21 @@ function hanaPoints(value: unknown): HanaPoints {
   if (!row || typeof row !== 'object' || typeof row.hanaId !== 'string' || !row.hanaId || row.hanaId.length > 200) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
   const breakdown = {} as Record<BreakdownKey, number>;
   for (const key of BREAKDOWN_KEYS) breakdown[key] = row.breakdown?.[key] === undefined ? 0 : amount(row.breakdown[key]);
-  return Object.freeze({hanaId: row.hanaId, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
+  return Object.freeze({hanaId: row.hanaId, displayName: null, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
 }
+type ActivityAction = 'install' | 'open' | 'use' | 'uninstall';
+type ActivityItem = {hanaRef: string; action: ActivityAction; occurredAt: string};
+type ActivityWindow = {from: string; to: string};
+type ActivityPage = {status: 'ready' | 'unavailable'; reason: string | null; items: readonly ActivityItem[]; nextAfter: string | null; window: ActivityWindow | null};
+const activityUnavailable = (reason: string): ActivityPage => ({status: 'unavailable', reason, items: [], nextAfter: null, window: null});
+const activityItem = (value: unknown, window: ActivityWindow): ActivityItem => {
+  const row = value as Record<string, unknown> | null;
+  if (!row || typeof row !== 'object' || typeof row.hanaRef !== 'string' || !row.hanaRef || row.hanaRef.length > 200 ||
+      !['install', 'open', 'use', 'uninstall'].includes(String(row.action)) || typeof row.occurredAt !== 'string' ||
+      Number.isNaN(Date.parse(row.occurredAt)) || new Date(row.occurredAt).toISOString() !== row.occurredAt ||
+      row.occurredAt < window.from || row.occurredAt >= window.to) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  return {hanaRef: row.hanaRef, action: row.action as ActivityAction, occurredAt: row.occurredAt};
+};
 /** usage >=0.2.0-rc.3 contributions `account`: the GitHub account name of the bound canonical principal. Older servers omit it -> null. */
 type LinkedAccount = {provider: 'github'; displayName: string};
 const linkedAccount = (value: unknown): LinkedAccount | null => {
@@ -43,6 +56,7 @@ export class SessionController {
   readonly #config: Required<PluginConfig>;
   readonly #store: CoreStore;
   readonly #transport: ServerTransport;
+  readonly #profileTransport: ServerTransport;
   #state: StoredCoreSnapshot;
   #publishTail: Promise<void> = Promise.resolve();
   #disposed = false;
@@ -54,6 +68,7 @@ export class SessionController {
   #contributionsCheckedAt = 0;
   #points: Points = pointsUnavailable('NOT_CONNECTED');
   #pointsCheckedAt = 0;
+  readonly #hanaNames = new Map<string, string | null>();
   #bound: boolean | null = null;
   #account: LinkedAccount | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
@@ -62,6 +77,7 @@ export class SessionController {
     this.#config = configOf(config);
     this.#store = store;
     this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher);
+    this.#profileTransport = new ServerTransport(this.#config.serverOrigin, Math.min(1_500, this.#config.timeoutMs), fetcher);
     this.#state = snapshotOf(store.read());
     this.service = Object.freeze({
       protocolVersion: '1' as const,
@@ -285,13 +301,59 @@ export class SessionController {
       const payload = await response.json() as {hanas?: unknown; totalPoints?: unknown};
       if (!Array.isArray(payload.hanas) || payload.hanas.length > MAX_HANA_ROWS) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const hanas = payload.hanas.map(hanaPoints);
-      const pendingTotal = hanas.reduce((sum, row) => sum + row.pending, 0);
-      this.#points = Object.freeze({status: 'ready', reason: null, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(hanas)} as const);
+      let next = 0;
+      const names = new Array<string | null>(hanas.length);
+      await Promise.all(Array.from({length: Math.min(4, hanas.length)}, async () => {
+        for (;;) {
+          const index = next++;
+          if (index >= hanas.length) return;
+          names[index] = await this.#hanaName(hanas[index]!.hanaId);
+        }
+      }));
+      const namedHanas = hanas.map((row, index) => Object.freeze({...row, displayName: names[index] ?? null}));
+      const pendingTotal = namedHanas.reduce((sum, row) => sum + row.pending, 0);
+      this.#points = Object.freeze({status: 'ready', reason: null, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(namedHanas)} as const);
       this.#pointsCheckedAt = Date.now();
     } catch (error) {
       this.#points = pointsUnavailable(safeError(error).code);
     }
     return this.#points;
+  }
+
+  async #hanaName(hanaId: string): Promise<string | null> {
+    if (this.#hanaNames.has(hanaId)) return this.#hanaNames.get(hanaId) ?? null;
+    let name: string | null = null;
+    try {
+      const response = await this.#profileTransport.request(`/v1/registry/hanas/${encodeURIComponent(hanaId)}`);
+      if (response.ok) {
+        const profile = await response.json() as {hanaId?: unknown; displayName?: unknown};
+        if (profile.hanaId === hanaId && typeof profile.displayName === 'string' && profile.displayName.trim() && profile.displayName.length <= 120) name = profile.displayName.trim();
+      }
+    } catch { /* An unavailable catalog must not hide authoritative points. */ }
+    this.#hanaNames.set(hanaId, name);
+    return name;
+  }
+
+  /** Usage's device-signed raw events are observations, not a per-event points ledger. */
+  async activity(query: {from?: string; to?: string; after?: string} = {}): Promise<ActivityPage> {
+    if (!this.#transport.configured) return activityUnavailable('NOT_CONNECTED');
+    if (this.#state.consent.state !== 'granted') return activityUnavailable('CONSENT_WITHHELD');
+    if (this.#state.registration.status !== 'registered') return activityUnavailable('NOT_REGISTERED');
+    const to = query.to ?? new Date().toISOString();
+    const from = query.from ?? new Date(Date.parse(to) - 90 * 86400000).toISOString();
+    const window = {from, to};
+    const path = `/v1/usage/me/devices/${encodeURIComponent(this.#device().deviceId)}/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&limit=200${query.after ? `&after=${encodeURIComponent(query.after)}` : ''}`;
+    try {
+      const headers = await this.#signRequest({method: 'GET', path, body: null});
+      const response = await this.#transport.request(path, {method: 'GET', headers});
+      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const payload = await response.json() as {items?: unknown; nextAfter?: unknown; window?: ActivityWindow};
+      if (!Array.isArray(payload.items) || payload.items.length > 200 || payload.window?.from !== from || payload.window?.to !== to ||
+          !(payload.nextAfter === null || (typeof payload.nextAfter === 'string' && /^[A-Za-z0-9_-]{1,512}$/u.test(payload.nextAfter)))) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const items = payload.items.map(value => activityItem(value, window));
+      for (let i = 1; i < items.length; i++) if (items[i]!.occurredAt < items[i - 1]!.occurredAt) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      return {status: 'ready', reason: null, items, nextAfter: payload.nextAfter, window};
+    } catch (error) { return activityUnavailable(safeError(error).code); }
   }
 
   /** Public JSON for `GET /api/hanamesh/core/points`. `prompt.show` is decided here, never in the client bundle:

@@ -47,12 +47,28 @@ test('T2: the 我的 Hana row renders real 分 from the host points route, with 
   assert.match(source, /NOT_REGISTERED: '本设备尚未注册成功/);
   assert.match(source, /NOT_CONNECTED: '未连接服务端/);
   assert.match(source, /'data-hanamesh-core-hint': 'points-not-token'\}, '分不是代币/);
-  assert.match(source, /\['creatorMirror', '创作镜像'\], \['launchInitiator', '发起'\]/);
+  assert.match(source, /\['creatorMirror', 'Creator 镜像奖励'\], \['launchInitiator', '发起奖励'\]/);
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.match(bundle, /\/api\/hanamesh\/core\/points/);
   assert.match(bundle, /分不是代币/);
   // The whole surface stays in 分 and %; no token or currency units leak into the client copy.
   assert.doesNotMatch(source, /HANA 币|代币数量|USDT|\bBNB\b/);
+});
+
+test('P01-U04: native points distinguish typed totals from signed device event history', async () => {
+  const source = await readFile('src/client/index.ts', 'utf8');
+  assert.match(source, /row\.displayName\s*\?\?/);
+  assert.match(source, /积分来源（按类型汇总）/);
+  assert.match(source, /filter\(\(\[, value\]\) => value !== 0\)/);
+  assert.match(source, /\/api\/hanamesh\/core\/activity/);
+  assert.match(source, /本设备近 90 天贡献事件/);
+  assert.match(source, /最新事件（新到旧）/);
+  assert.match(source, /事件不等于逐笔积分/);
+  assert.match(source, /尚未抵达最新/);
+  assert.match(source, /继续读取到最新/);
+  assert.match(source, /page < 5/);
+  assert.match(source, /slice\(-25\)/);
+  assert.match(source, /row\.displayName \?\? `\$\{row\.hanaId\.slice\(0, 8\)\}…`/);
 });
 
 test('T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows', async () => {

@@ -7,6 +7,7 @@ export const ROUTES = Object.freeze({
   register: '/api/hanamesh/core/device/register',
   health: '/api/hanamesh/core/health',
   points: '/api/hanamesh/core/points',
+  activity: '/api/hanamesh/core/activity',
   pointsPromptShown: '/api/hanamesh/core/points/prompt-shown',
   healthRecheck: '/api/hanamesh/core/health/recheck',
   refresh: '/api/hanamesh/core/refresh',
@@ -16,6 +17,19 @@ export const ROUTES = Object.freeze({
 });
 const ROUTE_PATHS = new Set<string>(Object.values(ROUTES));
 
+function activityQuery(url: URL): {from?: string; to?: string; after?: string} {
+  if (!url.search) return {};
+  const keys = [...url.searchParams.keys()];
+  if (keys.length < 2 || keys.length > 3 || keys.some(key => !['from', 'to', 'after'].includes(key)) || new Set(keys).size !== keys.length) throw new CoreError('CORE_INPUT_INVALID', 400);
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+  const after = url.searchParams.get('after');
+  const canonical = (value: string | null): value is string => value !== null && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString() === value;
+  if (!canonical(from) || !canonical(to) || Date.parse(to) <= Date.parse(from) || Date.parse(to) - Date.parse(from) > 90 * 86400000 || Date.parse(to) > Date.now() + 60_000 ||
+      (after !== null && !/^[A-Za-z0-9_-]{1,512}$/u.test(after))) throw new CoreError('CORE_INPUT_INVALID', 400);
+  return {...(after === null ? {} : {after}), from, to};
+}
+
 function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
@@ -24,13 +38,14 @@ export function createRouteHandler(controller: SessionController): (request: Req
   return async request => {
     try {
       const url = new URL(request.url);
-      if (url.search || url.hash) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
+      if (url.hash || (url.search && url.pathname !== ROUTES.activity)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
       if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
-      if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health || url.pathname === ROUTES.points) {
+      if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health || url.pathname === ROUTES.points || url.pathname === ROUTES.activity) {
         if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
         if (url.pathname === ROUTES.state) return response(controller.state());
         if (url.pathname === ROUTES.health) return response(controller.service.getHealth());
         if (url.pathname === ROUTES.points) return response(await controller.points());
+        if (url.pathname === ROUTES.activity) return response(await controller.activity(activityQuery(url)));
         return response(controller.diagnostics());
       }
       if (request.method !== 'POST') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
+import {createHash, createPublicKey, verify} from 'node:crypto';
 import {SessionController} from '../lib/controller.js';
 import {createRouteHandler, ROUTES} from '../lib/routes.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
@@ -19,12 +19,12 @@ const POINTS_BODY = {
 
 /** A controller whose device is already registered, consent granted, and whose upstream answers the two signed reads. */
 async function ready(options = {}) {
-  const {points = POINTS_BODY, pointsStatus = 200, bound = false, initial = INITIAL_CORE_SNAPSHOT, contributions = true} = options;
+  const {points = POINTS_BODY, pointsStatus = 200, bound = false, initial = INITIAL_CORE_SNAPSHOT, contributions = true, profiles = {}, events = []} = options;
   const memory = memoryStore(initial);
   const calls = [];
   const fetcher = async (url, init) => {
     const path = new URL(String(url)).pathname;
-    calls.push({path, headers: new Headers(init?.headers)});
+    calls.push({path, url: String(url), headers: new Headers(init?.headers)});
     if (path === '/v1/identity/devices/challenge') return Response.json({nonce: 'n', expiresAt: '2030-01-01T00:00:00.000Z'});
     if (path === '/v1/identity/devices') {
       const raw = Buffer.from(JSON.parse(init.body).publicKey, 'base64url');
@@ -37,6 +37,14 @@ async function ready(options = {}) {
     if (path === '/v1/custody/me/points') {
       if (pointsStatus !== 200) return new Response('nope', {status: pointsStatus});
       return Response.json(points);
+    }
+    if (path.startsWith('/v1/registry/hanas/')) {
+      const hanaId = path.slice('/v1/registry/hanas/'.length);
+      return profiles[hanaId] ? Response.json({hanaId, displayName: profiles[hanaId]}) : new Response('not found', {status: 404});
+    }
+    if (path.startsWith('/v1/usage/me/devices/') && path.endsWith('/events')) {
+      const params = new URL(String(url)).searchParams;
+      return Response.json({items: events, nextAfter: params.has('after') ? null : 'opaque-cursor', window: {from: params.get('from'), to: params.get('to')}});
     }
     return new Response('unexpected', {status: 404});
   };
@@ -64,6 +72,60 @@ test('GET /api/hanamesh/core/points returns the signed custody read with 分 tot
   assert.ok(signed, 'the host, not the client bundle, signs the custody read');
   for (const header of ['x-hm-device-id', 'x-hm-timestamp', 'x-hm-nonce', 'x-hm-signature']) assert.ok(signed.headers.get(header), header);
   assert.equal((await handle(new Request(`${carrier}${ROUTES.points}`, {method: 'POST', headers: postHeaders, body: '{}'}))).status, 405);
+});
+
+test('points use public registry names where available and retain an honest ID fallback', async () => {
+  const hanaId = POINTS_BODY.hanas[0].hanaId;
+  const {handle, calls} = await ready({profiles: {[hanaId]: 'HanaMesh Vibe Trading'}});
+  const body = await (await handle(new Request(`${carrier}${ROUTES.points}`))).json();
+  assert.equal(body.hanas[0].displayName, 'HanaMesh Vibe Trading');
+  assert.equal(body.hanas[1].displayName, null);
+  assert.equal(calls.filter(call => call.path === `/v1/registry/hanas/${hanaId}`).length, 1);
+});
+
+test('activity returns only this device signed raw events in an honest 90-day ascending page, without sensitive fields', async () => {
+  const at = '2026-09-30T04:00:00.000Z';
+  const event = {hanaRef: '@hanamesh/app-vibe-trading', action: 'use', occurredAt: at, eventId: 'event-secret', nonce: 'nonce-secret', signature: 'signature-secret', principalId: 'principal-secret', receipt: {providerId: 'openai', model: 'gpt-5.5', count: 1}};
+  const {handle, calls, controller} = await ready({events: [event]});
+  const first = await handle(new Request(`${carrier}/api/hanamesh/core/activity`));
+  assert.equal(first.status, 200);
+  const body = await first.json();
+  assert.equal(body.status, 'ready');
+  assert.deepEqual(body.items, [{hanaRef: event.hanaRef, action: 'use', occurredAt: at}]);
+  assert.equal(body.nextAfter, 'opaque-cursor');
+  assert.ok(Date.parse(body.window.to) - Date.parse(body.window.from) <= 90 * 86400000);
+  assert.doesNotMatch(JSON.stringify(body), /event-secret|nonce-secret|signature-secret|principal-secret|gpt-5\.5/);
+  const signed = calls.find(call => call.path.endsWith('/events'));
+  assert.ok(signed);
+  assert.equal(new URL(signed.url).searchParams.get('limit'), '200');
+  for (const header of ['x-hm-device-id', 'x-hm-timestamp', 'x-hm-nonce', 'x-hm-signature']) assert.ok(signed.headers.get(header), header);
+  assert.ok(signed.path.includes(controller.service.getDeviceId()));
+  const publicKey = createPublicKey({key: Buffer.concat([Buffer.from('302a300506032b6570032100', 'hex'), Buffer.from(controller.service.getPublicKey(), 'base64url')]), format: 'der', type: 'spki'});
+  const signedMessage = `GET|${signed.path}|${signed.headers.get('x-hm-timestamp')}|${signed.headers.get('x-hm-nonce')}|${createHash('sha256').update('').digest('hex')}`;
+  const signature = Buffer.from(signed.headers.get('x-hm-signature'), 'base64url');
+  assert.equal(verify(null, Buffer.from(signedMessage), publicKey, signature), true, 'canonical signature uses pathname without query');
+  assert.equal(verify(null, Buffer.from(signedMessage.replace(signed.path, new URL(signed.url).pathname + new URL(signed.url).search)), publicKey, signature), false);
+  const nextUrl = new URL(`${carrier}/api/hanamesh/core/activity`);
+  for (const key of ['from', 'to']) nextUrl.searchParams.set(key, body.window[key]);
+  nextUrl.searchParams.set('after', body.nextAfter);
+  const next = await (await handle(new Request(nextUrl))).json();
+  assert.equal(next.status, 'ready');
+  assert.equal(next.nextAfter, null);
+  assert.equal(calls.filter(call => call.path.endsWith('/events')).length, 2);
+});
+
+test('activity rejects arbitrary queries, does not read while consent is withheld, and fails closed on malformed upstream events', async () => {
+  const {handle, controller, calls} = await ready();
+  assert.equal((await handle(new Request(`${carrier}/api/hanamesh/core/activity?deviceId=another`))).status, 400);
+  await controller.setConsent('withheld');
+  const withheld = await (await handle(new Request(`${carrier}/api/hanamesh/core/activity`))).json();
+  assert.equal(withheld.status, 'unavailable');
+  assert.equal(withheld.reason, 'CONSENT_WITHHELD');
+  assert.equal(calls.filter(call => call.path.endsWith('/events')).length, 0);
+  const broken = await ready({events: [{hanaRef: 'x', action: 'random', occurredAt: 'no-date'}]});
+  const result = await (await broken.handle(new Request(`${carrier}/api/hanamesh/core/activity`))).json();
+  assert.equal(result.status, 'unavailable');
+  assert.deepEqual(result.items, []);
 });
 
 test('points empty states are readable: no consent, no registration, no server, upstream failure', async () => {

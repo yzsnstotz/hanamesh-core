@@ -19,6 +19,7 @@ test('adapter uses the core domain, core service name and no legacy web assets',
   const {facts,ctx}=fixture();await apply(ctx,config);
   assert.deepEqual(facts.specs.map(spec=>spec.name),['hanamesh_core','hanamesh_core_health']);assert.equal(facts.spec.layout,'single');assert.deepEqual(facts.spec.tables,{});
   assert.ok(facts.routes.length>=2);assert.ok(facts.routes.every(r=>r.requestBody==='buffered'&&r.path.startsWith('/api/hanamesh/core/')));
+  assert.deepEqual(facts.routes.find(r=>r.path==='/api/hanamesh/core/activity')?.methods,['GET']);
   assert.equal(facts.provided[0].name,'hanameshCore');assert.equal(facts.provided[0].value.signIn,undefined);
   assert.equal(facts.assets.length,0);assert.ok(facts.events.every(event=>event.name!==['webserver','index','inject'].join('/').replace('/index/','/index-')));
   await facts.effects[0]();
