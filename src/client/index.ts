@@ -34,12 +34,12 @@ type PointsState = {
   prompt: {show: boolean; shownAt: string | null};
 };
 const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
-  ['install', '安装贡献'], ['open', '打开贡献'], ['use', '使用贡献'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
+  ['install', '安装贡献'], ['open', '打开贡献'], ['use', '应用活跃小时'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];
 type ActivityItem = {hanaRef: string; action: 'install' | 'open' | 'use' | 'uninstall'; occurredAt: string};
 type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; items: ActivityItem[]; nextAfter: string | null; window: {from: string; to: string} | null};
 type ActivityView = ActivityState & {scanned: number};
-const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '使用', uninstall: '卸载'};
+const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '应用活跃小时', uninstall: '卸载'};
 /** Usage pages are oldest-first. Never present a scanned prefix as "latest" until its cursor reaches the tail. */
 export async function collectLatestActivity(fetchPage: (query: {from?: string; to?: string; after?: string}) => Promise<ActivityState>, previous: ActivityView | null): Promise<ActivityView> {
   let current: ActivityView | null = previous?.status === 'ready' ? previous : null;
@@ -209,7 +209,7 @@ function HanaMeshSection(): ReactNode {
       createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站')))),
     createElement(Row, {label: '贡献事件'}, createElement('div', {className: 'hm-core-events', 'data-hanamesh-core-activity': activity?.status ?? 'loading'},
       createElement('b', null, '本设备近 90 天贡献事件'),
-      createElement('small', {className: 'hm-core-muted'}, '事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。'),
+      createElement('small', {className: 'hm-core-muted'}, '活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。'),
       activityBusy && createElement('span', {className: 'hm-core-muted'}, '正在读取最新事件…'),
       activity === null ? createElement('span', {className: 'hm-core-muted'}, '正在读取事件…')
         : activity.status === 'unavailable' ? createElement('span', {className: 'hm-core-muted'}, pointsReason(activity.reason))
@@ -223,7 +223,7 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: '组件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('span', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'support-dependencies'}, '支持依赖：@hanamesh/lib-provision、zod（不是插件，DSH Market 里会显示为「Installed, not active」，属正常，无需操作）'), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.42 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.43 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
