@@ -9,7 +9,7 @@ import {inspectPackage, LoaderObservationSource} from '../lib/health/loader.js';
 
 const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
 const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.10', phase: 'active'}));
-active[1].version = '0.1.0-rc.41';
+active[1].version = '0.1.0-rc.43';
 
 test('notice components distinguish present, missing and disabled without restricting healthy core', async () => {
   for (const [name, observations, expected] of [
@@ -22,6 +22,15 @@ test('notice components distinguish present, missing and disabled without restri
     const state = await service.recheck();
     assert.deepEqual([state.mode, state.components[0].status], expected, name);
     assert.equal(writes.length, 1);
+  }
+});
+
+test('pinned AppHost rc.43 is satisfied and the superseded rc.41 is incompatible', async () => {
+  const appHost = profile.components.findIndex(row => row.moduleName === '@hanamesh/dsh-app-host');
+  for (const [version, status] of [['0.1.0-rc.43', 'satisfied'], ['0.1.0-rc.41', 'incompatible']]) {
+    const observations = active.map((row, index) => index === appHost ? {...row, version} : row);
+    const service = new HealthService(profile, {observe: async () => observations}, {publish: async () => undefined});
+    assert.equal((await service.recheck()).components[appHost].status, status, version);
   }
 });
 
@@ -48,7 +57,7 @@ test('real DSH include-prefixed ids and package root or subpath names match suit
       {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
       {id: 'include:hanamesh-app-host', options: {name: appHostName}, fiber: {state: 2}},
     ];
-    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.10' : '0.1.0-rc.41'}));
+    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.10' : '0.1.0-rc.43'}));
     const observations = await source.observe(profile.components);
     assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']], appHostName);
   }
