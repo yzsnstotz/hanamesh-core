@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';
 const evidence = resolve('docs/acceptance/mutations');
 await mkdir(evidence, {recursive: true});
 const production = new Map();
+const clientBundle = await readFile('lib/client.js', 'utf8');
 for (const file of ['dsh.mjs', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 
 function execute(testFile, env = {}) {
@@ -79,6 +80,30 @@ try {
     console.log(JSON.stringify({mutant: mutant.name, mutantExit: result.status, assertionFailure: true}));
     await writeFile(target, original);
   }
+  // P05-CORE-01 client mutants: each one re-opens a way the bind prompt could be spent unseen or lock the host,
+  // and must be killed by the real-browser suite (test/prompt-native.test.mjs) against the mutated bundle.
+  const clientMutants = [
+    {name: 'prompt-in-sidebar-slot', mutate: code => code.replace('document.body.append(node);', "(document.querySelector('.hm-core-footer')?.parentElement ?? document.body).append(node);")},
+    {name: 'prompt-stamp-before-open', mutate: code => code.replace('document.body.append(node);', "await jsonRequest('/api/hanamesh/core/points/prompt-shown', { method: 'POST' }).catch(() => undefined);\n                document.body.append(node);")},
+    {name: 'prompt-no-visibility-gate', mutate: code => code.replace('if (!promptOnScreen(node)) {', 'if (false) {')},
+    {name: 'prompt-ignores-hidden-window', mutate: code => code.replaceAll("document.visibilityState !== 'visible'", 'false')},
+  ];
+  for (const mutant of clientMutants) {
+    const changed = mutant.mutate(clientBundle);
+    assert.notEqual(changed, clientBundle, `${mutant.name} mutation must apply`);
+    const bundlePath = join(root, `${mutant.name}.client.js`);
+    await writeFile(bundlePath, changed);
+    const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', 'test/prompt-native.test.mjs'], {env: {...process.env, HM_CORE_CLIENT_BUNDLE: bundlePath}, encoding: 'utf8', timeout: 180_000});
+    const output = (result.stdout ?? '') + (result.stderr ?? '');
+    await writeFile(join(evidence, `${mutant.name}.tap`), output);
+    assert.doesNotMatch(output, /# skipped [1-9]|CHROME_MISSING/, `${mutant.name}: the browser suite must actually run`);
+    assert.notEqual(result.status, 0, `${mutant.name} must fail`);
+    assert.match(output, /ERR_ASSERTION/);
+    assert.match(output, /not ok/);
+    assert.doesNotMatch(output, /SyntaxError|PAGE_EXCEPTION/);
+    console.log(JSON.stringify({mutant: mutant.name, mutantExit: result.status, assertionFailure: true}));
+  }
 } finally { await rm(root, {recursive: true, force: true}); }
 
+assert.equal(await readFile('lib/client.js', 'utf8'), clientBundle, 'lib/client.js production copy untouched');
 for (const [file, bytes] of production) assert.equal(await readFile(join('lib', file), 'utf8'), bytes, `${file} production copy untouched`);

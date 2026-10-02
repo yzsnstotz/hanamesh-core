@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.2.0-rc.46",
+  "version": "0.2.0-rc.47",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint. Remove separately installed suite packages first to avoid duplicate loader entry id.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -70,6 +70,7 @@
     "@types/node": "24.13.4",
     "@types/react": "18.3.12",
     "react": "18.3.1",
+    "react-dom": "18.3.1",
     "typescript": "5.9.3",
     "zod": "4.5.4"
   },

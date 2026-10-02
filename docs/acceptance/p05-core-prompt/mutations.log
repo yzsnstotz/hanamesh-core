@@ -1,0 +1,24 @@
+npm warn Unknown env config "store-dir". This will stop working in the next major version of npm.
+(node:2890) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> hanamesh-core@0.2.0-rc.47 test:mutations
+> node scripts/mutation.mjs
+
+(node:2908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"mutant":"domain-name","mutantExit":1,"assertionFailure":true}
+{"mutant":"device-integrity","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-device-id","mutantExit":1,"assertionFailure":true}
+{"mutant":"registration-reverse-order","mutantExit":1,"assertionFailure":true}
+{"mutant":"health-repair-priority","mutantExit":1,"assertionFailure":true}
+{"mutant":"points-prompt-once","mutantExit":1,"assertionFailure":true}
+{"mutant":"prompt-in-sidebar-slot","mutantExit":1,"assertionFailure":true}
+{"mutant":"prompt-stamp-before-open","mutantExit":1,"assertionFailure":true}
+{"mutant":"prompt-no-visibility-gate","mutantExit":1,"assertionFailure":true}
+{"mutant":"prompt-ignores-hidden-window","mutantExit":1,"assertionFailure":true}
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice

@@ -1,0 +1,68 @@
+(node:4508) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:4509) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: normal view: pending 分 shows a visible prompt with the amount and both buttons, stamped once and only while visible
+ok 1 - normal view: pending 分 shows a visible prompt with the amount and both buttons, stamped once and only while visible
+  ---
+  duration_ms: 2495.29625
+  type: 'test'
+  ...
+# Subtest: P05 A path: pending appears while the settings page is open — the prompt is visible without leaving settings and is stamped only while visible
+ok 2 - P05 A path: pending appears while the settings page is open — the prompt is visible without leaving settings and is stamped only while visible
+  ---
+  duration_ms: 1647.417792
+  type: 'test'
+  ...
+# Subtest: settings open: the user is never locked — whenever no prompt is visible, a real click on "Back to app" works
+ok 3 - settings open: the user is never locked — whenever no prompt is visible, a real click on "Back to app" works
+  ---
+  duration_ms: 1586.272125
+  type: 'test'
+  ...
+# Subtest: 以后再说 (real click) closes the prompt, settings and "Back to app" stay operable, and a cold start never prompts again
+ok 4 - 以后再说 (real click) closes the prompt, settings and "Back to app" stay operable, and a cold start never prompts again
+  ---
+  duration_ms: 2089.404
+  type: 'test'
+  ...
+# Subtest: 去网站绑定 keeps the existing bind-link + system-browser path and closes the prompt
+ok 5 - 去网站绑定 keeps the existing bind-link + system-browser path and closes the prompt
+  ---
+  duration_ms: 564.605
+  type: 'test'
+  ...
+# Subtest: a prompt that cannot be opened (showModal throws) consumes nothing and never inerts the page
+ok 6 - a prompt that cannot be opened (showModal throws) consumes nothing and never inerts the page
+  ---
+  duration_ms: 1577.78
+  type: 'test'
+  ...
+# Subtest: unmounting the footer while the prompt is open removes it and leaves the host operable, with no extra stamp
+ok 7 - unmounting the footer while the prompt is open removes it and leaves the host operable, with no extra stamp
+  ---
+  duration_ms: 487.55925
+  type: 'test'
+  ...
+# Subtest: a hidden window (document.visibilityState hidden) defers the prompt and the marker until the window is visible
+ok 8 - a hidden window (document.visibilityState hidden) defers the prompt and the marker until the window is visible
+  ---
+  duration_ms: 1933.414958
+  type: 'test'
+  ...
+# Subtest: a prompt that opens but is still not on screen (host style hides it) is closed again: nothing spent, page operable
+ok 9 - a prompt that opens but is still not on screen (host style hides it) is closed again: nothing spent, page operable
+  ---
+  duration_ms: 1600.117625
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14113.2325

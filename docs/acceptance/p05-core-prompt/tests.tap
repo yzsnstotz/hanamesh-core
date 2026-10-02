@@ -1,0 +1,466 @@
+
+> hanamesh-core@0.2.0-rc.47 test
+> node --test --test-reporter=tap test/*.test.mjs
+
+(node:2593) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:2594) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: bounded scan reaches the tail before declaring newest events and retains only the latest 25
+ok 1 - bounded scan reaches the tail before declaring newest events and retains only the latest 25
+  ---
+  duration_ms: 8.843708
+  type: 'test'
+  ...
+# Subtest: a five-page budget remains explicitly incomplete and the next scan can finish
+ok 2 - a five-page budget remains explicitly incomplete and the next scan can finish
+  ---
+  duration_ms: 2.037208
+  type: 'test'
+  ...
+# (node:2595) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
+ok 3 - DSH adapter registration and disposal contract fixture (not real DSH)
+  ---
+  duration_ms: 262.991791
+  type: 'test'
+  ...
+# (node:2596) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: open-external rejects foreign origins and reports disabled native opening
+ok 4 - open-external rejects foreign origins and reports disabled native opening
+  ---
+  duration_ms: 61.788542
+  type: 'test'
+  ...
+# Subtest: contribution aggregation preserves unavailable versus real zero
+ok 5 - contribution aggregation preserves unavailable versus real zero
+  ---
+  duration_ms: 3.271375
+  type: 'test'
+  ...
+# Subtest: server responses larger than 1 MiB are rejected before JSON parsing
+ok 6 - server responses larger than 1 MiB are rejected before JSON parsing
+  ---
+  duration_ms: 13.31375
+  type: 'test'
+  ...
+# (node:2598) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: client distribution declares native slots and avoids forbidden layout/link fallbacks
+ok 7 - client distribution declares native slots and avoids forbidden layout/link fallbacks
+  ---
+  duration_ms: 24.1805
+  type: 'test'
+  ...
+# Subtest: account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)
+ok 8 - account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)
+  ---
+  duration_ms: 4.04825
+  type: 'test'
+  ...
+# Subtest: B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it
+ok 9 - B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it
+  ---
+  duration_ms: 1.37925
+  type: 'test'
+  ...
+# Subtest: T2: the 我的 Hana row renders real 分 from the host points route, with readable empty states and a "分不是代币" note
+ok 10 - T2: the 我的 Hana row renders real 分 from the host points route, with readable empty states and a "分不是代币" note
+  ---
+  duration_ms: 8.051417
+  type: 'test'
+  ...
+# Subtest: P01-U04: native points distinguish typed totals from signed device event history
+ok 11 - P01-U04: native points distinguish typed totals from signed device event history
+  ---
+  duration_ms: 2.555
+  type: 'test'
+  ...
+# Subtest: P01-U04: gateway activity is named by active hour, without implying a model call or a per-event award
+ok 12 - P01-U04: gateway activity is named by active hour, without implying a model call or a per-event award
+  ---
+  duration_ms: 1.659583
+  type: 'test'
+  ...
+# Subtest: T2: the bind nudge is a one-shot dialog that stamps the host marker only once it is on screen (behaviour: prompt-native.test.mjs)
+ok 13 - T2: the bind nudge is a one-shot dialog that stamps the host marker only once it is on screen (behaviour: prompt-native.test.mjs)
+  ---
+  duration_ms: 1.098917
+  type: 'test'
+  ...
+# Subtest: T9: the 账号 row carries an email-binding entry that opens the website, and no email form lives in core
+ok 14 - T9: the 账号 row carries an email-binding entry that opens the website, and no email form lives in core
+  ---
+  duration_ms: 0.717625
+  type: 'test'
+  ...
+# (node:2599) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+ok 15 - consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+  ---
+  duration_ms: 3.287917
+  type: 'test'
+  ...
+# Subtest: a delayed registration publish cannot restore consent after the user withdraws it
+ok 16 - a delayed registration publish cannot restore consent after the user withdraws it
+  ---
+  duration_ms: 30.004667
+  type: 'test'
+  ...
+# (node:2600) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+ok 17 - LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+  ---
+  duration_ms: 137.380958
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+ok 18 - LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+  ---
+  duration_ms: 118.553292
+  type: 'test'
+  ...
+# (node:2601) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: first initialization publishes one complete device snapshot and restart preserves id
+ok 19 - first initialization publishes one complete device snapshot and restart preserves id
+  ---
+  duration_ms: 10.363042
+  type: 'test'
+  ...
+# Subtest: sign returns a verifiable Ed25519 signature and private key never reaches public projections
+ok 20 - sign returns a verifiable Ed25519 signature and private key never reaches public projections
+  ---
+  duration_ms: 3.346708
+  type: 'test'
+  ...
+# Subtest: tampered public key makes every signature path fail closed
+ok 21 - tampered public key makes every signature path fail closed
+  ---
+  duration_ms: 1.808708
+  type: 'test'
+  ...
+# (node:2602) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: health provider feeds the contract, state and explicit recheck route
+ok 22 - health provider feeds the contract, state and explicit recheck route
+  ---
+  duration_ms: 102.414875
+  type: 'test'
+  ...
+# Subtest: state projects health faults and duck-typed usage service readiness
+ok 23 - state projects health faults and duck-typed usage service readiness
+  ---
+  duration_ms: 4.99575
+  type: 'test'
+  ...
+# Subtest: duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+ok 24 - duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+  ---
+  duration_ms: 2.939083
+  type: 'test'
+  ...
+# (node:2603) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 25 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 51.3175
+  type: 'test'
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 26 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 9.670416
+  type: 'test'
+  ...
+# Subtest: suite component versions are locked to package dependencies
+ok 27 - suite component versions are locked to package dependencies
+  ---
+  duration_ms: 17.412625
+  type: 'test'
+  ...
+# Subtest: real DSH include-prefixed ids and package root or subpath names match suite components
+ok 28 - real DSH include-prefixed ids and package root or subpath names match suite components
+  ---
+  duration_ms: 0.596875
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 29 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 18.330208
+  type: 'test'
+  ...
+# (node:2607) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: GET /api/hanamesh/core/points returns the signed custody read with 分 totals and a per-Hana breakdown
+ok 30 - GET /api/hanamesh/core/points returns the signed custody read with 分 totals and a per-Hana breakdown
+  ---
+  duration_ms: 71.715875
+  type: 'test'
+  ...
+# Subtest: points use public registry names where available and retain an honest ID fallback
+ok 31 - points use public registry names where available and retain an honest ID fallback
+  ---
+  duration_ms: 10.663916
+  type: 'test'
+  ...
+# Subtest: activity returns only this device signed raw events in an honest 90-day ascending page, without sensitive fields
+ok 32 - activity returns only this device signed raw events in an honest 90-day ascending page, without sensitive fields
+  ---
+  duration_ms: 24.6985
+  type: 'test'
+  ...
+# Subtest: activity rejects arbitrary queries, does not read while consent is withheld, and fails closed on malformed upstream events
+ok 33 - activity rejects arbitrary queries, does not read while consent is withheld, and fails closed on malformed upstream events
+  ---
+  duration_ms: 15.612125
+  type: 'test'
+  ...
+# Subtest: points empty states are readable: no consent, no registration, no server, upstream failure
+ok 34 - points empty states are readable: no consent, no registration, no server, upstream failure
+  ---
+  duration_ms: 7.37575
+  type: 'test'
+  ...
+# Subtest: the bind prompt fires once: pending 分 on an unbound device, then never again — restart included
+ok 35 - the bind prompt fires once: pending 分 on an unbound device, then never again — restart included
+  ---
+  duration_ms: 3.919708
+  type: 'test'
+  ...
+# Subtest: the bind prompt never fires for a bound device, and never without pending 分
+ok 36 - the bind prompt never fires for a bound device, and never without pending 分
+  ---
+  duration_ms: 1.85025
+  type: 'test'
+  ...
+# Subtest: the prompt marker is optional in storage so an rc.30 snapshot still loads and can be stamped
+ok 37 - the prompt marker is optional in storage so an rc.30 snapshot still loads and can be stamped
+  ---
+  duration_ms: 0.50575
+  type: 'test'
+  ...
+# Subtest: the points route is guarded like every other core route and leaks no secrets
+ok 38 - the points route is guarded like every other core route and leaks no secrets
+  ---
+  duration_ms: 0.79625
+  type: 'test'
+  ...
+# (node:2608) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: normal view: pending 分 shows a visible prompt with the amount and both buttons, stamped once and only while visible
+ok 39 - normal view: pending 分 shows a visible prompt with the amount and both buttons, stamped once and only while visible
+  ---
+  duration_ms: 2843.842334
+  type: 'test'
+  ...
+# Subtest: P05 A path: pending appears while the settings page is open — the prompt is visible without leaving settings and is stamped only while visible
+ok 40 - P05 A path: pending appears while the settings page is open — the prompt is visible without leaving settings and is stamped only while visible
+  ---
+  duration_ms: 1672.230041
+  type: 'test'
+  ...
+# Subtest: settings open: the user is never locked — whenever no prompt is visible, a real click on "Back to app" works
+ok 41 - settings open: the user is never locked — whenever no prompt is visible, a real click on "Back to app" works
+  ---
+  duration_ms: 1665.886834
+  type: 'test'
+  ...
+# Subtest: 以后再说 (real click) closes the prompt, settings and "Back to app" stay operable, and a cold start never prompts again
+ok 42 - 以后再说 (real click) closes the prompt, settings and "Back to app" stay operable, and a cold start never prompts again
+  ---
+  duration_ms: 2033.021042
+  type: 'test'
+  ...
+# Subtest: 去网站绑定 keeps the existing bind-link + system-browser path and closes the prompt
+ok 43 - 去网站绑定 keeps the existing bind-link + system-browser path and closes the prompt
+  ---
+  duration_ms: 570.830625
+  type: 'test'
+  ...
+# Subtest: a prompt that cannot be opened (showModal throws) consumes nothing and never inerts the page
+ok 44 - a prompt that cannot be opened (showModal throws) consumes nothing and never inerts the page
+  ---
+  duration_ms: 1627.465
+  type: 'test'
+  ...
+# Subtest: unmounting the footer while the prompt is open removes it and leaves the host operable, with no extra stamp
+ok 45 - unmounting the footer while the prompt is open removes it and leaves the host operable, with no extra stamp
+  ---
+  duration_ms: 549.915542
+  type: 'test'
+  ...
+# Subtest: a hidden window (document.visibilityState hidden) defers the prompt and the marker until the window is visible
+ok 46 - a hidden window (document.visibilityState hidden) defers the prompt and the marker until the window is visible
+  ---
+  duration_ms: 2010.454041
+  type: 'test'
+  ...
+# Subtest: a prompt that opens but is still not on screen (host style hides it) is closed again: nothing spent, page operable
+ok 47 - a prompt that opens but is still not on screen (host style hides it) is closed again: nothing spent, page operable
+  ---
+  duration_ms: 1607.272917
+  type: 'test'
+  ...
+# (node:2609) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration challenge flow succeeds and repeated registration stays idempotent
+ok 48 - registration challenge flow succeeds and repeated registration stays idempotent
+  ---
+  duration_ms: 92.2555
+  type: 'test'
+  ...
+# Subtest: device id mismatch and upstream failure are persisted as failed observations
+ok 49 - device id mismatch and upstream failure are persisted as failed observations
+  ---
+  duration_ms: 7.509709
+  type: 'test'
+  ...
+# Subtest: offline configuration never emits a request
+ok 50 - offline configuration never emits a request
+  ---
+  duration_ms: 5.068875
+  type: 'test'
+  ...
+# Subtest: registration is never published before the remote registration response
+ok 51 - registration is never published before the remote registration response
+  ---
+  duration_ms: 3.687791
+  type: 'test'
+  ...
+# Subtest: automatic contributions start only after registration succeeds
+ok 52 - automatic contributions start only after registration succeeds
+  ---
+  duration_ms: 7.651667
+  type: 'test'
+  ...
+# Subtest: device label is hostname / platform-arch / HANAMESH_SHELL-or-dsh, each within identity limits
+ok 53 - device label is hostname / platform-arch / HANAMESH_SHELL-or-dsh, each within identity limits
+  ---
+  duration_ms: 0.252625
+  type: 'test'
+  ...
+# Subtest: registration payload carries the label and the server echo is accepted
+ok 54 - registration payload carries the label and the server echo is accepted
+  ---
+  duration_ms: 2.514167
+  type: 'test'
+  ...
+# Subtest: identity rc.2 (400 on unknown `label`) makes core re-register once without the label using a fresh challenge
+ok 55 - identity rc.2 (400 on unknown `label`) makes core re-register once without the label using a fresh challenge
+  ---
+  duration_ms: 6.256333
+  type: 'test'
+  ...
+# Subtest: a 400 on a label-free registration is not retried and surfaces as upstream unavailable
+ok 56 - a 400 on a label-free registration is not retried and surfaces as upstream unavailable
+  ---
+  duration_ms: 1.110958
+  type: 'test'
+  ...
+# (node:2612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: service contract has exactly ten frozen keys
+ok 57 - service contract has exactly ten frozen keys
+  ---
+  duration_ms: 3.363792
+  type: 'test'
+  ...
+# Subtest: state, consent and diagnostics routes preserve method, origin and secret fences
+ok 58 - state, consent and diagnostics routes preserve method, origin and secret fences
+  ---
+  duration_ms: 42.842458
+  type: 'test'
+  ...
+# Subtest: DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+ok 59 - DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+  ---
+  duration_ms: 0.599542
+  type: 'test'
+  ...
+# (node:2613) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: package metadata exposes the core bundle and only the two suite dependencies
+ok 60 - package metadata exposes the core bundle and only the two suite dependencies
+  ---
+  duration_ms: 6.0665
+  type: 'test'
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 61 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 2.621666
+  type: 'test'
+  ...
+# Subtest: suite patch declares one insert containing the three canonical ids
+ok 62 - suite patch declares one insert containing the three canonical ids
+  ---
+  duration_ms: 1.100375
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 63 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 50.442041
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 64 - consistency declaration is renamed to core
+  ---
+  duration_ms: 1.682584
+  type: 'test'
+  ...
+# (node:2618) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly what identity verifies
+ok 65 - registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly what identity verifies
+  ---
+  duration_ms: 20.666209
+  type: 'test'
+  ...
+# Subtest: signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`
+ok 66 - signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`
+  ---
+  duration_ms: 1.331333
+  type: 'test'
+  ...
+# Subtest: bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature
+ok 67 - bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature
+  ---
+  duration_ms: 1.496625
+  type: 'test'
+  ...
+# Subtest: contributions response `bound` flows into getSession().bound
+ok 68 - contributions response `bound` flows into getSession().bound
+  ---
+  duration_ms: 1.023709
+  type: 'test'
+  ...
+# Subtest: B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null
+ok 69 - B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null
+  ---
+  duration_ms: 4.94475
+  type: 'test'
+  ...
+# Subtest: POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback
+ok 70 - POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback
+  ---
+  duration_ms: 1.329292
+  type: 'test'
+  ...
+1..70
+# tests 70
+# suites 0
+# pass 70
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14917.681459

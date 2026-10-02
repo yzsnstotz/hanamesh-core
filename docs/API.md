@@ -24,7 +24,7 @@
 
 客户端每 10 秒读取 `state`，同一轮再读 `points`。同意开关、注册重试、健康重查都在成功后重新读取；失败显示错误码并保留服务端真值。贡献与分的 unavailable 都不显示为 0。
 
-rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载），每 60 秒读一次 `points`；`prompt.show` 为真时先 `POST points/prompt-shown` 落标记、再用原生 `<dialog>` 的 top layer 弹出（不使用 fixed 覆盖层）。绑定按钮走既有 `bind-link` + `open-external`。「账号」行的「邮箱绑定」只打开 `websiteOrigin + /me`，邮箱表单与验证在网站侧（T8/T9）。
+rc.31 的一次性绑定引导由 `sidebar.footer.action`（始终挂载）驱动，每 60 秒（及窗口变为可见时）读一次 `points`。rc.47 起（P05-CORE-01）：`prompt.show` 为真且窗口可见时，原生 `<dialog>` 挂到 `document.body`（不放进宿主可能隐藏的侧栏槽位）并以 top layer 打开；**只有确认已打开且在屏幕上可见后**才 `POST points/prompt-shown` 落标记。打不开、不可见或窗口隐藏时立即关回、不落标记，等下一次轮询或窗口可见；组件卸载时一并移除。不使用 fixed 覆盖层。`prompt.show/shownAt` 与 `pointsBindPromptShownAt` 语义不变。绑定按钮走既有 `bind-link` + `open-external`。「账号」行的「邮箱绑定」只打开 `websiteOrigin + /me`，邮箱表单与验证在网站侧（T8/T9）。
 
 ## 主要错误码
 

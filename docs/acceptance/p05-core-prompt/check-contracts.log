@@ -1,0 +1,5 @@
+npm warn Unknown env config "store-dir". This will stop working in the next major version of npm.
+
+> hanamesh-core@0.2.0-rc.47 check:contracts
+> tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts
+

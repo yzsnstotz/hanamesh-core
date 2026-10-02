@@ -1,4 +1,6 @@
-# hanamesh-core · 0.2.0-rc.46
+# hanamesh-core · 0.2.0-rc.47
+
+> rc.47（2026-10-02，P05-CORE-01 本地组件候选）：修复首次可领权益提示在桌面设置页「标志已写、提示不可见、整个设置页被锁」——Core46 把 `<dialog>` 挂在侧栏 footer 内并先落标记后 `showModal()`，宿主设置页对侧栏/主区/右栏父节点设 `display:none !important`，模态不可见却让文档 inert。现改为挂到 `document.body`，打开并确认在屏幕可见后才 `POST points/prompt-shown`；打不开/不可见/窗口隐藏不消耗机会、不留 modal。文案、两个按钮、HTTP 路径、`prompt.show/shownAt` 与持久标记语义、积分规则、同意/设备行为不变；依赖仍精确 Usage `0.2.0-rc.10`、AppHost `0.1.0-rc.41`。新增仅测试用 devDependency `react-dom 18.3.1`（真实 Chrome 渲染客户端 bundle，运行时 React 由宿主提供，不随包）。证据 `docs/acceptance/p05-core-prompt/`；真实原生入口与 P05 组合由 PM 及不同 validator 复跑。
 
 > rc.46（2026-10-01，P01-U05-RI 组合钉版）：仅将 AppHost 固定包从 `0.1.0-rc.40` 更新到 `0.1.0-rc.41`，消费其运行时 Python 缓存卸载清理修复。Core 身份、同意、积分、事件展示行为保持 rc.45；需隔离原生重装与不同 validator 验证。
 

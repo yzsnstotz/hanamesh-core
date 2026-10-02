@@ -1,4 +1,4 @@
-import {createElement, Fragment, useEffect, useRef, useState, type ReactNode} from 'react';
+import {createElement, Fragment, useEffect, useState, type ReactNode} from 'react';
 
 interface SlotRegistry {
   inject(name: string, run: () => (() => void)): () => void;
@@ -223,7 +223,7 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: '组件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('span', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'support-dependencies'}, '支持依赖：@hanamesh/lib-provision、zod（不是插件，DSH Market 里会显示为「Installed, not active」，属正常，无需操作）'), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.46 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.47 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
@@ -250,42 +250,71 @@ function openHanaMeshSettings(): void {
   window.setTimeout(select, 100);
 }
 
-/** T2 one-time bind nudge. The host decides `prompt.show` (pending 分 > 0, device not bound, marker never stamped);
- *  the moment it is displayed we stamp the storage-domain marker, so a restart or reinstall never shows it again.
- *  Rendered as a native `<dialog>` in the browser top layer, so no layout hack covers the host chrome permanently. */
+/** T2 one-time bind nudge. The host decides `prompt.show` (pending 分 > 0, device not bound, marker never stamped).
+ *  P05-CORE-01: the `<dialog>` is attached to `document.body`, never inside the sidebar slot — the desktop host hides the
+ *  parents of sidebar/main/rightbar while Settings is open (`display:none !important`), and a modal under a hidden ancestor
+ *  is invisible yet still makes the whole page inert (Core46 locked the P05 A settings page and spent the marker unseen).
+ *  The storage-domain marker is stamped only after the dialog is open AND on screen; a dialog that cannot open or is not
+ *  visible is closed again at once and the attempt waits for the next poll or for the window to become visible. */
+function promptOnScreen(node: HTMLDialogElement): boolean {
+  if (!node.open || !node.isConnected || document.visibilityState !== 'visible') return false;
+  if (typeof node.checkVisibility === 'function' && !node.checkVisibility()) return false;
+  const rect = node.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return false;
+  const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  return hit !== null && node.contains(hit);
+}
+
+function buildBindPrompt(pending: number, onDismiss: () => void): HTMLDialogElement {
+  const node = document.createElement('dialog');
+  node.className = 'hm-core-prompt';
+  node.dataset['hanameshCorePrompt'] = 'bind';
+  const title = document.createElement('h3'); title.textContent = '绑定后这些分才归入你的账号';
+  const copy = document.createElement('p'); copy.textContent = `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`;
+  const actions = document.createElement('div'); actions.className = 'hm-core-actions';
+  const bind = document.createElement('button'); bind.type = 'button'; bind.textContent = '去网站绑定';
+  bind.addEventListener('click', () => { void openBindPage().catch(() => undefined); node.close(); });
+  const later = document.createElement('button'); later.type = 'button'; later.textContent = '以后再说';
+  later.addEventListener('click', () => node.close());
+  actions.append(bind, later);
+  node.append(title, copy, actions);
+  // Esc (cancel) and both buttons end in `close`; the node leaves the document so nothing modal lingers.
+  node.addEventListener('close', () => { node.remove(); onDismiss(); });
+  return node;
+}
+
 function PointsBindPrompt(): ReactNode {
-  const [pending, setPending] = useState<number | null>(null);
-  const dialog = useRef<HTMLDialogElement | null>(null);
   useEffect(() => {
-    let cancelled = false;
+    let disposed = false;
+    let busy = false;
+    let shown: HTMLDialogElement | null = null;
     let timer = 0;
-    const poll = async (): Promise<void> => {
+    const stop = (): void => { window.clearInterval(timer); document.removeEventListener('visibilitychange', attempt); };
+    async function attempt(): Promise<void> {
+      if (disposed || busy || shown || document.visibilityState !== 'visible') return;
+      busy = true;
       try {
         const next = await jsonRequest<PointsState>('/api/hanamesh/core/points');
-        if (cancelled || !next.prompt.show) return;
-        window.clearInterval(timer);
-        await jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => undefined);
-        if (cancelled) return;
-        setPending(next.pendingTotal);
+        if (disposed || !next.prompt.show || document.visibilityState !== 'visible') return; // the host decides, the client obeys
+        if (document.querySelector('dialog[data-hanamesh-core-prompt]')) return; // another mount is already showing it
+        const node = buildBindPrompt(next.pendingTotal, () => { shown = null; });
+        document.body.append(node);
+        try { if (typeof node.showModal === 'function') node.showModal(); else node.setAttribute('open', ''); }
+        catch (cause) { node.remove(); console.warn('[hanamesh-core] bind prompt could not open; marker not stamped, will retry', cause); return; }
+        if (!promptOnScreen(node)) { node.close(); console.warn('[hanamesh-core] bind prompt not visible; marker not stamped, will retry'); return; }
+        shown = node;
+        stop();
+        await jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'})
+          .catch((cause: unknown) => console.warn('[hanamesh-core] bind prompt shown but marker not persisted; it may show again on the next launch', cause));
       } catch { /* the nudge is optional; a failed read simply waits for the next tick */ }
-    };
-    void poll();
-    timer = window.setInterval(() => void poll(), 60_000);
-    return () => { cancelled = true; window.clearInterval(timer); };
+      finally { busy = false; }
+    }
+    document.addEventListener('visibilitychange', attempt);
+    void attempt();
+    timer = window.setInterval(() => void attempt(), 60_000);
+    return () => { disposed = true; stop(); const node = shown; shown = null; if (node?.open) node.close(); node?.remove(); };
   }, []);
-  useEffect(() => {
-    const node = dialog.current;
-    if (pending === null || !node || node.open) return;
-    if (typeof node.showModal === 'function') node.showModal(); else node.setAttribute('open', '');
-  }, [pending]);
-  if (pending === null) return null;
-  const close = (): void => { dialog.current?.close?.(); setPending(null); };
-  return createElement('dialog', {className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'bind', onCancel: close},
-    createElement('h3', null, '绑定后这些分才归入你的账号'),
-    createElement('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`),
-    createElement('div', {className: 'hm-core-actions'},
-      createElement('button', {type: 'button', onClick: () => { void openBindPage().catch(() => undefined); close(); }}, '去网站绑定'),
-      createElement('button', {type: 'button', onClick: close}, '以后再说')));
+  return null;
 }
 
 function FooterAction({wide}: {wide: boolean}): ReactNode {

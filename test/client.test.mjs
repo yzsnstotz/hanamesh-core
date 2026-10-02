@@ -79,15 +79,19 @@ test('P01-U04: gateway activity is named by active hour, without implying a mode
   assert.doesNotMatch(source, /\['use', '使用贡献'\]|use: '使用'/);
 });
 
-test('T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows', async () => {
+test('T2: the bind nudge is a one-shot dialog that stamps the host marker only once it is on screen (behaviour: prompt-native.test.mjs)', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /if \(cancelled \|\| !next\.prompt\.show\) return;/); // the host decides, the client obeys
+  assert.match(source, /if \(disposed \|\| !next\.prompt\.show \|\| document\.visibilityState !== 'visible'\) return;/); // the host decides, the client obeys
   assert.match(source, /jsonRequest\('\/api\/hanamesh\/core\/points\/prompt-shown', \{method: 'POST'\}\)/);
-  assert.match(source, /'data-hanamesh-core-prompt': 'bind'/);
+  assert.match(source, /node\.dataset\['hanameshCorePrompt'\] = 'bind'/);
   assert.match(source, /你已累计 \$\{fen\(pending\)\}（待绑定）/);
-  assert.match(source, /'去网站绑定'\),\n\s+createElement\('button', \{type: 'button', onClick: close\}, '以后再说'\)/);
-  assert.match(source, /createElement\(PointsBindPrompt\)/); // mounted from the always-present sidebar footer slot
-  assert.doesNotMatch(source, /className: 'hm-core-prompt'[^\n]*style:/); // no inline layout hacks; the dialog uses the browser top layer
+  assert.match(source, /bind\.textContent = '去网站绑定'/);
+  assert.match(source, /later\.textContent = '以后再说'/);
+  assert.match(source, /document\.body\.append\(node\)/); // P05-CORE-01: never inside a slot the host may hide
+  // The marker POST comes strictly after the visibility gate.
+  assert.ok(source.indexOf('if (!promptOnScreen(node))') < source.indexOf("'/api/hanamesh/core/points/prompt-shown'"));
+  assert.match(source, /createElement\(PointsBindPrompt\)/); // lifecycle still owned by the always-present sidebar footer slot
+  assert.doesNotMatch(source, /hm-core-prompt[^\n]*style\./); // no inline layout hacks; the dialog uses the browser top layer
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.match(bundle, /points\/prompt-shown/);
 });
