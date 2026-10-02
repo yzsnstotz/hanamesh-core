@@ -1,0 +1,5 @@
+{"mutant":"profile-range-rc41","file":"profile/suite.profile.json","test":"test/health.test.mjs","exit":1,"codes":" 2 code: 'ERR_ASSERTION';"}
+{"mutant":"dependency-rc41","file":"package.json","test":"test/stage0.test.mjs","exit":1,"codes":" 1 code: 'ERR_ASSERTION';"}
+{"mutant":"override-rc41","file":"package.json","test":"test/stage0.test.mjs","exit":1,"codes":" 1 code: 'ERR_ASSERTION';"}
+{"mutant":"sums-row-rc41","file":"vendor/siblings/SHA256SUMS","test":"test/stage0.test.mjs","exit":1,"codes":" 1 code: 'ERR_ASSERTION';"}
+{"mutant":"lock-rc41","file":"pnpm-lock.yaml","test":"test/stage0.test.mjs","exit":1,"codes":" 1 code: 'ERR_ASSERTION';"}

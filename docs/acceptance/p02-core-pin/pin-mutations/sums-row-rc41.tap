@@ -1,0 +1,66 @@
+(node:64344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:64345) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: package metadata exposes the core bundle and only the two suite dependencies
+not ok 1 - package metadata exposes the core bundle and only the two suite dependencies
+  ---
+  duration_ms: 3.0805
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/stage0.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /^0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  hanamesh-dsh-app-host-0\.1\.0-rc\.43\.tgz$/m. Input:
+    
+    '457b0c9690776d6762e374453f64780fcca9529b730ab506b45766055bb37134  hanamesh-dsh-app-host-0.1.0-rc.41.tgz\n' +
+      '386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  hanamesh-lib-provision-0.1.0-rc.1.tgz\n' +
+      'c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e  hanamesh-usage-0.2.0-rc.10.tgz\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    457b0c9690776d6762e374453f64780fcca9529b730ab506b45766055bb37134  hanamesh-dsh-app-host-0.1.0-rc.41.tgz
+    386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  hanamesh-lib-provision-0.1.0-rc.1.tgz
+    c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e  hanamesh-usage-0.2.0-rc.10.tgz
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/stage0.test.mjs:28:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 2 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 1.279375
+  type: 'test'
+  ...
+# Subtest: suite patch declares one insert containing the three canonical ids
+ok 3 - suite patch declares one insert containing the three canonical ids
+  ---
+  duration_ms: 0.530375
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 4 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 8.0905
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 5 - consistency declaration is renamed to core
+  ---
+  duration_ms: 0.38075
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 45.413334

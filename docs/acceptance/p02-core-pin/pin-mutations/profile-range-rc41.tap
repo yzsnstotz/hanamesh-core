@@ -1,0 +1,84 @@
+(node:64274) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:64275) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 1 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 3.140334
+  type: 'test'
+  ...
+# Subtest: pinned AppHost rc.43 is satisfied and the superseded rc.41 is incompatible
+not ok 2 - pinned AppHost rc.43 is satisfied and the superseded rc.41 is incompatible
+  ---
+  duration_ms: 0.612875
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    0.1.0-rc.43
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[32mi[39m[32mn[39m[32mc[39m[32mo[39m[32mm[39m[32mp[39m[31ms[39m[39ma[39m[39mt[39m[39mi[39m[32mb[39m[32ml[39m[31ms[39m[31mf[39m[31mi[39m[39me[39m[31md[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'satisfied'
+  actual: 'incompatible'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:33:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 3 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 0.346417
+  type: 'test'
+  ...
+# Subtest: suite component versions are locked to package dependencies
+not ok 4 - suite component versions are locked to package dependencies
+  ---
+  duration_ms: 2.112125
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:48:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[39m0[39m[39m.[39m[39m1[39m[39m.[39m[39m0[39m[39m-[39m[39mr[39m[39mc[39m[39m.[39m[39m4[39m[32m1[39m[31m3[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '0.1.0-rc.43'
+  actual: '0.1.0-rc.41'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:51:54)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: real DSH include-prefixed ids and package root or subpath names match suite components
+ok 5 - real DSH include-prefixed ids and package root or subpath names match suite components
+  ---
+  duration_ms: 0.280708
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 6 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 2.719875
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 4
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 52.624125

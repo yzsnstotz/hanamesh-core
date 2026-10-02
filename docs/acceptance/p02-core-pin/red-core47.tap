@@ -1,0 +1,136 @@
+(node:62113) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:62114) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: health provider feeds the contract, state and explicit recheck route
+ok 1 - health provider feeds the contract, state and explicit recheck route
+  ---
+  duration_ms: 11.064667
+  type: 'test'
+  ...
+# Subtest: state projects health faults and duck-typed usage service readiness
+ok 2 - state projects health faults and duck-typed usage service readiness
+  ---
+  duration_ms: 0.546416
+  type: 'test'
+  ...
+# Subtest: duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+ok 3 - duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+  ---
+  duration_ms: 1.628042
+  type: 'test'
+  ...
+# (node:62115) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 4 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 3.344625
+  type: 'test'
+  ...
+# Subtest: pinned AppHost rc.43 is satisfied and the superseded rc.41 is a restore-pinned-component repair
+not ok 5 - pinned AppHost rc.43 is satisfied and the superseded rc.41 is a restore-pinned-component repair
+  ---
+  duration_ms: 0.595334
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    0.1.0-rc.43
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[32mi[39m[32mn[39m[32mc[39m[32mo[39m[32mm[39m[32mp[39m[31ms[39m[39ma[39m[39mt[39m[39mi[39m[32mb[39m[32ml[39m[31ms[39m[31mf[39m[31mi[39m[39me[39m[31md[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'satisfied'
+  actual: 'incompatible'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/health.test.mjs:33:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 6 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 0.333208
+  type: 'test'
+  ...
+# Subtest: suite component versions are locked to package dependencies
+ok 7 - suite component versions are locked to package dependencies
+  ---
+  duration_ms: 2.873
+  type: 'test'
+  ...
+# Subtest: real DSH include-prefixed ids and package root or subpath names match suite components
+ok 8 - real DSH include-prefixed ids and package root or subpath names match suite components
+  ---
+  duration_ms: 0.232542
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 9 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 3.847084
+  type: 'test'
+  ...
+# (node:62116) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: package metadata exposes the core bundle and only the two suite dependencies
+not ok 10 - package metadata exposes the core bundle and only the two suite dependencies
+  ---
+  duration_ms: 2.9815
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/stage0.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    [32mactual[39m [31mexpected[39m
+    
+    [39m'[39m[39m0[39m[39m.[39m[39m2[39m[39m.[39m[39m0[39m[39m-[39m[39mr[39m[39mc[39m[39m.[39m[39m4[39m[32m7[39m[31m8[39m[39m'[39m
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '0.2.0-rc.48'
+  actual: '0.2.0-rc.47'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/test/stage0.test.mjs:10:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 11 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 0.7195
+  type: 'test'
+  ...
+# Subtest: suite patch declares one insert containing the three canonical ids
+ok 12 - suite patch declares one insert containing the three canonical ids
+  ---
+  duration_ms: 0.946791
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 13 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 11.649625
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 14 - consistency declaration is renamed to core
+  ---
+  duration_ms: 0.609208
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 12
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.356792

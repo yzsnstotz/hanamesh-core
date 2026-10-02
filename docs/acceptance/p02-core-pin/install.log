@@ -1,0 +1,48 @@
+# clean install: rm -rf node_modules; pnpm install --frozen-lockfile --store-dir <fresh mktemp> (npm_config_cache=<fresh mktemp>)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved [96m1[39m, reused [96m0[39m, downloaded [96m0[39m, added [96m0[39m
+Packages: [32m+40[39m
+[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m[32m+[39m
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Progress: resolved [96m40[39m, reused [96m0[39m, downloaded [96m40[39m, added [96m40[39m, done
+
+[96mdependencies:[39m
+[32m+[39m @deepseek-ai/dsh-client-ui-settings [90m0.1.5-alpha.1[39m
+[32m+[39m @deepseek-ai/dsh-client-ui-sidebar [90m0.1.5-alpha.1[39m
+[32m+[39m @hanamesh/dsh-app-host [90m0.1.0-rc.43[39m
+[32m+[39m hanamesh-usage [90m0.2.0-rc.10[39m
+
+[96mdevDependencies:[39m
+[32m+[39m @deepseek-ai/cordis [90m4.0.2[39m
+[32m+[39m @deepseek-ai/dsh-client-connection [90m0.1.5-alpha.1[39m
+[32m+[39m @deepseek-ai/dsh-storage-domain [90m0.1.5-alpha.1[39m
+[32m+[39m @hanamesh/lib-provision [90m0.1.0-rc.1[39m
+[32m+[39m @types/node [90m24.13.4[39m
+[32m+[39m @types/react [90m18.3.12[39m
+[32m+[39m react [90m18.3.1[39m
+[32m+[39m react-dom [90m18.3.1[39m
+[32m+[39m typescript [90m5.9.3[39m
+[32m+[39m zod [90m4.5.4[39m
+
+Done in 1s using pnpm v10.33.0
+exit=0
+installed app-host 0.1.0-rc.43 usage 0.2.0-rc.10

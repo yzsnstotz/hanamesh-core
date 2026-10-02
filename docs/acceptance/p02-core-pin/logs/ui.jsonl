@@ -1,0 +1,2 @@
+{"tag":"B-core48","captures":["B-core48-home","B-core48-core-settings"],"consoleErrors":[],"coreRequests":["GET /hanamesh/library/installedPlugins 200","GET /api/hanamesh/core/points 200","GET /api/hanamesh/core/state 200","GET /api/hanamesh/core/activity 200","GET /api/hanamesh/core/points 200"],"steps":["dismissed Continue","dismissed Configure later","click HanaMesh"],"rootStatus":200,"loaderIds":null}
+{"tag":"C-core-removed","captures":["C-core-removed-home"],"consoleErrors":[],"coreRequests":[],"steps":["dismissed Configure later"],"rootStatus":200,"loaderIds":null}

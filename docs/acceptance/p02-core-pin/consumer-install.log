@@ -1,0 +1,41 @@
+# fresh consumer dir, HOME=<fresh>, npm_config_cache=<fresh mktemp>, pnpm store=<fresh>; scaffold: private peer @hanamesh/lib-provision given as file: tgz (not on public npm)
+{
+ "name": "core48-consumer",
+ "private": true,
+ "type": "module",
+ "dependencies": {
+  "hanamesh-core": "file:in/hanamesh-core-0.2.0-rc.48.tgz",
+  "@deepseek-ai/cordis": "4.0.2",
+  "@deepseek-ai/dsh-client-connection": "0.1.5-alpha.1",
+  "@deepseek-ai/dsh-storage-domain": "0.1.5-alpha.1",
+  "@deepseek-ai/dsh-client-ui-settings": "0.1.5-alpha.1",
+  "@deepseek-ai/dsh-client-ui-sidebar": "0.1.5-alpha.1",
+  "react": "18.3.1",
+  "zod": "4.5.4",
+  "@hanamesh/lib-provision": "file:in/hanamesh-lib-provision-0.1.0-rc.1.tgz",
+  "@deepseek-ai/schemastery": "3.18.2"
+ },
+ "pnpm": {
+  "overrides": {
+   "hanamesh-usage": "file:in/hanamesh-usage-0.2.0-rc.10.tgz",
+   "@hanamesh/dsh-app-host": "file:in/hanamesh-dsh-app-host-0.1.0-rc.43.tgz",
+   "@hanamesh/lib-provision": "file:in/hanamesh-lib-provision-0.1.0-rc.1.tgz"
+  }
+ }
+}Packages: +33
++++++++++++++++++++++++++++++++++
+
+dependencies:
++ @deepseek-ai/cordis 4.0.2 (4.0.4 is available)
++ @deepseek-ai/dsh-client-connection 0.1.5-alpha.1
++ @deepseek-ai/dsh-client-ui-settings 0.1.5-alpha.1
++ @deepseek-ai/dsh-client-ui-sidebar 0.1.5-alpha.1
++ @deepseek-ai/dsh-storage-domain 0.1.5-alpha.1
++ @deepseek-ai/schemastery 3.18.2 (3.18.4 is available)
++ @hanamesh/lib-provision 0.1.0-rc.1
++ hanamesh-core 0.2.0-rc.48
++ react 18.3.1 (19.3.0 is available)
++ zod 4.5.4 (4.6.5 is available)
+
+Done in 1.8s using pnpm v10.33.0
+install_exit=0

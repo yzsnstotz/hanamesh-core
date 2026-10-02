@@ -1,0 +1,5 @@
+{
+  "title": "DeepSeek Harness",
+  "path": "/",
+  "bodyText": "New Session\nWorkspaces\nNo sessions yet\nSettings\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start"
+}

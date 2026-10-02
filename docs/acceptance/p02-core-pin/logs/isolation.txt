@@ -1,0 +1,4 @@
+RUN=$CLAUDE_JOB_DIR/tmp/run-core48-gate (fresh; did not exist before; exploratory run-core48 deleted, its evidence discarded)
+HOME=$RUN/home DSH_HOME=$RUN/home/dsh profile p48; dsh port 60514, stub port 60515
+env -i for every DSH call; never ~/.dsh, never 3080, no research runtime; Core serverOrigin/websiteOrigin -> loopback stub (503), allowSystemBrowser=false
+registry: machine-local verdaccio 127.0.0.1:4873 read-only; private suite packages via pnpm overrides to the frozen tgz in $PR/.inputs

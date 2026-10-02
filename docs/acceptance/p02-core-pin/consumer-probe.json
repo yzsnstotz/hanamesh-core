@@ -1,0 +1,1 @@
+{"core":"0.2.0-rc.48","usage":"0.2.0-rc.10","appHost":"0.1.0-rc.43","adapterName":"hanamesh-core","inject":["connection","storageDomain","loader"],"contractExports":0,"appHostDistTreeSha256":"ec9fa76573d629b7794d9b2df82051c20fdd8dc32e53fc502a3e2f85dcc5109c","appHostManagerSha256":"15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7"}

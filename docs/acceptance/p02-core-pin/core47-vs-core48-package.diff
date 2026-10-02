@@ -1,0 +1,48 @@
+# packed file diff: Core47 tgz (4447622b) vs Core48 tgz (cb13c948)
+Files <core47>/package/README.md and <core48>/package/README.md differ
+Files <core47>/package/lib/client/index.js and <core48>/package/lib/client/index.js differ
+Files <core47>/package/lib/client.js and <core48>/package/lib/client.js differ
+Files <core47>/package/package.json and <core48>/package/package.json differ
+Files <core47>/package/profile/suite.profile.json and <core48>/package/profile/suite.profile.json differ
+# content diff excluding README
+diff -r -x README.md <core47>/package/lib/client/index.js <core48>/package/lib/client/index.js
+193c193
+<                     : createElement(Fragment, null, createElement('small', { className: 'hm-core-muted' }, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item, index) => createElement('div', { 
+---
+>                     : createElement(Fragment, null, createElement('small', { className: 'hm-core-muted' }, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item, index) => createElement('div', { 
+diff -r -x README.md <core47>/package/lib/client.js <core48>/package/lib/client.js
+200c200
+<                     : (0, react_1.createElement)(react_1.Fragment, null, (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item,
+---
+>                     : (0, react_1.createElement)(react_1.Fragment, null, (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item,
+diff -r -x README.md <core47>/package/package.json <core48>/package/package.json
+3c3
+<   "version": "0.2.0-rc.47",…
+---
+>   "version": "0.2.0-rc.48",…
+52c52
+<     "@hanamesh/dsh-app-host": "0.1.0-rc.41"
+---
+>     "@hanamesh/dsh-app-host": "0.1.0-rc.43"
+68c68
+<     "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.41.tgz",
+---
+>     "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.43.tgz",
+81c81
+<       "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.41.tgz",
+---
+>       "@hanamesh/dsh-app-host": "file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.43.tgz",
+diff -r -x README.md <core47>/package/profile/suite.profile.json <core48>/package/profile/suite.profile.json
+4c4
+<   "version": "0.2.0-rc.47",…
+---
+>   "version": "0.2.0-rc.48",…
+22c22
+<       "versionRange": "0.1.0-rc.41",
+---
+>       "versionRange": "0.1.0-rc.43",
+# word-level diff of lib/client.js and lib/client/index.js (Core47 -> Core48)
+-0.2.0-rc.47
++0.2.0-rc.48
+-0.2.0-rc.47
++0.2.0-rc.48

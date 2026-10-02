@@ -1,0 +1,10 @@
+$ /Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/docs/acceptance/p02-core-pin/harness/dsh.sh plugin --profile p48 remove hanamesh-core
+✓ Lockfile passes supply-chain policies (verified 15s ago)
+Progress: resolved 0, reused 1, downloaded 0, added 0
+
+dependencies:
+- hanamesh-core file:$RUN/home/dsh/profiles/p48/.inputs/hanamesh-core-0.2.0-rc.48.tgz
+
+Already up to date
+Progress: resolved 2, reused 2, downloaded 0, added 0, done
+Done in 249ms using pnpm v11.7.0

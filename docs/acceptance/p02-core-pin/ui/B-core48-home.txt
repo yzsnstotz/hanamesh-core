@@ -1,0 +1,5 @@
+{
+  "title": "DeepSeek Harness",
+  "path": "/",
+  "bodyText": "New Session\nWorkspaces\nNo sessions yet\n市场\nHanaMesh\nSettings\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start"
+}

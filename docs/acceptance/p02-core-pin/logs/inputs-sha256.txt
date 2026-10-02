@@ -1,0 +1,5 @@
+cb13c948ceffe2ca9a4d1934f0ea224ae8d3ed14023759d09e0a3ac44edb28f4  hanamesh-core-0.2.0-rc.48.tgz
+0867f969f023b281bd2bf2a1aa158c75dc8838cbbcb53f8bb63dfce2a66bffaf  hanamesh-dsh-app-host-0.1.0-rc.43.tgz
+386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  hanamesh-lib-provision-0.1.0-rc.1.tgz
+c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e  hanamesh-usage-0.2.0-rc.10.tgz
+51f51d886af1428713bf52b4e795afa43e2b43956b8483c9a92590f4c5a7b296  zod-4.5.4.tgz

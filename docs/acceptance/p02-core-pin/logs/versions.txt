@@ -1,0 +1,9 @@
+$ dsh --version
+0.1.5-alpha.1
+$ node --version (desktop runtime node)
+v24.13.1
+$ shasum -a 256 bin.js
+0ff7f1d72c4e0cbe14001709c81e20a04b70464118a7f78568952988e28f2ac5  node_modules/@deepseek-ai/dsh/lib/bin.js
+$ pnpm --version (desktop pnpm.cjs)
+[43m[33m[[39m[49m[43m[30mWARN[39m[49m[43m[33m][39m[49m The "pnpm" field in package.json is no longer read by pnpm. The following keys were ignored: "pnpm.overrides". See https://pnpm.io/settings for the new home of each setting.
+10.33.0

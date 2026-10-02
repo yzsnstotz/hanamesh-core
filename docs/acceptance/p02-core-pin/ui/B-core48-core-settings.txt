@@ -1,0 +1,5 @@
+{
+  "title": "DeepSeek Harness",
+  "path": "/",
+  "bodyText": "New Session\nWorkspaces\nNo sessions yet\n市场\nHanaMesh\nSettings\nSettings\nGeneral\nModels\nPlugins\n供应商\n市场目录源\nAgent presets\nHanaMesh\nOpen configuration file\nClose\nHanaMesh\n\n套件与单包互斥：已单独安装 hanamesh-usage 或 @hanamesh/dsh-app-host 的用户，装 hanamesh-core 前先 dsh plugin remove 它们；已装套件后再单独安装它们同样会以 duplicate loader entry id 起不来。\n\n设备身份\n设备 id：3mXBHgDI…　注册：注册失败：CORE_UPSTREAM_UNAVAILABLE\n重试注册\n数据授权\n允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）\n当前：已关闭\n撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。\n账号\n绑定状态读取中…\n去网站绑定\n邮箱绑定\n我的 Hana\n未开启数据授权，本设备不上报事件，因此没有分\n分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。\n去网站\n贡献事件\n本设备近 90 天贡献事件\n活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。\n未开启数据授权，本设备不上报事件，因此没有分\n刷新事件\n本设备贡献累计\n暂不可用：NOT_CONNECTED\n组件\n使用记录：已安装 0.2.0-rc.10\n应用容器：已安装 0.1.0-rc.43\n支持依赖：@hanamesh/lib-provision、zod（不是插件，DSH Market 里会显示为「Installed, not active」，属正常，无需操作）\n重新检查\n关于\nhanamesh-core 0.2.0-rc.48 · DSH >=0.1.5-alpha.1 <0.2.0（已实测 0.1.5-alpha.1、0.1.5-rc.2）\n去网站\nInto the Unknown\nPreview\nChoose workspace\nStandard mode\nChoose a workspace to start"
+}

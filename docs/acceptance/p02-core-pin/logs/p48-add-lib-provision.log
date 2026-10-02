@@ -1,0 +1,22 @@
+$ /Users/yzliu/work/projects/hanamesh/_deliveries/p05-dispatch-20261002/worktrees/core-first-prompt/docs/acceptance/p02-core-pin/harness/dsh.sh plugin --profile p48 add file:$RUN/home/dsh/profiles/p48/.inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz file:$RUN/home/dsh/profiles/p48/.inputs/zod-4.5.4.tgz
+Progress: resolved 0, reused 0, downloaded 1, added 0
+
+dependencies:
++ @hanamesh/lib-provision file:$RUN/home/dsh/profiles/p48/.inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz
++ zod file:$RUN/home/dsh/profiles/p48/.inputs/zod-4.5.4.tgz
+
+Packages: +2
+++
+
+   ╭─────────────────────────────────────────╮
+   │                                         │
+   │   Update available! 11.7.0 → 12.8.1.    │
+   │   Changelog: https://pnpm.io/v/12.8.1   │
+   │    To update, run: pnpm add -g pnpm     │
+   │                                         │
+   ╰─────────────────────────────────────────╯
+
+Progress: resolved 2, reused 0, downloaded 2, added 2, done
+Done in 514ms using pnpm v11.7.0
+dsh: warning: @hanamesh/lib-provision declares no dsh.bundle — installed as a plain dependency, not a profile layer (a later update that gains one activates it automatically)
+dsh: warning: zod declares no dsh.bundle — installed as a plain dependency, not a profile layer (a later update that gains one activates it automatically)

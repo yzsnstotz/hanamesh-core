@@ -1,0 +1,10 @@
+A hanamesh_loader_entries=3
+{"tag":"B-core48","action":"core","firstHealth":["usage:inactive","app-host:inactive"],"settledAfterMs":2516,"stateStatus":200,"deviceIdPresent":true,"deviceIdPrefix":"3mXBHgDI","registration":"failed","consent":"withheld","healthStatus":200,"healthMode":"normal","healthFault":null,"components":[{"id":"usage","status":"satisfied","version":"0.2.0-rc.10","requiredRange":"0.2.0-rc.10"},{"id":"app-host","status":"satisfied","version":"0.1.0-rc.43","requiredRange":"0.1.0-rc.43"}]}
+{"tag":"B-core48","action":"routes","/api/hanamesh/core/state":200,"/api/hanamesh/core/health":200,"/hanamesh/apps":200,"installedPlugins":["@hanamesh/lib-provision@0.1.0-rc.1:inactive","hanamesh-core@0.2.0-rc.48:active","zod@4.5.4:inactive"],"unauthenticatedCoreState":401}
+B duplicate_lines=0
+C hanamesh_loader_entries=0
+{"tag":"C-core-removed","action":"routes","/api/hanamesh/core/state":404,"/api/hanamesh/core/health":404,"/hanamesh/apps":404,"installedPlugins":404,"unauthenticatedCoreState":401}
+D hanamesh_loader_entries=3
+{"tag":"D-core48-readded","action":"core","firstHealth":["usage:inactive","app-host:inactive"],"settledAfterMs":2516,"stateStatus":200,"deviceIdPresent":true,"deviceIdPrefix":"3mXBHgDI","registration":"failed","consent":"withheld","healthStatus":200,"healthMode":"normal","healthFault":null,"components":[{"id":"usage","status":"satisfied","version":"0.2.0-rc.10","requiredRange":"0.2.0-rc.10"},{"id":"app-host","status":"satisfied","version":"0.1.0-rc.43","requiredRange":"0.1.0-rc.43"}]}
+{"tag":"D-core48-readded","action":"routes","/api/hanamesh/core/state":200,"/api/hanamesh/core/health":200,"/hanamesh/apps":200,"installedPlugins":["@hanamesh/lib-provision@0.1.0-rc.1:inactive","hanamesh-core@0.2.0-rc.48:active","zod@4.5.4:inactive"],"unauthenticatedCoreState":401}
+leftover_dsh_procs=0

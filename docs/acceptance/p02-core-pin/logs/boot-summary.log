@@ -1,0 +1,6 @@
+2026-10-02T11:15:13Z B-core48 web_up port=60514 root_without_token=401
+2026-10-02T11:15:26Z B-core48 stopped_by=SIGINT rc=130
+2026-10-02T11:15:28Z C-core-removed web_up port=60514 root_without_token=401
+2026-10-02T11:15:34Z C-core-removed stopped_by=SIGINT rc=130
+2026-10-02T11:15:36Z D-core48-readded web_up port=60514 root_without_token=401
+2026-10-02T11:15:40Z D-core48-readded stopped_by=SIGINT rc=130
