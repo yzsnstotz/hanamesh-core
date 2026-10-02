@@ -3,10 +3,10 @@
     "id": "hanamesh-core@0.2.0-rc.47",
     "name": "hanamesh-core",
     "version": "0.2.0-rc.47",
-    "size": 85497,
-    "unpackedSize": 263532,
-    "shasum": "b2b7cc5af8a83d7265097ed18b45d8a42cde548c",
-    "integrity": "sha512-kW7QfFTF30tTibGml7779r6FbJrcDsm3C15X/s0sboNuhyH4WTcntYmHmuAjnwyBOwDZXonsmJCbuumggKhFPQ==",
+    "size": 84875,
+    "unpackedSize": 262159,
+    "shasum": "f3f54b5f31e8207abfc706d7ef771b2110876e44",
+    "integrity": "sha512-6dVjPQjLIaVvJCW3j6N3DkXdXPxOcT63rhk7V6jqYoj/q4DiT5X9oh0AUF3IE+xs92DkMrg3FO0xGDb6W2SDkA==",
     "filename": "hanamesh-core-0.2.0-rc.47.tgz",
     "files": [
       {
@@ -16,7 +16,7 @@
       },
       {
         "path": "README.md",
-        "size": 10276,
+        "size": 9298,
         "mode": 420
       },
       {
@@ -26,7 +26,7 @@
       },
       {
         "path": "docs/API.md",
-        "size": 7075,
+        "size": 6680,
         "mode": 420
       },
       {

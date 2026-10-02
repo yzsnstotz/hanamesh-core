@@ -7,7 +7,8 @@
 | 卡 | `_deliveries/p05-dispatch-20261002/P05-CORE-01.md` |
 | 起点 | Core `0.2.0-rc.46`，`cb171b048931fd9dc105507ac575120f618816d4`；`lib/client.js` SHA256 `07d05f47006704e44a170877946ad0250529cb11dad36c456dde17302b3e94fe`，与 P05 A 失败安装字节一致 |
 | 目标 | Core `0.2.0-rc.47`，分支 `codex/p05-core-prompt-rc47`（本地，未 push） |
-| 包 | `artifacts/hanamesh-core-0.2.0-rc.47.tgz`，SHA256 `b80bf076278cbb51723b15b6e2e4f3de861697e5590be2921d5148e55f2eebfa`，99 文件，npm integrity `sha512-6dVjPQjLIaVvJCW3j6N3DkXdXPxOcT63rhk7V6jqYoj/q4DiT5X9oh0AUF3IE+xs92DkMrg3FO0xGDb6W2SDkA==` |
+| 包（重打包后，现行） | `artifacts/hanamesh-core-0.2.0-rc.47.tgz`，SHA256 `4447622b2e0f951febd44d3d52511e483a6d732aa9c23972be2897f819ef3173`，99 文件，npm integrity `sha512-kW7QfFTF30tTibGml7779r6FbJrcDsm3C15X/s0sboNuhyH4WTcntYmHmuAjnwyBOwDZXonsmJCbuumggKhFPQ==`；由干净的源码 commit `669c98b4ffc94ea506dfa3791411ff248487e2f5` 连续打两次，字节相同 |
+| 已作废的包 | SHA256 `b80bf076278cbb51723b15b6e2e4f3de861697e5590be2921d5148e55f2eebfa`：在最后修改 README/API 之前打出，无法从 commit 复现；不得用于组合。原字节与原元数据保存在 `superseded-b80bf076/` |
 | 新 `lib/client.js` | SHA256 `77554bc091a3d236bea1ca7501d1c4f3a83d17309f69b9ed2a519f0204837e5c`（包内同字节） |
 | 固定依赖 | `hanamesh-usage 0.2.0-rc.10`、`@hanamesh/dsh-app-host 0.1.0-rc.41`（精确，未变） |
 | 工具链 | Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`；Chrome = `/Applications/Google Chrome.app`（`HM_CHROMIUM` 可覆盖） |
@@ -55,8 +56,9 @@ Core46 `PointsBindPrompt` 渲染在 `sidebar.footer.action` 内，`prompt.show` 
 | `npm run check:contracts` | PASS | `check-contracts.log` |
 | `npm run verify:inputs` | PASS（hostApi 94，siblings 3） | `verify-inputs.log` |
 | `pnpm install --frozen-lockfile --lockfile-only --ignore-scripts` | PASS | `lockfile.log` |
-| `npm pack` + `scripts/check-package.mjs` | PASS，99 文件，deps 精确 | `npm-pack.json`、`check-package.log` |
-| 浏览器套件跑**包内解出的** `lib/client.js` | 9/9 PASS | `packed-bundle-browser.tap` |
+| `npm pack` + `scripts/check-package.mjs`（重打包 `4447622b…`） | PASS，99 文件，deps 精确 | `npm-pack.json`、`npm-pack-repeat.json`、`check-package.log` |
+| 确定性重打包（同一 commit 打两次） | 两次 SHA 相同，均为 `4447622b…3173`；与作废包相比只有 `README.md`、`docs/API.md` 不同 | `repack-determinism.log` |
+| 浏览器套件跑**重打包包内解出的** `lib/client.js` | 9/9 PASS | `packed-bundle-browser.tap` |
 
 变异说明：`prompt-in-sidebar-slot` 只被 2/4 杀死而 3 仍过——可见性门把不可见的侧栏 dialog 关回，所以即使挂错位置也不再锁页面；两道防线各自独立有效。
 
@@ -70,3 +72,7 @@ Core46 `PointsBindPrompt` 渲染在 `sidebar.footer.action` 内，`prompt.show` 
 - **REAL_NATIVE_UI：NOT_RUN。** 实施者无 macOS Accessibility，没有亲点原生界面；不得把 Chrome 结果当原生 PASS。WKWebView 与 Chrome 在「祖先 `display:none` 的 modal 不渲染但 inert」上表现一致（原生 precheck 已实测该现象），但 rc.47 在 WebKit 的实际可见性须原生复验。
 - **REAL_LOCAL_PG / 冷启标志读回：NOT_RUN**（本卡不改服务端；由 validator 查 PG pending、`storages/hanamesh_core.json` 标志与冷启）。
 - 下一步：PM 独立审查本地 commit → 不同 validator 在新隔离设备 + 一次性 PG 真实 Mac 原生入口：设置页开同意 → 不离开设置页看到提示 → 「以后再说」→ 标志只写一次 → Back to app 可点 → 冷启不再弹 → 设置页常驻绑定入口与「去网站绑定」系统浏览器路径；随后 PM 把 rc.47 纳入 P05 组合，从头跑 U01–U03。
+
+## 更正（2026-10-02，独立 SPEC S1 / QUALITY Q1）
+
+原回报的包 `b80bf076…` 是在最后修改 `README.md`、`docs/API.md` 之前打出的。包内 README 标题仍是 rc.46，API 文档仍描述被修掉的「先落标记再弹出」，因此无法从 commit `669c98b` 复现。运行时字节（`lib/**`、`package.json`、`lib/client.js` `77554bc0…`）不受影响。本次更正只改产物与证据，不改源码行为，Q3/Q4 未处理：从干净的 `669c98b` 重新 `npm pack` 两次，得到同一个 SHA `4447622b…3173`，已替换 `artifacts/` 中的包并更新 `SHA256SUMS`。随包的 README 与 API.md 已和 commit 逐字节一致，`check-package` 与包内 bundle 浏览器套件 9/9 均重新通过。作废包的原字节和当时的 `npm-pack.json`、`check-package.log`、`packed-bundle-browser.tap` 原样保存在 `superseded-b80bf076/`。REAL_HOST、REAL_NATIVE_UI、REAL_LOCAL_PG 仍为 NOT_RUN，产品是否 PASS 不在本报告内。

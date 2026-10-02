@@ -1,0 +1,6 @@
+# deterministic repack from commit 669c98b4ffc94ea506dfa3791411ff248487e2f5 (clean tree), Node v24.13.1, npm 11.8.0
+4447622b2e0f951febd44d3d52511e483a6d732aa9c23972be2897f819ef3173  a/hanamesh-core-0.2.0-rc.47.tgz
+4447622b2e0f951febd44d3d52511e483a6d732aa9c23972be2897f819ef3173  b/hanamesh-core-0.2.0-rc.47.tgz
+# file diff vs superseded b80bf076 (packed before final README/API edits):
+Files old/package/README.md and new/package/README.md differ
+Files old/package/docs/API.md and new/package/docs/API.md differ

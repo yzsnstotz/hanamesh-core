@@ -1,3 +1,3 @@
-(node:3768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:38704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-{"event":"check_package_ok","name":"hanamesh-core","version":"0.2.0-rc.47","inject":["connection","storageDomain","loader"],"bundlePatch":true,"dependencies":2,"sha256":"b80bf076278cbb51723b15b6e2e4f3de861697e5590be2921d5148e55f2eebfa"}
+{"event":"check_package_ok","name":"hanamesh-core","version":"0.2.0-rc.47","inject":["connection","storageDomain","loader"],"bundlePatch":true,"dependencies":2,"sha256":"4447622b2e0f951febd44d3d52511e483a6d732aa9c23972be2897f819ef3173"}
