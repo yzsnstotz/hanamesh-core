@@ -1,0 +1,26 @@
+{
+  "tag": "B-core50",
+  "source": "REAL_HOST + REAL_UI official DSH; local fixture catalog",
+  "rootStatus": 200,
+  "state": [
+    {
+      "status": "found",
+      "text": "已定位 dsh-pet，请确认条目后点击安装。",
+      "visible": true
+    }
+  ],
+  "exact": [
+    {
+      "id": "p06-pet-exact-1",
+      "visible": true
+    },
+    {
+      "id": "p06-pet-exact-2",
+      "visible": true
+    }
+  ],
+  "targetCleared": true,
+  "consumePosts": 1,
+  "installPosts": 0,
+  "closePosts": 0
+}

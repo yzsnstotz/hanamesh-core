@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.0.0",
+  "revision": "p06-rc45-test-only-2026-10-03",
+  "items": [
+    {
+      "id": "p06-fixture-app",
+      "name": "@hanamesh/app-contract-fixture",
+      "displayName": "Contract fixture",
+      "summary": "Test-only v2 application used by the isolated DSH acceptance profile.",
+      "latestVersion": "0.0.4",
+      "categories": [
+        "hanamesh-app"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "@hanamesh/app-contract-fixture"
+      },
+      "publisher": {
+        "name": "P06 test fixture"
+      }
+    },
+    {
+      "id": "p06-pet-exact-1",
+      "name": "dsh-pet",
+      "displayName": "dsh-pet A",
+      "summary": "Test-only exact target card A.",
+      "latestVersion": "1.0.0",
+      "categories": [
+        "fun"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "dsh-pet"
+      },
+      "publisher": {
+        "name": "P06 test fixture"
+      }
+    },
+    {
+      "id": "p06-pet-exact-2",
+      "name": "dsh-pet",
+      "displayName": "dsh-pet B",
+      "summary": "Test-only exact target card B.",
+      "latestVersion": "1.0.0",
+      "categories": [
+        "fun"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "dsh-pet"
+      },
+      "publisher": {
+        "name": "P06 test fixture"
+      }
+    },
+    {
+      "id": "p06-pet-substring",
+      "name": "dsh-pet-extra",
+      "displayName": "dsh-pet-extra",
+      "summary": "Test-only substring nonmatch.",
+      "latestVersion": "1.0.0",
+      "categories": [
+        "fun"
+      ],
+      "package": {
+        "registry": "npm",
+        "name": "dsh-pet-extra"
+      },
+      "publisher": {
+        "name": "P06 test fixture"
+      }
+    }
+  ],
+  "page": {
+    "total": 4
+  }
+}

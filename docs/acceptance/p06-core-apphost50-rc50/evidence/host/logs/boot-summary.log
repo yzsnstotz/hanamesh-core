@@ -1,0 +1,6 @@
+2026-10-03T05:17:54Z B-core50 web_up port=35108 root_without_token=<redacted>
+2026-10-03T05:18:05Z B-core50 stopped_by=SIGINT rc=130
+2026-10-03T05:18:08Z C-core-removed web_up port=35108 root_without_token=<redacted>
+2026-10-03T05:18:09Z C-core-removed stopped_by=SIGINT rc=130
+2026-10-03T05:18:12Z D-core50-readded web_up port=35108 root_without_token=<redacted>
+2026-10-03T05:18:18Z D-core50-readded stopped_by=SIGINT rc=130

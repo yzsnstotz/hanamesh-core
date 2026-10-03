@@ -1,0 +1,4 @@
+own_listener_count=0
+stub_requests=3
+forbidden_write_shapes=0
+all_evidence_tokens_redacted=true

@@ -1,0 +1,20 @@
+
+> hanamesh-core@0.2.0-rc.50 verify:inputs /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45
+> node scripts/verify-inputs.mjs
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 10aab3563b13ade0a275e5fc8d42af87296cd2764eb3337a57af358ee288553b  hanamesh-dsh-app-host-0.1.0-rc.50.tgz
+    at file:///Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/scripts/verify-inputs.mjs:21:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.13.1
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,33 @@
+{
+  "core": {
+    "version": "0.2.0-rc.50",
+    "name": "hanamesh-core",
+    "archiveFiles": 99,
+    "mismatches": [],
+    "tgzSha256": "f74df3b285437fab9a819f40218447793d4ff56047dd4357c5a510635aecdbc6"
+  },
+  "usage": {
+    "version": "0.2.0-rc.10",
+    "name": "hanamesh-usage",
+    "archiveFiles": 45,
+    "mismatches": [],
+    "tgzSha256": "c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e"
+  },
+  "appHost": {
+    "version": "0.1.0-rc.50",
+    "name": "@hanamesh/dsh-app-host",
+    "archiveFiles": 83,
+    "mismatches": [],
+    "tgzSha256": "10aab3563b13ade0a275e5fc8d42af87296cd2764eb3337a57af358ee288553b"
+  },
+  "libProvision": {
+    "version": "0.1.0-rc.1",
+    "name": "@hanamesh/lib-provision",
+    "archiveFiles": 39,
+    "mismatches": [],
+    "tgzSha256": "386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0"
+  },
+  "bytesIdentical": true,
+  "coreClientSha256": "252242df02c2422c002647ba496d0e0279bac1c95a3715919e6f3d8334a30580",
+  "appHostClientSha256": "376dbb58a02cc5715c2d86807f848b7f5d2b7e3d67f3770ce76118a8cfcfe06d"
+}

@@ -1,0 +1,11 @@
+$ sh -c cd '$RUN/home/dsh/profiles/p50/node_modules' && for d in hanamesh-core hanamesh-usage @hanamesh/dsh-app-host @hanamesh/lib-provision; do printf '%s ' $d; grep -m1 '"version"' $d/package.json 2>/dev/null || echo ABSENT; done; shasum -a 256 @hanamesh/dsh-app-host/dist/manager.js hanamesh-core/lib/client.js hanamesh-core/lib/dsh.mjs 2>/dev/null; find . -name package.json -path '*dsh-app-host/package.json' -o -name package.json -path '*hanamesh-usage/package.json' -o -name package.json -path '*hanamesh-core/package.json' | sort
+hanamesh-core   "version": "0.2.0-rc.50",
+hanamesh-usage   "version": "0.2.0-rc.10",
+@hanamesh/dsh-app-host   "version": "0.1.0-rc.50",
+@hanamesh/lib-provision   "version": "0.1.0-rc.1",
+15b9a2515d9458d5047fa2d230a8a4329d03282e91f774330da6210746bf65d7  @hanamesh/dsh-app-host/dist/manager.js
+252242df02c2422c002647ba496d0e0279bac1c95a3715919e6f3d8334a30580  hanamesh-core/lib/client.js
+75ac442ad2d9d80a25c1425a326748b9d080e19a03769b7199fd5e04705e8c7c  hanamesh-core/lib/dsh.mjs
+./@hanamesh/dsh-app-host/package.json
+./hanamesh-core/package.json
+./hanamesh-usage/package.json

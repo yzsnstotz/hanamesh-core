@@ -13,11 +13,11 @@ for (const row of semverRows) {
   assert.ok(match, row);
   assert.equal(digest(await readFile(match[2])), match[1], match[2]);
 }
-// Frozen sibling artifact inputs: hanamesh-usage 0.2.0-rc.10, @hanamesh/dsh-app-host 0.1.0-rc.45.
+// Frozen sibling artifact inputs: hanamesh-usage 0.2.0-rc.10, @hanamesh/dsh-app-host 0.1.0-rc.50.
 const siblingRows = (await readFile('vendor/siblings/SHA256SUMS', 'utf8')).trim().split('\n');
 assert.equal(siblingRows.length, 3);
 for (const row of siblingRows) {
-  const match = /^([a-f0-9]{64})  (hanamesh-usage-0\.2\.0-rc\.10\.tgz|hanamesh-dsh-app-host-0\.1\.0-rc\.45\.tgz|hanamesh-lib-provision-0\.1\.0-rc\.1\.tgz)$/.exec(row);
+  const match = /^([a-f0-9]{64})  (hanamesh-usage-0\.2\.0-rc\.10\.tgz|hanamesh-dsh-app-host-0\.1\.0-rc\.50\.tgz|hanamesh-lib-provision-0\.1\.0-rc\.1\.tgz)$/.exec(row);
   assert.ok(match, row);
   assert.equal(digest(await readFile(`vendor/siblings/${match[2]}`)), match[1], match[2]);
 }

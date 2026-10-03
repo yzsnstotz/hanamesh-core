@@ -1,0 +1,5 @@
+f74df3b285437fab9a819f40218447793d4ff56047dd4357c5a510635aecdbc6  /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/core50-realhost-20261003/inputs/hanamesh-core-0.2.0-rc.50.tgz
+10aab3563b13ade0a275e5fc8d42af87296cd2764eb3337a57af358ee288553b  /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/core50-realhost-20261003/inputs/hanamesh-dsh-app-host-0.1.0-rc.50.tgz
+386d57361ccc3c8578f54cad8137acc291dd72e01b3ff987e65dfaa716f2e0b0  /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/core50-realhost-20261003/inputs/hanamesh-lib-provision-0.1.0-rc.1.tgz
+c69c97a93eb5ad167b60a8ec0000a954e809f291879992b9eb24078d7756864e  /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/core50-realhost-20261003/inputs/hanamesh-usage-0.2.0-rc.10.tgz
+51f51d886af1428713bf52b4e795afa43e2b43956b8483c9a92590f4c5a7b296  /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/core50-realhost-20261003/inputs/zod-4.5.4.tgz

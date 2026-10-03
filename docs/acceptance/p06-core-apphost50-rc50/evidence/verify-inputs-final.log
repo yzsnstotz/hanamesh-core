@@ -1,0 +1,5 @@
+
+> hanamesh-core@0.2.0-rc.50 verify:inputs /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45
+> node scripts/verify-inputs.mjs
+
+{"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true,"siblings":3}
