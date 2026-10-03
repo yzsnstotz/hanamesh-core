@@ -1,0 +1,2 @@
+npm_cache=/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.nd2aMNyJLb
+pnpm_store=/var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.IykjyXU6yl

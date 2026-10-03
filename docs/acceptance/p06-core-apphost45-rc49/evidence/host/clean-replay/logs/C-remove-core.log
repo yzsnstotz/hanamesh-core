@@ -1,0 +1,9 @@
+$ /Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/docs/acceptance/p06-core-apphost45-rc49/harness/dsh.sh plugin --profile p49 remove hanamesh-core
+Progress: resolved 0, reused 1, downloaded 0, added 0
+
+dependencies:
+- hanamesh-core file:$RUN/home/dsh/profiles/p49/.inputs/hanamesh-core-0.2.0-rc.49.tgz
+
+Already up to date
+Progress: resolved 2, reused 2, downloaded 0, added 0, done
+Done in 193ms using pnpm v10.33.0

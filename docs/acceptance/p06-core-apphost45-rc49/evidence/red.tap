@@ -1,0 +1,113 @@
+TAP version 13
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 1 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 7.608416
+  type: 'test'
+  ...
+# Subtest: pinned AppHost rc.45 is satisfied and the superseded rc.43 is incompatible
+not ok 2 - pinned AppHost rc.45 is satisfied and the superseded rc.43 is incompatible
+  ---
+  duration_ms: 0.562125
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/test/health.test.mjs:28:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    0.1.0-rc.45
+    + actual - expected
+    
+    + 'incompatible'
+    - 'satisfied'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'satisfied'
+  actual: 'incompatible'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/test/health.test.mjs:33:12)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 3 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 0.423917
+  type: 'test'
+  ...
+# Subtest: suite component versions are locked to package dependencies
+ok 4 - suite component versions are locked to package dependencies
+  ---
+  duration_ms: 3.096541
+  type: 'test'
+  ...
+# Subtest: real DSH include-prefixed ids and package root or subpath names match suite components
+ok 5 - real DSH include-prefixed ids and package root or subpath names match suite components
+  ---
+  duration_ms: 0.279709
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 6 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 3.202875
+  type: 'test'
+  ...
+# Subtest: package metadata exposes the core bundle and only the two suite dependencies
+not ok 7 - package metadata exposes the core bundle and only the two suite dependencies
+  ---
+  duration_ms: 3.518459
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/test/stage0.test.mjs:7:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + '0.2.0-rc.48'
+    - '0.2.0-rc.49'
+                 ^
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '0.2.0-rc.49'
+  actual: '0.2.0-rc.48'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/_deliveries/p06-public-consumer-20261003/worktrees/core-apphost45/test/stage0.test.mjs:10:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 8 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 1.149791
+  type: 'test'
+  ...
+# Subtest: suite patch declares one insert containing the three canonical ids
+ok 9 - suite patch declares one insert containing the three canonical ids
+  ---
+  duration_ms: 2.023792
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 10 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 21.076042
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 11 - consistency declaration is renamed to core
+  ---
+  duration_ms: 0.420833
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 9
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 76.795917

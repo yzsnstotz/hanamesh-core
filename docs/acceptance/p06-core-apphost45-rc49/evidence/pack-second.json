@@ -1,0 +1,511 @@
+[
+  {
+    "id": "hanamesh-core@0.2.0-rc.49",
+    "name": "hanamesh-core",
+    "version": "0.2.0-rc.49",
+    "size": 85879,
+    "unpackedSize": 264522,
+    "shasum": "fe7648dfdbace970c248bb5fec00c082a0cbe76e",
+    "integrity": "sha512-/z5eIJ0tJyR/YVaDqUhoGQGLYoKJAcSqBd5wwGjWF0oPuAazy58IYmR6Ss7fHUoYrkrZoLFw4pnEa0UFMUOKnQ==",
+    "filename": "hanamesh-core-0.2.0-rc.49.tgz",
+    "files": [
+      {
+        "path": "LICENSE",
+        "size": 1065,
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "size": 11266,
+        "mode": 420
+      },
+      {
+        "path": "consistency.json",
+        "size": 1110,
+        "mode": 420
+      },
+      {
+        "path": "docs/API.md",
+        "size": 7075,
+        "mode": 420
+      },
+      {
+        "path": "docs/CORE_CONTRACT.md",
+        "size": 1411,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 1101,
+        "mode": 420
+      },
+      {
+        "path": "lib/client.js",
+        "size": 27724,
+        "mode": 420
+      },
+      {
+        "path": "lib/client/index.d.ts",
+        "size": 1239,
+        "mode": 420
+      },
+      {
+        "path": "lib/client/index.js",
+        "size": 26201,
+        "mode": 420
+      },
+      {
+        "path": "lib/contract.d.ts",
+        "size": 1364,
+        "mode": 420
+      },
+      {
+        "path": "lib/contract.js",
+        "size": 11,
+        "mode": 420
+      },
+      {
+        "path": "lib/contracts.d.ts",
+        "size": 1480,
+        "mode": 420
+      },
+      {
+        "path": "lib/contracts.js",
+        "size": 423,
+        "mode": 420
+      },
+      {
+        "path": "lib/controller.d.ts",
+        "size": 3823,
+        "mode": 420
+      },
+      {
+        "path": "lib/controller.js",
+        "size": 22813,
+        "mode": 420
+      },
+      {
+        "path": "lib/device.d.ts",
+        "size": 401,
+        "mode": 420
+      },
+      {
+        "path": "lib/device.js",
+        "size": 1856,
+        "mode": 420
+      },
+      {
+        "path": "lib/dsh.mjs",
+        "size": 6139,
+        "mode": 420
+      },
+      {
+        "path": "lib/errors.d.ts",
+        "size": 477,
+        "mode": 420
+      },
+      {
+        "path": "lib/errors.js",
+        "size": 351,
+        "mode": 420
+      },
+      {
+        "path": "lib/external.d.ts",
+        "size": 150,
+        "mode": 420
+      },
+      {
+        "path": "lib/external.js",
+        "size": 865,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/evaluate.d.ts",
+        "size": 393,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/evaluate.js",
+        "size": 3564,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/loader.d.ts",
+        "size": 967,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/loader.js",
+        "size": 3424,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/service.d.ts",
+        "size": 349,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/service.js",
+        "size": 1705,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/types.d.ts",
+        "size": 2518,
+        "mode": 420
+      },
+      {
+        "path": "lib/health/types.js",
+        "size": 11,
+        "mode": 420
+      },
+      {
+        "path": "lib/registration.d.ts",
+        "size": 983,
+        "mode": 420
+      },
+      {
+        "path": "lib/registration.js",
+        "size": 3017,
+        "mode": 420
+      },
+      {
+        "path": "lib/routes.d.ts",
+        "size": 863,
+        "mode": 420
+      },
+      {
+        "path": "lib/routes.js",
+        "size": 6619,
+        "mode": 420
+      },
+      {
+        "path": "lib/transport.d.ts",
+        "size": 235,
+        "mode": 420
+      },
+      {
+        "path": "lib/transport.js",
+        "size": 2686,
+        "mode": 420
+      },
+      {
+        "path": "lib/validation.d.ts",
+        "size": 346,
+        "mode": 420
+      },
+      {
+        "path": "lib/validation.js",
+        "size": 2269,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 3925,
+        "mode": 420
+      },
+      {
+        "path": "profile.schema.json",
+        "size": 2341,
+        "mode": 420
+      },
+      {
+        "path": "profile/cordis.patch.yml",
+        "size": 696,
+        "mode": 420
+      },
+      {
+        "path": "profile/core.config.example.json",
+        "size": 83,
+        "mode": 420
+      },
+      {
+        "path": "profile/suite.profile.json",
+        "size": 793,
+        "mode": 420
+      },
+      {
+        "path": "types/index.d.ts",
+        "size": 635,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/bin/semver.js",
+        "size": 4739,
+        "mode": 493
+      },
+      {
+        "path": "vendor/semver/classes/comparator.js",
+        "size": 3631,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/classes/index.js",
+        "size": 143,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/classes/range.js",
+        "size": 14938,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/classes/semver.js",
+        "size": 9297,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/clean.js",
+        "size": 205,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/cmp.js",
+        "size": 961,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/coerce.js",
+        "size": 2004,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/compare-build.js",
+        "size": 281,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/compare-loose.js",
+        "size": 132,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/compare.js",
+        "size": 170,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/diff.js",
+        "size": 1421,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/eq.js",
+        "size": 126,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/gt.js",
+        "size": 124,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/gte.js",
+        "size": 127,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/inc.js",
+        "size": 478,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/lt.js",
+        "size": 124,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/lte.js",
+        "size": 127,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/major.js",
+        "size": 136,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/minor.js",
+        "size": 136,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/neq.js",
+        "size": 128,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/parse.js",
+        "size": 331,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/patch.js",
+        "size": 136,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/prerelease.js",
+        "size": 234,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/rcompare.js",
+        "size": 132,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/rsort.js",
+        "size": 163,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/satisfies.js",
+        "size": 247,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/sort.js",
+        "size": 161,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/functions/valid.js",
+        "size": 176,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/index.js",
+        "size": 2630,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/constants.js",
+        "size": 873,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/debug.js",
+        "size": 240,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/identifiers.js",
+        "size": 424,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/lrucache.js",
+        "size": 802,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/parse-options.js",
+        "size": 338,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/internal/re.js",
+        "size": 8141,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/LICENSE",
+        "size": 765,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/package.json",
+        "size": 1663,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/preload.js",
+        "size": 83,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/range.bnf",
+        "size": 619,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/gtr.js",
+        "size": 231,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/intersects.js",
+        "size": 224,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/ltr.js",
+        "size": 227,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/max-satisfying.js",
+        "size": 593,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/min-satisfying.js",
+        "size": 591,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/min-version.js",
+        "size": 1514,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/outside.js",
+        "size": 2204,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/simplify.js",
+        "size": 1355,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/subset.js",
+        "size": 7524,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/to-comparators.js",
+        "size": 282,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/ranges/valid.js",
+        "size": 326,
+        "mode": 420
+      },
+      {
+        "path": "vendor/semver/README.md",
+        "size": 24763,
+        "mode": 420
+      },
+      {
+        "path": "vendor/SHA256SUMS",
+        "size": 5117,
+        "mode": 420
+      },
+      {
+        "path": "vendor/srv-identity/API.md",
+        "size": 4019,
+        "mode": 420
+      },
+      {
+        "path": "vendor/srv-identity/contracts.d.ts",
+        "size": 1199,
+        "mode": 420
+      }
+    ],
+    "entryCount": 99,
+    "bundled": []
+  }
+]

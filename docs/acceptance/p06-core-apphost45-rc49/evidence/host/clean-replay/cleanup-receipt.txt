@@ -1,0 +1,5 @@
+clean_replay_run_root_under_worktree=true
+port_64962_listeners=0
+port_64963_listeners=0
+local_registry_http=200
+harness_leftover_dsh_procs=leftover_dsh_procs=0

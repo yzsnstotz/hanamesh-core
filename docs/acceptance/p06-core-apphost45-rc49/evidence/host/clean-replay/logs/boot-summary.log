@@ -1,0 +1,6 @@
+2026-10-03T00:27:25Z B-core49 web_up port=64962 root_without_token=401
+2026-10-03T00:27:29Z B-core49 stopped_by=SIGINT rc=130
+2026-10-03T00:27:32Z C-core-removed web_up port=64962 root_without_token=401
+2026-10-03T00:27:33Z C-core-removed stopped_by=SIGINT rc=130
+2026-10-03T00:27:36Z D-core49-readded web_up port=64962 root_without_token=401
+2026-10-03T00:27:39Z D-core49-readded stopped_by=SIGINT rc=130

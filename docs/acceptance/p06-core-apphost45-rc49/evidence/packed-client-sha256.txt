@@ -1,0 +1,2 @@
+43005d7da56e70ae39578c89d5d428c1865a65558aa715129a93e03aed1ac521  lib/client.js
+43005d7da56e70ae39578c89d5d428c1865a65558aa715129a93e03aed1ac521  /var/folders/fy/_vc547vx0t75yjmxm8bbfwb40000gn/T/tmp.VtI1nE3jkV/package/lib/client.js

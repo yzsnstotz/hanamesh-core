@@ -1,0 +1,45 @@
+file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1545
+		throw new Error(`${binName}: ${stage}: ${detail}${stack}`, { cause });
+		      ^
+
+Error: dsh: plugin tree failed to load: failed to apply loader entry hanamesh-app-host (@hanamesh/dsh-app-host): Symlinked/non-directory data path is not allowed.
+AppHostError: Symlinked/non-directory data path is not allowed.
+    at requireCondition (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/errors.js:8:18)
+    at secureDirectory (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/store.js:51:5)
+    at async AppHost.init (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/manager.js:157:5)
+    at async Module.apply (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/dsh.js:129:5)
+    at async Object.apply [as callback] (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/index.js:15:10)
+    at async Fiber._reload (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis/lib/index.js:1355:5)
+    at async Promise.allSettled (index 6)
+    at async Proxy.await (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js:189:5)
+    at boot (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1545:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async runProfile (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/profile-boot-Dk-7KqJc.js:311:14)
+    at async runCli (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:146:4)
+    at async file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:168:23 {
+  [cause]: Error: failed to apply loader entry hanamesh-app-host (@hanamesh/dsh-app-host): Symlinked/non-directory data path is not allowed.
+      at updateError (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js:309:9)
+      at Entry._await (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js:516:10)
+      at async Promise.allSettled (index 155)
+      at async Proxy.await (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js:192:22)
+      at async boot (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js:1535:3)
+      at async runProfile (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/profile-boot-Dk-7KqJc.js:311:14)
+      at async runCli (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:146:4)
+      at async file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js:168:23 {
+    [cause]: AppHostError: Symlinked/non-directory data path is not allowed.
+        at requireCondition (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/errors.js:8:18)
+        at secureDirectory (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/store.js:51:5)
+        at async AppHost.init (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/manager.js:157:5)
+        at async Module.apply (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/dsh.js:129:5)
+        at async Object.apply [as callback] (file:///private$RUN/home/dsh/profiles/p49/node_modules/@hanamesh/dsh-app-host/dist/index.js:15:10)
+        at async Fiber._reload (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis/lib/index.js:1355:5)
+        at async Promise.allSettled (index 6)
+        at async Proxy.await (file:///Users/yzliu/Library/Application%20Support/com.hanamesh.desktop/dependencies/dsh/node_modules/@deepseek-ai/cordis-plugin-loader/lib/index.js:189:5) {
+      code: 'UNSAFE_DATA_PATH',
+      details: {},
+      status: 400
+    }
+  }
+}
+
+Node.js v24.13.1
