@@ -56,7 +56,7 @@ not ok 9 - standalone Core explains optional components without instructing dupl
   failureType: 'testCodeFailure'
   error: |-
     The input was expected to not match the regular expression /套件与单包互斥|duplicate loader entry id/. Input:
-    
+
     '/* Generated from strictly checked HanaMesh core client source. React is host-supplied. */\n' +
       `window.__ModuleLoader__.load({id:"hanamesh-core",factory:function(require){'use strict';const module={exports:{}};const exports=module.exports;(function(module,exports,require){\n` +
       '"use strict";\n' +
@@ -230,7 +230,7 @@ not ok 9 - standalone Core explains optional components without instructing dupl
       '    };\n' +
       '    if (!state)\n' +
       "        return (0, react_1.createElement)('section', { className: 'hm-core-section', 'data-hanamesh-core': 'loading' }, (0, react_1.createElement)('h2', null, 'HanaMes"... 13602 more characters
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected:
@@ -418,7 +418,7 @@ not ok 9 - standalone Core explains optional components without instructing dupl
                 : `已绑定到网站账号（设备 ${state.deviceId.slice(0, 8)}… 已关联你的 GitHub 登录）`)
             : (0, react_1.createElement)('span', { 'data-hanamesh-core-bound': String(state.session.bound) }, state.session.bound === false ? '未绑定：绑定后网站才能把本设备的贡献记到你的账号' : state.serverOrigin === null ? '未连接服务端' : '绑定状态读取中…'), state.session.bound === true
             ? (0, react_1.createElement)('button', { type: 'button', onClick: () => visit('/me') }, '在网站查看账号与设备')
-            : (0, react_1.createElement)('button', { type: 'button', onClick: () => void bind() }, '去网站绑定'), 
+            : (0, react_1.createElement)('button', { type: 'button', onClick: () => void bind() }, '去网站绑定'),
         // T9: the email form lives on the website; core only carries the entry point.
         (0, react_1.createElement)('button', { type: 'button', 'data-hanamesh-core-email': 'entry', onClick: () => visit('/me') }, '邮箱绑定'))), (0, react_1.createElement)(Row, { label: '我的 Hana' }, (0, react_1.createElement)('div', { className: 'hm-core-points', 'data-hanamesh-core-points': points?.status ?? 'loading' }, points === null
             ? (0, react_1.createElement)('span', { className: 'hm-core-muted' }, '正在读取分…')
@@ -520,9 +520,9 @@ not ok 9 - standalone Core explains optional components without instructing dupl
             return () => { footer(); section(); style.remove(); };
         }, 'hanamesh-core:client');
     }
-    
+
     })(module,exports,require);return module.exports;}});
-    
+
   operator: 'doesNotMatch'
   stack: |-
     TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/client.test.mjs:105:10)
@@ -551,10 +551,10 @@ not ok 12 - suite health expectations do not require installing optional compone
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + '0.2.0-rc.10'
     - undefined
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   actual: '0.2.0-rc.10'
@@ -586,13 +586,13 @@ not ok 15 - Core installs independently and pins its public official host peers
   error: |-
     Expected values to be strictly deep-equal:
     + actual - expected
-    
+
     + {
     +   '@hanamesh/dsh-app-host': '0.1.0-rc.41',
     +   'hanamesh-usage': '0.2.0-rc.10'
     + }
     - {}
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected:
@@ -621,13 +621,13 @@ not ok 17 - Core patch inserts only Core so separately installed components can 
   error: |-
     Expected values to be strictly deep-equal:
     + actual - expected
-    
+
       [
         'hanamesh-core',
     +   'hanamesh-usage',
     +   'hanamesh-app-host'
       ]
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected:
