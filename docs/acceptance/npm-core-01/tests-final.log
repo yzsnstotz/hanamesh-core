@@ -1,0 +1,386 @@
+
+> hanamesh-core@0.2.0-rc.48 test /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node --test --test-reporter=tap test/*.test.mjs
+
+TAP version 13
+# Subtest: bounded scan reaches the tail before declaring newest events and retains only the latest 25
+ok 1 - bounded scan reaches the tail before declaring newest events and retains only the latest 25
+  ---
+  duration_ms: 4.050167
+  type: 'test'
+  ...
+# Subtest: a five-page budget remains explicitly incomplete and the next scan can finish
+ok 2 - a five-page budget remains explicitly incomplete and the next scan can finish
+  ---
+  duration_ms: 2.928875
+  type: 'test'
+  ...
+# Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
+ok 3 - DSH adapter registration and disposal contract fixture (not real DSH)
+  ---
+  duration_ms: 191.624625
+  type: 'test'
+  ...
+# Subtest: open-external rejects foreign origins and reports disabled native opening
+ok 4 - open-external rejects foreign origins and reports disabled native opening
+  ---
+  duration_ms: 35.794583
+  type: 'test'
+  ...
+# Subtest: contribution aggregation preserves unavailable versus real zero
+ok 5 - contribution aggregation preserves unavailable versus real zero
+  ---
+  duration_ms: 12.863209
+  type: 'test'
+  ...
+# Subtest: server responses larger than 1 MiB are rejected before JSON parsing
+ok 6 - server responses larger than 1 MiB are rejected before JSON parsing
+  ---
+  duration_ms: 10.024333
+  type: 'test'
+  ...
+# Subtest: client distribution declares native slots and avoids forbidden layout/link fallbacks
+ok 7 - client distribution declares native slots and avoids forbidden layout/link fallbacks
+  ---
+  duration_ms: 11.106417
+  type: 'test'
+  ...
+# Subtest: account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)
+ok 8 - account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)
+  ---
+  duration_ms: 6.327334
+  type: 'test'
+  ...
+# Subtest: B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it
+ok 9 - B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it
+  ---
+  duration_ms: 4.950625
+  type: 'test'
+  ...
+# Subtest: T2: the 我的 Hana row renders real 分 from the host points route, with readable empty states and a "分不是代币" note
+ok 10 - T2: the 我的 Hana row renders real 分 from the host points route, with readable empty states and a "分不是代币" note
+  ---
+  duration_ms: 2.26625
+  type: 'test'
+  ...
+# Subtest: P01-U04: native points distinguish typed totals from signed device event history
+ok 11 - P01-U04: native points distinguish typed totals from signed device event history
+  ---
+  duration_ms: 1.821958
+  type: 'test'
+  ...
+# Subtest: P01-U04: gateway activity is named by active hour, without implying a model call or a per-event award
+ok 12 - P01-U04: gateway activity is named by active hour, without implying a model call or a per-event award
+  ---
+  duration_ms: 1.392167
+  type: 'test'
+  ...
+# Subtest: T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows
+ok 13 - T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows
+  ---
+  duration_ms: 2.674
+  type: 'test'
+  ...
+# Subtest: T9: the 账号 row carries an email-binding entry that opens the website, and no email form lives in core
+ok 14 - T9: the 账号 row carries an email-binding entry that opens the website, and no email form lives in core
+  ---
+  duration_ms: 2.13475
+  type: 'test'
+  ...
+# Subtest: standalone Core explains optional components without instructing duplicate removal
+ok 15 - standalone Core explains optional components without instructing duplicate removal
+  ---
+  duration_ms: 0.824875
+  type: 'test'
+  ...
+# Subtest: consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+ok 16 - consent defaults withheld, publishes once, survives restart, isolates and unsubscribes listeners
+  ---
+  duration_ms: 8.553542
+  type: 'test'
+  ...
+# Subtest: a delayed registration publish cannot restore consent after the user withdraws it
+ok 17 - a delayed registration publish cannot restore consent after the user withdraws it
+  ---
+  duration_ms: 27.76975
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+ok 18 - LOCAL_FIXTURE kill -9 around device snapshot publication leaves old or complete new state
+  ---
+  duration_ms: 140.096417
+  type: 'test'
+  ...
+# Subtest: LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+ok 19 - LOCAL_FIXTURE kill -9 around health publication leaves old or complete new snapshot
+  ---
+  duration_ms: 71.486458
+  type: 'test'
+  ...
+# Subtest: first initialization publishes one complete device snapshot and restart preserves id
+ok 20 - first initialization publishes one complete device snapshot and restart preserves id
+  ---
+  duration_ms: 10.072333
+  type: 'test'
+  ...
+# Subtest: sign returns a verifiable Ed25519 signature and private key never reaches public projections
+ok 21 - sign returns a verifiable Ed25519 signature and private key never reaches public projections
+  ---
+  duration_ms: 2.11825
+  type: 'test'
+  ...
+# Subtest: tampered public key makes every signature path fail closed
+ok 22 - tampered public key makes every signature path fail closed
+  ---
+  duration_ms: 2.094083
+  type: 'test'
+  ...
+# Subtest: health provider feeds the contract, state and explicit recheck route
+ok 23 - health provider feeds the contract, state and explicit recheck route
+  ---
+  duration_ms: 27.958667
+  type: 'test'
+  ...
+# Subtest: state projects health faults and duck-typed usage service readiness
+ok 24 - state projects health faults and duck-typed usage service readiness
+  ---
+  duration_ms: 1.219792
+  type: 'test'
+  ...
+# Subtest: duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+ok 25 - duck-typed Cordis usage lookup distinguishes an available service without a hard inject edge
+  ---
+  duration_ms: 2.221583
+  type: 'test'
+  ...
+# Subtest: notice components distinguish present, missing and disabled without restricting healthy core
+ok 26 - notice components distinguish present, missing and disabled without restricting healthy core
+  ---
+  duration_ms: 3.279292
+  type: 'test'
+  ...
+# Subtest: damaged inventory, loader failure and persistence failure are repair snapshots
+ok 27 - damaged inventory, loader failure and persistence failure are repair snapshots
+  ---
+  duration_ms: 0.378
+  type: 'test'
+  ...
+# Subtest: suite health expectations do not require installing optional components
+ok 28 - suite health expectations do not require installing optional components
+  ---
+  duration_ms: 4.143
+  type: 'test'
+  ...
+# Subtest: real DSH include-prefixed ids and package root or subpath names match suite components
+ok 29 - real DSH include-prefixed ids and package root or subpath names match suite components
+  ---
+  duration_ms: 0.729791
+  type: 'test'
+  ...
+# Subtest: package integrity accepts the loader subpath when the package root is not exported
+ok 30 - package integrity accepts the loader subpath when the package root is not exported
+  ---
+  duration_ms: 8.844708
+  type: 'test'
+  ...
+# Subtest: GET /api/hanamesh/core/points returns the signed custody read with 分 totals and a per-Hana breakdown
+ok 31 - GET /api/hanamesh/core/points returns the signed custody read with 分 totals and a per-Hana breakdown
+  ---
+  duration_ms: 45.449666
+  type: 'test'
+  ...
+# Subtest: points use public registry names where available and retain an honest ID fallback
+ok 32 - points use public registry names where available and retain an honest ID fallback
+  ---
+  duration_ms: 3.942584
+  type: 'test'
+  ...
+# Subtest: activity returns only this device signed raw events in an honest 90-day ascending page, without sensitive fields
+ok 33 - activity returns only this device signed raw events in an honest 90-day ascending page, without sensitive fields
+  ---
+  duration_ms: 2.010834
+  type: 'test'
+  ...
+# Subtest: activity rejects arbitrary queries, does not read while consent is withheld, and fails closed on malformed upstream events
+ok 34 - activity rejects arbitrary queries, does not read while consent is withheld, and fails closed on malformed upstream events
+  ---
+  duration_ms: 2.01125
+  type: 'test'
+  ...
+# Subtest: points empty states are readable: no consent, no registration, no server, upstream failure
+ok 35 - points empty states are readable: no consent, no registration, no server, upstream failure
+  ---
+  duration_ms: 4.64675
+  type: 'test'
+  ...
+# Subtest: the bind prompt fires once: pending 分 on an unbound device, then never again — restart included
+ok 36 - the bind prompt fires once: pending 分 on an unbound device, then never again — restart included
+  ---
+  duration_ms: 6.694666
+  type: 'test'
+  ...
+# Subtest: the bind prompt never fires for a bound device, and never without pending 分
+ok 37 - the bind prompt never fires for a bound device, and never without pending 分
+  ---
+  duration_ms: 1.358417
+  type: 'test'
+  ...
+# Subtest: the prompt marker is optional in storage so an rc.30 snapshot still loads and can be stamped
+ok 38 - the prompt marker is optional in storage so an rc.30 snapshot still loads and can be stamped
+  ---
+  duration_ms: 0.557375
+  type: 'test'
+  ...
+# Subtest: the points route is guarded like every other core route and leaks no secrets
+ok 39 - the points route is guarded like every other core route and leaks no secrets
+  ---
+  duration_ms: 0.86225
+  type: 'test'
+  ...
+# Subtest: registration challenge flow succeeds and repeated registration stays idempotent
+ok 40 - registration challenge flow succeeds and repeated registration stays idempotent
+  ---
+  duration_ms: 22.2145
+  type: 'test'
+  ...
+# Subtest: device id mismatch and upstream failure are persisted as failed observations
+ok 41 - device id mismatch and upstream failure are persisted as failed observations
+  ---
+  duration_ms: 2.037875
+  type: 'test'
+  ...
+# Subtest: offline configuration never emits a request
+ok 42 - offline configuration never emits a request
+  ---
+  duration_ms: 0.290875
+  type: 'test'
+  ...
+# Subtest: registration is never published before the remote registration response
+ok 43 - registration is never published before the remote registration response
+  ---
+  duration_ms: 0.6745
+  type: 'test'
+  ...
+# Subtest: automatic contributions start only after registration succeeds
+ok 44 - automatic contributions start only after registration succeeds
+  ---
+  duration_ms: 3.662458
+  type: 'test'
+  ...
+# Subtest: device label is hostname / platform-arch / HANAMESH_SHELL-or-dsh, each within identity limits
+ok 45 - device label is hostname / platform-arch / HANAMESH_SHELL-or-dsh, each within identity limits
+  ---
+  duration_ms: 0.149625
+  type: 'test'
+  ...
+# Subtest: registration payload carries the label and the server echo is accepted
+ok 46 - registration payload carries the label and the server echo is accepted
+  ---
+  duration_ms: 0.916125
+  type: 'test'
+  ...
+# Subtest: identity rc.2 (400 on unknown `label`) makes core re-register once without the label using a fresh challenge
+ok 47 - identity rc.2 (400 on unknown `label`) makes core re-register once without the label using a fresh challenge
+  ---
+  duration_ms: 0.71575
+  type: 'test'
+  ...
+# Subtest: a 400 on a label-free registration is not retried and surfaces as upstream unavailable
+ok 48 - a 400 on a label-free registration is not retried and surfaces as upstream unavailable
+  ---
+  duration_ms: 0.848083
+  type: 'test'
+  ...
+# Subtest: service contract has exactly ten frozen keys
+ok 49 - service contract has exactly ten frozen keys
+  ---
+  duration_ms: 5.709458
+  type: 'test'
+  ...
+# Subtest: state, consent and diagnostics routes preserve method, origin and secret fences
+ok 50 - state, consent and diagnostics routes preserve method, origin and secret fences
+  ---
+  duration_ms: 19.400042
+  type: 'test'
+  ...
+# Subtest: DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+ok 51 - DSH bridge accepts the authenticated carrier Host while rejecting foreign or wrong-port origins
+  ---
+  duration_ms: 2.232
+  type: 'test'
+  ...
+# Subtest: Core installs independently and pins its public official host peers
+ok 52 - Core installs independently and pins its public official host peers
+  ---
+  duration_ms: 4.4575
+  type: 'test'
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 53 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 1.444458
+  type: 'test'
+  ...
+# Subtest: Core patch inserts only Core so separately installed components can coexist
+ok 54 - Core patch inserts only Core so separately installed components can coexist
+  ---
+  duration_ms: 1.275584
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 55 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 33.993916
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 56 - consistency declaration is renamed to core
+  ---
+  duration_ms: 1.328333
+  type: 'test'
+  ...
+# Subtest: registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly what identity verifies
+ok 57 - registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly what identity verifies
+  ---
+  duration_ms: 25.05875
+  type: 'test'
+  ...
+# Subtest: signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`
+ok 58 - signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`
+  ---
+  duration_ms: 3.135917
+  type: 'test'
+  ...
+# Subtest: bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature
+ok 59 - bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature
+  ---
+  duration_ms: 2.265291
+  type: 'test'
+  ...
+# Subtest: contributions response `bound` flows into getSession().bound
+ok 60 - contributions response `bound` flows into getSession().bound
+  ---
+  duration_ms: 1.385833
+  type: 'test'
+  ...
+# Subtest: B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null
+ok 61 - B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null
+  ---
+  duration_ms: 4.929375
+  type: 'test'
+  ...
+# Subtest: POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback
+ok 62 - POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback
+  ---
+  duration_ms: 0.966625
+  type: 'test'
+  ...
+1..62
+# tests 62
+# suites 0
+# pass 62
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 268.290416

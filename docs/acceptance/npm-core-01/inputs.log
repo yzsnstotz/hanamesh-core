@@ -1,0 +1,5 @@
+
+> hanamesh-core@0.2.0-rc.47 verify:inputs /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/verify-inputs.mjs
+
+{"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true}

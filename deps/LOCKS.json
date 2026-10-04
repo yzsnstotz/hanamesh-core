@@ -1,7 +1,9 @@
 {
   "dsh": {
-    "version": "0.1.5-alpha.1",
-    "commit": "5dda764ed3aa172535a7967b06ff95d9cbfe536a"
+    "version": "0.2.0-rc.2",
+    "registry": "https://registry.npmjs.org",
+    "source": "https://github.com/deepseek-ai/deepseek-harness",
+    "license": "MIT"
   },
   "srvIdentity": {
     "version": "0.1.0-rc.1",

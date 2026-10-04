@@ -1,0 +1,26 @@
+{
+  "coreInput": "local tarball rc49 (diagnostic only)",
+  "registry": "https://registry.npmjs.org",
+  "dependencyPackages": 17,
+  "nonpublicDependencies": [],
+  "resolved": {
+    "": null,
+    "node_modules/@deepseek-ai/cordis": "https://registry.npmjs.org/@deepseek-ai/cordis/-/cordis-4.0.4.tgz",
+    "node_modules/@deepseek-ai/cosmokit": "https://registry.npmjs.org/@deepseek-ai/cosmokit/-/cosmokit-1.8.5.tgz",
+    "node_modules/@deepseek-ai/dsh-brand": "https://registry.npmjs.org/@deepseek-ai/dsh-brand/-/dsh-brand-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-client-connection": "https://registry.npmjs.org/@deepseek-ai/dsh-client-connection/-/dsh-client-connection-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-client-ui-settings": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-settings/-/dsh-client-ui-settings-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-client-ui-sidebar": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-sidebar/-/dsh-client-ui-sidebar-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-credentials": "https://registry.npmjs.org/@deepseek-ai/dsh-credentials/-/dsh-credentials-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-invariants": "https://registry.npmjs.org/@deepseek-ai/dsh-invariants/-/dsh-invariants-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-scope": "https://registry.npmjs.org/@deepseek-ai/dsh-scope/-/dsh-scope-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-storage": "https://registry.npmjs.org/@deepseek-ai/dsh-storage/-/dsh-storage-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/dsh-storage-domain": "https://registry.npmjs.org/@deepseek-ai/dsh-storage-domain/-/dsh-storage-domain-0.2.0-rc.2.tgz",
+    "node_modules/@deepseek-ai/schemastery": "https://registry.npmjs.org/@deepseek-ai/schemastery/-/schemastery-3.18.4.tgz",
+    "node_modules/@standard-schema/spec": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
+    "node_modules/js-tokens": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
+    "node_modules/loose-envify": "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz",
+    "node_modules/react": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+    "node_modules/zod": "https://registry.npmjs.org/zod/-/zod-4.5.4.tgz"
+  }
+}

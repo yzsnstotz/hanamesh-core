@@ -1,0 +1,2 @@
+dsh web: http://127.0.0.1:54670/?token=<redacted>
+dsh web: opening the default browser; pass --no-open to disable

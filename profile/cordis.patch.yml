@@ -7,12 +7,3 @@
         websiteOrigin: https://market.hanamesh.com
         # open-external 只放行 websiteOrigin 同源 URL，所以默认允许系统浏览器打开绑定/网站链接。
         allowSystemBrowser: true
-    - id: hanamesh-usage
-      name: hanamesh-usage
-      config:
-        maxRecords: 5000
-        maxPending: 128
-        allowExport: false
-    - id: hanamesh-app-host
-      name: '@hanamesh/dsh-app-host'
-      config: {}

@@ -13,12 +13,4 @@ for (const row of semverRows) {
   assert.ok(match, row);
   assert.equal(digest(await readFile(match[2])), match[1], match[2]);
 }
-// Frozen sibling artifact inputs: hanamesh-usage 0.2.0-rc.10, @hanamesh/dsh-app-host 0.1.0-rc.41.
-const siblingRows = (await readFile('vendor/siblings/SHA256SUMS', 'utf8')).trim().split('\n');
-assert.equal(siblingRows.length, 3);
-for (const row of siblingRows) {
-  const match = /^([a-f0-9]{64})  (hanamesh-usage-0\.2\.0-rc\.10\.tgz|hanamesh-dsh-app-host-0\.1\.0-rc\.41\.tgz|hanamesh-lib-provision-0\.1\.0-rc\.1\.tgz)$/.exec(row);
-  assert.ok(match, row);
-  assert.equal(digest(await readFile(`vendor/siblings/${match[2]}`)), match[1], match[2]);
-}
-console.log(JSON.stringify({event: 'inputs_verified', hostApi: Object.keys(files).length, srvIdentity: true, semver: semverRows.length > 0, siblings: siblingRows.length}));
+console.log(JSON.stringify({event: 'inputs_verified', hostApi: Object.keys(files).length, srvIdentity: true, semver: semverRows.length > 0}));

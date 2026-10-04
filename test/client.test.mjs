@@ -99,3 +99,9 @@ test('T9: the 账号 row carries an email-binding entry that opens the website, 
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.match(bundle, /邮箱绑定/);
 });
+
+test('standalone Core explains optional components without instructing duplicate removal', async () => {
+  const bundle = await readFile('lib/client.js', 'utf8');
+  assert.doesNotMatch(bundle, /套件与单包互斥|duplicate loader entry id|@hanamesh\/lib-provision/);
+  assert.match(bundle, /可分别安装/);
+});

@@ -36,10 +36,10 @@ test('damaged inventory, loader failure and persistence failure are repair snaps
   assert.equal(failed.mode, 'repair');
 });
 
-test('suite component versions are locked to package dependencies', async () => {
+test('suite health expectations do not require installing optional components', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   assert.equal(profile.version, pkg.version);
-  for (const component of profile.components) assert.equal(component.versionRange, pkg.dependencies[component.moduleName]);
+  for (const component of profile.components) { assert.ok(component.versionRange); assert.equal(pkg.dependencies?.[component.moduleName], undefined); }
 });
 
 test('real DSH include-prefixed ids and package root or subpath names match suite components', async () => {

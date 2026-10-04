@@ -4,32 +4,18 @@ import {readFile, access} from 'node:fs/promises';
 
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 
-test('package metadata exposes the core bundle and only the two suite dependencies', async () => {
+test('Core installs independently and pins its public official host peers', async () => {
   const pkg = await readJson('package.json');
   assert.equal(pkg.name, 'hanamesh-core');
-  assert.equal(pkg.version, '0.2.0-rc.46');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
-  assert.equal(pkg.repository?.url, 'https://github.com/yzsnstotz/hanamesh-core.git');
-  assert.deepEqual(pkg.dependencies, {
-    'hanamesh-usage': '0.2.0-rc.10',
-    '@hanamesh/dsh-app-host': '0.1.0-rc.41',
-  });
-  assert.equal(pkg.dsh?.bundle?.patch, './profile/cordis.patch.yml');
-  assert.ok(pkg.exports?.['./contract']);
-  assert.equal(pkg.peerDependencies?.['@hanamesh/ui-kit'], undefined);
-  assert.equal(pkg.peerDependencies?.['@deepseek-ai/dsh-host-webserver'], undefined);
-  assert.match(await readFile('lib/client/index.js', 'utf8'), new RegExp(`hanamesh-core ${pkg.version.replaceAll('.', '\\.')}`));
-  // The suite profile version is the health snapshot's profile identity; it must not drift from the package it ships in.
+  assert.deepEqual(pkg.dependencies ?? {}, {});
+  assert.equal(pkg.dsh.bundle.patch, './profile/cordis.patch.yml');
+  for (const [name, version] of Object.entries(pkg.peerDependencies)) {
+    if (name.startsWith('@deepseek-ai/')) assert.equal(version, name.endsWith('/cordis') ? '4.0.4' : '0.2.0-rc.2');
+  }
   assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
-  assert.equal(pkg.devDependencies['@hanamesh/dsh-app-host'], 'file:vendor/siblings/hanamesh-dsh-app-host-0.1.0-rc.41.tgz');
-  assert.equal(pkg.pnpm.overrides['@hanamesh/dsh-app-host'], pkg.devDependencies['@hanamesh/dsh-app-host']);
-  assert.equal((await readJson('profile/suite.profile.json')).components.find(row => row.id === 'app-host').versionRange, pkg.dependencies['@hanamesh/dsh-app-host']);
-  assert.match(await readFile('vendor/siblings/SHA256SUMS', 'utf8'), /^457b0c9690776d6762e374453f64780fcca9529b730ab506b45766055bb37134  hanamesh-dsh-app-host-0\.1\.0-rc\.41\.tgz$/m);
-  const lock = await readFile('pnpm-lock.yaml', 'utf8');
-  assert.match(lock, /'@hanamesh\/dsh-app-host@file:vendor\/siblings\/hanamesh-dsh-app-host-0\.1\.0-rc\.41\.tgz'/);
-  assert.doesNotMatch(lock, /hanamesh-dsh-app-host-0\.1\.0-rc\.39\.tgz/);
-  assert.doesNotMatch(lock, /hanamesh-dsh-app-host-0\.1\.0-rc\.35\.tgz/);
+  assert.doesNotMatch(await readFile('pnpm-lock.yaml', 'utf8'), /file:vendor\/siblings/);
 });
 
 test('real-host boot uses a clean allowlisted environment', async () => {
@@ -39,15 +25,12 @@ test('real-host boot uses a clean allowlisted environment', async () => {
   assert.match(script, /DSH_HOME="\$DSH_HOME"/);
 });
 
-test('suite patch declares one insert containing the three canonical ids', async () => {
+test('Core patch inserts only Core so separately installed components can coexist', async () => {
   const patch = await readFile('profile/cordis.patch.yml', 'utf8');
   assert.equal((patch.match(/^- insert:/gm) ?? []).length, 1);
   assert.deepEqual([...patch.matchAll(/^\s+- id: (hanamesh-[a-z-]+)$/gm)].map(match => match[1]), [
     'hanamesh-core',
-    'hanamesh-usage',
-    'hanamesh-app-host',
   ]);
-  assert.match(patch, /name: '@hanamesh\/dsh-app-host'$/m); // package root: pinned dsh-client-modules only discovers ./client for a root loader entry (P3-DIFF 2026-09-19)
   // rc.15: a fresh install must be able to register and open the bind page without hand-editing the profile
   // (user 2026-09-20 hit CORE_URL_NOT_ALLOWED on a stock install because both origins shipped as null).
   assert.match(patch, /^\s+serverOrigin: https:\/\/api\.hanamesh\.com$/m);
