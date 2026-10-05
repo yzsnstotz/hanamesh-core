@@ -36,6 +36,9 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: 0.2.0-rc.2
         version: 0.2.0-rc.2(@deepseek-ai/cordis@4.0.4)
+      '@hanamesh/devkit':
+        specifier: file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz
+        version: file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz
       '@types/node':
         specifier: 24.13.4
         version: 24.13.4
@@ -126,6 +129,12 @@ packages:
 
   '@deepseek-ai/schemastery@3.18.4':
     resolution: {integrity: sha512-SSXO6tYuyrIqKVbmOnIq0s+riUywYzouFMcnBluHF9n4KMo2G8HvEzhCYj6pj2617/glOjbJuVInJ9hfONsjkg==}
+
+  '@hanamesh/devkit@file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz':
+    resolution: {integrity: sha512-A8gqZ+Lhs86CPZ2+vEOl4NrDi2sbHrrwa2JC6DXJfpNAnSF/WBVhmQrn5YW/JsUrJ4aZbwzvT+xHCrXunvSeaw==, tarball: file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz}
+    version: 0.1.0-rc.1
+    engines: {node: '>=22'}
+    hasBin: true
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -233,6 +242,8 @@ snapshots:
     dependencies:
       '@deepseek-ai/cosmokit': 1.8.5
       '@standard-schema/spec': 1.1.0
+
+  '@hanamesh/devkit@file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz': {}
 
   '@standard-schema/spec@1.1.0': {}
 

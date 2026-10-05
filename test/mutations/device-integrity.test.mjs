@@ -1,0 +1,1 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createDevice,signWithDevice} from '../../lib/device.js';test('corrupt device rejected',()=>{const d={...createDevice(),publicKey:Buffer.alloc(32,7).toString('base64url')};assert.throws(()=>signWithDevice(d,new Uint8Array([1])),e=>e?.code==='CORE_DEVICE_CORRUPT');});

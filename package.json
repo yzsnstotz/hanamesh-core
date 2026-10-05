@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.2.0-rc.49",
+  "version": "0.2.0-rc.50",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -45,7 +45,11 @@
     "test:crash": "node --test --test-reporter=tap test/crash.test.mjs",
     "verify:inputs": "node scripts/verify-inputs.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts"
+    "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts",
+    "check:toolchain": "hanamesh-devkit check-toolchain",
+    "verify:pack": "node scripts/check-package.mjs",
+    "pack": "npm pack --pack-destination artifacts",
+    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
@@ -54,7 +58,8 @@
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
     "react": "18.3.1",
-    "zod": "4.5.4"
+    "zod": "4.5.4",
+    "@hanamesh/devkit": "0.1.0-rc.1"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
@@ -67,7 +72,8 @@
     "zod": "4.5.4",
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2"
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
+    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
   },
   "pnpm": {
     "overrides": {
@@ -100,5 +106,10 @@
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanamesh-core.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "peerDependenciesMeta": {
+    "@hanamesh/devkit": {
+      "optional": true
+    }
+  }
 }
