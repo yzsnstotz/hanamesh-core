@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: bind prompt shows at most once
+not ok 1 - bind prompt shows at most once
+  ---
+  duration_ms: 3.272833
+  type: 'test'
+  location: '/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/route-a/devkit-mut-4I62Oa/test/mutations/points-prompt-once.test.mjs:1:189'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/route-a/devkit-mut-4I62Oa/test/mutations/points-prompt-once.test.mjs:1:580)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41.352125

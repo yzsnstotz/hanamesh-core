@@ -1,0 +1,6 @@
+{"id":"domain-name","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}
+{"id":"device-integrity","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}
+{"id":"registration-device-id","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}
+{"id":"registration-reverse-order","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}
+{"id":"health-repair-priority","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}
+{"id":"points-prompt-once","baselineExit":0,"mutantExit":1,"detected":true,"assertionFailure":true}

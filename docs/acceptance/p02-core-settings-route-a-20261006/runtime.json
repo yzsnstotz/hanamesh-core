@@ -1,0 +1,22 @@
+{
+  "coreVersion": "0.2.0-rc.52",
+  "coreSha256": "a213dd6adec3a9512ac81a607bc3fce5bc38a7374f2ac81b3b0ebb97ed98ddbd",
+  "officialHostVersion": "0.2.0-rc.2",
+  "publicHostModules": "/Users/yzliu/.cache/hanamesh-runs/P02-ENTRY-01/build/targets/mac-arm64/dsh/node_modules",
+  "seedPackagesRead": false,
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/route-a/dsh-home/profiles/route-a",
+  "home": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/route-a/home",
+  "environmentNames": [
+    "HOME",
+    "DSH_HOME",
+    "TMPDIR",
+    "PATH",
+    "NPM_CONFIG_USERCONFIG",
+    "npm_config_cache"
+  ],
+  "hostPid": 1197,
+  "port": 53035,
+  "browserEntry": "http://127.0.0.1:53036/",
+  "modelRequests": 0,
+  "limitation": "Public official host package links are a component environment; not a product install or dependency-closure gate."
+}

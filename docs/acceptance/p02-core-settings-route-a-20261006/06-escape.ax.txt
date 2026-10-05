@@ -1,0 +1,34 @@
+Browser tab: 2, Title: "DeepSeek Harness", URL: "http://127.0.0.1:53035/".
+0 AXWebArea DeepSeek Harness, URL: 127.0.0.1:53035/
+	1 container
+		2 button New session
+		3 button Collapse sidebar
+		4 button New session
+		5 container Global panels
+			6 button Plugins
+		7 text Workspaces
+		8 container
+			9 button (collapsed) Description: Search sessions, Secondary Actions: Expand
+			10 text field (settable)
+		11 button View options
+		12 button Add workspace
+		13 outline Sessions
+			14 container
+				15 row (selectable, expanded) Default workspace, Secondary Actions: Collapse
+					16 text Default workspace
+				17 row (selected) New Session
+					18 text New Session
+		19 button 打开 HanaMesh 设置
+		20 pop up button (collapsed) Description: Settings, Secondary Actions: Expand
+		21 button Open right sidebar
+		22 container
+			23 text Into the Unknown Preview
+			24 pop up button (collapsed) Description: Choose workspace, Secondary Actions: Expand
+			25 pop up button (collapsed) Standard mode, Help: Choose the agent preset for your new task, Secondary Actions: Expand
+			26 text entry area (settable) Describe what you want to build, / commands, @ files or sessions
+			27 pop up button (collapsed) Description: Add files or run commands, Secondary Actions: Expand
+			28 button Access mode, current: Workspace Write
+			29 pop up button (collapsed) Description: Select model, current DeepSeek-V41-Flash, reasoning effort High, Help: DeepSeek-V41-Flash · High, Secondary Actions: Expand
+			30 button (disabled) Send message
+
+The focused UI element is 19 button 打开 HanaMesh 设置

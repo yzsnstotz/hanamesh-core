@@ -1,0 +1,50 @@
+[
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "1241.134",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/health/recheck",
+    "method": "POST"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "1241.134",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/health/recheck",
+    "status": 200
+  },
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "1241.135",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/state",
+    "method": "GET"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "1241.135",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/state",
+    "status": 200
+  },
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "1241.136",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/points",
+    "method": "GET"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "1241.136",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/points",
+    "status": 200
+  },
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "1241.137",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/bind-link",
+    "method": "POST"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "1241.137",
+    "url": "http://127.0.0.1:53035/api/hanamesh/core/bind-link",
+    "status": 409
+  }
+]

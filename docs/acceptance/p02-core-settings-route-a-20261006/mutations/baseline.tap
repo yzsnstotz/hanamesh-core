@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
+ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
+  ---
+  duration_ms: 115.679416
+  type: 'test'
+  ...
+# Subtest: first initialization publishes one complete device snapshot and restart preserves id
+ok 2 - first initialization publishes one complete device snapshot and restart preserves id
+  ---
+  duration_ms: 17.319916
+  type: 'test'
+  ...
+# Subtest: sign returns a verifiable Ed25519 signature and private key never reaches public projections
+ok 3 - sign returns a verifiable Ed25519 signature and private key never reaches public projections
+  ---
+  duration_ms: 3.947083
+  type: 'test'
+  ...
+# Subtest: tampered public key makes every signature path fail closed
+ok 4 - tampered public key makes every signature path fail closed
+  ---
+  duration_ms: 0.795958
+  type: 'test'
+  ...
+# Subtest: corrupt device rejected
+ok 5 - corrupt device rejected
+  ---
+  duration_ms: 2.849417
+  type: 'test'
+  ...
+# Subtest: damage repairs
+ok 6 - damage repairs
+  ---
+  duration_ms: 10.068417
+  type: 'test'
+  ...
+# Subtest: bind prompt shows at most once
+ok 7 - bind prompt shows at most once
+  ---
+  duration_ms: 7.46475
+  type: 'test'
+  ...
+# Subtest: mismatch rejected
+ok 8 - mismatch rejected
+  ---
+  duration_ms: 25.675209
+  type: 'test'
+  ...
+# Subtest: no premature registered publication
+ok 9 - no premature registered publication
+  ---
+  duration_ms: 25.6885
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 168.422209

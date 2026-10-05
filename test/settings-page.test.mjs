@@ -68,6 +68,7 @@ test('HanaMesh footer opens complete Core-owned settings without querying host n
     const cleanups = page.effects().map(run => run());
     assert.equal(opens, 1);
     elements(tree).find(e => e.type === 'button' && e.children.includes(action)).props.onClick();
+    assert.equal(focuses, action === '返回' ? 0 : 1, 'focus restoration waits for modal cleanup');
     assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0);
     cleanups.forEach(cleanup => cleanup?.());
     assert.equal(closes, 1);
@@ -79,5 +80,5 @@ test('HanaMesh footer opens complete Core-owned settings without querying host n
   escapePage.props.onCancel({preventDefault() { prevented = true; }});
   assert.equal(prevented, true);
   assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0);
-  assert.equal(focuses, 3);
+  assert.equal(focuses, 2);
 });

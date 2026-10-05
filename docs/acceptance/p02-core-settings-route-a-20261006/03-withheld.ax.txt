@@ -1,0 +1,26 @@
+Browser tab: 2, Title: "DeepSeek Harness", URL: "http://127.0.0.1:53035/".
+0 AXWebArea DeepSeek Harness, URL: 127.0.0.1:53035/
+	1 container HanaMesh 设置
+		2 container
+			3 button 返回
+			4 heading HanaMesh 设置, Value: 1, ID: hm-core-settings-title
+				5 text HanaMesh 设置
+			6 button 关闭 HanaMesh 设置
+		7 container
+			8 heading HanaMesh, Value: 2
+				9 text HanaMesh
+			10 text Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。 设备身份 设备 id：C2i_Y5jT…　注册：未连接 数据授权
+			11 checkbox (settable, integer) Description: 允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）, Value: 0
+			12 text 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 账号 未连接服务端
+			13 button 去网站绑定
+			14 button 邮箱绑定
+			15 text 我的Hana 未连接服务端，暂时读不到分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。
+			16 button 去网站
+			17 text 贡献事件 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。 未连接服务端，暂时读不到分
+			18 button 刷新事件
+			19 text 本设备贡献累计 暂不可用：NOT_CONNECTED HanaMesh套件 使用记录：未安装 应用容器：未安装
+			20 button 重新检查
+			21 text 关于 hanamesh-core 0.2.0-rc.52 · DSH 0.2.0-rc.2
+			22 button 去网站
+
+The focused UI element is 11 checkbox (settable, integer) Description: 允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）, Value: 0

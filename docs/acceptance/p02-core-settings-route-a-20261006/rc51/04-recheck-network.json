@@ -1,0 +1,38 @@
+[
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "99671.142",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/health/recheck",
+    "method": "POST"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "99671.142",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/health/recheck",
+    "status": 200
+  },
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "99671.143",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/state",
+    "method": "GET"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "99671.143",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/state",
+    "status": 200
+  },
+  {
+    "event": "Network.requestWillBeSent",
+    "id": "99671.144",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/points",
+    "method": "GET"
+  },
+  {
+    "event": "Network.responseReceived",
+    "id": "99671.144",
+    "url": "http://127.0.0.1:51408/api/hanamesh/core/points",
+    "status": 200
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0-rc.52",
+  "sha256": "a213dd6adec3a9512ac81a607bc3fce5bc38a7374f2ac81b3b0ebb97ed98ddbd",
+  "members": 99,
+  "sourcePackedByteEquality": [
+    "lib/client.js",
+    "lib/client/index.js",
+    "lib/dsh.mjs",
+    "profile/suite.profile.json"
+  ],
+  "dependenciesAdded": false,
+  "peerDependenciesChanged": false,
+  "vendorChanged": false
+}

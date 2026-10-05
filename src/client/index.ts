@@ -231,19 +231,19 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.51 · DSH 0.2.0-rc.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.52 · DSH 0.2.0-rc.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
 /** A complete Core-owned page in the browser top layer. Its only navigation
  * is FooterAction's local state; no host menu, settings service or DOM lookup. */
-function HanaMeshSettingsPage({onClose}: {onClose: () => void}): ReactNode {
+function HanaMeshSettingsPage({onClose, restoreFocus}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
   const page = useRef<HTMLDialogElement | null>(null);
   useEffect(() => {
     const node = page.current;
     if (!node) return;
     node.showModal();
-    return () => { if (node.open) node.close(); };
+    return () => { if (node.open) node.close(); restoreFocus(); };
   }, []);
   return createElement('dialog', {ref: page, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'settings', 'aria-labelledby': 'hm-core-settings-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); onClose(); }},
     createElement('header', {className: 'hm-core-settings-header'},
@@ -294,10 +294,10 @@ function PointsBindPrompt(): ReactNode {
 function FooterAction({wide}: {wide: boolean}): ReactNode {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const entry = useRef<HTMLButtonElement | null>(null);
-  const closeSettings = (): void => { setSettingsOpen(false); entry.current?.focus(); };
+  const closeSettings = (): void => { setSettingsOpen(false); };
   return createElement(Fragment, null,
     createElement('button', {type: 'button', className: 'hm-core-footer', 'data-wide': String(wide), title: 'HanaMesh', 'aria-label': '打开 HanaMesh 设置', ref: entry, onClick: () => setSettingsOpen(true)}, wide ? 'HanaMesh' : 'H'),
-    settingsOpen && createElement(HanaMeshSettingsPage, {onClose: closeSettings}),
+    settingsOpen && createElement(HanaMeshSettingsPage, {onClose: closeSettings, restoreFocus: () => entry.current?.focus()}),
     createElement(PointsBindPrompt));
 }
 
