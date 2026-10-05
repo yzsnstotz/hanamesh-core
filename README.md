@@ -30,6 +30,6 @@ Server 注册 POST 的 Origin 为 serverOrigin；Server 的可信 Origin 须包�
 
 The private `@hanamesh/devkit@0.1.0-rc.1` tarball is pinned in `vendor/`, the lockfile and an optional peer. It is a development dependency; the published runtime files do not import it. Install with `pnpm install --frozen-lockfile` using Node 24.13.1 and pnpm 10.33.0.
 
-Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
+Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm run pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
 
 The package consumer checks JavaScript and strict TypeScript without devkit installed. The root type entry also needs the public DSH type prerequisite `@deepseek-ai/dsh-typert-protocol@0.2.0-rc.2`, already used by the local host type gate.
