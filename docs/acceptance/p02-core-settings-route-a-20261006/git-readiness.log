@@ -1,0 +1,2 @@
+repo                                 git    main  clean  version=tag  remote=local   lock         worktree sha   note
+hanamesh-core                        yes    NO(codex/p02-core-settings-route-a) yes    NO(no v0.2.0-rc.52) NO(d911cde!=67e47bf) yes          none     yes   
