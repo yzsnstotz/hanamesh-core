@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "76056214288337703287a8c04040d988e09509b7",
+  "files": [
+    {
+      "source": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/cards/P02-CORE-SETTINGS-01/REPORT.md",
+      "archive": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/_evidence/suite-health-f2/rc52-baseline/REPORT.md",
+      "sha256": "e5554e490092e9ace0857275816dac2db3a9d0fa2d15b11c9328cff1fae50f09"
+    },
+    {
+      "source": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/cards/P02-CORE-SETTINGS-01/VERIFY.md",
+      "archive": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/_evidence/suite-health-f2/rc52-baseline/VERIFY.md",
+      "sha256": "5cdfc871b119c4b86131085441355f5e49c0f8788ef225a9ecfbfc2aa676095c"
+    },
+    {
+      "source": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/route-a/latest/hanamesh-core-0.2.0-rc.52.tgz",
+      "archive": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/_evidence/suite-health-f2/rc52-baseline/hanamesh-core-0.2.0-rc.52.tgz",
+      "sha256": "a213dd6adec3a9512ac81a607bc3fce5bc38a7374f2ac81b3b0ebb97ed98ddbd"
+    }
+  ]
+}

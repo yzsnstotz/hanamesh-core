@@ -1,0 +1,14 @@
+{
+  "candidate": "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/suite-health-f2/latest/hanamesh-core-0.2.0-rc.53.tgz",
+  "sha256": "776bc58d7a94635f662d6a2b519a2cd88912d13fe305467ace4ca8920526b5ae",
+  "members": 99,
+  "everyMemberMatchesRepository": true,
+  "rc52ArchiveSha256": "a213dd6adec3a9512ac81a607bc3fce5bc38a7374f2ac81b3b0ebb97ed98ddbd",
+  "changedFromRc52": [
+    "package/lib/client.js",
+    "package/lib/client/index.js",
+    "package/package.json",
+    "package/profile/suite.profile.json"
+  ],
+  "securityAndHealthLogicBytesUnchanged": true
+}

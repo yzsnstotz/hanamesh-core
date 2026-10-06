@@ -1,0 +1,83 @@
+[
+  {
+    "log": "build.log",
+    "argv": [
+      "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+      "scripts/build.mjs",
+      "--target"
+    ],
+    "exit": 0
+  },
+  {
+    "log": "test-f2.tap",
+    "argv": [
+      "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+      "--test",
+      "--test-reporter=tap",
+      "test/suite-health-f2.test.mjs"
+    ],
+    "exit": 0
+  },
+  {
+    "log": "test-full.tap",
+    "argv": [
+      "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+      "--test",
+      "--test-reporter=tap",
+      "test/activity-client.test.mjs",
+      "test/adapter.test.mjs",
+      "test/client-routes.test.mjs",
+      "test/client.test.mjs",
+      "test/consent.test.mjs",
+      "test/crash.test.mjs",
+      "test/device.test.mjs",
+      "test/health-integration.test.mjs",
+      "test/health.test.mjs",
+      "test/points.test.mjs",
+      "test/registration.test.mjs",
+      "test/routes.test.mjs",
+      "test/settings-page.test.mjs",
+      "test/stage0.test.mjs",
+      "test/suite-health-f2.test.mjs",
+      "test/wire-format.test.mjs"
+    ],
+    "exit": 0
+  },
+  {
+    "log": "inputs.log",
+    "argv": [
+      "/Users/yzliu/.local/share/fnm/node-versions/v24.13.1/installation/bin/node",
+      "scripts/verify-inputs.mjs"
+    ],
+    "exit": 0
+  },
+  {
+    "log": "contracts.log",
+    "argv": [
+      "tsc",
+      "--noEmit",
+      "--strict",
+      "--skipLibCheck",
+      "false",
+      "--target",
+      "ES2022",
+      "--module",
+      "NodeNext",
+      "--moduleResolution",
+      "NodeNext",
+      "test/public-contracts.ts"
+    ],
+    "exit": 0
+  },
+  {
+    "log": "pack.log",
+    "argv": [
+      "npm",
+      "pack",
+      "--ignore-scripts",
+      "--pack-destination",
+      "/Users/yzliu/.cache/hanamesh-runs/P02-CORE-SETTINGS-01/suite-health-f2/latest"
+    ],
+    "exit": 0
+  }
+]

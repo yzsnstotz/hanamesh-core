@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: fixed suite health through package inspection and HTTP: current five seeds
+ok 1 - fixed suite health through package inspection and HTTP: current five seeds
+  ---
+  duration_ms: 19.530292
+  type: 'test'
+  ...
+# Subtest: fixed suite health through package inspection and HTTP: wrong current version
+ok 2 - fixed suite health through package inspection and HTTP: wrong current version
+  ---
+  duration_ms: 4.848958
+  type: 'test'
+  ...
+# Subtest: fixed suite health through package inspection and HTTP: legacy pin is rejected
+ok 3 - fixed suite health through package inspection and HTTP: legacy pin is rejected
+  ---
+  duration_ms: 3.521834
+  type: 'test'
+  ...
+# Subtest: fixed suite health through package inspection and HTTP: missing version
+ok 4 - fixed suite health through package inspection and HTTP: missing version
+  ---
+  duration_ms: 3.420292
+  type: 'test'
+  ...
+# Subtest: fixed suite health through package inspection and HTTP: invalid version
+ok 5 - fixed suite health through package inspection and HTTP: invalid version
+  ---
+  duration_ms: 3.644459
+  type: 'test'
+  ...
+# Subtest: fixed suite health through package inspection and HTTP: missing loader entry
+ok 6 - fixed suite health through package inspection and HTTP: missing loader entry
+  ---
+  duration_ms: 3.242292
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83.432875
