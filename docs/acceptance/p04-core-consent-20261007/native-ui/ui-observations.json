@@ -1,0 +1,19 @@
+{
+  "card": "P04-CORE-CONSENT-01",
+  "phase": "normal-product-install-and-native-step",
+  "original_client_pid": 65365,
+  "current_client_pid": 16014,
+  "current_client_url": "http://127.0.0.1:58619/",
+  "restart_count": 1,
+  "installation": "Plugins / Add plugin / local rc54 tgz / Installed / Enable now",
+  "installed_version": "0.2.0-rc.54",
+  "installed_byte_match_files": 99,
+  "observed_core_about_after_restart": "0.2.0-rc.53",
+  "consent_observed": "withheld",
+  "consent_toggled": false,
+  "core_rc54_ui_proven": false,
+  "gui_lock_release": "2026-10-07 native exec release completed",
+  "native_screenshot": "02-core-after-restart.png",
+  "ax": "02-core-after-restart.ax.txt",
+  "ax_pixel_disagreement": "After close, a composite native observation returned the main-screen AX tree while pixels still showed Core settings; raw composite output remains in this worker chat. No further navigation or old P02 reprobe."
+}

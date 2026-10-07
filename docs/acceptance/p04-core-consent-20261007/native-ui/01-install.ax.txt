@@ -1,0 +1,34 @@
+Window: "HanaMesh", App: HanaMesh.
+0 standard window HanaMesh, Secondary Actions: Raise
+	1 container HanaMesh
+		2 container
+			3 HTML content HanaMesh, URL: 127.0.0.1:53812/
+				4 container Installed
+					5 button Close
+					6 container
+						7 text Installed /Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest/hanamesh-core-0.2.0-rc.54.tgz Tarball Installed; it loads at the next start.
+						8 button Hide install details
+						9 text Installs into /Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/dsh-home/profiles/desktop Done
+						10 container
+							11 text $ pnpm add /Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest/hanamesh-core-0.2.0-rc.54.tgz
+						12 button Copy
+						13 container
+							14 text ✓ Lockfile passes supply-chain policies (verified 15m ago)
+							15 text Progress: resolved 1, reused 0, downloaded 0, added 0
+							16 text [WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+							17 text Packages: +1
+							18 text +
+							19 text Progress: resolved 2, reused 0, downloaded 1, added 1, done
+							20 text Done in 267ms using pnpm v11.7.0
+						21 button Enable now
+	22 close button
+	23 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	24 minimize button
+25 menu bar
+	26 HanaMesh
+	27 File
+	28 Edit
+	29 Window
+	30 Developer
+
+The focused UI element is 8 button Hide install details

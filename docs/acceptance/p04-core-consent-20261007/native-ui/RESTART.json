@@ -1,0 +1,25 @@
+{
+  "started_at_utc": "2026-10-07T11:52:09.101655+00:00",
+  "old_pid": 65365,
+  "pid": 16014,
+  "argv": [
+    "/Applications/HanaMesh.app/Contents/MacOS/HanaMesh",
+    "--user-data-dir=/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/electron-user-data"
+  ],
+  "home": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/home",
+  "dsh_home": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/dsh-home",
+  "user_data_dir": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/electron-user-data",
+  "env_variable_names": [
+    "HOME",
+    "DSH_HOME",
+    "TMPDIR",
+    "PATH",
+    "LANG",
+    "USER",
+    "LOGNAME",
+    "SHELL"
+  ],
+  "env_policy": "allowlist only; no inherited credentials",
+  "normal_quit_before_launch": true,
+  "restart_count": 1
+}
