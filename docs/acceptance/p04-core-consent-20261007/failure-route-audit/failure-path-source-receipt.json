@@ -1,0 +1,125 @@
+{
+  "recorded_at_utc": "2026-10-07T13:52:42Z",
+  "worker": "01a115ed-505d-78e3-a66e-7090668f028b",
+  "source_commit": "e73c92a7ad792353609d754783c8176076dc7f96",
+  "read_only": true,
+  "new_execution_of_success_gates": false,
+  "gui_actions": 0,
+  "shared_runtime_changes": 0,
+  "failure_chain": [
+    {
+      "file": "src/client/index.ts",
+      "lines": [
+        93,
+        97,
+        163,
+        177,
+        212,
+        214
+      ],
+      "fact": "non-2xx rejects; consent-specific busy/error; POST then authoritative GET; controlled checkbox; unconfirmed save alert; polling does not clear consentError"
+    },
+    {
+      "file": "src/controller.ts",
+      "lines": [
+        113,
+        121,
+        163,
+        171
+      ],
+      "fact": "local CoreStore.publish before in-memory update/listeners; setConsent does not call remote transport"
+    },
+    {
+      "file": "src/dsh.mjs",
+      "lines": [
+        48,
+        51,
+        62,
+        66
+      ],
+      "fact": "real adapter binds publish to official domain.global.set and registers public HTTP routes"
+    },
+    {
+      "file": "src/routes.ts",
+      "lines": [
+        51,
+        78
+      ],
+      "fact": "POST requires same carrier and valid one-key JSON state; errors sanitized as non-2xx"
+    },
+    {
+      "file": "src/contracts.ts",
+      "lines": [
+        1,
+        8
+      ],
+      "fact": "no public runtime consent failure injection configuration"
+    },
+    {
+      "file": "src/errors.ts",
+      "lines": [
+        23,
+        24
+      ],
+      "fact": "unknown storage exception maps to CORE_UPSTREAM_UNAVAILABLE/503; raw errno not exposed"
+    }
+  ],
+  "inherited_storage_evidence": {
+    "file": "docs/acceptance/p04-core-consent-20261007/storage-observations.json",
+    "rerun": false,
+    "observed": "actual JSON medium write failure ->503 CORE_UPSTREAM_UNAVAILABLE; consent still withheld including reopen",
+    "limits": "route dispatcher/empty loader harness supplied; no unified client UI"
+  },
+  "route_options": [
+    {
+      "route": "remote server unavailable",
+      "conclusion": "does not directly fail local consent publish; no shared service stop"
+    },
+    {
+      "route": "invalid public POST",
+      "conclusion": "public error capability exists; no normal checkbox control produces invalid state; HTTP invocation would not prove displayed consent error; no new invocation"
+    },
+    {
+      "route": "fixture fetch/store rejection",
+      "conclusion": "already supports engineering evidence; no rerun and cannot close native client failure gate"
+    },
+    {
+      "route": "fresh independent official client + isolated actual storage medium failure",
+      "conclusion": "proposed new supply; needs PM structural CARD/LAUNCH plus owning normal Desktop launcher/storage backend proof; not executed"
+    }
+  ],
+  "other_observations": [
+    {
+      "input": "Usage15/AppHost7 incompatible warning",
+      "owner": "hanamesh-core profile/suite.profile.json lines13,22 and health/evaluate.ts lines31,44-50",
+      "conclusion": "current exact pins10/2 explain warning; notice policy and consent local path separate; not evidence of consent failure or approval to repin"
+    },
+    {
+      "input": "install0->179",
+      "owner": "Core read aggregation at controller.ts250-278; producer of /v1/usage/me/contributions requires owning server usage audit",
+      "conclusion": "UI renders cached Core aggregate, adds supplied byHana actions.install; no attribution of179 source rows or event generation without new owning evidence"
+    }
+  ],
+  "next_structure_inputs": [
+    "independent formal App entry with exact existing Core54 bytes",
+    "fresh own run HOME/DSH_HOME/user-data-dir/TMPDIR, new PID/origin, credentials-free env allowlist",
+    "normal public storage backend config and exact owned medium path/realpath disjoint from shared rc19",
+    "fault scope only new diagnostic medium; restore original byte-preserved path in finally; no snapshot edits",
+    "explicit test supply label and no fabricated response/client UI injection",
+    "new GUI time only after Usage actual release",
+    "capture real native alert/last-read closed/public503/readback; do not rerun successful grant-withdraw gates"
+  ],
+  "new_product_candidate_needed": false,
+  "source_file_sha256": {
+    "src/client/index.ts": "5fb7913c5c5b903e958a05725ee42ed24eeb2f606f61d96782ef3ee00c9b7baf",
+    "src/controller.ts": "0a63d289ba9068c15f34b988640114dfa30efe0358f686b192f3bc9259f95845",
+    "src/dsh.mjs": "75ac442ad2d9d80a25c1425a326748b9d080e19a03769b7199fd5e04705e8c7c",
+    "src/routes.ts": "7e69374826b7c2cb5cd3bf1ddff093e92e6099945bbfcdce53dd63bd55a1e081",
+    "src/contracts.ts": "d3bff0b8897cb4d322f09bfca8a86ee57576e5526267812419d9562379cd45d1",
+    "src/errors.ts": "e3c6f9a43d52b633c6828b4eea53288bf3d4568e4e506ce0d54d5a09132644e0",
+    "src/health/evaluate.ts": "43712f0d7d043c824c3d9f6820a6aa96f1868842f881a23ab15b5b653fdd5df8",
+    "profile/suite.profile.json": "a44a99a32a9a78678d9572ef386693cf814ca5fd2efc265e7650d5fea50638d2",
+    "scripts/consent-storage-diagnostic.mjs": "f002fd7a2278794cff1e853d93eb50b6c10d6c6bf3c8c2a42791bac88e80e03b",
+    "docs/acceptance/p04-core-consent-20261007/storage-observations.json": "f798dc3c9f37612a65d6b069f01a61862fba77f33928831679a5c8520590eb9d"
+  }
+}
