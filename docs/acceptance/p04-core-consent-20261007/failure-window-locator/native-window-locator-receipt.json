@@ -1,0 +1,51 @@
+{
+  "recorded_at_utc": "2026-10-07T14:32:13Z",
+  "worker": "01a115ed-505d-78e3-a66e-7090668f028b",
+  "card": "P04-CORE-CONSENT-01",
+  "diagnostic_launch_ref": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/tooling/DESKTOP-CORE-FAILURE-SUPPLY-01/LAUNCH.json",
+  "expected_origin": "http://127.0.0.1:57826",
+  "expected_desktop_pid": 76814,
+  "expected_host_pid": 76894,
+  "observed_native_target": {
+    "method": "cua.getApp('/Applications/HanaMesh.app')",
+    "app": "HanaMesh",
+    "window": "HanaMesh",
+    "ax_html_content_url": "127.0.0.1:64967/",
+    "focused_element": "3 HTML content HanaMesh, URL: 127.0.0.1:64967/",
+    "source": "Native tool result in this thread; only target observation, no UI input"
+  },
+  "inventory": {
+    "method": "cua.listApps()",
+    "same_bundle_id": "com.hanamesh.desktop",
+    "limitations": "bundle inventory does not identify a diagnostic PID/window mapping"
+  },
+  "gui_acquire_native_result": {
+    "chunk_id": "b3dc9c",
+    "wall_time_seconds": 0.000008125,
+    "exit_code": 0,
+    "original_token_count": 3,
+    "output": "ACQUIRED\n"
+  },
+  "gui_release_native_result": {
+    "chunk_id": "ad08e8",
+    "wall_time_seconds": 0.000008917,
+    "exit_code": 0,
+    "original_token_count": 3,
+    "output": "RELEASED\n"
+  },
+  "gui_end_status_native_result": {
+    "chunk_id": "60ce9d",
+    "wall_time_seconds": 0.000006167,
+    "exit_code": 0,
+    "original_token_count": 53,
+    "output": "FREE\n71450     1   0.0 /Applications/HanaMesh.app/Contents/MacOS/HanaMesh\n76814     1   0.0 /Applications/HanaMesh.app/Contents/MacOS/HanaMesh\n76894 76814   0.1 /Applications/HanaMesh.app/Contents/MacOS/HanaMesh\n"
+  },
+  "gui_input_actions": 0,
+  "fault_attempts": 0,
+  "medium_moved": false,
+  "baseline_not_captured": true,
+  "baseline_reason": "Window origin identification failed before any medium operation; no fault or restoration necessary",
+  "no_config_probe_retry": true,
+  "main_runtime_not_stopped": true,
+  "diagnostic_runtime_not_stopped": true
+}
