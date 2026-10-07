@@ -8,7 +8,7 @@ for name in ['home', 'dsh-home', 'tmp', 'engineering']:
 env = {'PATH': str(repo / 'node_modules/.bin') + ':' + node_bin + ':/Users/yzliu/.local/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/usr/bin:/bin:/usr/sbin:/sbin',
        'HOME': str(root / 'home'), 'DSH_HOME': str(root / 'dsh-home'), 'TMPDIR': str(root / 'tmp'),
        'LANG': 'en_US.UTF-8', 'npm_config_userconfig': '/dev/null', 'npm_config_cache': tempfile.mkdtemp(prefix='npm-', dir=root / 'tmp'),
-       'HM_CORE_RUN': str(root / 'engineering')}
+       'HM_CORE_RUN': str(root / 'engineering'), 'HANAMESH_UMBRELLA': str(repo.parent)}
 name, *argv = sys.argv[1:]
 with (root / 'engineering' / name).open('w') as log:
     result = subprocess.run(argv, cwd=repo, env=env, stdout=log, stderr=subprocess.STDOUT)

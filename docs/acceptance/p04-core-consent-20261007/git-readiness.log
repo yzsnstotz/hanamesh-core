@@ -1,0 +1,2 @@
+repo                                 git    main  clean  version=tag  remote=local   lock         worktree sha   note
+hanamesh-core                        yes    NO(codex/p04-core-consent-01) yes    NO(no v0.2.0-rc.54) NO(d911cde!=426b745) yes          none     yes   not in bluemap/STATUS.md repo map

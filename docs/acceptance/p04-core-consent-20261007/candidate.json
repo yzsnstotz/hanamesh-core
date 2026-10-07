@@ -1,0 +1,11 @@
+{
+  "name": "hanamesh-core",
+  "version": "0.2.0-rc.54",
+  "source_commit": "426b745bd30288f273b16776acbebbc7a1e6adce",
+  "base_commit": "d6171296ec0937f86c79b01378f105d1573c06d1",
+  "branch": "codex/p04-core-consent-01",
+  "tarball": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest/hanamesh-core-0.2.0-rc.54.tgz",
+  "sha256": "1c1b3fe524efb2047c8aa4499100ed98474d673e3b00063c93b3ff4555a2b7a7",
+  "source_push_native_exit": 0,
+  "source_push_native_chunk": "c2d7ae"
+}

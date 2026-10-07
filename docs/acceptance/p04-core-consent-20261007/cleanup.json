@@ -1,0 +1,29 @@
+{
+  "removed": [
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-1meppzcv",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-xhl3at8h",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-buhiv6qs",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-jufy79wy",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-txe4nt46",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-_2n3ap6d",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-wqw0p0jj",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-jt857dw8",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-fh_edmnx",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-0vo1lq45",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-x12m93gn",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-kyqb3b73",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-scanan8c",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-6ee5rvf3",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-wt7mfjko",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/runtime"
+  ],
+  "retained": [
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/worker-admission",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/_evidence",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/engineering",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-runtime",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-diagnostic"
+  ],
+  "scope": "Only generated paths of P04-CORE-CONSENT-01; inherited P02 candidates and evidence untouched."
+}
