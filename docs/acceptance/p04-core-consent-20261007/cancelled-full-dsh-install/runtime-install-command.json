@@ -1,0 +1,21 @@
+{
+  "log": "runtime-install.log",
+  "argv": [
+    "npm",
+    "install",
+    "--prefix",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/runtime",
+    "--registry=https://registry.npmjs.org/",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "@deepseek-ai/dsh@0.2.0-rc.2"
+  ],
+  "exit_code": 1,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

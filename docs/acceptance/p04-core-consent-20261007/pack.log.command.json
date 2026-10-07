@@ -1,0 +1,17 @@
+{
+  "log": "pack.log",
+  "argv": [
+    "npm",
+    "pack",
+    "--ignore-scripts",
+    "--pack-destination",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest"
+  ],
+  "exit_code": 0,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

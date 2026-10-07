@@ -1,0 +1,89 @@
+TAP version 13
+# Subtest: HanaMesh footer opens complete Core-owned settings without querying host navigation
+ok 1 - HanaMesh footer opens complete Core-owned settings without querying host navigation
+  ---
+  duration_ms: 2.773167
+  type: 'test'
+  ...
+# Subtest: consent UI reads the saved grant and withdrawal through Core routes
+ok 2 - consent UI reads the saved grant and withdrawal through Core routes
+  ---
+  duration_ms: 13.134
+  type: 'test'
+  ...
+# Subtest: consent UI disables the switch until its write and authoritative read finish
+not ok 3 - consent UI disables the switch until its write and authoritative read finish
+  ---
+  duration_ms: 1.696333
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:128:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + undefined
+    - true
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:133:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: consent write failure remains explicit after the regular state poll succeeds
+not ok 4 - consent write failure remains explicit after the regular state poll succeeds
+  ---
+  duration_ms: 1.562333
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:141:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /CORE_STORAGE_WRITE_FAILED/. Input:
+
+    'HanaMesh Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。  设备 id：j7mwNKG6…　注册：未连接   允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话） 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 未连接服务端 去网站绑定 邮箱绑定 未连接服务端，暂时读不到分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。 去网站 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。  未连接服务端，暂时读不到分 刷新事件  暂不可用：NOT_CONNECTED 检查未完成（CHECK_NOT_RUN） 重新检查 hanamesh-core 0.2.0-rc.53 · DSH 0.2.0-rc.2 去网站'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'HanaMesh Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。  设备 id：j7mwNKG6…　注册：未连接   允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话） 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 未连接服务端 去网站绑定 邮箱绑定 未连接服务端，暂时读不到分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。 去网站 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。  未连接服务端，暂时读不到分 刷新事件  暂不可用：NOT_CONNECTED 检查未完成（CHECK_NOT_RUN） 重新检查 hanamesh-core 0.2.0-rc.53 · DSH 0.2.0-rc.2 去网站'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:148:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: consent UI cannot claim a confirmed save when the readback disagrees
+not ok 5 - consent UI cannot claim a confirmed save when the readback disagrees
+  ---
+  duration_ms: 1.130125
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:154:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /授权保存未确认.*CORE_CONSENT_NOT_CONFIRMED/. Input:
+
+    'HanaMesh Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。  设备 id：j_hYw1S4…　注册：未连接   允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话） 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 未连接服务端 去网站绑定 邮箱绑定 未连接服务端，暂时读不到分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。 去网站 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。  未连接服务端，暂时读不到分 刷新事件  暂不可用：NOT_CONNECTED 检查未完成（CHECK_NOT_RUN） 重新检查 hanamesh-core 0.2.0-rc.53 · DSH 0.2.0-rc.2 去网站'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'HanaMesh Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。  设备 id：j_hYw1S4…　注册：未连接   允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话） 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 未连接服务端 去网站绑定 邮箱绑定 未连接服务端，暂时读不到分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。 去网站 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。  未连接服务端，暂时读不到分 刷新事件  暂不可用：NOT_CONNECTED 检查未完成（CHECK_NOT_RUN） 重新检查 hanamesh-core 0.2.0-rc.53 · DSH 0.2.0-rc.2 去网站'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/test/settings-page.test.mjs:158:10)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 2
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 55.2395

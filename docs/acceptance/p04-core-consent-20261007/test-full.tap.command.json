@@ -1,0 +1,14 @@
+{
+  "log": "test-full.tap",
+  "argv": [
+    "pnpm",
+    "test"
+  ],
+  "exit_code": 0,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

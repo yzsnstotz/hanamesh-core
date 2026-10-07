@@ -1,0 +1,200 @@
+[
+  {
+    "log": "install.log",
+    "argv": [
+      "pnpm",
+      "install",
+      "--frozen-lockfile",
+      "--store-dir",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/pnpm-store"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "build.log",
+    "argv": [
+      "node",
+      "scripts/build.mjs",
+      "--target"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "test-green.tap",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "test/settings-page.test.mjs"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "runtime-install.log",
+    "argv": [
+      "npm",
+      "install",
+      "--prefix",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/runtime",
+      "--registry=https://registry.npmjs.org/",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "@deepseek-ai/dsh@0.2.0-rc.2"
+    ],
+    "exit_code": 1,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "contracts.log",
+    "argv": [
+      "pnpm",
+      "check:contracts"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "inputs.log",
+    "argv": [
+      "node",
+      "scripts/verify-inputs.mjs"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "pack.log",
+    "argv": [
+      "npm",
+      "pack",
+      "--ignore-scripts",
+      "--pack-destination",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "package-check.log",
+    "argv": [
+      "pnpm",
+      "verify:pack",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest/hanamesh-core-0.2.0-rc.54.tgz"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "storage-diagnostic.log",
+    "argv": [
+      "node",
+      "scripts/consent-storage-diagnostic.mjs",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-runtime",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-diagnostic"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "storage-install.log",
+    "argv": [
+      "npm",
+      "install",
+      "--prefix",
+      "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-runtime",
+      "--registry=https://registry.npmjs.org/",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "@deepseek-ai/dsh-storage-json@0.2.0-rc.2",
+      "@deepseek-ai/dsh-storage-domain@0.2.0-rc.2",
+      "@deepseek-ai/cordis@4.0.4"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "test-full.tap",
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  },
+  {
+    "log": "test-stage0-final.tap",
+    "argv": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "test/stage0.test.mjs"
+    ],
+    "exit_code": 0,
+    "environment": {
+      "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+      "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+      "npm_config_userconfig": "/dev/null",
+      "inherited_credentials": false
+    }
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "log": "storage-diagnostic.log",
+  "argv": [
+    "node",
+    "scripts/consent-storage-diagnostic.mjs",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-runtime",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-diagnostic"
+  ],
+  "exit_code": 0,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "package": "hanamesh-core",
+  "version": "0.2.0-rc.54",
+  "sha256": "1c1b3fe524efb2047c8aa4499100ed98474d673e3b00063c93b3ff4555a2b7a7",
+  "members": 99,
+  "all_bytes_match_source": true,
+  "changes_from_rc53": [
+    "lib/client.js",
+    "lib/client/index.js",
+    "package.json",
+    "profile/suite.profile.json"
+  ],
+  "dependencies_unchanged": true,
+  "license": "MIT"
+}

@@ -1,0 +1,43 @@
+{
+  "storageVersions": "0.2.0-rc.2",
+  "supply": "route dispatcher and empty sibling loader are harness inputs",
+  "observations": [
+    {
+      "stage": "fresh-default",
+      "consent": "withheld"
+    },
+    {
+      "stage": "grant-readback",
+      "consent": "granted"
+    },
+    {
+      "stage": "reopen-granted",
+      "consent": "granted"
+    },
+    {
+      "stage": "foreign-origin-rejected",
+      "consent": "granted"
+    },
+    {
+      "stage": "withdraw-readback",
+      "consent": "withheld"
+    },
+    {
+      "stage": "reopen-withheld",
+      "consent": "withheld"
+    },
+    {
+      "stage": "filesystem-write-failed-no-memory-publish",
+      "consent": "withheld"
+    },
+    {
+      "stage": "filesystem-error-response",
+      "status": 503,
+      "code": "CORE_UPSTREAM_UNAVAILABLE"
+    },
+    {
+      "stage": "reopen-after-failed-write",
+      "consent": "withheld"
+    }
+  ]
+}

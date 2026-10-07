@@ -1,0 +1,9 @@
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+npm error process terminated
+npm error signal SIGTERM
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.0
+npm notice To update run: npm install -g npm@11.21.0
+npm notice
+npm error A complete log of this run can be found in: /Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/tmp/npm-1meppzcv/_logs/2026-10-07T10_42_42_513Z-debug-0.log

@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: Core installs independently and pins its public official host peers
+ok 1 - Core installs independently and pins its public official host peers
+  ---
+  duration_ms: 4.617459
+  type: 'test'
+  ...
+# Subtest: real-host boot uses a clean allowlisted environment
+ok 2 - real-host boot uses a clean allowlisted environment
+  ---
+  duration_ms: 1.577083
+  type: 'test'
+  ...
+# Subtest: Core patch inserts only Core so separately installed components can coexist
+ok 3 - Core patch inserts only Core so separately installed components can coexist
+  ---
+  duration_ms: 0.837459
+  type: 'test'
+  ...
+# Subtest: legacy login UI and identity names are absent from active source surfaces
+ok 4 - legacy login UI and identity names are absent from active source surfaces
+  ---
+  duration_ms: 23.88225
+  type: 'test'
+  ...
+# Subtest: consistency declaration is renamed to core
+ok 5 - consistency declaration is renamed to core
+  ---
+  duration_ms: 0.641458
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 74.621541

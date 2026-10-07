@@ -1,0 +1,23 @@
+{
+  "log": "storage-install.log",
+  "argv": [
+    "npm",
+    "install",
+    "--prefix",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/storage-runtime",
+    "--registry=https://registry.npmjs.org/",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "@deepseek-ai/dsh-storage-json@0.2.0-rc.2",
+    "@deepseek-ai/dsh-storage-domain@0.2.0-rc.2",
+    "@deepseek-ai/cordis@4.0.4"
+  ],
+  "exit_code": 0,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

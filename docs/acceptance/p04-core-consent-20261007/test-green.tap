@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: HanaMesh footer opens complete Core-owned settings without querying host navigation
+ok 1 - HanaMesh footer opens complete Core-owned settings without querying host navigation
+  ---
+  duration_ms: 2.590875
+  type: 'test'
+  ...
+# Subtest: consent UI reads the saved grant and withdrawal through Core routes
+ok 2 - consent UI reads the saved grant and withdrawal through Core routes
+  ---
+  duration_ms: 12.009583
+  type: 'test'
+  ...
+# Subtest: consent UI disables the switch until its write and authoritative read finish
+ok 3 - consent UI disables the switch until its write and authoritative read finish
+  ---
+  duration_ms: 1.670917
+  type: 'test'
+  ...
+# Subtest: consent write failure remains explicit after the regular state poll succeeds
+ok 4 - consent write failure remains explicit after the regular state poll succeeds
+  ---
+  duration_ms: 1.143583
+  type: 'test'
+  ...
+# Subtest: consent UI cannot claim a confirmed save when the readback disagrees
+ok 5 - consent UI cannot claim a confirmed save when the readback disagrees
+  ---
+  duration_ms: 1.059166
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 54.03125
