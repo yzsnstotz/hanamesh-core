@@ -1,0 +1,61 @@
+{
+  "desktop_version": "0.2.0-rc.19",
+  "desktop_source": "7b61dd20a429c50d659d8d554aef415e545ba45d",
+  "pid": 71450,
+  "origin": "http://127.0.0.1:64967/",
+  "launch_reference": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/cards/P06-DESKTOP-INSTALL-01/evidence/20261007-rc19-normal-supply/LAUNCH.json",
+  "core_ui_about_version": "0.2.0-rc.54",
+  "normal_ui_action_sequence": [
+    "click visible AX Settings; market remained",
+    "paired AX/screenshot both market; visible Close",
+    "click market Close",
+    "click Settings",
+    "default checkbox0/current closed",
+    "click checkbox: checkbox1/current enabled",
+    "close Settings/reopen: checkbox1/current enabled",
+    "click checkbox: checkbox0/current closed",
+    "close Settings/reopen: checkbox0/current closed",
+    "release GUI lock"
+  ],
+  "initial_default": {
+    "checkbox": 0,
+    "display": "当前：已关闭",
+    "device_registered": true
+  },
+  "grant": {
+    "checkbox": 1,
+    "display": "当前：已开启"
+  },
+  "grant_reentry": {
+    "checkbox": 1,
+    "display": "当前：已开启"
+  },
+  "withdraw": {
+    "checkbox": 0,
+    "display": "当前：已关闭"
+  },
+  "withdraw_reentry": {
+    "checkbox": 0,
+    "display": "当前：已关闭"
+  },
+  "visible_failure_exercised": false,
+  "saving_transient_captured": false,
+  "final_consent_display": "closed",
+  "suite_visible_warnings": [
+    "Usage 0.2.0-rc.15 != Core pin 0.2.0-rc.10",
+    "AppHost 0.2.0-rc.7 != Core pin 0.2.0-rc.2"
+  ],
+  "contribution_counts_observed": {
+    "initial_install": 0,
+    "withdraw_install": 179,
+    "open": 0,
+    "use": 0,
+    "uninstall": 0,
+    "attribution": "not established; no Usage/Server acceptance"
+  },
+  "no_restart": true,
+  "no_reinstall": true,
+  "no_profile_edit": true,
+  "no_runtime_fault_injection": true,
+  "boundary": "Native UI readback and reentry only; no HTTP/storage inspection or failure gate this continuation"
+}

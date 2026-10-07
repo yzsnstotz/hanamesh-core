@@ -1,0 +1,35 @@
+{
+  "recorded_at_utc": "2026-10-07T13:42:38Z",
+  "worker": "01a115ed-505d-78e3-a66e-7090668f028b",
+  "card": "P04-CORE-CONSENT-01",
+  "initial_status": {
+    "chunk_id": "bccac4",
+    "wall_time_seconds": 0.000005583,
+    "exit_code": 0,
+    "original_token_count": 33,
+    "output": "FREE\n71450   0.0 /Applications/HanaMesh.app/Contents/MacOS/HanaMesh\n## codex/p04-core-consent-01...origin/codex/p04-core-consent-01\n"
+  },
+  "acquire": {
+    "chunk_id": "ea23d4",
+    "wall_time_seconds": 0.000006125,
+    "exit_code": 0,
+    "original_token_count": 3,
+    "output": "ACQUIRED\n"
+  },
+  "release": {
+    "chunk_id": "01765b",
+    "wall_time_seconds": 0.000006917,
+    "exit_code": 0,
+    "original_token_count": 3,
+    "output": "RELEASED\n"
+  },
+  "end_status": {
+    "chunk_id": "5b49b3",
+    "wall_time_seconds": 0.000007584,
+    "exit_code": 0,
+    "original_token_count": 17,
+    "output": "FREE\n71450   0.0 /Applications/HanaMesh.app/Contents/MacOS/HanaMesh\n"
+  },
+  "acquire_count": 1,
+  "release_count": 1
+}

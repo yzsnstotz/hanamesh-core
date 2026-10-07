@@ -1,0 +1,9 @@
+{
+  "native_exit_code": 0,
+  "native_chunk_id": "d44815",
+  "scope": "read-only public installed package metadata and realpath; no profile write",
+  "profile_path": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc19-install/fresh-client/dsh-home/profiles/desktop/node_modules/hanamesh-core",
+  "exists": true,
+  "realpath": "/Applications/HanaMesh.app/Contents/Resources/dsh/node_modules/hanamesh-core",
+  "version": "0.2.0-rc.54"
+}
