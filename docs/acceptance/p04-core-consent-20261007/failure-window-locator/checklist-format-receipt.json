@@ -1,0 +1,23 @@
+{
+  "native_check_checklist_result": {
+    "chunk_id": "f02eb7",
+    "exit_code": 0,
+    "output": "check_checklist: PASS\n"
+  },
+  "full_validate_native_result": {
+    "chunk_id": "a81d9f",
+    "wall_time_seconds": 1.6959e-05,
+    "exit_code": 1,
+    "original_token_count": 75,
+    "output": "FAIL bluemap/cards/P04-CORE-CONSENT-01/CARD.md: bluemap/cards/P04-CORE-CONSENT-01/USER_CHECKLIST.md: '入口' must be the project's 统一客户端 (http://127.0.0.1:48606/), not another client: /Applications/HanaMesh.app → “打开 HanaMesh 设置”。若市场覆盖主界面，先点击市场\n"
+  },
+  "scope": "Checklist product-action syntax and full CARD entry registration are separate; neither is a product gate",
+  "entry_in_current_checklist": "/Applications/HanaMesh.app",
+  "launch_registration_readback": "/Applications/HanaMesh.app（P04-CORE-CONSENT-01，Core Settings）",
+  "required_registration_syntax": "/Applications/HanaMesh.app（P04-CORE-CONSENT-01）",
+  "full_entry_reason": "card_entry expects close parenthesis immediately after exact card ID; current descriptive suffix prevents match and falls back to web unified entry48606",
+  "pm_notified": true,
+  "launch_not_edited_by_worker": true,
+  "main_flow_screenshots_not_recreated": true,
+  "user_checklist_sha256": "e5acf654e6d079f493a4354380fa8cd92c051ad278ff4ef3ec82ce762e51c1c4"
+}
