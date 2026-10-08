@@ -1,0 +1,29 @@
+{
+  "removedExactPaths": [
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-bcwervs7",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-4_orsaio",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-vflljnw1",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-1hn020k9",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-t9clrm6r",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-3wfxevlg",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-kd3ll9wk",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-ifva99t9",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-web-lja8bqi5",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-oq5qwjj9",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-6kvsebkl",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/tmp/npm-c6jt2t4v"
+  ],
+  "kept": [
+    "release/hanamesh-core-0.2.0-rc.56.tgz",
+    "release/hanamesh-core-0.2.0-rc.56.tgz.sha256",
+    "runtime",
+    "home",
+    "dsh-home",
+    "evidence",
+    "contract-rc55",
+    "consumer",
+    "boot-private.log (0600)"
+  ],
+  "protectedOtherInstances": true,
+  "faultBackupAbsent": true
+}

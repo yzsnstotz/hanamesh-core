@@ -1,0 +1,12 @@
+{
+  "medium": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/dsh-home/storages/hanamesh_core.json",
+  "mechanism": "real official JSON atomic rename hits a directory",
+  "restored": false,
+  "beforeSha256": "dc7a4d1bc280ecc4a356346184167b7323767d5c670c0ef7828463c332f37606",
+  "beforeConsent": {
+    "state": "withheld",
+    "changedAt": "2026-10-08T09:05:20.066Z"
+  },
+  "beforeRevision": 4,
+  "faultDirectoryInode": 307083321
+}

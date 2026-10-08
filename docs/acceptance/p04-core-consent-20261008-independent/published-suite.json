@@ -1,0 +1,228 @@
+{
+  "source": "hanamesh-core v0.2.0-rc.55",
+  "suite": "hanamesh-core/contract/suite",
+  "results": [
+    {
+      "suite": "hanamesh-core/contract",
+      "protocolVersion": "1",
+      "side": "provider",
+      "subject": "rc56 real SessionController.service (memory store; source suite rc55)",
+      "ok": true,
+      "results": [
+        {
+          "id": "handshake.present",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.rejects-other-version",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "surface.closed",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "identity.deviceId",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "identity.publicKey",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "sign.ed25519",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "signRequest.canonical",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "signRequest.rejects-invalid",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "consent.state",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "consent.subscribe",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "session.schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "serverOrigin",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "health.schema",
+          "ok": true,
+          "detail": "ok"
+        }
+      ]
+    },
+    {
+      "suite": "hanamesh-core/contract",
+      "protocolVersion": "1",
+      "side": "provider",
+      "subject": "FIXTURE · hanamesh-core contract v1 (not the product provider)",
+      "ok": true,
+      "results": [
+        {
+          "id": "handshake.present",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.rejects-other-version",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "surface.closed",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "identity.deviceId",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "identity.publicKey",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "sign.ed25519",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "signRequest.canonical",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "signRequest.rejects-invalid",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "consent.state",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "consent.subscribe",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "session.schema",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "serverOrigin",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "health.schema",
+          "ok": true,
+          "detail": "ok"
+        }
+      ]
+    },
+    {
+      "suite": "hanamesh-core/contract",
+      "protocolVersion": "1",
+      "side": "consumer",
+      "subject": "FIXTURE · hanamesh-core contract v1 (not the product provider)",
+      "ok": true,
+      "results": [
+        {
+          "id": "handshake.match",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.absent-undefined",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.absent-null",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.not-object",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.protocol-2",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.protocol-missing",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-getDeviceId",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-sign",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-signRequest",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-getConsent",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-onConsentChange",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-getSession",
+          "ok": true,
+          "detail": "ok"
+        },
+        {
+          "id": "handshake.missing-getServerOrigin",
+          "ok": true,
+          "detail": "ok"
+        }
+      ]
+    }
+  ]
+}

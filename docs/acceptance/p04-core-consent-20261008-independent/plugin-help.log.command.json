@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/runtime/node_modules/@deepseek-ai/dsh/lib/bin.js",
+    "plugin",
+    "--help"
+  ],
+  "exit_code": 1,
+  "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/home",
+  "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/dsh-home",
+  "inherited_credentials": false
+}
