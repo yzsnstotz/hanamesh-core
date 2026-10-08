@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: v1 handshake constants match the published schema and the existing seven required methods
+ok 1 - v1 handshake constants match the published schema and the existing seven required methods
+  ---
+  duration_ms: 2.246709
+  type: 'test'
+  ...
+# Subtest: handshake gives one deterministic result for match, absent, unsupported version and each missing method
+ok 2 - handshake gives one deterministic result for match, absent, unsupported version and each missing method
+  ---
+  duration_ms: 1.828041
+  type: 'test'
+  ...
+# Subtest: real Core provider passes the v1 provider suite, including signed request verification and no-replay consent
+ok 3 - real Core provider passes the v1 provider suite, including signed request verification and no-replay consent
+  ---
+  duration_ms: 3.196208
+  type: 'test'
+  ...
+# Subtest: provider fixture passes the same suite and is labelled as a fixture
+ok 4 - provider fixture passes the same suite and is labelled as a fixture
+  ---
+  duration_ms: 0.722125
+  type: 'test'
+  ...
+# Subtest: provider suite rejects a provider that drifts from v1 semantics
+ok 5 - provider suite rejects a provider that drifts from v1 semantics
+  ---
+  duration_ms: 0.47225
+  type: 'test'
+  ...
+# Subtest: reference consumer fixture passes the consumer suite and exercises the real provider
+ok 6 - reference consumer fixture passes the consumer suite and exercises the real provider
+  ---
+  duration_ms: 0.919833
+  type: 'test'
+  ...
+# Subtest: consumer suite fails a consumer that silently accepts an unsupported version or a missing method
+ok 7 - consumer suite fails a consumer that silently accepts an unsupported version or a missing method
+  ---
+  duration_ms: 0.502291
+  type: 'test'
+  ...
+# Subtest: schema validator rejects session snapshots outside v1
+ok 8 - schema validator rejects session snapshots outside v1
+  ---
+  duration_ms: 0.109833
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 44.369625

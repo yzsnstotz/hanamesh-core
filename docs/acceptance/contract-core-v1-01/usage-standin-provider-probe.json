@@ -1,0 +1,1 @@
+{"ok":false,"failed":[{"id":"signRequest.canonical","ok":false,"detail":"DeviceAuthHeaders.x-hm-timestamp: does not match ^[0-9]{13,}$"},{"id":"signRequest.rejects-invalid","ok":false,"detail":"invalid signRequest input was accepted"}]}

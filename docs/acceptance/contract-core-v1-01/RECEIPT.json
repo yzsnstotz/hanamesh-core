@@ -1,0 +1,17 @@
+{
+  "card": "CONTRACT-CORE-V1-01",
+  "package": "hanamesh-core",
+  "version": "0.2.0-rc.55",
+  "protocolVersion": "1",
+  "inputSource": "426b745bd30288f273b16776acbebbc7a1e6adce (rc54, codex/p04-core-consent-01; not overwritten)",
+  "source": "c2c27e89d2af495d2e2b8b2641a1a155f56f13d3",
+  "branch": "claude/contract-core-v1-01",
+  "main": "c2c27e89d2af495d2e2b8b2641a1a155f56f13d3 (fast-forward from d911cde)",
+  "tag": "v0.2.0-rc.55 (annotated f1bbff3cdcc4c4b290a6f9ca9b796b6b804ded2a -> c2c27e8)",
+  "pack": "hanamesh-core-0.2.0-rc.55.tgz from git archive v0.2.0-rc.55",
+  "sha256": "89d914d0c4503f4b467790f13ba096abf587e4037f2106a98cf69c7f3057421d",
+  "npmIntegrity": "sha512-obgyxqWAmFn3Re8kvsuUnyW+ihrz6eJCnJO4fh1cQzDtmPYz/zzVeUkH9R94I0OwSVOocK67Kgakm04j/oQXzg==",
+  "publicNpm": "not published (no authorization this batch)",
+  "suiteCommand": "npx hanamesh-core-contract-suite [--consumer <file.js>#<export>] [--provider core|fixture]",
+  "exports": ["hanamesh-core/contract", "hanamesh-core/contract/schema.json", "hanamesh-core/contract/fixtures", "hanamesh-core/contract/suite"]
+}
