@@ -14,3 +14,39 @@
 | `getHealth()` | `() => HealthSnapshot` | 组件健康快照 | 否 |
 
 契约明确不暴露私钥、PKCS8、token、cookie、nonce、传输实例或 storage-domain 写接口。
+
+## 发布形态（rc.55 起，只加不改）
+
+协议仍是 `'1'`，上表方法、字段与拒绝语义不变。rc.55 在同一个 `./contract` 导出下增加可选的机器可读部分，供提供方与消费方跑同一套检查：
+
+| 导出 | 内容 |
+|---|---|
+| `hanamesh-core/contract` | 上述类型；新增 `CORE_SERVICE_NAME`、`CORE_PROTOCOL_VERSION`、`CORE_SUPPORTED_PROTOCOL_VERSIONS`、`CORE_REQUIRED_METHODS`（7 个）、`CORE_OPTIONAL_METHODS`（`getPublicKey`、`getHealth`）与握手 `checkCoreService(value, accept?)` |
+| `hanamesh-core/contract/schema.json` | v1 数据形状（JSON Schema 2020-12）；`x-hanamesh` 列出服务名、版本、必需/可选方法、`signRequest` canonical 与握手顺序 |
+| `hanamesh-core/contract/fixtures` | 提供方 fixture `createCoreProviderFixture()`、消费方参考 fixture `createCoreConsumerFixture()`、13 项握手矩阵 `coreHandshakeCases()`；全部带 `CORE_FIXTURE_LABEL`，不是产品提供方 |
+| `hanamesh-core/contract/suite` | `runCoreProviderSuite(provider)`、`runCoreConsumerSuite(consumer)`、`validateCoreValue(def, value)` |
+| bin `hanamesh-core-contract-suite` | 在已安装的包里对真实 `SessionController.service`、提供方 fixture、参考消费方跑套件；`--consumer <file>#<export>` 再跑你的接受函数 |
+
+### 握手
+
+`checkCoreService(value, accept = ['1'])` 对每个输入只有一个结果，顺序固定：
+
+1. `undefined`/`null` → `{status:'absent', reason:'CORE_ABSENT'}`
+2. 非对象 → `{status:'incompatible', reason:'CORE_NOT_OBJECT'}`
+3. `protocolVersion` 不在 `accept` → `{status:'incompatible', reason:'CORE_PROTOCOL_UNSUPPORTED', provided, supported}`
+4. 缺必需方法 → `{status:'incompatible', reason:'CORE_METHOD_MISSING', missing}`
+5. 否则 `{status:'present', protocolVersion, optional}`（`optional` 只列确实是函数的可选方法）
+
+不做静默兼容：版本不符或缺方法一律 `incompatible`。`absent / incompatible / present` 三态与 Usage 现有 `duckCore` 一致。
+
+### 提供方套件检查项
+
+`handshake.present`、`handshake.rejects-other-version`、`surface.closed`（不多暴露成员）、`identity.deviceId`、`identity.publicKey`、`sign.ed25519`（64 字节且可用 `getPublicKey` 验签、不改输入）、`signRequest.canonical`（四个头；`METHOD|pathname|unixMilliseconds|nonce|hex(sha256(body))` 验签；去掉 query/fragment）、`signRequest.rejects-invalid`、`consent.state`、`consent.subscribe`（订阅不回放、经提供方自己的写路径改一次只通知一次、取消后不再通知、结束恢复原值）、`session.schema`、`serverOrigin`、`health.schema`。
+
+### 消费方套件
+
+消费方给出接受函数 `accept(value) → {status, reason?}`，对 13 项握手矩阵逐项给出与 `checkCoreService` 相同的 `status`（给了 `reason` 时也要相同）。
+
+### 版本规则
+
+只加可选成员 = 小版本，仍是 `'1'`，加进 `CORE_OPTIONAL_METHODS` 与 schema；删除、改名、改语义 = `'2'`，按合约卡批次同步所有消费方后发布。

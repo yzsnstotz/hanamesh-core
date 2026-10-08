@@ -30,6 +30,17 @@ const {INITIAL_CORE_SNAPSHOT} = await import(pathToFileURL(join(packageRoot, 'li
 let value = structuredClone(INITIAL_CORE_SNAPSHOT);
 const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, {read: () => value, publish: async next => { value = next; }, close: async () => undefined});
 assert.deepEqual(Object.keys(controller.service).sort(), ['protocolVersion', 'getDeviceId', 'getPublicKey', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin', 'getHealth'].sort());
+assert.deepEqual(contract.checkCoreService(controller.service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth']});
+const {runCoreProviderSuite, runCoreConsumerSuite} = await import('hanamesh-core/contract/suite');
+const {createCoreProviderFixture, createCoreConsumerFixture} = await import('hanamesh-core/contract/fixtures');
+const {default: schema} = await import('hanamesh-core/contract/schema.json', {with: {type: 'json'}});
+assert.equal(schema['x-hanamesh'].protocolVersion, '1');
+for (const result of [
+  await runCoreProviderSuite({label: 'packed SessionController.service', service: controller.service, setConsent: state => controller.setConsent(state)}),
+  await runCoreProviderSuite(createCoreProviderFixture()),
+  await runCoreConsumerSuite(createCoreConsumerFixture()),
+]) assert.equal(result.ok, true, JSON.stringify(result.results.filter(row => !row.ok)));
+await access(join(packageRoot, 'lib/contract-cli.js'));
 await controller.dispose();
 const packedLib = await readFile(join(packageRoot, 'lib/dsh.mjs'), 'utf8');
 assert.doesNotMatch(packedLib, /from ['"]hanamesh-usage|from ['"]@hanamesh\/dsh-app-host|import\(['"]hanamesh-usage/);
