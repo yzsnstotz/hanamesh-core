@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hanamesh-core/contract/hanamesh-core.v1.schema.json",
+  "title": "hanameshCore service contract, protocol v1",
+  "description": "Data shapes returned by the Cordis service `hanameshCore`. Methods are listed under x-hanamesh; they are functions and cannot be expressed in JSON Schema. Source of truth: hanamesh-core src/contract.ts and docs/CORE_CONTRACT.md.",
+  "x-hanamesh": {
+    "service": "hanameshCore",
+    "protocolVersion": "1",
+    "requiredMethods": ["getDeviceId", "sign", "signRequest", "getConsent", "onConsentChange", "getSession", "getServerOrigin"],
+    "optionalMethods": ["getPublicKey", "getHealth"],
+    "handshake": {
+      "order": ["CORE_ABSENT", "CORE_NOT_OBJECT", "CORE_PROTOCOL_UNSUPPORTED", "CORE_METHOD_MISSING"],
+      "statuses": ["present", "absent", "incompatible"]
+    },
+    "methods": {
+      "getDeviceId": {"returns": "#/$defs/DeviceId", "note": "available right after apply; does not depend on registration"},
+      "getPublicKey": {"returns": "#/$defs/PublicKey", "note": "raw 32-byte Ed25519 key, base64url"},
+      "sign": {"input": "Uint8Array", "returns": "Uint8Array(64)", "note": "Ed25519 over the given bytes; synchronous; the private key never leaves the process"},
+      "signRequest": {"input": "#/$defs/RequestSignatureInput", "returns": "Promise<#/$defs/DeviceAuthHeaders>", "canonical": "METHOD|pathname|unixMilliseconds|nonce|hex(sha256(body || ''))", "note": "METHOD upper-cased; pathname is path without ?query or #fragment; invalid input rejects"},
+      "getConsent": {"returns": "#/$defs/ConsentState"},
+      "onConsentChange": {"input": "(state: ConsentState, changedAt: ISO-8601 string) => void", "returns": "() => void", "note": "does not replay the current value on subscribe; the returned function unsubscribes"},
+      "getSession": {"returns": "#/$defs/SessionSnapshot", "note": "observation, may be stale; not proof of authorization"},
+      "getServerOrigin": {"returns": "#/$defs/ServerOrigin", "note": "null = offline"},
+      "getHealth": {"returns": "#/$defs/HealthSnapshot"}
+    },
+    "notExposed": ["private key", "PKCS8", "token", "cookie", "transport instance", "storage-domain write interface"]
+  },
+  "$defs": {
+    "DeviceId": {"type": "string", "minLength": 1},
+    "PublicKey": {"type": "string", "pattern": "^[A-Za-z0-9_-]{43}$"},
+    "ConsentState": {"enum": ["granted", "withheld"]},
+    "ServerOrigin": {"type": ["string", "null"], "minLength": 1},
+    "RequestSignatureInput": {
+      "type": "object",
+      "required": ["method", "path", "body"],
+      "properties": {
+        "method": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "pattern": "^/"},
+        "body": {"description": "Uint8Array or null; binary, not representable in JSON"}
+      }
+    },
+    "DeviceAuthHeaders": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x-hm-device-id", "x-hm-timestamp", "x-hm-nonce", "x-hm-signature"],
+      "properties": {
+        "x-hm-device-id": {"type": "string", "minLength": 1},
+        "x-hm-timestamp": {"type": "string", "pattern": "^[0-9]{13,}$"},
+        "x-hm-nonce": {"type": "string", "minLength": 1},
+        "x-hm-signature": {"type": "string", "pattern": "^[A-Za-z0-9_-]{86}$"}
+      }
+    },
+    "SessionSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocolVersion", "deviceId", "registration", "principalId", "bound", "serverReachable", "checkedAt", "reason"],
+      "properties": {
+        "protocolVersion": {"const": "1"},
+        "deviceId": {"$ref": "#/$defs/DeviceId"},
+        "registration": {"enum": ["unregistered", "registered", "failed"]},
+        "principalId": {"type": ["string", "null"]},
+        "bound": {"type": ["boolean", "null"]},
+        "serverReachable": {"type": ["boolean", "null"]},
+        "checkedAt": {"type": ["string", "null"]},
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "HealthSnapshot": {
+      "type": "object",
+      "required": ["revision", "mode", "components"],
+      "properties": {
+        "revision": {"type": "integer", "minimum": 0},
+        "mode": {"enum": ["normal", "restricted", "blocked", "repair"]},
+        "components": {"type": "array"},
+        "fault": {"type": "string"}
+      }
+    }
+  }
+}

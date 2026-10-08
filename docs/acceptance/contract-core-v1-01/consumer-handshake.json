@@ -1,0 +1,93 @@
+{
+ "schemaProtocol": "1",
+ "CORE_PROTOCOL_VERSION": "1",
+ "match": {
+  "status": "present",
+  "protocolVersion": "1",
+  "optional": [
+   "getPublicKey",
+   "getHealth"
+  ]
+ },
+ "missingMethod": {
+  "status": "incompatible",
+  "reason": "CORE_METHOD_MISSING",
+  "missing": [
+   "signRequest"
+  ]
+ },
+ "unsupportedVersion": {
+  "status": "incompatible",
+  "reason": "CORE_PROTOCOL_UNSUPPORTED",
+  "provided": "2",
+  "supported": [
+   "1"
+  ]
+ },
+ "consumerDeclaresOnly2": {
+  "status": "incompatible",
+  "reason": "CORE_PROTOCOL_UNSUPPORTED",
+  "provided": "1",
+  "supported": [
+   "2"
+  ]
+ },
+ "absent": {
+  "status": "absent",
+  "reason": "CORE_ABSENT"
+ },
+ "matrix": [
+  {
+   "id": "handshake.match",
+   "ok": true
+  },
+  {
+   "id": "handshake.absent-undefined",
+   "ok": true
+  },
+  {
+   "id": "handshake.absent-null",
+   "ok": true
+  },
+  {
+   "id": "handshake.not-object",
+   "ok": true
+  },
+  {
+   "id": "handshake.protocol-2",
+   "ok": true
+  },
+  {
+   "id": "handshake.protocol-missing",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-getDeviceId",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-sign",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-signRequest",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-getConsent",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-onConsentChange",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-getSession",
+   "ok": true
+  },
+  {
+   "id": "handshake.missing-getServerOrigin",
+   "ok": true
+  }
+ ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.2.0-rc.54",
+  "version": "0.2.0-rc.55",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -14,14 +14,27 @@
       "types": "./lib/contract.d.ts",
       "default": "./lib/contract.js"
     },
+    "./contract/fixtures": {
+      "types": "./lib/contract-fixtures.d.ts",
+      "default": "./lib/contract-fixtures.js"
+    },
+    "./contract/suite": {
+      "types": "./lib/contract-suite.d.ts",
+      "default": "./lib/contract-suite.js"
+    },
+    "./contract/schema.json": "./contract/hanamesh-core.v1.schema.json",
     "./client": {
       "types": "./lib/client/index.d.ts",
       "default": "./lib/client.js"
     },
     "./package.json": "./package.json"
   },
+  "bin": {
+    "hanamesh-core-contract-suite": "./lib/contract-cli.js"
+  },
   "files": [
     "lib",
+    "contract",
     "types",
     "profile",
     "profile.schema.json",
@@ -42,6 +55,7 @@
     "build:offline": "node scripts/build.mjs --offline",
     "test": "node --test --test-reporter=tap test/*.test.mjs",
     "test:mutations": "node scripts/mutation.mjs",
+    "test:contract": "node lib/contract-cli.js",
     "test:crash": "node --test --test-reporter=tap test/crash.test.mjs",
     "verify:inputs": "node scripts/verify-inputs.mjs",
     "preflight": "node scripts/preflight.mjs",

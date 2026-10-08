@@ -1,0 +1,2 @@
+{"event":"check_package_ok","version":"0.2.0-rc.55","dependencies":0}
+{"event":"pack_verified","sha256":"89d914d0c4503f4b467790f13ba096abf587e4037f2106a98cf69c7f3057421d","entries":106,"artifactConsumer":true}
