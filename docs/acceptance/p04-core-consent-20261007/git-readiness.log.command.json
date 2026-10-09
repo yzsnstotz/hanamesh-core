@@ -1,0 +1,15 @@
+{
+  "log": "git-readiness.log",
+  "argv": [
+    "bash",
+    "/Users/yzliu/work/Docs/Projects/hanamesh/tools/git-readiness.sh",
+    "hanamesh-core"
+  ],
+  "exit_code": 0,
+  "environment": {
+    "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/home",
+    "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/dsh-home",
+    "npm_config_userconfig": "/dev/null",
+    "inherited_credentials": false
+  }
+}

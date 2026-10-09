@@ -1,0 +1,32 @@
+{
+  "recorded_at_utc": "2026-10-07T13:35:45Z",
+  "card": "P04-CORE-CONSENT-01",
+  "worker": "01a115ed-505d-78e3-a66e-7090668f028b",
+  "command": [
+    "python3",
+    "/Users/yzliu/work/Docs/skills/_shared/bluemap/bluemap.py",
+    "gui-lock",
+    "acquire",
+    "--project",
+    "hanamesh",
+    "--card",
+    "P04-CORE-CONSENT-01",
+    "--thread",
+    "01a115ed-505d-78e3-a66e-7090668f028b"
+  ],
+  "native_result": {
+    "chunk_id": "a16133",
+    "wall_time_seconds": 0.00001175,
+    "exit_code": 1,
+    "original_token_count": 45,
+    "output": "BUSY held by /Users/yzliu/work/projects/hana-world-mvp F-DESKTOP-FLAT-WORLD-01 thread 01a11643-26e0-7b40-8f39-08a0d62bdf2b since 2026-10-07T13:29:59Z — wait; do not take it over\n"
+  },
+  "attempt_count": 1,
+  "gui_acquired": false,
+  "gui_actions": 0,
+  "desktop_pid_observed": 71450,
+  "desktop_version": "0.2.0-rc.19",
+  "desktop_source": "7b61dd20a429c50d659d8d554aef415e545ba45d",
+  "launch_reference": "/Users/yzliu/work/Docs/Projects/hanamesh/bluemap/cards/P06-DESKTOP-INSTALL-01/evidence/20261007-rc19-normal-supply/LAUNCH.json",
+  "scope": "GLOBAL_GUI_RESOURCE_BLOCKED; NO_RC19_UI_OBSERVATION"
+}

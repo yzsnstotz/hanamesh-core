@@ -1,0 +1,33 @@
+Window: "DeepSeek Harness", App: Google Chrome.
+0 standard window DeepSeek Harness - Google Chrome - nobuaki, URL: 127.0.0.1:62787/?card=P04-CORE-CONSENT-01, Secondary Actions: Raise
+	1 container DeepSeek Harness - Google Chrome - nobuaki, URL: 127.0.0.1:62787/?card=P04-CORE-CONSENT-01
+		2 container
+			3 toolbar
+				4 button Back
+				5 button (disabled) Forward
+				6 button Reload
+				7 container
+					8 pop up button View site information
+					9 text field (settable) Address and search bar, Value: 127.0.0.1:62787/?card=P04-CORE-CONSENT-01, Placeholder: Search Google or type a URL
+					10 button Install DeepSeek Harness
+					11 button Bookmark this tab
+				12 container
+					13 pop up button OKX Wallet
+Has access to this site
+					14 pop up button Authenticator App
+Wants access to this site
+					15 pop up button Extensions
+				16 button Open Gemini in Chrome
+				17 button nobuaki
+				18 pop up button New Chrome available
+			19 container
+				20 scroll area
+					21 HTML content DeepSeek Harness, URL: 127.0.0.1:62787/?card=P04-CORE-CONSENT-01
+						22 container 添加一个 API Key 开始使用
+							23 heading 添加一个 API Key 开始使用, Value: 2
+								24 text 添加一个 API Key 开始使用
+							25 text 配置 DeepSeek 官方模型，即可开始使用。
+							26 text API 密钥
+							27 secure text field (settable) API 密钥, Placeholder: 输入 API 密钥
+							28 button 稍后配置
+							29 button (disabled) 保存并继续

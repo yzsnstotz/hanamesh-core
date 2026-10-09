@@ -1,0 +1,6 @@
+The following is a diff from the previous accessibility tree for Window: "DeepSeek Harness" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~								100 checkbox 允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）, Value: 0
+~								101 text 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 账号 未绑定：绑定后网站才能把本设备的贡献记到你的账号
+~								106 text 贡献事件 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。 未开启数据授权，本设备不上报事件，因此没有分
+~								107 button 刷新事件
+The focused UI element is 21 HTML content DeepSeek Harness, URL: 127.0.0.1:62787/

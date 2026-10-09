@@ -1,0 +1,3 @@
+The following is a diff from the previous accessibility tree for Window: "DeepSeek Harness" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~								101 text 上次读取：已关闭 授权保存未确认：CORE_UPSTREAM_UNAVAILABLE。请重新切换授权，或重新进入页面读取当前状态。 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 账号 未绑定：绑定后网站才能把本设备的贡献记到你的账号
+The focused UI element is 21 HTML content DeepSeek Harness, URL: 127.0.0.1:62787/

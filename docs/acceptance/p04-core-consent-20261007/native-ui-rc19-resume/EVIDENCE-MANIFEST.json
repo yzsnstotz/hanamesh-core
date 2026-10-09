@@ -1,0 +1,62 @@
+{
+  "01-settings-first-step.ax.txt": {
+    "sha256": "2402c76bc4d47c8e6474559c4d2b252c334309794c8846e842285e47524faf8b",
+    "bytes": 21811
+  },
+  "01-settings-first-step.png": {
+    "sha256": "ad5cebe259de3f52bd527cbe1aae0a375454c59b95041eaae764c7105437ddcf",
+    "bytes": 403402
+  },
+  "02-core-default.ax.txt": {
+    "sha256": "304e960e28bcf1c74471a567bd52ca1620eef8de3cd426e961ac923166392d28",
+    "bytes": 2292
+  },
+  "02-core-default.png": {
+    "sha256": "fa45ac60f69c0582dba276ed8a39d50c8e330e3cf72cab10a861dcd672a363c9",
+    "bytes": 317911
+  },
+  "03-granted.ax.txt": {
+    "sha256": "510da15ef3ba475b0593a62a1f60f6d2b55f6e03a1ecf4506de9a3c4b3f54e12",
+    "bytes": 2311
+  },
+  "03-granted.png": {
+    "sha256": "cb7c4a766f23ce39aae45acf4b188e382819bcd5ffbf98500c988aec087f7374",
+    "bytes": 317063
+  },
+  "04-granted-reentry.ax.txt": {
+    "sha256": "4279d91f40af9e959bbb72680a887d474961d7e95032c051a5597dbafdfba628",
+    "bytes": 2292
+  },
+  "04-granted-reentry.png": {
+    "sha256": "aa3ed9fc3ad66dcbabf49df25ee60d5db424f272f532dd935e8b09f456c94971",
+    "bytes": 306275
+  },
+  "05-withdrawn.ax.txt": {
+    "sha256": "1a6b9dd4cce55c007548f53e0b31432736c888d3f8ce93d17cbb9948fd2890a4",
+    "bytes": 2325
+  },
+  "05-withdrawn.png": {
+    "sha256": "b398d357773bcf7a6b3f91976d9adfcc1e1aca6fd1cb2a8d71bf2aaee81bd65a",
+    "bytes": 318492
+  },
+  "06-withdrawn-reentry.ax.txt": {
+    "sha256": "b6e93c38500c1fc5f04f11e7ee58dce8d0198dc262834446e861ee91bc31e410",
+    "bytes": 2294
+  },
+  "06-withdrawn-reentry.png": {
+    "sha256": "606b9e8ecb4d77103275dea9f440e85fe03457a6249862147a6a2a2c01403fa4",
+    "bytes": 318727
+  },
+  "gui-native-receipts.json": {
+    "sha256": "777a33bc694b03aaeb849137697ddb1ec2568654271c3a3d7e60e2c8a6019fae",
+    "bytes": 1022
+  },
+  "installed-readback.json": {
+    "sha256": "8e57f4b6bc94ed13fb91d15c82f53d267ef6a960e712f8c73c82d60ce2f18b7c",
+    "bytes": 445
+  },
+  "ui-observations.json": {
+    "sha256": "21c20d3b695a10ba52814c183b0dc235a8a47fdc0fc3e991326863d949a3e995",
+    "bytes": 1923
+  }
+}

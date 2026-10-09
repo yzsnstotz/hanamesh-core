@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "pnpm",
+    "check"
+  ],
+  "exit_code": 0,
+  "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/home",
+  "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/dsh-home",
+  "inherited_credentials": false
+}

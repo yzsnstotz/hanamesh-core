@@ -1,0 +1,16 @@
+{
+  "tag": "v0.2.0-rc.55",
+  "tagCommit": "c2c27e89d2af495d2e2b8b2641a1a155f56f13d3",
+  "functionalVersion": "0.2.0-rc.56",
+  "sha256": "7342a2ab95b78a83d74a4c927039b4998f0dd76f3c7e8ed9b09c31700e642e28",
+  "unchangedContractFiles": {
+    "src/contract.ts": true,
+    "src/contract-suite.ts": true,
+    "src/contract-fixtures.ts": true,
+    "src/contract-cli.ts": true,
+    "contract/hanamesh-core.v1.schema.json": true,
+    "lib/contract.js": true,
+    "lib/contract-suite.js": true,
+    "lib/contract-fixtures.js": true
+  }
+}

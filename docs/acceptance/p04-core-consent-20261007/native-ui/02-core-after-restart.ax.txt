@@ -1,0 +1,36 @@
+Window: "HanaMesh", App: HanaMesh.
+0 standard window HanaMesh, Secondary Actions: Raise
+	1 container HanaMesh
+		2 container
+			3 HTML content HanaMesh, URL: 127.0.0.1:58619/
+				4 container HanaMesh 设置
+					5 container
+						6 button 返回
+						7 heading HanaMesh 设置, Value: 1
+							8 text HanaMesh 设置
+						9 button 关闭 HanaMesh 设置
+					10 container
+						11 heading HanaMesh, Value: 2
+							12 text HanaMesh
+						13 text Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。 设备身份 设备 id：CF6fHQsw…　注册：已注册 数据授权
+						14 checkbox 允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）, Value: 0
+						15 text 当前：已关闭 撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。 账号 未绑定：绑定后网站才能把本设备的贡献记到你的账号
+						16 button 去网站绑定
+						17 button 邮箱绑定
+						18 text 我的Hana 未开启数据授权，本设备不上报事件，因此没有分 分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。
+						19 button 去网站
+						20 text 贡献事件 本设备近 90 天贡献事件 活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。 未开启数据授权，本设备不上报事件，因此没有分
+						21 button 刷新事件
+						22 text 本设备贡献累计 install 0 · open 0 · use 0 · uninstall 0　窗口：近 90 天 HanaMesh套件 使用记录：版本不匹配 0.2.0-rc.13 ≠ 0.2.0-rc.10 应用容器：版本不匹配 0.2.0-rc.7 ≠ 0.2.0-rc.2
+						23 button 重新检查
+						24 text 关于 hanamesh-core 0.2.0-rc.53 · DSH 0.2.0-rc.2
+						25 button 去网站
+	26 close button
+	27 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	28 minimize button
+29 menu bar
+	30 HanaMesh
+	31 File
+	32 Edit
+	33 Window
+	34 Developer

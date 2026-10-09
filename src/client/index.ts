@@ -259,7 +259,7 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.55 · DSH 0.2.0-rc.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.2.0-rc.56 · DSH 0.2.0-rc.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "npm",
+    "install",
+    "--prefix",
+    "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/runtime",
+    "--registry=https://registry.npmjs.org/",
+    "--no-audit",
+    "--no-fund",
+    "@deepseek-ai/dsh@0.2.0-rc.2"
+  ],
+  "exit_code": 0,
+  "HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/home",
+  "DSH_HOME": "/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/web-rc56-20261008/dsh-home",
+  "inherited_credentials": false
+}

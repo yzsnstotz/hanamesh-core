@@ -1,0 +1,328 @@
+Window: "HanaMesh", App: HanaMesh.
+0 standard window HanaMesh, Secondary Actions: Raise
+	1 container HanaMesh
+		2 container
+			3 HTML content HanaMesh, URL: 127.0.0.1:64967/
+				4 container
+					5 button Collapse sidebar
+					6 button New session
+					7 container Global panels
+						8 button Plugins
+					9 text Workspaces
+					10 button Search sessions
+					11 text field (settable) Search session names
+					12 button View options
+					13 button Add workspace
+					14 outline Sessions
+						15 row Default workspace
+							16 text Default workspace
+					17 button 市场
+					18 button 打开 HanaMesh 设置
+					19 pop up button Account menu
+					20 button Open right sidebar
+					21 container
+						22 text HanaMesh
+						23 pop up button Choose workspace
+						24 pop up button Standard mode, Help: Choose the agent preset for your new task
+						25 text entry area (settable) Describe what you want to build, / commands, @ files or sessions
+						26 pop up button Add files or run commands
+						27 button Access mode, current: Workspace Write
+						28 pop up button DeepSeek-V41-Flash
+						29 button (disabled) Send message
+					30 container
+						31 heading HanaMesh 市场, Value: 1
+							32 text HanaMesh 市场
+						33 button 关闭
+						34 container 安装目标开发小界面
+							35 heading 安装目标, Value: 2
+								36 text 安装目标
+							37 text 输入目录条目 ID 或包名，市场查询当前目录后确认安装。
+							38 container
+								39 text field (settable) Description: 目录条目 ID, Placeholder: itemId（可选）
+								40 text field (settable) Description: 包名, Placeholder: packageName（可选）
+								41 button 查看安装目标
+						42 search text field (settable) 搜索应用与插件
+						43 button 搜索
+						44 pop up button Description: 类别, Value: 全部
+							45 (selected) 全部
+						46 heading dsh-ui-wallpaper, Value: 3
+							47 text dsh-ui-wallpaper
+						48 text 用图片、GIF 或视频自定义网页界面背景，类似 Wallpaper Engine。
+						49 text 插件 · youzhoujiMrLiu · — · ui
+						50 button 安装
+						51 heading dsh-model-switch, Value: 3
+							52 text dsh-model-switch
+						53 text dsh plugin: flexible model switch for sub‑agent & plan execution. 为子代理和计划执行选择更合适的模型。
+						54 text 插件 · lincong1987 · — · model
+						55 button 安装
+						56 heading dsh-ATN, Value: 3
+							57 text dsh-ATN
+						58 text 面向 DeepSeek Harness 的自适应拓扑多智能体预设，提供点对点通信、共享白板、任务交接和实时网络可视化。
+						59 text 仅收录 · ff66ccff · — · workflow
+						60 text 仅收录，不可安装
+						61 heading dsh-lanmode, Value: 3
+							62 text dsh-lanmode
+						63 text 为 DeepSeek Harness 网页 UI 提供局域网与反向代理访问：在非 localhost 页面返回设置服务，补齐浏览器在纯 HTTP 下限制的 Web API，并可自行开启监听端口。
+						64 text 插件 · GooDAnDReaDY · 0.8.39 · remote
+						65 button 安装
+						66 heading dsh-cosplay, Value: 3
+							67 text dsh-cosplay
+						68 text 让 DeepSeek Harness 的 Agent 扮演任何角色：全局扮演开关、酒馆 v2 角色卡（JSON 导入导出）、中立/角色化思考切换，内置 skill 支持一句话生成角色卡。
+						69 text 插件 · ZelinW1 · 0.5.1 · fun
+						70 button 安装
+						71 heading dsh-plugin-ops#dsh-plugin-ops-bundle, Value: 3
+							72 text dsh-plugin-ops#dsh-plugin-ops-bundle
+						73 text dsh 插件树的启动前体检与修复：七条静态扫描规则、启动失败后的故障归因、白名单内的可逆修复，以及带插件行管理面板和历次故障 RAG 知识库。
+						74 text 插件 · f-infinite-z · 0.16.1 · market
+						75 button 安装
+						76 heading dsh-codex-pet, Value: 3
+							77 text dsh-codex-pet
+						78 text DSH Web 页内宠物，提供多会话任务提醒，可打开任务、停止当前轮次，并处理受支持的审批和问答请求。
+						79 text 插件 · MichengAI · 0.1.13 · fun
+						80 button 安装
+						81 heading dsh-vps-manager, Value: 3
+							82 text dsh-vps-manager
+						83 text 通过 SSH 密钥登录管理 VPS：21 条不走模型的 /vps- 命令（查看状态、按菜谱安装并先出计划再用 /vps-yes 确认、重启并等机器回来），对话里的终端（xterm.js + ssh -tt，可运行菜单脚本等交互程序），5 个按风险分级确认的 agent 工具，改文件自动备份与还原、改防火墙和 SSH 前设自动恢复，29 条内置菜谱，以及添加机器的设置页。
+						84 text 插件 · AIcivilization · 0.6.5 · remote
+						85 button 安装
+						86 heading dsh-lan-guard, Value: 3
+							87 text dsh-lan-guard
+						88 text 把官方 DSH Web UI 安全地开放到局域网：不改动 DSH 自身的回环绑定，另开一个带密码门禁、自签 HTTPS 与可逐个吊销的设备配对的反向代理端口，并提供手机扫码入口。
+						89 text 插件 · idoall · 0.6.0 · remote
+						90 button 安装
+						91 heading dsh-android, Value: 3
+							92 text dsh-android
+						93 text 在对话里直接操作 Android 设备——模拟器或 USB 手机，完全通过 adb 驱动：20 个 Agent 工具用于流式投屏、Gradle 构建运行、UI 树或 OCR 交互、logcat、进程与内存检查，并附带三键导航面板。
+						94 text 插件 · ZSeven-W · 0.1.0-rc.9 · remote
+						95 button 安装
+						96 heading dsh-wechat, Value: 3
+							97 text dsh-wechat
+						98 text 以进程内 Cordis 插件的形式，通过腾讯 iLink bot 协议把微信私聊桥接到 DeepSeek Harness——双向收发文本、图片、文件与语音，微信内 slash 命令经原生命令注册中心解析（DSH 新增命令零改动可用），支持在微信端处理审批与提问，并提供 send_wechat 工具主动推送。
+						99 text 插件 · pan17 · 0.9.7 · remote
+						100 button 安装
+						101 heading orbis#orbis-remote-dsh, Value: 3
+							102 text orbis#orbis-remote-dsh
+						103 text 提供 DeepSeek Harness 远程控制功能的原生 iOS/Android 应用，支持端到端加密、工作区浏览和会话实时更新等。
+						104 text 插件 · icodesign · 0.5.0 · remote
+						105 button 安装
+						106 heading dsh-time-machine, Value: 3
+							107 text dsh-time-machine
+						108 text 为 DeepSeek Harness 提供智能检查点、工作区安全防护和即时回滚。
+						109 text 插件 · GooDAnDReaDY · 0.1.27 · security
+						110 button 安装
+						111 heading dsh-plugin-manager, Value: 3
+							112 text dsh-plugin-manager
+						113 text 插件管理器与救砖中心：按必要程度分组启停、多更新源（npm / 插件超市 / GitHub）、浏览器下载优先与目录自动安装、P2P 兜底、启动前自检与坏包隔离。
+						114 text 插件 · nonentity303 · 0.9.1 · market
+						115 button 安装
+						116 heading dsh-ths-holdings, Value: 3
+							117 text dsh-ths-holdings
+						118 text 悬浮卡片，自动同步同花顺投资账本的真实持仓盈亏，显示今日盈亏、上证指数和当日走势图，无需手动添加股票。
+						119 text 插件 · PM25000 · 0.2.1 · fun
+						120 button 安装
+						121 heading dsh-auth-gate, Value: 3
+							122 text dsh-auth-gate
+						123 text DSH 网页端登录门插件：账号口令或共享令牌认证、会话 cookie、登录限速，附用户管理 CLI（0.4.1 起声明 dsh.bundle manifest，`dsh plugin add` 一键挂载）。
+						124 text 插件 · TecFancy · 0.17.0 · security
+						125 button 安装
+						126 heading dsh-pet#dsh-pet, Value: 3
+							127 text dsh-pet#dsh-pet
+						128 text DSH Web UI 桌面宠物：25 个透明动画、屏幕漫游、点击反应与拖拽，附可复现的素材生成链。
+						129 text 插件 · PC2005-cloud · 0.3.6 · fun
+						130 button 安装
+						131 heading dsh-login, Value: 3
+							132 text dsh-login
+						133 text 为 DSH Web 界面提供多用户登录网关：首次访问创建管理员账户，管理员在 GUI 设置面板中添加和管理用户，普通用户只能看到自己的会话，未登录访问重定向到 /login。
+						134 text 插件 · islibaodong · 0.3.1 · security
+						135 button 安装
+						136 heading dsh-livechat, Value: 3
+							137 text dsh-livechat
+						138 text 给 DSH Web 对话区叠加 B 站风格弹幕：按 agent 事件生成滚动/顶部/底部三轨弹幕，三套预设包、可选 LLM 生成吐槽、可拖动控制球、分会话弹幕池与历史回放，以及完整设置卡。
+						139 text 插件 · huashenglian · 0.6.9 · fun
+						140 button 安装
+						141 heading dsh-diff-approval, Value: 3
+							142 text dsh-diff-approval
+						143 text DeepSeek Harness 的待处理改动审查：每次 edit/write/str_replace_editor 改动都会自动汇总到文件列表，可对单个差异块、选区内的多块或整个文件执行保留/回退，支持撤销重做。还能导入工作区的版本控制改动，以单栏或左右对照视图展示差异，并提供亦能保留/回退差异的 Markdown 预览、文件内搜索、差异块跳转与可复制的行号引用；差异数据持久化存储，重启后可继续审查。
+						144 text 插件 · 9087 · 0.31.0 · git
+						145 button 安装
+						146 heading dsh-code-review, Value: 3
+							147 text dsh-code-review
+						148 text 提供 /review、/review-status 和 /review-cancel，用独立原生子 Agent 审查所选 Git 范围（基准分支、未提交更改、某次提交或自定义要求），并把发现报告返回当前会话；报告语言跟随宿主 locale，支持中英文。
+						149 text 插件 · MichengAI · 0.1.11 · git
+						150 button 安装
+						151 heading dsh-notify, Value: 3
+							152 text dsh-notify
+						153 text 带可折叠状态通知、提示音与会话跳转的页内任务通知插件。
+						154 text 插件 · idoall · 0.4.3 · notify
+						155 button 安装
+						156 heading better-dsh#better-dsh, Value: 3
+							157 text better-dsh#better-dsh
+						158 text 能胜任严肃编程任务的 dsh。（Tools x Schemas）^REPL。`skill://`，`ctx://`，`agent://`，`dvc://`，`dsh://`，IPython REPL，Context as Variables，抗压缩可回溯、完整上下文重构。`hash-edit`、`dvc://browser`、subagent as function、workflow as function。
+						159 text 插件 · pgmi-builds · 0.2.5-e · dev
+						160 button 安装
+						161 heading tongflow#dsh-tongflow, Value: 3
+							162 text tongflow#dsh-tongflow
+						163 text 基于 TongFlow 的“片场”插件，用于图片、配音、音乐与视频制作：agent 为每个资产生成 TongFlow 工作流文件（.tongflow.json）并通过 TongFlow 插件执行，内嵌工作流画布，按镜头/角色/take 组织项目，附漫剧模板；以 @tongflow 开头的会话进入 Studio 界面。
+						164 text 插件 · tong-io · 0.8.4 · workflow
+						165 button 安装
+						166 heading dsh-agent-studio, Value: 3
+							167 text dsh-agent-studio
+						168 text 可视化地自定义配置 Agent 的提示词、工具、可见技能、子代理与备用模型，把它们编成一支团队。不写宿主的任何预设文件。
+						169 text 插件 · thissensen · 0.1.5 · workflow
+						170 button 安装
+						171 heading dsh-gitea, Value: 3
+							172 text dsh-gitea
+						173 text 为 DeepSeek Harness 集成 Gitea 与 Forgejo，提供 issue、拉取请求和 worktree 工具及 Git 状态芯片。
+						174 text 插件 · GooDAnDReaDY · 0.7.23 · git
+						175 button 安装
+						176 heading dsh-update-checker, Value: 3
+							177 text dsh-update-checker
+						178 text DeepSeek Harness 主程序与插件更新管理：对主程序与每个已装插件做 npm/GitHub Release 双源 semver 比对，GUI 横幅按系统语言（中/英）列出可更新项；一键更新——主程序自动备份、完整性校验、失败回滚，插件经临时目录安装不碰其它包；更新后看门狗自动重启服务。「检查更新」设置页提供逐插件版本状态灯、实时更新进度与横幅/通知开关。
+						179 text 插件 · Airmetro · 1.7.1 · dev
+						180 button 安装
+						181 heading dsh-im-connect, Value: 3
+							182 text dsh-im-connect
+						183 text 把微信、企业微信、钉钉、飞书、Lark、QQ、Telegram 接到本机 DeepSeek Harness，每个 IM 聊天对应一条独立工作区频道。
+						184 text 插件 · MichengAI · 0.1.64 · notify
+						185 button 安装
+						186 heading dsh-im, Value: 3
+							187 text dsh-im
+						188 text 通过二维码或机器人凭据将 IM 机器人接入 DeepSeek Harness（支持飞书、微信、钉钉、企业微信、QQ、Slack、Telegram、Discord 和 WhatsApp 共 9 种渠道）。
+						189 text 插件 · xmanrui · 4.37.0 · notify
+						190 button 安装
+						191 heading dsh-simplify, Value: 3
+							192 text dsh-simplify
+						193 text 提供 /simplify 命令，让 Agent 在选定的 Git 变更范围内简化代码，支持暂存变更、提交及未跟踪文件。
+						194 text 插件 · MichengAI · 0.1.14 · dev
+						195 button 安装
+						196 heading dsh-worktree-space, Value: 3
+							197 text dsh-worktree-space
+						198 text Worktree Space：将一个可包含多个 Git 仓库的工作区任务放进独立的任务空间目录——参与的每个仓库使用同一个任务分支各开一个 worktree；空间自动注册为 DSH 工作区，会话直接在其中开工，多个任务并行推进、互不干扰。收尾时可合并回各仓库目标分支、移除 worktree，并把 Git 未跟踪的文件归档到指定目录；结束任务时可选把未提交的变更和合并冲突交给 agent 处理。
+						199 text 插件 · kangtsang · 1.2.1 · git
+						200 button 安装
+						201 heading dsh-issue-reporter, Value: 3
+							202 text dsh-issue-reporter
+						203 text 收集并脱敏 DSH 运行诊断信息，然后向 GitHub 或 Gitea 提交结构化问题报告。
+						204 text 插件 · GooDAnDReaDY · 0.1.13 · dev
+						205 button 安装
+						206 heading dsh-agent-team, Value: 3
+							207 text dsh-agent-team
+						208 text 给 DSH 一个可长期协作的持久 Agent 团队：Agent 是持久身份，Workspace 按项目组织，Channel 承载职责分派，Task Thread 串联多个 session agent 协作推进。
+						209 text 插件 · wowyuarm · 0.2.1 · workflow
+						210 button 安装
+						211 heading dsh-skills-manager, Value: 3
+							212 text dsh-skills-manager
+						213 text 在设置里管理本地 DSH 技能，并只读查看公共 Agent 技能。
+						214 text 插件 · MichengAI · 1.1.10 · dev
+						215 button 安装
+						216 heading dsh-alert-sound, Value: 3
+							217 text dsh-alert-sound
+						218 text 为 dsh 网页界面提供声音/语音提醒：审批、提问、完成、错误各有独立音色，可选语音朗读。
+						219 text 插件 · Machine-126 · 0.3.16 · notify
+						220 button 安装
+						221 heading dsh-crew, Value: 3
+							222 text dsh-crew
+						223 text 从 Claude Code / Codex 派发任务给 DSH Agent：原生子代理进度、按能力分层预设的宿主内工作会话，以及为纯文本 Harness 提供视觉与图像生成的多模态桥。
+						224 text 插件 · ZSeven-W · 0.1.0-rc.13 · workflow
+						225 button 安装
+						226 heading dsh-qqbot, Value: 3
+							227 text dsh-qqbot
+						228 text 接入 QQ 官方机器人的 DeepSeek Harness 通道(tencent-connect/dsh-qqbot 功能增强 fork): 群/私聊与完整 agent 对话、表情包图库(自动打标+AI 斗图)、群管理(入群审批/禁言)、botplay 互动事件卡与翻页目录、用户扩展注册表(自定义斜杠命令与 QQ 工具)、定时唤醒、QQ 远程审批、悬浮球 dock Web UI。
+						229 text 插件 · gcry13067381632-jpg · 1.7.4 · notify
+						230 button 安装
+						231 heading dsh-skill-mcp-center, Value: 3
+							232 text dsh-skill-mcp-center
+						233 text DeepSeek Harness 技能与 MCP 管理中心：浏览并启停用户/项目技能，热增删改 MCP 服务器（免重启），侧边栏实时展示各服务器状态。
+						234 text 插件 · Max-Null · 0.6.0 · dev
+						235 button 安装
+						236 heading dsh-cc-ecosystem, Value: 3
+							237 text dsh-cc-ecosystem
+						238 text 运行时把 Claude Code 全家桶原样加载进 DSH：.claude/ 的技能、斜杠命令、规则、权限（deny/ask/allow）、子代理与 hooks，以及 Claude Code 插件（plugin.json / marketplace / 技能 / 代理 / MCP）——内存 IR 解析层，.claude 始终是唯一事实来源，零回写。六个可安装包：loader、skills、permissions、agents、hooks、mcp。
+						239 text 插件 · Bcy2020 · 0.3.4 · dev
+						240 button 安装
+						241 heading dsh-startup-command, Value: 3
+							242 text dsh-startup-command
+						243 text 在 dsh web 启动成功后运行用户自定义命令的 DeepSeek Harness Web 插件。
+						244 text 插件 · kagurazakayashi · 1.1.2 · workflow
+						245 button 安装
+						246 heading dsh-vision-bridge, Value: 3
+							247 text dsh-vision-bridge
+						248 text 将图片交给所选的视觉模型处理（自动改写、显式工具或混合模式），使纯文本聊天模型也能处理包含图片的对话。
+						249 text 插件 · GooDAnDReaDY · 0.6.13 · vision
+						250 button 安装
+						251 heading dsh-tts, Value: 3
+							252 text dsh-tts
+						253 text 在 DeepSeek Harness 网页 UI 中朗读智能体回复，采用服务商回退链（OpenAI、ElevenLabs、Google、Azure、Groq、Deepgram、OpenRouter、Edge、Piper、eSpeak），某个服务商失败或被限流时自动切换到下一个，而不是直接静音。
+						254 text 插件 · GooDAnDReaDY · 0.4.30 · voice
+						255 button 安装
+						256 heading dsh-mattpocock-skills-deck, Value: 3
+							257 text dsh-mattpocock-skills-deck
+						258 text 安装即自带mattpocock/skills v1.2.3的25个工程与效率技能，无需手动装技能。300亿token打造。本插件在原始技能之上提供10倍的开发效率。主力支持GitHub issue；Markdown为预览版；GitLab暂不支持。
+						259 text 插件 · FeatherHunter · 1.7.44 · skill
+						260 button 安装
+						261 heading dsh-notes-plugin#dsh-notes-plugin, Value: 3
+							262 text dsh-notes-plugin#dsh-notes-plugin
+						263 text DeepSeek Harness 的会话感知本地笔记：在 Apple Notes 风格浮窗里快速记录与选区摘录，由 LLM 自动分类主题，把约定类笔记自动注入系统提示，待办可携带召回上下文派发到活跃会话执行。
+						264 text 插件 · PPawnsir · 0.4.4 · workflow
+						265 button 安装
+						266 heading dsh-voice, Value: 3
+							267 text dsh-voice
+						268 text Web UI 语音输入：按停顿分段的听写与语音消息，各自拥有独立的服务商回退链（Deepgram、Groq、HuggingFace、本地 whisper.cpp 或 OpenAI 兼容接口）。
+						269 text 插件 · GooDAnDReaDY · 0.9.30 · voice
+						270 button 安装
+						271 heading logicprobe, Value: 3
+							272 text logicprobe
+						273 text 声称核查技能：将设计文档与计划中的每条声称对照代码库事实核验，行为类声称升级为状态机/数据模型逻辑原语验证，支持前后回归、领域约束与并发风险挖掘。
+						274 text 插件 · AmethystLuna · 0.8.1 · skill
+						275 button 安装
+						276 heading dsh-web-search-exa, Value: 3
+							277 text dsh-web-search-exa
+						278 text ctx.web 接缝的零配置 Exa 网页搜索提供方：无 API key 时走匿名 MCP 兜底，配 key 时走 REST 搜索。
+						279 text 插件 · TonyDua · 0.2.2 · browser
+						280 button 安装
+						281 heading dsh-wsl, Value: 3
+							282 text dsh-wsl
+						283 text DSH 的 WSL 工具：执行 Linux 命令、转换 Windows/WSL 路径、汇总 WSL 环境。
+						284 text 插件 · XINY11451 · 1.11.0 · wsl
+						285 button 安装
+						286 heading dsh-graph#dsh-graph-host, Value: 3
+							287 text dsh-graph#dsh-graph-host
+						288 text dsh 目标生命周期管理与可视化看板：目标、判据、执行、评审都在项目内跟踪，由 graph_* 工具驱动，会话视图内渲染二维泳道看板。
+						289 text 插件 · miuzel · 0.19.7 · workflow
+						290 button 安装
+						291 heading dsh-trellis, Value: 3
+							292 text dsh-trellis
+						293 text 为 DeepSeek Harness 打造的 Trellis 风格工作流：基于 agent/pre-step 的每轮速记注入、内置技能提供方，以及带 git 清洁度护栏的 DSH 原生任务与相位状态管理。
+						294 text 插件 · 1264459640 · 0.3.6 · workflow
+						295 button 安装
+						296 button 更多
+						297 heading 已安装, Value: 2
+							298 text 已安装
+						299 content list
+							300 container
+								301 AXListMarker • 
+								302 text 应用 · Vibe-Trading · @hanamesh/app-vibe-trading 0.2.0-rc.1 · 缺运行时
+							303 container
+								304 AXListMarker • 
+								305 text 插件 · @hanamesh/dsh-app-host 0.2.0-rc.7 · 已安装
+							306 container
+								307 AXListMarker • 
+								308 text 插件 · dsh-codex-subscription 2.5.2 · 已安装
+								309 button 卸载
+							310 container
+								311 AXListMarker • 
+								312 text 插件 · hanamesh-core 0.2.0-rc.54 · 已安装
+							313 container
+								314 AXListMarker • 
+								315 text 插件 · hanamesh-usage 0.2.0-rc.15 · 已安装
+	316 close button
+	317 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	318 minimize button
+319 menu bar
+	320 HanaMesh
+	321 File
+	322 Edit
+	323 Window
+	324 Developer
+
+The focused UI element is 3 HTML content HanaMesh, URL: 127.0.0.1:64967/

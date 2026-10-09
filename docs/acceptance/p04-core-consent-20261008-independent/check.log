@@ -1,0 +1,30 @@
+
+> hanamesh-core@0.2.0-rc.56 check /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight
+
+
+> hanamesh-core@0.2.0-rc.56 check:toolchain /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> hanamesh-devkit check-toolchain
+
+{"event":"toolchain_verified","node":"24.13.1","pnpm":"10.33.0","typescript":"5.9.3","nodeTypes":"24.13.4"}
+
+> hanamesh-core@0.2.0-rc.56 verify:inputs /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/verify-inputs.mjs
+
+{"event":"inputs_verified","hostApi":94,"srvIdentity":true,"semver":true}
+
+> hanamesh-core@0.2.0-rc.56 check:contracts /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts
+
+
+> hanamesh-core@0.2.0-rc.56 preflight /Users/yzliu/work/projects/hanamesh/hanamesh-core
+> node scripts/preflight.mjs
+
+{"event":"toolchain_verified","node":"24.13.1","pnpm":"10.33.0","typescript":"5.9.3","nodeTypes":"24.13.4"}
+{"command":"dsh --version","exit":1,"output":null,"error":null}
+{"command":"psql --version","exit":null,"output":null,"error":"ENOENT"}
+{"path":"~/work/projects/hanamesh/hanamesh-dsh-runtime","exists":false}
+{"path":"~/work/projects/hanamesh/hanamesh-ui-kit","exists":false}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/upstream","exists":false}
+{"path":"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/rt","exists":false}
+{"os":"darwin","arch":"arm64","userProfileAccessed":false,"userPort3080Accessed":false,"databaseAccessed":false}

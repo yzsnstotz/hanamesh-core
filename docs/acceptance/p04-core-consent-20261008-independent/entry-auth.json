@@ -1,0 +1,80 @@
+{
+  "officialAuthEnabled": true,
+  "freshAnonymousDenied": [
+    {
+      "host": "127.0.0.1",
+      "unauthenticatedStatus": 401,
+      "authenticatedRoots": [
+        {
+          "url": "http://127.0.0.1:62787/",
+          "status": 200,
+          "finalUrl": "http://127.0.0.1:62787/"
+        },
+        {
+          "url": "http://127.0.0.1:62787/",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:62787/?card=P04-CORE-CONSENT-01",
+          "status": 200
+        }
+      ],
+      "stateStatus": 200,
+      "consent": {
+        "state": "withheld",
+        "changedAt": "2026-10-08T09:07:12.764Z"
+      },
+      "stateTopKeys": [
+        "deviceId",
+        "publicKey",
+        "registration",
+        "consent",
+        "session",
+        "account",
+        "serverOrigin",
+        "websiteOrigin",
+        "health",
+        "components",
+        "contributions"
+      ]
+    },
+    {
+      "host": "localhost",
+      "unauthenticatedStatus": 401,
+      "authenticatedRoots": [
+        {
+          "url": "http://localhost:62787/",
+          "status": 200,
+          "finalUrl": "http://localhost:62787/"
+        },
+        {
+          "url": "http://localhost:62787/",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:62787/?card=P04-CORE-CONSENT-01",
+          "status": 200
+        }
+      ],
+      "stateStatus": 200,
+      "consent": {
+        "state": "withheld",
+        "changedAt": "2026-10-08T09:07:12.764Z"
+      },
+      "stateTopKeys": [
+        "deviceId",
+        "publicKey",
+        "registration",
+        "consent",
+        "session",
+        "account",
+        "serverOrigin",
+        "websiteOrigin",
+        "health",
+        "components",
+        "contributions"
+      ]
+    }
+  ],
+  "uiProof": "actual native Chrome CUA screenshots 01-11, HTTP is supplemental only"
+}

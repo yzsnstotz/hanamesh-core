@@ -1,0 +1,9 @@
+{
+  "profile": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/dsh-home/profiles/desktop",
+  "dependency": "file:/Users/yzliu/.cache/hanamesh-runs/P04-CORE-CONSENT-01/latest/hanamesh-core-0.2.0-rc.54.tgz",
+  "installed_path": "/Users/yzliu/.cache/hanamesh-runs/P06-DESKTOP-INSTALL-01/rc17-install-successor/fresh-client/dsh-home/profiles/desktop/node_modules/hanamesh-core",
+  "installed_version": "0.2.0-rc.54",
+  "byte_identical_files": 99,
+  "client_running_before_restart": 65365,
+  "observed_running_ui_version_before_restart": "0.2.0-rc.53"
+}
