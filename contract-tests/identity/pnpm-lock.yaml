@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hanamesh/server-identity':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11
-        version: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#17ba1181041b0b0789f7ffb6373c66e2abb34e77(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)
+        specifier: git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.2
+        version: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)
 
 packages:
 
@@ -117,17 +117,13 @@ packages:
   '@fastify/proxy-addr@5.1.1':
     resolution: {integrity: sha512-zv07Y9GEuDsJPegZoDFd4SDWaZOW8N2pa0GSrYmKpId/tjt1Hgo3BjZBVjdVpfVrHaA+Qv5jawtS2O50J5xM9g==}
 
-  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#17ba1181041b0b0789f7ffb6373c66e2abb34e77':
-    resolution: {commit: 17ba1181041b0b0789f7ffb6373c66e2abb34e77, repo: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git, type: git}
-    version: 0.2.0-rc.11
+  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526':
+    resolution: {commit: 93691f5cd863c1bc2ce8ed985197b774ed97e526, repo: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git, type: git}
+    version: 0.3.0-rc.2
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
     peerDependencies:
-      '@hanamesh/devkit': 0.1.0-rc.2
       fastify: 5.12.3
-    peerDependenciesMeta:
-      '@hanamesh/devkit':
-        optional: true
 
   '@noble/ciphers@1.3.0':
     resolution: {integrity: sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==}
@@ -174,8 +170,8 @@ packages:
   '@types/pg@8.15.6':
     resolution: {integrity: sha512-NoaMtzhxOrubeL/7UZuNTrejB4MPAJ0RpxZqXQf2qXuVlTPuG6Y8p4u9dKRaue4yjmC7ZhzVO2/Yyyn25znrPQ==}
 
-  abitype@1.1.0:
-    resolution: {integrity: sha512-6Vh4HcRxNMLA0puzPjM5GBgT4aAcFGKZzSgAXvuZ27shJP6NEpielTuqbBmZILR5/xd0PizkBGy5hReKz9jl5A==}
+  abitype@1.2.3:
+    resolution: {integrity: sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==}
     peerDependencies:
       typescript: '>=5.0.4'
       zod: ^3.22.0 || ^4.0.0
@@ -443,8 +439,8 @@ packages:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
 
-  ox@0.9.6:
-    resolution: {integrity: sha512-8SuCbHPvv2eZLYXrNmC0EC12rdzXQLdhnOMlHDW2wiCPLxBrOOJwX5L5E61by+UjTPOryqQiRSnjIKCI+GykKg==}
+  ox@0.14.29:
+    resolution: {integrity: sha512-M5j87Ec4V99MQdRct/g09eWXW60g6zhHTUs1lr4deUtrPDnezBdCJTgKd7pxqTpSZBFveV0ALi9jMMuT1qKyNg==}
     peerDependencies:
       typescript: '>=5.4.0'
     peerDependenciesMeta:
@@ -581,16 +577,16 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
-  viem@2.38.5:
-    resolution: {integrity: sha512-EU2olUnWd5kBK1t3BicwaamPHGUANRYetoDLSVzDy7XQ8o8UswItnkQbufe3xTcdRCtb2JYMwjlgHZZ7fUoLdA==}
+  viem@2.54.2:
+    resolution: {integrity: sha512-o0+5dEAUekBMTbixXy2mKbSDPnwsCJ+8+mOeMBDjkuS9iM4fcr3yKUWb2zlOy2NKInkg3anl1W11sxYspLiXig==}
     peerDependencies:
       typescript: '>=5.0.4'
     peerDependenciesMeta:
       typescript:
         optional: true
 
-  ws@8.18.3:
-    resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -692,7 +688,7 @@ snapshots:
       '@fastify/forwarded': 3.0.2
       ipaddr.js: 2.5.0
 
-  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#17ba1181041b0b0789f7ffb6373c66e2abb34e77(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)':
+  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)':
     dependencies:
       '@better-auth/drizzle-adapter': 1.7.4(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.15.6)(kysely@0.29.6)(pg@8.23.0))
       '@types/pg': 8.15.6
@@ -700,7 +696,7 @@ snapshots:
       drizzle-orm: 0.45.2(@types/pg@8.15.6)(kysely@0.29.6)(pg@8.23.0)
       fastify: 5.12.3
       pg: 8.23.0
-      viem: 2.38.5(zod@4.6.5)
+      viem: 2.54.2(zod@4.6.5)
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@better-auth/core'
@@ -791,7 +787,7 @@ snapshots:
       pg-protocol: 1.16.1
       pg-types: 2.2.0
 
-  abitype@1.1.0(zod@4.6.5):
+  abitype@1.2.3(zod@4.6.5):
     optionalDependencies:
       zod: 4.6.5
 
@@ -915,9 +911,9 @@ snapshots:
 
   ipaddr.js@2.5.0: {}
 
-  isows@1.0.7(ws@8.18.3):
+  isows@1.0.7(ws@8.21.0):
     dependencies:
-      ws: 8.18.3
+      ws: 8.21.0
 
   jose@6.2.12: {}
 
@@ -939,7 +935,7 @@ snapshots:
 
   on-exit-leak-free@2.1.2: {}
 
-  ox@0.9.6(zod@4.6.5):
+  ox@0.14.29(zod@4.6.5):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -947,7 +943,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(zod@4.6.5)
+      abitype: 1.2.3(zod@4.6.5)
       eventemitter3: 5.0.1
     transitivePeerDependencies:
       - zod
@@ -1063,22 +1059,22 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  viem@2.38.5(zod@4.6.5):
+  viem@2.54.2(zod@4.6.5):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(zod@4.6.5)
-      isows: 1.0.7(ws@8.18.3)
-      ox: 0.9.6(zod@4.6.5)
-      ws: 8.18.3
+      abitype: 1.2.3(zod@4.6.5)
+      isows: 1.0.7(ws@8.21.0)
+      ox: 0.14.29(zod@4.6.5)
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - zod
 
-  ws@8.18.3: {}
+  ws@8.21.0: {}
 
   xtend@4.0.2: {}
 
