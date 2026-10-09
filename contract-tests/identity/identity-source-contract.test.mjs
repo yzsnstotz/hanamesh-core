@@ -14,7 +14,7 @@ test('Identity contract comes from a published source range, with no packaged pr
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   assert.equal(pkg.devDependencies['@hanamesh/server-identity'], undefined);
   const checks = JSON.parse(await readFile('contract-tests/identity/package.json', 'utf8'));
-  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.2');
+  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.3');
   assert.ok(!pkg.files.includes('vendor/srv-identity'));
   await assert.rejects(access('vendor/srv-identity/contracts.d.ts'));
   assert.ok(!('srvIdentity' in JSON.parse(await readFile('deps/LOCKS.json', 'utf8'))));
@@ -75,4 +75,37 @@ test('Core wire major remains string 1 across package minors and rejects major 2
     assert.equal(result.reason, 'CORE_PROTOCOL_UNSUPPORTED');
   }
   assert.equal(checkCoreService({...service, signRequest: undefined}).reason, 'CORE_METHOD_MISSING');
+});
+
+
+test('actual Core bind-link URL consumes rc3 named challenge and receiver DeviceBindInput schema', async () => {
+  await loadIdentitySchema();
+  const fixture = createIdentityServicesFixture();
+  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const calls = [];
+  const controller = await SessionController.create({serverOrigin: 'https://identity.fixture.invalid', websiteOrigin: 'https://website.fixture.invalid'}, memory.store, {
+    fetcher: async (url, init) => {
+      assert.equal(new URL(url).pathname, '/v1/identity/devices/challenge');
+      const input = JSON.parse(init.body);
+      assert.deepEqual(validateIdentityValue('DeviceChallengeInput', input), []);
+      assert.equal(input.purpose, 'bind');
+      calls.push(input);
+      const challenge = await fixture.services.deviceRegistration.createChallenge(input.purpose);
+      const response = {nonce: challenge.nonce, expiresAt: challenge.expiresAt};
+      assert.deepEqual(validateIdentityValue('DeviceChallengeDTO', response), []);
+      return Response.json(response);
+    },
+  });
+  try {
+    const link = await controller.bindLink();
+    const url = new URL(link.url);
+    assert.equal(url.origin, 'https://website.fixture.invalid');
+    assert.equal(url.pathname, '/me/bind');
+    assert.deepEqual([...url.searchParams.keys()].sort(), ['deviceId', 'nonce', 'signature']);
+    const input = Object.fromEntries(url.searchParams);
+    assert.deepEqual(validateIdentityValue('DeviceBindInput', input), []);
+    assert.equal(input.deviceId, controller.service.getDeviceId());
+    assert.equal(typeof link.expiresAt, 'string');
+    assert.equal(calls.length, 1);
+  } finally { await controller.dispose(); }
 });
