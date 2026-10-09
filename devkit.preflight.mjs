@@ -1,12 +1,10 @@
-import assert from 'node:assert/strict';
-import {createHash} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
+import {checkConsumer} from '@hanamesh/devkit/contract';
+import requirement from '@hanamesh/devkit/contract/fixtures/consumer.json' with {type: 'json'};
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 export async function validateCoreEnvironment() {
-assert.equal(createHash('sha256').update(await readFile('vendor/hanamesh-devkit-0.1.0-rc.1.tgz')).digest('hex'), '3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff');
-assert.equal(await readFile('vendor/DEVKIT.sha256', 'utf8'), '3cf0b621ca2950fbe21c114d5b31ac1a55f97a67eb0a2dada77fb2d3bf2cb6ff  hanamesh-devkit-0.1.0-rc.1.tgz\n');
+console.log(JSON.stringify({event: 'devkit_source_contract', ...checkConsumer({consumerRoot: process.cwd(), requirement})}));
 const commands = [['dsh', ['--version']], ['psql', ['--version']]];
 for (const [command, args] of commands) {
   const result = spawnSync(command, args, {encoding: 'utf8'});

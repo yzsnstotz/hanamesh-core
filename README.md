@@ -28,7 +28,7 @@ Server 注册 POST 的 Origin 为 serverOrigin；Server 的可信 Origin 须包�
 
 ## Development tools
 
-The private `@hanamesh/devkit@0.1.0-rc.1` tarball is pinned in `vendor/`, the lockfile and an optional peer. It is a development dependency; the published runtime files do not import it. Install with `pnpm install --frozen-lockfile` using Node 24.13.1 and pnpm 10.33.0.
+`@hanamesh/devkit` is installed from `git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit`. It is used by development scripts only and is not a runtime dependency or public peer. pnpm 10.33.0 supports this Git subpackage selector; npm Git source installation does not. Use Node 24.13.1 and `pnpm install --strict-peer-dependencies --frozen-lockfile`; preflight runs the installed public supply suite against the resolved package, exports, CLI and lock. Normal npm tarball consumption is checked separately.
 
 Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm run pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
 

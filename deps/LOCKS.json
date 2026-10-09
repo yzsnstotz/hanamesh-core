@@ -4,11 +4,5 @@
     "registry": "https://registry.npmjs.org",
     "source": "https://github.com/deepseek-ai/deepseek-harness",
     "license": "MIT"
-  },
-  "uiKit": {
-    "version": "0.1.0-rc.3",
-    "sourceCommit": "d1e1a50",
-    "artifact": null,
-    "sha256": null
   }
 }
