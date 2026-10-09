@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hanamesh/server-identity':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.2
-        version: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)
+        specifier: git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.3
+        version: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#1d8f59f9b39e1810a38ecb860e7ac4627dd01c2c(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)
 
 packages:
 
@@ -117,9 +117,9 @@ packages:
   '@fastify/proxy-addr@5.1.1':
     resolution: {integrity: sha512-zv07Y9GEuDsJPegZoDFd4SDWaZOW8N2pa0GSrYmKpId/tjt1Hgo3BjZBVjdVpfVrHaA+Qv5jawtS2O50J5xM9g==}
 
-  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526':
-    resolution: {commit: 93691f5cd863c1bc2ce8ed985197b774ed97e526, repo: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git, type: git}
-    version: 0.3.0-rc.2
+  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#1d8f59f9b39e1810a38ecb860e7ac4627dd01c2c':
+    resolution: {commit: 1d8f59f9b39e1810a38ecb860e7ac4627dd01c2c, repo: git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git, type: git}
+    version: 0.3.0-rc.3
     engines: {node: '>=24.13.1 <25'}
     hasBin: true
     peerDependencies:
@@ -688,7 +688,7 @@ snapshots:
       '@fastify/forwarded': 3.0.2
       ipaddr.js: 2.5.0
 
-  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#93691f5cd863c1bc2ce8ed985197b774ed97e526(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)':
+  '@hanamesh/server-identity@git+ssh://git@github.com/yzsnstotz/hanamesh-server-identity.git#1d8f59f9b39e1810a38ecb860e7ac4627dd01c2c(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(fastify@5.12.3)(kysely@0.29.6)(zod@4.6.5)':
     dependencies:
       '@better-auth/drizzle-adapter': 1.7.4(@better-auth/core@1.7.4(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.5))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@types/pg@8.15.6)(kysely@0.29.6)(pg@8.23.0))
       '@types/pg': 8.15.6
