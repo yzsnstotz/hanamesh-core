@@ -13,8 +13,8 @@ export const packConfig = {
     const packed = JSON.parse(read('package.json'));
     assert.equal(packed.version, source.version);
     assert.deepEqual(packed.dependencies ?? {}, {});
-    assert.equal(packed.peerDependencies['@hanamesh/devkit'], '0.1.0-rc.1');
-    assert.deepEqual(packed.peerDependenciesMeta['@hanamesh/devkit'], {optional: true});
+    assert.equal(packed.peerDependencies['@hanamesh/devkit'], undefined);
+    assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'], undefined);
   },
   consumer: {
     packageJson: {private: true, type: 'module', dependencies: {'hanamesh-core': 'file:' + tarball, '@types/node': '24.13.4', '@deepseek-ai/dsh-typert-protocol': '0.2.0-rc.2'}},

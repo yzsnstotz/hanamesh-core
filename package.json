@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -72,8 +72,7 @@
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
     "react": "18.3.1",
-    "zod": "4.5.4",
-    "@hanamesh/devkit": "0.1.0-rc.1"
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
@@ -87,7 +86,7 @@
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
+    "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit"
   },
   "pnpm": {
     "overrides": {
@@ -120,10 +119,5 @@
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanamesh-core.git"
   },
-  "license": "MIT",
-  "peerDependenciesMeta": {
-    "@hanamesh/devkit": {
-      "optional": true
-    }
-  }
+  "license": "MIT"
 }
