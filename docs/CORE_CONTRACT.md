@@ -51,12 +51,18 @@
 
 只加可选成员 = 小版本，仍是 `'1'`，加进 `CORE_OPTIONAL_METHODS` 与 schema；删除、改名、改语义 = `'2'`，按合约卡批次同步所有消费方后发布。
 
-## 0.3.0 正常源包声明
+## 0.3.1 正常源包声明
 
 一行变更：移除继承的 Identity rc1 协议副本与其 SHA 权威，开发一致性门正常安装已发布 `@hanamesh/server-identity` 源 tag 范围；Core 协议 v1、schema、提供方/消费方 fixture 与产品策略保持原字节。
 
 包 SemVer 是发布/安装选择；wire `protocolVersion: '1'` 与内部数字 `schemaVersion: 1` 不是包 SemVer，Core 没有全 SemVer 严格相等的握手检查。v1 握手已接受额外可选成员，并拒绝不同 wire 主版本、数字替代和缺少必需方法；闭合 schema 与提供方私有成员边界继续生效。
 
-Identity 只在开发门以 `git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11` 正常安装。HTTP 注册与设备鉴权使用源包的 fixture/schema 验证；Core 不消费 IdentityServices 聚合端口，聚合消费方 suite 不冒作适用。产品包没有 Identity runtime dependency、协议副本或随包 Identity tgz。
+Identity 只在本仓独立 `contract-tests/identity` 验证包中以 `git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11` 正常安装。HTTP 注册与设备鉴权使用源包的 fixture/schema 验证；Core 不消费 IdentityServices 聚合端口，聚合消费方 suite 不冒作适用。产品包没有 Identity runtime dependency、协议副本或随包 Identity tgz。
 
 0.x caret 不是整个 major 范围：`^0.2.0-rc.11` 不接受 `0.3.0`，`^0.2.0-rc.55` 也不选择 Core `0.3.0`。安装选择与 wire 兼容分别记录；已有消费方不用为 v1 行为修改。
+
+### 正常 Git 安装与验证依赖边界
+
+0.3.0 的候选 tgz 消费通过，但 npm Git 包准备会安装根开发依赖；根 Identity 依赖引入其 devkit rc2 peer 与本仓 rc1 冲突，真实正常 Git 消费失败 404。0.3.1 将同一源范围移到独立验证包，Core 源包的正常构建不引入 Identity 提供方依赖；不改上游 peer、不放宽包管理检查、不复制合约。验证包单独正常安装并冻结其 lock。
+
+开发门：先 `pnpm install --frozen-lockfile --store-dir <共享缓存>`，再 `pnpm install:contract-tests --store-dir <共享缓存>`，随后 `pnpm build`、`pnpm check`、`pnpm test`。独立验证包不在产品包 files 内，仍通过正常包名直接引用发布源的 schema/fixture/suite。

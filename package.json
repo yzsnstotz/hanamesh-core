@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -52,17 +52,18 @@
   "scripts": {
     "build": "node scripts/build.mjs --target",
     "build:offline": "node scripts/build.mjs --offline",
-    "test": "node --test --test-reporter=tap test/*.test.mjs",
+    "test": "node --test --test-reporter=tap test/*.test.mjs contract-tests/identity/*.test.mjs",
     "test:mutations": "node scripts/mutation.mjs",
     "test:contract": "node lib/contract-cli.js",
     "test:crash": "node --test --test-reporter=tap test/crash.test.mjs",
     "verify:inputs": "node scripts/verify-inputs.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts",
+    "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts contract-tests/identity/public-contracts.ts",
     "check:toolchain": "hanamesh-devkit check-toolchain",
     "verify:pack": "node scripts/check-package.mjs",
     "pack": "npm pack --pack-destination artifacts",
-    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight"
+    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight",
+    "install:contract-tests": "pnpm --dir contract-tests/identity install --frozen-lockfile"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
@@ -86,8 +87,7 @@
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz",
-    "@hanamesh/server-identity": "git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11"
+    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
   },
   "pnpm": {
     "overrides": {

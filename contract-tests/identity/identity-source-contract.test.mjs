@@ -4,15 +4,17 @@ import {createHash} from 'node:crypto';
 import {readFile, access} from 'node:fs/promises';
 import {createIdentityServicesFixture} from '@hanamesh/server-identity/contract/fixtures';
 import {loadIdentitySchema, validateIdentityValue} from '@hanamesh/server-identity/contract/suite';
-import {SessionController} from '../lib/controller.js';
-import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
-import {checkCoreService} from '../lib/contract.js';
-import {createCoreProviderFixture, createCoreConsumerFixture} from '../lib/contract-fixtures.js';
-import {memoryStore} from './fixtures/core-store.mjs';
+import {SessionController} from '../../lib/controller.js';
+import {INITIAL_CORE_SNAPSHOT} from '../../lib/contracts.js';
+import {checkCoreService} from '../../lib/contract.js';
+import {createCoreProviderFixture, createCoreConsumerFixture} from '../../lib/contract-fixtures.js';
+import {memoryStore} from '../../test/fixtures/core-store.mjs';
 
 test('Identity contract comes from a published source range, with no packaged protocol copy', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.equal(pkg.devDependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11');
+  assert.equal(pkg.devDependencies['@hanamesh/server-identity'], undefined);
+  const checks = JSON.parse(await readFile('contract-tests/identity/package.json', 'utf8'));
+  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11');
   assert.ok(!pkg.files.includes('vendor/srv-identity'));
   await assert.rejects(access('vendor/srv-identity/contracts.d.ts'));
   assert.ok(!('srvIdentity' in JSON.parse(await readFile('deps/LOCKS.json', 'utf8'))));
