@@ -14,7 +14,7 @@ test('Identity contract comes from a published source range, with no packaged pr
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   assert.equal(pkg.devDependencies['@hanamesh/server-identity'], undefined);
   const checks = JSON.parse(await readFile('contract-tests/identity/package.json', 'utf8'));
-  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11');
+  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.2');
   assert.ok(!pkg.files.includes('vendor/srv-identity'));
   await assert.rejects(access('vendor/srv-identity/contracts.d.ts'));
   assert.ok(!('srvIdentity' in JSON.parse(await readFile('deps/LOCKS.json', 'utf8'))));
