@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.2.0-rc.56",
+  "version": "0.3.0",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -43,8 +43,7 @@
     "docs/API.md",
     "docs/SECURITY.md",
     "vendor/semver",
-    "vendor/SHA256SUMS",
-    "vendor/srv-identity"
+    "vendor/SHA256SUMS"
   ],
   "engines": {
     "node": "24.13.1"
@@ -87,7 +86,8 @@
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz"
+    "@hanamesh/devkit": "file:vendor/hanamesh-devkit-0.1.0-rc.1.tgz",
+    "@hanamesh/server-identity": "git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11"
   },
   "pnpm": {
     "overrides": {
