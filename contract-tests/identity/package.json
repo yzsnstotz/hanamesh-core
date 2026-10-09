@@ -1,0 +1,10 @@
+{
+  "name": "@hanamesh/core-identity-contract-check",
+  "private": true,
+  "version": "0.3.1",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "@hanamesh/server-identity": "git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11"
+  }
+}
