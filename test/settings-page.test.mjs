@@ -159,3 +159,64 @@ test('consent UI cannot claim a confirmed save when the readback disagrees', asy
   assert.equal(switchIn(section).props.checked, false);
   await controller.dispose();
 });
+
+test('settings section shows a failed shared identity with its location and repairs it in place', async t => {
+  const {mkdtemp, mkdir, writeFile, rm} = await import('node:fs/promises');
+  const {tmpdir} = await import('node:os');
+  const {join} = await import('node:path');
+  const {fileSharedDeviceStore} = await import('../lib/shared-device.js');
+  const root = await mkdtemp(join(tmpdir(), 'hm-settings-identity-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
+  const file = join(root, 'identity', 'device.json');
+  await mkdir(join(root, 'identity'), {recursive: true});
+  await writeFile(file, 'broken');
+  const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {sharedDevice: fileSharedDeviceStore(root)});
+  const handle = createRouteHandler(controller);
+  const f = await clientFixture(async (path, init = {}) => handle(new Request(`http://127.0.0.1:41001${path}`, {...init, headers: {...init.headers, origin: 'http://127.0.0.1:41001', 'sec-fetch-site': 'same-origin'}})));
+  const section = f.mount(f.slots.get('settings.section'));
+  section.render();
+  section.effects().forEach(run => run());
+  await settle();
+  const tree = section.render();
+  const row = elements(tree).find(e => e.props['data-hanamesh-core-identity'] === 'failed');
+  assert.ok(row, 'identity failure is rendered in the settings section');
+  assert.match(textIn(row), /设备身份文件已损坏/);
+  assert.match(textIn(row), new RegExp(file.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(textIn(row), /不会自动新建身份/);
+  await rm(file);
+  elements(tree).find(e => e.type === 'button' && textIn(e).includes('重新读取设备身份')).props.onClick();
+  // The repair does real file I/O on the thread pool, which outlasts any fixed number of event-loop turns.
+  let repaired;
+  for (const deadline = Date.now() + 5_000; Date.now() < deadline;) {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    repaired = elements(section.render()).find(e => e.props['data-hanamesh-core-identity']);
+    if (repaired.props['data-hanamesh-core-identity'] !== 'failed') break;
+  }
+  assert.equal(repaired.props['data-hanamesh-core-identity'], 'shared');
+  assert.match(textIn(repaired), /本机共享/);
+  assert.equal(repaired.props['data-hanamesh-core-device'], controller.service.getDeviceId());
+  await controller.dispose();
+});
+
+test('settings section names a replaced identity after a conflict', async t => {
+  const {mkdtemp, rm} = await import('node:fs/promises');
+  const {tmpdir} = await import('node:os');
+  const {join} = await import('node:path');
+  const {fileSharedDeviceStore} = await import('../lib/shared-device.js');
+  const {createDevice} = await import('../lib/device.js');
+  const root = await mkdtemp(join(tmpdir(), 'hm-settings-conflict-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
+  await fileSharedDeviceStore(root).claim(createDevice());
+  const own = createDevice();
+  const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore({...INITIAL_CORE_SNAPSHOT, device: own}).store, {sharedDevice: fileSharedDeviceStore(root)});
+  const handle = createRouteHandler(controller);
+  const f = await clientFixture(async (path, init = {}) => handle(new Request(`http://127.0.0.1:41001${path}`, init)));
+  const section = f.mount(f.slots.get('settings.section'));
+  section.render();
+  section.effects().forEach(run => run());
+  await settle();
+  const row = elements(section.render()).find(e => e.props['data-hanamesh-core-identity'] === 'shared');
+  assert.match(textIn(row), new RegExp(`${own.deviceId.slice(0, 8)}`));
+  assert.match(textIn(row), /已保留在本客户端/);
+  await controller.dispose();
+});

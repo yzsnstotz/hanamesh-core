@@ -1,12 +1,13 @@
 import {createHash} from 'node:crypto';
 import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
 import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput} from './contract.js';
-import {createDevice, requestNonce, signWithDevice} from './device.js';
+import {createDevice, requestNonce, signWithDevice, type StoredDevice} from './device.js';
 import {CoreError, safeError} from './errors.js';
 import {registerDevice} from './registration.js';
 import {ServerTransport} from './transport.js';
 import {openExternal as openSystemExternal} from './external.js';
 import {configOf, publicJson, snapshotOf} from './validation.js';
+import type {SharedDeviceStore} from './shared-device.js';
 
 const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
@@ -52,11 +53,28 @@ const linkedAccount = (value: unknown): LinkedAccount | null => {
   return v && v.provider === 'github' && typeof v.displayName === 'string' && v.displayName.length > 0 && v.displayName.length <= 120 ? Object.freeze({provider: 'github', displayName: v.displayName}) : null;
 };
 
+/** J1.S4 machine-wide identity. `source` says how this client arrived at it: `existing` (already the shared identity),
+ *  `created` (first client, new key), `migrated` (this client's pre-J1.S4 identity became the shared one), `adopted`
+ *  (no local identity, took the shared one), `conflict` (this client's own identity lost to the shared one and was kept
+ *  under `replacedDevices`). `failed` never creates or replaces an identity: signing stays CORE_NOT_READY until repaired. */
+type IdentitySource = 'existing' | 'created' | 'migrated' | 'adopted' | 'conflict';
+type Identity = {
+  status: 'shared' | 'local-only' | 'failed';
+  location: string | null;
+  source: IdentitySource | null;
+  reason: 'CORE_DEVICE_CORRUPT' | 'CORE_DEVICE_STORE_UNAVAILABLE' | null;
+  /** OS errno behind CORE_DEVICE_STORE_UNAVAILABLE (EACCES, ENOSPC, …); null otherwise. */
+  detail: string | null;
+  replacedDeviceIds: readonly string[];
+};
+
 export class SessionController {
   readonly #config: Required<PluginConfig>;
   readonly #store: CoreStore;
   readonly #transport: ServerTransport;
   readonly #profileTransport: ServerTransport;
+  readonly #shared: SharedDeviceStore | null;
+  #identity: Identity;
   #state: StoredCoreSnapshot;
   #publishTail: Promise<void> = Promise.resolve();
   #disposed = false;
@@ -73,12 +91,14 @@ export class SessionController {
   #account: LinkedAccount | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
   readonly service: HanaMeshCoreContract;
-  private constructor(config: PluginConfig, store: CoreStore, fetcher?: typeof fetch) {
+  private constructor(config: PluginConfig, store: CoreStore, fetcher?: typeof fetch, shared: SharedDeviceStore | null = null) {
     this.#config = configOf(config);
     this.#store = store;
+    this.#shared = shared;
     this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher);
     this.#profileTransport = new ServerTransport(this.#config.serverOrigin, Math.min(1_500, this.#config.timeoutMs), fetcher);
     this.#state = snapshotOf(store.read());
+    this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
     this.service = Object.freeze({
       protocolVersion: '1' as const,
       getDeviceId: () => this.#device().deviceId,
@@ -96,17 +116,65 @@ export class SessionController {
     });
   }
 
-  static async create(config: PluginConfig, store: CoreStore, options: {fetcher?: typeof fetch} = {}): Promise<SessionController> {
-    const controller = new SessionController(config, store, options.fetcher);
-    if (controller.#state.device === null) {
+  /** `sharedDevice` is the product path (dsh.mjs always passes it). Without it the identity is this client's own
+   *  storage only, and `state().identity.status` says `local-only`. */
+  static async create(config: PluginConfig, store: CoreStore, options: {fetcher?: typeof fetch; sharedDevice?: SharedDeviceStore} = {}): Promise<SessionController> {
+    const controller = new SessionController(config, store, options.fetcher, options.sharedDevice ?? null);
+    if (controller.#shared) await controller.#resolveSharedIdentity();
+    else if (controller.#state.device === null) {
       await controller.#publish(current => ({...current, revision: current.revision + 1, device: createDevice()}));
-    }
+      controller.#identity = controller.#identityOf('local-only', 'created', null);
+    } else controller.#identity = controller.#identityOf('local-only', 'existing', null);
     return controller;
+  }
+
+  #identityOf(status: Identity['status'], source: IdentitySource | null, reason: Identity['reason'], detail: string | null = null): Identity {
+    return Object.freeze({status, location: this.#shared?.location ?? null, source, reason, detail,
+      replacedDeviceIds: Object.freeze((this.#state.replacedDevices ?? []).map(device => device.deviceId))});
+  }
+
+  /** Never invents an identity on failure: an unreadable or corrupt shared file leaves this client not ready, with the
+   *  reason and file location in `state().identity`, and leaves both the shared file and this client's storage untouched. */
+  async #resolveSharedIdentity(): Promise<void> {
+    const shared = this.#shared!;
+    const local = this.#state.device;
+    let device: StoredDevice;
+    let source: IdentitySource;
+    try {
+      const existing = await shared.read();
+      if (existing) {
+        device = existing;
+        source = local === null ? 'adopted' : local.deviceId === existing.deviceId ? 'existing' : 'conflict';
+      } else {
+        const candidate = local ?? createDevice();
+        device = await shared.claim(candidate);
+        source = device.deviceId === candidate.deviceId ? (local ? 'migrated' : 'created') : (local ? 'conflict' : 'adopted');
+      }
+    } catch (error) {
+      const reason = error instanceof CoreError && error.code === 'CORE_DEVICE_CORRUPT' ? 'CORE_DEVICE_CORRUPT' : 'CORE_DEVICE_STORE_UNAVAILABLE';
+      const detail = (error as {detail?: unknown} | null)?.detail;
+      this.#identity = this.#identityOf('failed', null, reason, typeof detail === 'string' ? detail : error instanceof CoreError ? null : String((error as Error)?.message ?? error));
+      return;
+    }
+    if (local?.deviceId !== device.deviceId) {
+      const replacedAt = new Date().toISOString();
+      // Decided against the serialized `current`, so overlapping resolutions (two refreshes) record a replacement once.
+      await this.#publish(current => {
+        if (current.device?.deviceId === device.deviceId) return current;
+        const replaced = current.device;
+        return {...current, revision: current.revision + 1, device, ...(replaced === null ? {} : {
+          replacedDevices: [...(current.replacedDevices ?? []), {...replaced, replacedAt}],
+          // The server registration belonged to the replaced key; the shared identity registers itself.
+          registration: {status: 'unregistered', principalId: null, registeredAt: null, lastError: null, attempts: 0},
+        })};
+      });
+    }
+    this.#identity = this.#identityOf('shared', source, null);
   }
 
   #device() {
     if (this.#disposed) throw new CoreError('CORE_DISPOSED', 503);
-    if (!this.#state.device) throw new CoreError('CORE_NOT_READY', 503);
+    if (this.#identity.status === 'failed' || !this.#state.device) throw new CoreError('CORE_NOT_READY', 503);
     return this.#state.device;
   }
 
@@ -199,7 +267,7 @@ export class SessionController {
   }
 
   async startRegistration(): Promise<void> {
-    if (!this.#transport.configured || this.#disposed) return;
+    if (!this.#transport.configured || this.#disposed || this.#identity.status === 'failed') return;
     await this.register();
     this.startContributions();
   }
@@ -279,6 +347,11 @@ export class SessionController {
   }
 
   async refresh(): Promise<unknown> {
+    if (this.#identity.status === 'failed' && !this.#disposed) {
+      await this.#resolveSharedIdentity();
+      if (this.#identity.status === 'failed') return this.state();
+      void this.startRegistration().catch(() => undefined);
+    }
     this.#contributionsCheckedAt = 0;
     this.#pointsCheckedAt = 0;
     await this.refreshContributions();
@@ -375,13 +448,13 @@ export class SessionController {
   }
 
   state(): unknown {
-    const device = this.#device();
+    const device = this.#identity.status === 'failed' && !this.#disposed ? null : this.#device();
     const health = this.service.getHealth();
     const components = health.components.map(component => component && typeof component === 'object' && (component as {id?: unknown}).id === 'usage'
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
-    return publicJson({deviceId: device.deviceId, publicKey: device.publicKey, registration: this.#state.registration, consent: this.#state.consent,
-      session: this.#session(), account: this.#account, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
+    return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registration: this.#state.registration, consent: this.#state.consent,
+      session: device ? this.#session() : null, account: this.#account, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
       health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
   }
   diagnostics(): unknown {

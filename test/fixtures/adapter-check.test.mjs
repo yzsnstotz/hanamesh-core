@@ -1,6 +1,8 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {resolve} from 'node:path';import {pathToFileURL} from 'node:url';
+import test from 'node:test';import assert from 'node:assert/strict';import {resolve} from 'node:path';import {pathToFileURL} from 'node:url';import {mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';import {tmpdir} from 'node:os';import {join} from 'node:path';
 const {apply}=await import(pathToFileURL(resolve(process.env.HM_TEST_LIB||'lib','dsh.mjs')).href);
-const config={serverOrigin:null,websiteOrigin:null,allowSystemBrowser:false};
+// Never the real ~/.hanamesh: every run gets its own machine-wide identity root.
+const sharedRoot=()=>mkdtempSync(join(tmpdir(),'hm-adapter-identity-'));
+const config={serverOrigin:null,websiteOrigin:null,allowSystemBrowser:false,sharedIdentityDir:sharedRoot()};
 function fixture(failAt){
   const facts={routes:[],assets:[],events:[],closed:0,disposed:0,writes:[],provided:[],effects:[],specs:[]};
   const dispose=()=>{facts.disposed++;};
@@ -33,4 +35,16 @@ test('adapter activation failures do not silently install an anonymous substitut
 test('disposing after the storage facility closes still clears public access',async()=>{
   const {facts,ctx}=fixture();await apply(ctx,config);facts.closed=1;
   await facts.effects[0]();assert.equal(facts.closed>=1,true);
+});
+test('product path resolves the shared identity file and a corrupt one is reported, not replaced',async()=>{
+  const root=sharedRoot();const {facts,ctx}=fixture();await apply(ctx,{...config,sharedIdentityDir:root});
+  const shared=JSON.parse(readFileSync(join(root,'identity','device.json'),'utf8'));const core=facts.writes.filter(w=>w.domain==='hanamesh_core').at(-1).value;
+  assert.equal(core.device.deviceId,shared.deviceId);assert.equal(facts.provided[0].value.getDeviceId(),shared.deviceId);await facts.effects[0]();
+  const broken=sharedRoot();mkdirSync(join(broken,'identity'));writeFileSync(join(broken,'identity','device.json'),'broken');
+  const second=fixture();await apply(second.ctx,{...config,sharedIdentityDir:broken});
+  assert.equal(second.facts.writes.filter(w=>w.domain==='hanamesh_core').length,0);assert.equal(readFileSync(join(broken,'identity','device.json'),'utf8'),'broken');
+  assert.throws(()=>second.facts.provided[0].value.getDeviceId(),e=>e?.code==='CORE_NOT_READY');
+  const state=second.facts.routes.find(r=>r.path==='/api/hanamesh/core/state');const body=await (await state.fetch(new Request('http://127.0.0.1/api/hanamesh/core/state'))).json();
+  assert.equal(body.identity.status,'failed');assert.equal(body.identity.reason,'CORE_DEVICE_CORRUPT');assert.equal(body.identity.location,join(broken,'identity','device.json'));
+  await second.facts.effects[0]();
 });

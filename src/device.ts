@@ -37,6 +37,11 @@ function checkedPrivateKey(device: StoredDevice) {
   }
 }
 
+/** Throws CORE_DEVICE_CORRUPT unless the private key, public key and deviceId belong together. */
+export function verifyDevice(device: StoredDevice): void {
+  checkedPrivateKey(device);
+}
+
 export function signWithDevice(device: StoredDevice, bytes: Uint8Array): Uint8Array {
   return new Uint8Array(cryptoSign(null, bytes, checkedPrivateKey(device)));
 }

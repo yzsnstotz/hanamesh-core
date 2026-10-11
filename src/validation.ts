@@ -1,3 +1,4 @@
+import {isAbsolute} from 'node:path';
 import {CoreError} from './errors.js';
 import {INITIAL_CORE_SNAPSHOT, type PluginConfig, type StoredCoreSnapshot} from './contracts.js';
 
@@ -22,6 +23,8 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
   if (!Number.isInteger(timeoutMs) || timeoutMs < 10 || timeoutMs > 60_000 || !Number.isInteger(checkIntervalMs) || checkIntervalMs < 250 || checkIntervalMs > 60_000) {
     throw new CoreError('CORE_INPUT_INVALID', 400);
   }
+  const sharedIdentityDir = input.sharedIdentityDir ?? null;
+  if (sharedIdentityDir !== null && (typeof sharedIdentityDir !== 'string' || !isAbsolute(sharedIdentityDir))) throw new CoreError('CORE_INPUT_INVALID', 400);
   return Object.freeze({
     serverOrigin: originOf(input.serverOrigin),
     websiteOrigin: originOf(input.websiteOrigin),
@@ -29,6 +32,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
     checkIntervalMs,
+    sharedIdentityDir,
   });
 }
 

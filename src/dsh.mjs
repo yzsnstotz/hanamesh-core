@@ -1,9 +1,11 @@
 import {readFile} from 'node:fs/promises';
+import {homedir} from 'node:os';
 import {SessionController} from './controller.js';
 import {createRouteHandler, ROUTES} from './routes.js';
 import {HealthService} from './health/service.js';
 import {LoaderObservationSource} from './health/loader.js';
 import {INITIAL_CORE_SNAPSHOT, snapshotOf} from './validation.js';
+import {fileSharedDeviceStore, sharedIdentityRoot} from './shared-device.js';
 
 export const name = 'hanamesh-core';
 export const inject = ['connection', 'storageDomain', 'loader'];
@@ -25,9 +27,13 @@ export async function apply(ctx, config) {
   const serverObservation = z.object({reachable: z.boolean().nullable(), checkedAt: z.string().nullable()}).strict();
   // T2 marker: optional so a profile upgraded from rc.30 keeps loading its stored snapshot (DELIVERY_RULES §1.6 incident 20).
   const pointsBindPromptShownAt = z.string().nullable().optional();
-  const device = z.object({deviceId: z.string(), publicKey: z.string(), privateKeyPkcs8: z.string(), createdAt: z.string()}).strict().nullable();
+  const deviceFields = {deviceId: z.string(), publicKey: z.string(), privateKeyPkcs8: z.string(), createdAt: z.string()};
+  // J1.S4: `device` mirrors the machine-wide shared identity; `replacedDevices` keeps this client's own identities that
+  // lost to it. Optional so pre-J1.S4 snapshots keep loading.
+  const device = z.object(deviceFields).strict().nullable();
+  const replacedDevices = z.array(z.object({...deviceFields, replacedAt: z.string()}).strict()).optional();
   const spec = defineDomain({name: 'hanamesh_core', version: 1, layout: 'single', tables: {}, global: {
-    schema: z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt}).strict(),
+    schema: z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices}).strict(),
     initial: INITIAL_CORE_SNAPSHOT,
   }});
   const domain = await ctx.storageDomain.open(spec);
@@ -45,11 +51,13 @@ export async function apply(ctx, config) {
   const disposers = [];
   try {
     healthDomain = await ctx.storageDomain.open(healthSpec);
+    // Device identity lives outside this client's storage domain so DSH and HanaMesh desktop sign as one device.
+    const sharedDevice = fileSharedDeviceStore(sharedIdentityRoot(config, process.env, homedir()));
     controller = await SessionController.create(config, {
       read: () => snapshotOf(domain.global.get()),
       publish: async value => { await domain.global.set(snapshotOf(value)); },
       close: () => domain.close(),
-    });
+    }, {sharedDevice});
     const suiteProfile = JSON.parse(await readFile(new URL('../profile/suite.profile.json', import.meta.url), 'utf8'));
     healthService = new HealthService(suiteProfile, new LoaderObservationSource(/** @type {any} */ (ctx).loader, import.meta.url), {
       publish: async value => { await healthDomain.global.set(value); },

@@ -7,11 +7,22 @@ interface SlotRegistry {
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; nextStep: string | null; serviceReady?: boolean};
+/** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
+type IdentityState = {
+  status: 'shared' | 'local-only' | 'failed';
+  location: string | null;
+  source: 'existing' | 'created' | 'migrated' | 'adopted' | 'conflict' | null;
+  reason: 'CORE_DEVICE_CORRUPT' | 'CORE_DEVICE_STORE_UNAVAILABLE' | null;
+  detail: string | null;
+  replacedDeviceIds: string[];
+};
 type CoreState = {
-  deviceId: string;
+  /** null while the shared identity cannot be read; `identity.reason` says why. */
+  deviceId: string | null;
+  identity: IdentityState;
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
   consent: {state: 'withheld' | 'granted'};
-  session: {bound: boolean | null};
+  session: {bound: boolean | null} | null;
   /** usage rc.3+: GitHub account name of the bound principal; null when unbound or the server predates it. */
   account: {provider: 'github'; displayName: string} | null;
   serverOrigin: string | null;
@@ -63,6 +74,14 @@ const POINTS_REASONS: Record<string, string> = {
   CORE_UPSTREAM_UNAVAILABLE: '服务端暂时不可达，稍后再看',
 };
 const pointsReason = (reason: string | null): string => POINTS_REASONS[reason ?? ''] ?? `暂不可用：${reason ?? '未知'}`;
+const IDENTITY_FAILURES: Record<NonNullable<IdentityState['reason']>, string> = {
+  CORE_DEVICE_CORRUPT: '设备身份文件已损坏（内容无法解析，或密钥与设备 id 不一致）',
+  CORE_DEVICE_STORE_UNAVAILABLE: '设备身份文件无法读取或写入（权限或磁盘问题）',
+};
+const IDENTITY_SOURCES: Record<NonNullable<IdentityState['source']>, string> = {
+  existing: '', created: '本机首次创建', migrated: '已把本客户端原有身份迁移为本机共享身份', adopted: '已采用本机已有的共享身份', conflict: '已采用本机已有的共享身份',
+};
+const short = (id: string): string => `${id.slice(0, 8)}…`;
 
 const styleText = `
 .hm-core-section{display:flex;flex-direction:column;gap:0;color:var(--dsw-alias-label-primary,CanvasText);font:14px/1.55 system-ui,sans-serif}
@@ -187,7 +206,7 @@ function HanaMeshSection(): ReactNode {
         polls += 1;
         void jsonRequest<CoreState>('/api/hanamesh/core/refresh', {method: 'POST'}).then(next => {
           setState(next);
-          if (next.session.bound === true || polls >= 12) window.clearInterval(timer);
+          if (next.session?.bound === true || polls >= 12) window.clearInterval(timer);
         }).catch(() => { if (polls >= 12) window.clearInterval(timer); });
       }, 15_000);
       bindTimer.current = timer;
@@ -201,6 +220,19 @@ function HanaMeshSection(): ReactNode {
   };
   if (!state) return createElement('section', {className: 'hm-core-section', 'data-hanamesh-core': 'loading'}, createElement('h2', null, 'HanaMesh'), createElement('p', {className: error ? 'hm-core-error' : 'hm-core-muted'}, error ? `未能读取：${error}` : '正在读取…'), error && createElement('button', {type: 'button', onClick: () => void load()}, '重新读取'));
   const registration = state.serverOrigin === null ? '未连接' : state.registration.status === 'registered' ? '已注册' : state.registration.status === 'failed' ? `注册失败：${state.registration.lastError ?? '未知'}` : '未注册';
+  const bound = state.session?.bound ?? null;
+  const identity = state.identity;
+  const identityRow = identity.status === 'failed'
+    ? createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-identity': 'failed'},
+      createElement('span', {className: 'hm-core-error', role: 'alert'}, `${IDENTITY_FAILURES[identity.reason ?? 'CORE_DEVICE_STORE_UNAVAILABLE']}${identity.detail ? `（${identity.detail}）` : ''}：${identity.location ?? '未知位置'}`),
+      createElement('small', {className: 'hm-core-muted'}, '为避免两个客户端各算一台设备，Core 不会自动新建身份，也不会覆盖这个文件；修复或移走该文件后重新读取。在此之前不注册、不签名、不上报。'),
+      createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/refresh')}, '重新读取设备身份')))
+    : createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-identity': identity.status, 'data-hanamesh-core-device': state.deviceId ?? ''},
+      createElement('div', {className: 'hm-core-actions'}, createElement('span', null, `设备 id：${state.deviceId ? short(state.deviceId) : '—'}　注册：${registration}`), state.serverOrigin && state.registration.status !== 'registered' && createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/device/register')}, '重试注册')),
+      createElement('small', {className: 'hm-core-muted'}, identity.status === 'shared'
+        ? `本机共享：DSH 与 HanaMesh 客户端使用同一设备身份（${identity.location}）${identity.source && IDENTITY_SOURCES[identity.source] ? `；${IDENTITY_SOURCES[identity.source]}` : ''}`
+        : '仅本客户端：未接入本机共享身份'),
+      identity.replacedDeviceIds.length > 0 && createElement('small', {className: 'hm-core-muted'}, `本客户端原有身份 ${identity.replacedDeviceIds.map(short).join('、')} 与本机共享身份冲突，已改用共享身份；原身份的密钥已保留在本客户端存储中，未删除。原身份未绑定时的待绑定分不会自动转入。`));
   const contributions = state.contributions.status === 'ready'
     ? `install ${state.contributions.actions.install} · open ${state.contributions.actions.open} · use ${state.contributions.actions.use} · uninstall ${state.contributions.actions.uninstall}　窗口：近 ${state.contributions.windowDays} 天`
     : `暂不可用：${state.contributions.reason}`;
@@ -208,18 +240,18 @@ function HanaMeshSection(): ReactNode {
     createElement('h2', null, 'HanaMesh'),
     createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'optional-components'}, 'Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。'),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${error}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
-    createElement(Row, {label: '设备身份'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, `设备 id：${state.deviceId.slice(0, 8)}…　注册：${registration}`), state.serverOrigin && state.registration.status !== 'registered' && createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/device/register')}, '重试注册'))),
+    createElement(Row, {label: '设备身份'}, identityRow),
     createElement(Row, {label: '数据授权'}, createElement('label', {className: 'hm-core-switch'}, createElement('input', {type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld')}), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'),
       createElement('span', {role: 'status'}, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`),
       consentError && createElement('p', {className: 'hm-core-error', role: 'alert'}, `授权保存未确认：${consentError}。请重新切换授权，或重新进入页面读取当前状态。`),
       createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。')),
     createElement(Row, {label: '账号'}, createElement('div', {className: 'hm-core-actions'},
-      state.session.bound === true
+      bound === true
         ? createElement('span', {'data-hanamesh-core-bound': 'true', ...(state.account ? {'data-hanamesh-core-account': state.account.displayName} : {})}, state.account?.provider === 'github'
-          ? `已绑定到 GitHub 账号 ${state.account.displayName}（设备 ${state.deviceId.slice(0, 8)}…）`
-          : `已绑定到网站账号（设备 ${state.deviceId.slice(0, 8)}… 已关联你的 GitHub 登录）`)
-        : createElement('span', {'data-hanamesh-core-bound': String(state.session.bound)}, state.session.bound === false ? '未绑定：绑定后网站才能把本设备的贡献记到你的账号' : state.serverOrigin === null ? '未连接服务端' : '绑定状态读取中…'),
-      state.session.bound === true
+          ? `已绑定到 GitHub 账号 ${state.account.displayName}（设备 ${short(state.deviceId ?? '')}）`
+          : `已绑定到网站账号（设备 ${short(state.deviceId ?? '')} 已关联你的 GitHub 登录）`)
+        : createElement('span', {'data-hanamesh-core-bound': String(bound)}, bound === false ? '未绑定：绑定后网站才能把本设备的贡献记到你的账号' : state.serverOrigin === null ? '未连接服务端' : identity.status === 'failed' ? '设备身份不可用，暂不能绑定' : '绑定状态读取中…'),
+      bound === true
         ? createElement('button', {type: 'button', onClick: () => visit('/me')}, '在网站查看账号与设备')
         : createElement('button', {type: 'button', onClick: () => void bind()}, '去网站绑定'),
       // T9: the email form lives on the website; core only carries the entry point.

@@ -4,7 +4,7 @@
 
 | 方法 | 路径 | 返回 / 语义 |
 |---|---|---|
-| `GET` | `state` | 设备 id、公钥、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥 |
+| `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥 |
 | `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播 |
 | `POST` | `device/register` | 手动重试挑战→注册；失败仍保留本地设备能力 |
 | `GET` | `health` | 当前 `hanamesh_core_health` 快照 |
@@ -14,9 +14,40 @@
 | `GET` | `points` | rc.42：宿主用设备签名读服务端 `GET /v1/custody/me/points`，并以公开 Registry profile 补充可读的 `displayName`（不可用则 `null`，客户端回退短 ID）。返回 `{status:'ready'|'unavailable', reason, totalPoints, pendingTotal, hanas:[{hanaId,displayName,points,pending,breakdown:{install,open,use,claimBonus,creatorMirror,launchInitiator}}], bound, deviceId, prompt:{show, shownAt}}`。六类是**按类型汇总**，不是逐笔历史；所有数值单位是**分**，不是代币。`status:'unavailable'` 的 `reason`：`NOT_CONNECTED`、`CONSENT_WITHHELD`、`NOT_REGISTERED`、`CORE_UPSTREAM_UNAVAILABLE`。成功结果缓存 60 秒，`refresh` 与同意开关会清缓存。`prompt.show` 由宿主判定：`pendingTotal > 0 && bound !== true && shownAt === null` |
 | `GET` | `activity[?from=<ISO>&to=<ISO>&after=<opaque>]` | rc.42：宿主用**本设备签名**读现有 Usage `GET /v1/usage/me/devices/:deviceId/events`；返回 `{status,reason,items:[{hanaRef,action,occurredAt}],nextAfter,window}`。缺省近 90 天、每页最多 200、服务端原有升序游标；后续页必须原样带 `window.from/to` 与 opaque `after`，不接受任意设备 ID。宿主只投影这三个字段，不把原始事件的签名、nonce、主体或回执给浏览器。它仅是本设备未撤回且未过保留期的**事件历史**，无逐事件获分；客户端到尾后才将最新 25 项倒序展示，未到尾必须告知不完整。|
 | `POST` | `points/prompt-shown` | rc.31（T2）。无 body；把一次性绑定引导标记 `pointsBindPromptShownAt` 落到 `hanamesh_core` storage-domain 并返回 `{shownAt}`。幂等：已有标记时原样返回，不覆盖。该字段在 schema 里是 optional，rc.30 及更早的快照仍能加载 |
+| `POST` | `refresh` | 无 body；共享设备身份处于 `failed` 时先重新解析，再刷新贡献与分，返回 `state` |
 | `GET` | `diagnostics` | 生命周期与 origin 诊断；再次经过秘密字段过滤 |
 
 设备注册签名是 Ed25519 `utf8(nonce ‖ publicKey字符串)`；rc.26 起注册体多一个可选 `label {hostname, os, shell}`（`os.hostname()` ≤64、`${platform}-${arch}` ≤32、`HANAMESH_SHELL ?? 'dsh'` ≤48；桌面壳设 `HANAMESH_SHELL=hanamesh-desktop/<version>`），identity ≥0.2.0-rc.3 存下并在网站设备列表显示；identity rc.2 对未知键返回 400 且不消费 nonce，core 随即取新挑战、不带 label 重注册；`signRequest` 的 canonical bytes 是 `METHOD + '|' + pathname + '|' + unixMilliseconds + '|' + nonce + '|' + hex(sha256(body || ''))`（rc.9 起，见文末「与 O1 identity 的线上格式」），输出四个 `x-hm-*` 头；默认客户端随机 nonce，配置可切服务端 auth challenge（identity 0.2.0-rc.1 的 challenge 只接受 `register|bind`，`authNonceSource:'server'` 在该版本会被拒绝，保持默认 `'client'`）。
+
+## 本机共享设备身份（J1.S4）
+
+同一 OS 用户下的 DSH 与 HanaMesh 桌面客户端各有自己的 storage-domain，但签名用的设备身份只有一份：
+`<root>/identity/device.json`（目录 0700、文件 0600，内容 `{schemaVersion:1, deviceId, publicKey, privateKeyPkcs8, createdAt}`）。
+`<root>` 依次取插件配置 `sharedIdentityDir`（绝对路径）、环境变量 `HANAMESH_SHARED_HOME`（绝对路径）、`~/.hanamesh-shared`。
+默认值刻意不放在任何一个客户端自己的 home（`~/.dsh`、`~/.hanamesh`）里。两个客户端必须解析到同一个 `<root>`；
+设置段会显示实际路径，配置不一致时两边显示的路径不同、设备 id 也不同，可据此发现。
+
+文件是一次写入：先用 `wx` 写临时文件再 `link(2)` 到最终名，已存在则失败，因此并发的首次启动不会互相覆盖，所有进程读回同一个赢家。
+每次启动按下表决定本客户端用哪个身份，`state().identity.source` 记录结果：
+
+| 共享文件 | 本客户端 `hanamesh_core.device` | 结果 `source` | 本客户端存储的变化 |
+|---|---|---|---|
+| 有、与本地相同 | 同一 id | `existing` | 无 |
+| 有 | 无 | `adopted` | `device` 写为共享身份 |
+| 有、与本地不同 | 另一 id | `conflict` | `device` 改为共享身份；原身份（含私钥）追加到 `replacedDevices[]`，不删除；`registration` 复位为 `unregistered`（原注册属于旧密钥），随后按正常流程注册共享身份 |
+| 无 | 有（J1.S4 之前的旧客户端） | `migrated` | 无；本地身份原样成为共享身份 |
+| 无 | 无 | `created` | 新建密钥写入共享文件，`device` 镜像之 |
+
+冲突规则是「先写入共享文件者为准」。被替换身份在服务端仍是一台独立设备；它未绑定时的待绑定分**不会**自动转入共享身份，
+设置段会列出被替换的设备 id 并说明这一点（当前合约没有设备合并接口）。
+
+共享文件不可读（`CORE_DEVICE_STORE_UNAVAILABLE`，`identity.detail` 带 errno）或损坏（`CORE_DEVICE_CORRUPT`：JSON 无法解析、字段缺失、
+私钥/公钥/deviceId 不一致）时：**不新建身份、不覆盖共享文件、不改本客户端存储**，`identity.status='failed'`；
+`getDeviceId` / `getSession` / `signRequest` 抛 `CORE_NOT_READY`，不注册、不签名。设置段显示原因与文件路径，
+用户修复或移走文件后点「重新读取设备身份」（`POST refresh`）即重新解析，无需重启。
+
+`identity` 字段：`{status:'shared'|'local-only'|'failed', location, source, reason, detail, replacedDeviceIds[]}`。
+`local-only` 只出现在未传入共享存储的直接调用（测试替身）；产品入口 `dsh.mjs` 总是接入共享存储。
 
 ## 客户端席位
 

@@ -1,5 +1,6 @@
 import type { CoreStore, PluginConfig } from './contracts.js';
 import type { HanaMeshCoreContract, HealthSnapshot } from './contract.js';
+import type { SharedDeviceStore } from './shared-device.js';
 interface HealthProvider {
     getHealth(): HealthSnapshot;
     recheck(): Promise<HealthSnapshot>;
@@ -62,8 +63,11 @@ export declare class SessionController {
     #private;
     readonly service: HanaMeshCoreContract;
     private constructor();
+    /** `sharedDevice` is the product path (dsh.mjs always passes it). Without it the identity is this client's own
+     *  storage only, and `state().identity.status` says `local-only`. */
     static create(config: PluginConfig, store: CoreStore, options?: {
         fetcher?: typeof fetch;
+        sharedDevice?: SharedDeviceStore;
     }): Promise<SessionController>;
     setConsent(state: 'granted' | 'withheld'): Promise<{
         state: 'granted' | 'withheld';

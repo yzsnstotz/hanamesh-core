@@ -19,7 +19,8 @@ test('client distribution declares native slots and avoids forbidden layout/link
 
 test('account row is state-aware: bound hides the bind button and names the account, unbound keeps it (user 2026-09-20)', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /state\.session\.bound === true\s*\?\s*createElement\('button'[^\n]*visit\('\/me'\)[^\n]*在网站查看账号与设备/);
+  assert.match(source, /const bound = state\.session\?\.bound \?\? null;/); // J1.S4: session is null while the shared identity is unavailable
+  assert.match(source, /\bbound === true\s*\?\s*createElement\('button'[^\n]*visit\('\/me'\)[^\n]*在网站查看账号与设备/);
   assert.match(source, /'去网站绑定'/);
   assert.match(source, /已绑定到网站账号/);
   assert.match(source, /'\/api\/hanamesh\/core\/refresh', \{method: 'POST'\}/); // post-bind polling uses the host refresh route
@@ -31,7 +32,7 @@ test('B7: bound account row names the GitHub account from state.account and fall
   const source = await readFile('src/client/index.ts', 'utf8');
   assert.match(source, /account: \{provider: 'github'; displayName: string\} \| null;/); // CoreState mirrors GET state
   assert.match(source, /state\.account\?\.provider === 'github'\s*\?\s*`已绑定到 GitHub 账号 \$\{state\.account\.displayName\}/);
-  assert.match(source, /:\s*`已绑定到网站账号（设备 \$\{state\.deviceId\.slice\(0, 8\)\}… 已关联你的 GitHub 登录）`/); // fallback for usage <= rc.2
+  assert.match(source, /:\s*`已绑定到网站账号（设备 \$\{short\(state\.deviceId \?\? ''\)\} 已关联你的 GitHub 登录）`/); // fallback for usage <= rc.2
   assert.match(source, /'data-hanamesh-core-account': state\.account\.displayName/); // hook for the AX/headless acceptance read
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.match(bundle, /已绑定到 GitHub 账号/);

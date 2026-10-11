@@ -2,7 +2,7 @@
 
 本插件不持有账号 cookie，不做邮箱或密码登录；账号绑定、认领与资产动作在网站完成。
 
-设备私钥只在插件进程内用于 `sign` / `signRequest`，不会进入契约响应、HTTP、日志或 diagnostics。远端 origin 固定，不跟随重定向；外链只允许与配置的 website origin 完全相同。
+设备私钥存放在本机共享身份文件 `<root>/identity/device.json`（目录 0700、文件 0600，见 API.md「本机共享设备身份」），由同一 OS 用户下的各客户端共用，并镜像在各客户端自己的 `hanamesh_core` storage-domain；冲突时被替换的旧私钥保留在本客户端存储的 `replacedDevices`，不删除。共享文件不可读或损坏时不新建、不覆盖，签名失败关闭（`CORE_NOT_READY`）。设备私钥只在插件进程内用于 `sign` / `signRequest`，不会进入契约响应、HTTP、日志或 diagnostics。远端 origin 固定，不跟随重定向；外链只允许与配置的 website origin 完全相同。
 
 Core 的同意状态是本机真相。安装不等于同意，默认 `withheld`；事件采集、缓冲删除与远端撤回由 Usage 插件负责。
 
