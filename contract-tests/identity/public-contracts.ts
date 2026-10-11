@@ -1,6 +1,5 @@
 // Public Identity names are consumed from the normal installed source, with no DTO declarations copied here.
-import type {DeviceLabelDTO, DeviceChallengeDTO, DeviceChallengeInput, DeviceRegisterInput, DeviceRegisterResponse, DeviceBindInput} from '@hanamesh/server-identity/contracts';
-import type {DeviceBindInput as ContractDeviceBindInput} from '@hanamesh/server-identity/contract';
+import type {DeviceLabelDTO, DeviceChallengeDTO, DeviceChallengeInput, DeviceRegisterInput, DeviceRegisterResponse, DeviceBindInput} from '@hanamesh/api-contracts/identity';
 import type {DeviceAuthHeaders} from '../../lib/contract.js';
 import {deviceLabel, registerDevice} from '../../lib/registration.js';
 const label: DeviceLabelDTO | null = deviceLabel();
@@ -17,7 +16,7 @@ const publishedRegistration: DeviceRegisterResponse = actualCoreRegistration;
 declare const providerRegistration: DeviceRegisterResponse;
 const acceptedCoreRegistration: Awaited<ReturnType<typeof registerDevice>> = providerRegistration;
 declare const bindInput: DeviceBindInput;
-const contractBindInput: ContractDeviceBindInput = bindInput;
+const contractBindInput: DeviceBindInput = bindInput;
 const deviceId: string = contractBindInput.deviceId;
 const signature: string = contractBindInput.signature;
 void [label, nonce, challenges, registrationInput, publishedRegistration, acceptedCoreRegistration, deviceId, signature];

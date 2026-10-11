@@ -23,7 +23,7 @@ test('account row is state-aware: bound hides the bind button and names the acco
   assert.match(source, /\bbound === true\s*\?\s*createElement\('button'[^\n]*visit\('\/me'\)[^\n]*在网站查看账号与设备/);
   assert.match(source, /'去网站绑定'/);
   assert.match(source, /已绑定到网站账号/);
-  assert.match(source, /'\/api\/hanamesh\/core\/refresh', \{method: 'POST'\}/); // post-bind polling uses the host refresh route
+  // Return-triggered POST refresh and its rendered result are exercised in settings-page.test.mjs.
   // rc.31: the 我的 Hana row stopped being a placeholder and now renders the real points read (T2).
   assert.match(source, /'data-hanamesh-core-points': points\?\.status \?\? 'loading'/);
 });
