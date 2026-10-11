@@ -88,3 +88,8 @@ await provider.setConsent('granted');
 卡片中的 `getConsent` 错误来自调用前的服务握手，是 `{status,reason,...}`，不能当成 getConsent 抛出的异常。既有握手还返回 `CORE_NOT_OBJECT`。卡片声明的运行错误保留原码：`CORE_NOT_READY`（503）、`CORE_DEVICE_CORRUPT`（500）；后者对应设备密钥读取/签名的损坏守卫。现有实现的输入、销毁及可选 server nonce 路径守卫另列在 `implementationErrors`，不隐藏为卡片错误。`getServerOrigin()` 的产品实现直接返回配置的 `string | null`（销毁后仍如此），没有就绪异常守卫：`CORE_NOT_READY` 是卡片声明的可用性错误，`implementationErrors: []` 表示当前 getter 不抛此码。离线的 null 不是错误；`getSession()` 为可能陈旧的观察，不是授权证明。
 
 本交接只整理本仓定义。api-contracts 仓的合入、版本 tag 和消费方接入由对应卡片负责，未在此发布新的合约包。
+
+
+### 无 TTY 自检的依赖目录重建
+
+根目录与 `contract-tests/identity` 各自的 `pnpm-workspace.yaml` 均明确只选择当前包（`packages: ['.']`），并设置 `confirmModulesPurge: false`。两者继续使用各自既有冻结 lock；不将 Identity 验证包纳入根包依赖图。已装依赖来自另一个 HOME/store 时，pnpm 可重建生成的 node_modules，不依赖调用方设置 CI 或提供 TTY。无 CI、无 TTY 的两 store 实际安装回归验证此路径，仍使用 `--frozen-lockfile`。该选项在本仓固定 pnpm 10.33.0 的 YAML 设置中生效，放入 .npmrc 不会传入对应安装选项。

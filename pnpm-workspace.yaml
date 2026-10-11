@@ -1,0 +1,6 @@
+# This install root owns only its package and its frozen lock.
+packages:
+  - '.'
+
+# Recreate generated modules after an environment/store change without a TTY.
+confirmModulesPurge: false
