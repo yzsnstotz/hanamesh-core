@@ -65,4 +65,26 @@ Identity 只在本仓独立 `contract-tests/identity` 验证包中以 `git+https
 
 0.3.0 的候选 tgz 消费通过，但 npm Git 包准备会安装根开发依赖；根 Identity 依赖引入其 devkit rc2 peer 与本仓 rc1 冲突，真实正常 Git 消费失败 404。0.3.1 将同一源范围移到独立验证包，Core 源包的正常构建不引入 Identity 提供方依赖；不改上游 peer、不放宽包管理检查、不复制合约。验证包单独正常安装并冻结其 lock。
 
-开发门：先 `pnpm install --frozen-lockfile --store-dir <共享缓存>`，再 `pnpm install:contract-tests --store-dir <共享缓存>`，随后 `pnpm build`、`pnpm check`、`pnpm test`。独立验证包不在产品包 files 内，仍通过正常包名直接引用发布源的 schema/fixture/suite。
+开发门：先 `pnpm install --frozen-lockfile --store-dir <共享缓存>`，随后 `pnpm build`、`pnpm check`、`pnpm test`。`pnpm test` 的 `pretest` 会调用 `pnpm install:contract-tests`，以独立 lock 冻结安装 Identity 验证依赖；需要先跑类型门时可提前执行该命令。独立验证包不在产品包 files 内，仍通过正常包名直接引用发布源的 schema/fixture/suite。
+
+
+## C-CORE 提供方定义交接（J1S2-CORE-01）
+
+`src/contract-fixtures.ts` 为真源，重建后的 `lib/contract-fixtures.js`（包导出 `hanamesh-core/contract/fixtures`）向 api-contracts 提供：
+
+- `CORE_CONTRACT_DEFINITION`：合约 id、服务名、wire 协议、五个卡片方法的输入/输出类型名与错误码、签名 canonical。`types` 引用现有 v1 JSON Schema 的字段定义，包含 SessionSnapshot 全部八个字段；没有第二份协议字段副本。
+- 类型重导出：`ConsentState`、`RequestSignatureInput`、`DeviceAuthHeaders`、`SessionSnapshot`、`HanaMeshCoreContract`、`CoreHandshake`。
+- `createCoreContractExamples()`：带 fixture 标签的同意状态、设备 id、公钥、会话、origin、原始请求字节及可验签四头；握手错误返回值与 `{code,status}` 运行错误样例。每次生成独立 Ed25519 公钥/签名，不输出私钥。请求 body 是 `Uint8Array | null`，消费方应保留或重建原始字节；JSON 序列化对象不替代签名输入。
+- `createCoreProviderFixture()`：最小内存模拟提供方，可切换同意、订阅/取消、签名及读取会话；`createCoreConsumerFixture()` 与现有 13 项握手矩阵可检查消费方。
+
+```js
+import {CORE_CONTRACT_DEFINITION, createCoreContractExamples, createCoreProviderFixture} from 'hanamesh-core/contract/fixtures';
+const definition = CORE_CONTRACT_DEFINITION;
+const examples = await createCoreContractExamples();
+const provider = createCoreProviderFixture({initialConsent: 'withheld'});
+await provider.setConsent('granted');
+```
+
+卡片中的 `getConsent` 错误来自调用前的服务握手，是 `{status,reason,...}`，不能当成 getConsent 抛出的异常。既有握手还返回 `CORE_NOT_OBJECT`。卡片声明的运行错误保留原码：`CORE_NOT_READY`（503）、`CORE_DEVICE_CORRUPT`（500）；后者对应设备密钥读取/签名的损坏守卫。现有实现的输入、销毁及可选 server nonce 路径守卫另列在 `implementationErrors`，不隐藏为卡片错误。`getServerOrigin()` 的产品实现直接返回配置的 `string | null`（销毁后仍如此），没有就绪异常守卫：`CORE_NOT_READY` 是卡片声明的可用性错误，`implementationErrors: []` 表示当前 getter 不抛此码。离线的 null 不是错误；`getSession()` 为可能陈旧的观察，不是授权证明。
+
+本交接只整理本仓定义。api-contracts 仓的合入、版本 tag 和消费方接入由对应卡片负责，未在此发布新的合约包。

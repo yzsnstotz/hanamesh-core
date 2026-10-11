@@ -1,9 +1,84 @@
+import {readFileSync} from 'node:fs';
 import {createHash, createPublicKey, generateKeyPairSync, randomBytes, sign as edSign, verify as edVerify} from 'node:crypto';
 import {CORE_REQUIRED_METHODS, checkCoreService} from './contract.js';
-import type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput} from './contract.js';
+import type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput, SessionSnapshot} from './contract.js';
 
 /** Every fixture carries this label so no screen, log or report can mistake it for the product provider. */
 export const CORE_FIXTURE_LABEL = 'FIXTURE · hanamesh-core contract v1 (not the product provider)';
+
+/** C-CORE types are re-exported here so the handoff has one import entry point. */
+export type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput, SessionSnapshot} from './contract.js';
+
+const schema = JSON.parse(readFileSync(new URL('../contract/hanamesh-core.v1.schema.json', import.meta.url), 'utf8')) as {$defs: Record<string, unknown>};
+const typeNames = ['ConsentState', 'DeviceId', 'PublicKey', 'RequestSignatureInput', 'DeviceAuthHeaders', 'SessionSnapshot', 'ServerOrigin'] as const;
+
+/** Transfer definition for api-contracts. References the existing v1 schema, without a second copy of its fields.
+ * `errors` records the card's public contract; implementationErrors records additional existing provider guards.
+ * Handshake failures are observations returned by checkCoreService, not exceptions from getConsent.
+ */
+export const CORE_CONTRACT_DEFINITION = Object.freeze({
+  id: 'C-CORE',
+  service: 'hanameshCore',
+  protocolVersion: '1',
+  types: Object.freeze(Object.fromEntries(typeNames.map(name => [name, schema.$defs[name]]))),
+  methods: {
+    getConsent: {input: null, output: 'ConsentState', errors: ['CORE_ABSENT', 'CORE_PROTOCOL_UNSUPPORTED', 'CORE_METHOD_MISSING'], errorChannel: 'handshake'},
+    signRequest: {input: 'RequestSignatureInput', output: 'Promise<DeviceAuthHeaders>', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_INPUT_INVALID', 'CORE_DISPOSED', 'CORE_UPSTREAM_UNAVAILABLE']},
+    getSession: {input: null, output: 'SessionSnapshot', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED']},
+    getServerOrigin: {input: null, output: 'ServerOrigin', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: [], note: 'The current provider returns configured string | null unconditionally, including after disposal; null means offline. CORE_NOT_READY is card-declared availability, not a thrown guard in this implementation.'},
+    getDeviceId: {input: null, output: 'DeviceId', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED']},
+  },
+  requestSigning: {
+    algorithm: 'Ed25519',
+    canonical: 'METHOD|pathname|unixMilliseconds|nonce|hex(sha256(body))',
+    method: 'upper-case',
+    path: 'strip query and fragment',
+    body: 'Uint8Array | null; hash exact bytes; null hashes the empty byte sequence',
+    signature: '64-byte Ed25519 signature encoded as base64url',
+    publicKey: 'raw 32-byte Ed25519 public key encoded as base64url',
+  },
+} as const);
+
+export interface CoreContractExamples {
+  readonly label: string;
+  readonly consent: ConsentState;
+  readonly deviceId: string;
+  readonly publicKey: string;
+  readonly session: SessionSnapshot;
+  readonly serverOrigin: string | null;
+  readonly request: RequestSignatureInput;
+  readonly headers: DeviceAuthHeaders;
+  readonly errors: {
+    readonly CORE_ABSENT: CoreHandshake;
+    readonly CORE_PROTOCOL_UNSUPPORTED: CoreHandshake;
+    readonly CORE_METHOD_MISSING: CoreHandshake;
+    readonly CORE_NOT_READY: {readonly code: 'CORE_NOT_READY'; readonly status: 503};
+    readonly CORE_DEVICE_CORRUPT: {readonly code: 'CORE_DEVICE_CORRUPT'; readonly status: 500};
+  };
+}
+
+/** Fresh, verifiable sample data backed by the minimal in-memory provider; no credentials or private keys leave it. */
+export async function createCoreContractExamples(): Promise<CoreContractExamples> {
+  const {service} = createCoreProviderFixture({serverOrigin: 'https://core.fixture.invalid'});
+  const request: RequestSignatureInput = {method: 'POST', path: '/v1/usage/events?fixture=1', body: new TextEncoder().encode('[]')};
+  return {
+    label: CORE_FIXTURE_LABEL,
+    consent: service.getConsent(),
+    deviceId: service.getDeviceId(),
+    publicKey: service.getPublicKey(),
+    session: service.getSession(),
+    serverOrigin: service.getServerOrigin(),
+    request,
+    headers: await service.signRequest(request),
+    errors: {
+      CORE_ABSENT: checkCoreService(undefined),
+      CORE_PROTOCOL_UNSUPPORTED: checkCoreService({...service, protocolVersion: '2'}),
+      CORE_METHOD_MISSING: checkCoreService({...service, signRequest: undefined}),
+      CORE_NOT_READY: {code: 'CORE_NOT_READY', status: 503},
+      CORE_DEVICE_CORRUPT: {code: 'CORE_DEVICE_CORRUPT', status: 500},
+    },
+  };
+}
 
 const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 const b64 = (bytes: Uint8Array): string => Buffer.from(bytes).toString('base64url');

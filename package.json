@@ -52,6 +52,7 @@
   "scripts": {
     "build": "node scripts/build.mjs --target",
     "build:offline": "node scripts/build.mjs --offline",
+    "pretest": "pnpm install:contract-tests",
     "test": "node --test --test-reporter=tap test/*.test.mjs contract-tests/identity/*.test.mjs",
     "test:mutations": "node scripts/mutation.mjs",
     "test:contract": "node lib/contract-cli.js",

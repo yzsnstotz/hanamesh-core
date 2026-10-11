@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile, access} from 'node:fs/promises';
+import {readFile, access, readdir} from 'node:fs/promises';
+import {join} from 'node:path';
 
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 
@@ -54,15 +55,24 @@ test('legacy login UI and identity names are absent from active source surfaces'
     ['Identity', 'Controller'].join(''),
     ['Identity', 'ClientService'].join(''),
   ].join('|');
-  const {spawnSync} = await import('node:child_process');
-  const result = spawnSync('rg', [
-    '-n',
-    legacyPattern,
-    ...active,
-    '-g', '!docs/acceptance/**',
-    '-g', '!test/stage0.test.mjs',
-  ], {encoding: 'utf8'});
-  assert.equal(result.status, 1, result.stdout + result.stderr);
+  const pattern = new RegExp(legacyPattern, 'u');
+  const matches = [];
+  async function scan(path) {
+    if (path === 'test/stage0.test.mjs') return;
+    const entries = await readdir(path, {withFileTypes: true}).catch(error => {
+      if (error.code === 'ENOTDIR') return null;
+      throw error;
+    });
+    if (entries) {
+      for (const entry of entries) {
+        const child = join(path, entry.name);
+        if (entry.isDirectory()) await scan(child);
+        else if (entry.isFile()) await scan(child);
+      }
+    } else if (pattern.test(await readFile(path, 'utf8'))) matches.push(path);
+  }
+  for (const path of active) await scan(path);
+  assert.deepEqual(matches, [], `legacy names found in ${matches.join(', ')}`);
   await assert.rejects(access('src/view.ts'));
   await assert.rejects(access('src/ui/login.js'));
 });
