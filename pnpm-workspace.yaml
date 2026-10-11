@@ -4,3 +4,7 @@ packages:
 
 # Recreate generated modules after an environment/store change without a TTY.
 confirmModulesPurge: false
+
+# Keep every pnpm run entrypoint on the already required development toolchain,
+# including conformance launched from a non-login shell with a different Node.
+useNodeVersion: 24.13.1
