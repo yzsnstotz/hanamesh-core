@@ -1,9 +1,6 @@
 import {createHash} from 'node:crypto';
-import {createRequire} from 'node:module';
+import semver from 'semver';
 import type {ComponentHealth, ComponentObservation, ComponentStatus, CoreHealthSnapshot, SuiteComponent, SuiteProfile} from './types.js';
-
-const require = createRequire(import.meta.url);
-const semver = require('../../vendor/semver/index.js') as {valid(value: string): string | null; satisfies(value: string, range: string): boolean};
 
 const reasons: Record<ComponentStatus, string> = {
   satisfied: '必需组件已加载，版本符合当前 profile。',

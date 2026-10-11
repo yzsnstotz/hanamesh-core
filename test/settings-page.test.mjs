@@ -125,6 +125,32 @@ test('consent UI reads the saved grant and withdrawal through Core routes', asyn
   await reopened.dispose();
 });
 
+test('J2S1: HanaMesh section shows device identity and a default-off consent switch whose status and service effect follow each toggle', async () => {
+  const {section, controller} = await consentSection();
+  const statusText = () => textIn(elements(section.render()).find(e => e.props.role === 'status'));
+  const tree = section.render();
+  assert.equal(tree.type, 'section');
+  assert.ok(elements(tree).some(e => e.type === 'h2' && e.children.includes('HanaMesh')));
+  const identity = elements(tree).find(e => e.props['data-hanamesh-core-identity']);
+  assert.ok(identity, 'device identity row is in the same section');
+  assert.equal(identity.props['data-hanamesh-core-device'], controller.service.getDeviceId());
+  assert.equal(switchIn(section).props.checked, false, 'fresh device starts withheld');
+  assert.equal(statusText(), '当前：已关闭');
+  const seen = [];
+  controller.service.onConsentChange(state => seen.push(state));
+  switchIn(section).props.onChange({currentTarget: {checked: true}});
+  await settle();
+  assert.equal(controller.service.getConsent(), 'granted', 'C-CORE getConsent sees the grant without a reload');
+  assert.deepEqual(seen, ['granted']);
+  assert.equal(statusText(), '当前：已开启');
+  switchIn(section).props.onChange({currentTarget: {checked: false}});
+  await settle();
+  assert.equal(controller.service.getConsent(), 'withheld');
+  assert.deepEqual(seen, ['granted', 'withheld']);
+  assert.equal(statusText(), '当前：已关闭');
+  await controller.dispose();
+});
+
 test('consent UI disables the switch until its write and authoritative read finish', async () => {
   let release;
   const waiting = new Promise(resolve => { release = resolve; });

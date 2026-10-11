@@ -12,7 +12,7 @@ dsh plugin --profile web add hanamesh-core@0.2.0-rc.49
 
 Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`。官方宿主 peer 精确钉 `@deepseek-ai/cordis@4.0.4` 和四项 `@deepseek-ai/dsh-*@0.2.0-rc.2`；React `18.3.1` 与 Zod `4.5.4` 由公开依赖闭包供给。Core 不 import Usage/AppHost。
 
-`dsh-typert-protocol@0.2.0-rc.2` 是严格类型检查需要的 devDependency：官方 connection 的公开类型引用它，但只将其列为 devDependency。无运行时补丁，构建不跳过库类型检查。历史 `vendor/host-api` 只作可校验的旧类型快照，构建使用实际公开官方包；不随 npm 包分发。
+`dsh-typert-protocol@0.2.0-rc.2` 是严格类型检查需要的 devDependency：官方 connection 的公开类型引用它，但只将其列为 devDependency。无运行时补丁，构建不跳过库类型检查。构建使用实际公开官方包；历史 DSH 0.1.5-alpha.1 类型快照已归档到 `docs/archive/host-api-dsh-0.1.5-alpha.1/`，不参与构建与发布。版本范围判断用正常依赖 `semver@7.7.2`，不再随包携带复制件。
 
 ```sh
 pnpm install --frozen-lockfile

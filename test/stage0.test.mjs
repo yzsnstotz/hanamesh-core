@@ -10,7 +10,7 @@ test('Core installs independently and pins its public official host peers', asyn
   assert.equal(pkg.name, 'hanamesh-core');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
-  assert.deepEqual(pkg.dependencies ?? {}, {});
+  assert.deepEqual(pkg.dependencies, {semver: '7.7.2'}); // D-3 / HM-4: semver is the only runtime dependency
   assert.equal(pkg.dsh.bundle.patch, './profile/cordis.patch.yml');
   for (const [name, version] of Object.entries(pkg.peerDependencies)) {
     if (name.startsWith('@deepseek-ai/')) assert.equal(version, name.endsWith('/cordis') ? '4.0.4' : '0.2.0-rc.2');

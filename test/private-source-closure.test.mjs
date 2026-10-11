@@ -12,6 +12,14 @@ test('Core private source closure uses published ranges and keeps developer tool
   await assert.rejects(access('vendor/DEVKIT.sha256'));
   await assert.rejects(access('vendor/hanamesh-ui-kit-0.1.0-rc.3.tgz'));
   assert.equal(JSON.parse(await readFile('deps/LOCKS.json','utf8')).uiKit, undefined);
+  // HM-4: semver is a normal runtime dependency; the vendored copy and the old host-api snapshot are archived.
+  assert.deepEqual(root.dependencies, {semver: '7.7.2'});
+  assert.ok(!root.files.some(path => path.startsWith('vendor/')));
+  await assert.rejects(access('vendor/semver'));
+  await assert.rejects(access('vendor/host-api'));
+  await assert.rejects(access('deps/HOST_API.sha256.json'));
+  await access('docs/archive/host-api-dsh-0.1.5-alpha.1/HOST_API.sha256.json');
+  assert.match(await readFile('src/health/evaluate.ts','utf8'), /^import semver from 'semver';$/m);
   for(const path of ['package.json','contract-tests/identity/package.json']) {
     const pkg=JSON.parse(await readFile(path,'utf8'));
     for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
