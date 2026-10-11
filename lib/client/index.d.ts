@@ -34,7 +34,10 @@ export declare function collectLatestActivity(fetchPage: (query: {
     from?: string;
     to?: string;
     after?: string;
-}) => Promise<ActivityState>, previous: ActivityView | null): Promise<ActivityView>;
+}) => Promise<ActivityState>, previous: ActivityView | null, limits?: {
+    activityPageBudget: number;
+    activityDisplayRows: number;
+}): Promise<ActivityView>;
 export declare const name = "hanamesh-core-client";
 export declare const inject: string[];
 export declare function apply(ctx: ClientContext): void;

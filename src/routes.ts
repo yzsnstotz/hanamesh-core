@@ -34,9 +34,11 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null): (request: Request) => Promise<Response> {
   return async request => {
     try {
+      const rejection = admission?.requestRejection(request);
+      if (rejection !== undefined) return response({error: {code: rejection === 401 ? 'CORE_NOT_READY' : 'CORE_INPUT_INVALID'}}, rejection);
       const url = new URL(request.url);
       if (url.hash || (url.search && url.pathname !== ROUTES.activity)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
       if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
@@ -49,7 +51,9 @@ export function createRouteHandler(controller: SessionController): (request: Req
         return response(controller.diagnostics());
       }
       if (request.method !== 'POST') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
-      requireSameCarrierOrigin(request);
+      // Desktop validates its app origin then strips it before forwarding. Only the
+      // official Connection's authenticated admission may authorize that carrier.
+      if (!admission || request.headers.has('origin')) requireSameCarrierOrigin(request);
       if (url.pathname === ROUTES.register) return response(await controller.register());
       if (url.pathname === ROUTES.healthRecheck) return response(await controller.recheckHealth());
       if (url.pathname === ROUTES.refresh) return response(await controller.refresh());

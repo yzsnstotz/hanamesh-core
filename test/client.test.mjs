@@ -67,8 +67,10 @@ test('P01-U04: native points distinguish typed totals from signed device event h
   assert.match(source, /事件不等于逐笔积分/);
   assert.match(source, /尚未抵达最新/);
   assert.match(source, /继续读取到最新/);
-  assert.match(source, /page < 5/);
-  assert.match(source, /slice\(-25\)/);
+  assert.match(source, /page < limits\.activityPageBudget/);
+  assert.match(source, /activityPageBudget: 5/);
+  assert.match(source, /slice\(-limits\.activityDisplayRows\)/);
+  assert.match(source, /activityDisplayRows: 25/);
   assert.match(source, /row\.displayName \?\? `\$\{row\.hanaId\.slice\(0, 8\)\}…`/);
 });
 
@@ -82,7 +84,8 @@ test('P01-U04: gateway activity is named by active hour, without implying a mode
 
 test('T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /if \(cancelled \|\| !next\.prompt\.show\) return;/); // the host decides, the client obeys
+  assert.match(source, /if \(cancelled\) return;/);
+  assert.match(source, /if \(!next\.prompt\.show\) return;/); // the host decides, the client obeys
   assert.match(source, /jsonRequest\('\/api\/hanamesh\/core\/points\/prompt-shown', \{method: 'POST'\}\)/);
   assert.match(source, /'data-hanamesh-core-prompt': 'bind'/);
   assert.match(source, /你已累计 \$\{fen\(pending\)\}（待绑定）/);

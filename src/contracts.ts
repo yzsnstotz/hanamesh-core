@@ -5,6 +5,19 @@ export interface PluginConfig {
   readonly timeoutMs?: number;
   readonly authNonceSource?: 'client' | 'server';
   readonly checkIntervalMs?: number;
+  /** Local response budget; not a server pagination limit. Default 200 Hana rows. */
+  readonly maxHanaRows?: number;
+  /** Catalog request deadline in milliseconds, default 1500, bounded by timeoutMs. */
+  readonly profileTimeoutMs?: number;
+  /** Local memory budget for each upstream response, default 1 MiB. */
+  readonly maxResponseBytes?: number;
+  readonly clientPollIntervalMs?: number;
+  readonly pointsRefreshMs?: number;
+  readonly contributionIntervalMs?: number;
+  readonly activityPageBudget?: number;
+  readonly activityDisplayRows?: number;
+  readonly catalogConcurrency?: number;
+
   /** Absolute root of the machine-wide shared identity (`<root>/identity/device.json`). null/absent → env
    *  `HANAMESH_SHARED_HOME`, then `~/.hanamesh-shared`. Every client on the machine must resolve the same root. */
   readonly sharedIdentityDir?: string | null;

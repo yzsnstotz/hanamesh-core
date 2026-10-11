@@ -2,6 +2,8 @@ import {isAbsolute} from 'node:path';
 import {CoreError} from './errors.js';
 import {INITIAL_CORE_SNAPSHOT, type PluginConfig, type StoredCoreSnapshot} from './contracts.js';
 
+export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4});
+
 const SECRET_KEY = /(?:password|token|cookie|authorization|credential|secret|signer|private.?key)/i;
 
 function originOf(value: unknown): string | null {
@@ -18,10 +20,29 @@ function originOf(value: unknown): string | null {
 
 export function configOf(input: PluginConfig): Required<PluginConfig> {
   if (!input || typeof input !== 'object') throw new CoreError('CORE_INPUT_INVALID', 400);
-  const timeoutMs = input.timeoutMs ?? 10_000;
-  const checkIntervalMs = input.checkIntervalMs ?? 3_000;
+  const timeoutMs = input.timeoutMs ?? CORE_DEFAULTS.timeoutMs;
+  const checkIntervalMs = input.checkIntervalMs ?? CORE_DEFAULTS.checkIntervalMs;
   if (!Number.isInteger(timeoutMs) || timeoutMs < 10 || timeoutMs > 60_000 || !Number.isInteger(checkIntervalMs) || checkIntervalMs < 250 || checkIntervalMs > 60_000) {
     throw new CoreError('CORE_INPUT_INVALID', 400);
+  }
+  const maxHanaRows = input.maxHanaRows ?? CORE_DEFAULTS.maxHanaRows;
+  const profileTimeoutMs = input.profileTimeoutMs ?? CORE_DEFAULTS.profileTimeoutMs;
+  const maxResponseBytes = input.maxResponseBytes ?? CORE_DEFAULTS.maxResponseBytes;
+  for (const value of [maxHanaRows, profileTimeoutMs, maxResponseBytes]) {
+    if (!Number.isSafeInteger(value) || value < 1) throw new CoreError('CORE_INPUT_INVALID', 400);
+  }
+  const clientPollIntervalMs = input.clientPollIntervalMs ?? CORE_DEFAULTS.clientPollIntervalMs;
+  const pointsRefreshMs = input.pointsRefreshMs ?? CORE_DEFAULTS.pointsRefreshMs;
+  const contributionIntervalMs = input.contributionIntervalMs ?? CORE_DEFAULTS.contributionIntervalMs;
+  const activityPageBudget = input.activityPageBudget ?? CORE_DEFAULTS.activityPageBudget;
+  const activityDisplayRows = input.activityDisplayRows ?? CORE_DEFAULTS.activityDisplayRows;
+  const catalogConcurrency = input.catalogConcurrency ?? CORE_DEFAULTS.catalogConcurrency;
+  for (const value of [clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency]) {
+    if (!Number.isSafeInteger(value) || value < 1) throw new CoreError('CORE_INPUT_INVALID', 400);
+  }
+  // JavaScript timers use a signed 32-bit millisecond delay.
+  for (const value of [clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs]) {
+    if (value > 2_147_483_647) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
   const sharedIdentityDir = input.sharedIdentityDir ?? null;
   if (sharedIdentityDir !== null && (typeof sharedIdentityDir !== 'string' || !isAbsolute(sharedIdentityDir))) throw new CoreError('CORE_INPUT_INVALID', 400);
@@ -31,7 +52,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     allowSystemBrowser: input.allowSystemBrowser ?? false,
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
-    checkIntervalMs,
+    checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency,
     sharedIdentityDir,
   });
 }

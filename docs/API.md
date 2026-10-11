@@ -11,7 +11,7 @@
 | `POST` | `health/recheck` | 重新读取 Loader 与包元数据并发布一个完整快照 |
 | `POST` | `open-external` | 请求 `{url}`；只允许 `url.origin === websiteOrigin`；系统打开器默认关闭 |
 | `POST` | `bind-link` | 无 body；向 Server 取 `bind` 挑战并用设备私钥签 `utf8(nonce)`，返回 `{url, expiresAt}`，`url` = `websiteOrigin` + `/me/bind?deviceId&nonce&signature`（O2 绑定落地页；identity `POST /v1/identity/me/devices/bind` 验签 nonce）；未配置 `serverOrigin` 或 `websiteOrigin` → 409 `CORE_URL_NOT_ALLOWED` |
-| `GET` | `points` | rc.42：宿主用设备签名读服务端 `GET /v1/custody/me/points`，并以公开 Registry profile 补充可读的 `displayName`（不可用则 `null`，客户端回退短 ID）。返回 `{status:'ready'|'unavailable', reason, bindingStatus, totalPoints, pendingTotal, hanas:[{hanaId,displayName,points,pending,breakdown:{install,open,use,claimBonus,creatorMirror,launchInitiator}}], bound, deviceId, prompt:{show, shownAt}}`。六类是**按类型汇总**，不是逐笔历史；所有数值单位是**分**，不是代币。`status:'unavailable'` 的 `reason`：`NOT_CONNECTED`、`CONSENT_WITHHELD`、`NOT_REGISTERED`、`CORE_UPSTREAM_UNAVAILABLE`。`ready` 返回 C-POINTS v0.10.0 的必填 `bindingStatus: UNBOUND | BOUND`；`bindingStatus` 缺失或非法时返回 `CORE_UPSTREAM_UNAVAILABLE`，不从余额或 Usage 的绑定状态推断；设置页在 `UNBOUND` 时显示「未绑定：只累计、暂不可领」，包括零积分空态。`BOUND` 只表示账号已绑定，不表示钱包或领取资格。成功结果缓存 60 秒，`refresh` 与同意开关会清缓存。`prompt.show` 由宿主判定：`pendingTotal > 0 && bound !== true && shownAt === null` |
+| `GET` | `points` | rc.42：宿主用设备签名读服务端 `GET /v1/custody/me/points`，并以公开 Registry profile 补充可读的 `displayName`（不存在则 `not-found`，读取失败则 `failed` 与原因，客户端保留积分并显示故障）。返回 `{status:'ready'|'unavailable', reason, bindingStatus, totalPoints, pendingTotal, hanas:[{hanaId,displayName,points,pending,breakdown:{install,open,use,claimBonus,creatorMirror,launchInitiator}}], bound, deviceId, prompt:{show, shownAt}}`。六类是**按类型汇总**，不是逐笔历史；所有数值单位是**分**，不是代币。`status:'unavailable'` 的 `reason`：`NOT_CONNECTED`、`CONSENT_WITHHELD`、`NOT_REGISTERED`、`CORE_UPSTREAM_UNAVAILABLE`。`ready` 返回 C-POINTS v0.10.0 的必填 `bindingStatus: UNBOUND | BOUND`；`bindingStatus` 缺失或非法时返回 `CORE_UPSTREAM_UNAVAILABLE`，不从余额或 Usage 的绑定状态推断；设置页在 `UNBOUND` 时显示「未绑定：只累计、暂不可领」，包括零积分空态。`BOUND` 只表示账号已绑定，不表示钱包或领取资格。成功结果默认缓存 60 秒（`pointsRefreshMs`），`refresh` 与同意开关会清缓存。`prompt.show` 由宿主判定：`pendingTotal > 0 && bound !== true && shownAt === null` |
 | `GET` | `activity[?from=<ISO>&to=<ISO>&after=<opaque>]` | rc.42：宿主用**本设备签名**读现有 Usage `GET /v1/usage/me/devices/:deviceId/events`；返回 `{status,reason,items:[{hanaRef,action,occurredAt}],nextAfter,window}`。缺省近 90 天、每页最多 200、服务端原有升序游标；后续页必须原样带 `window.from/to` 与 opaque `after`，不接受任意设备 ID。宿主只投影这三个字段，不把原始事件的签名、nonce、主体或回执给浏览器。它仅是本设备未撤回且未过保留期的**事件历史**，无逐事件获分；客户端到尾后才将最新 25 项倒序展示，未到尾必须告知不完整。|
 | `POST` | `points/prompt-shown` | rc.31（T2）。无 body；把一次性绑定引导标记 `pointsBindPromptShownAt` 落到 `hanamesh_core` storage-domain 并返回 `{shownAt}`。幂等：已有标记时原样返回，不覆盖。该字段在 schema 里是 optional，rc.30 及更早的快照仍能加载 |
 | `POST` | `refresh` | 无 body；共享设备身份处于 `failed` 时先重新解析，再刷新贡献与分，返回 `state` |
@@ -51,7 +51,7 @@
 
 ## 客户端席位
 
-浏览器 bundle 只注册原生 `settings.section` 与 `sidebar.footer.action` 两个席位，不使用 webserver index 注入，也不画 fixed 覆盖层。固定 DSH `0.1.5-alpha.1` 没有公开的 `settings.open(section)` 服务，因此侧栏动作点击原生 Settings trigger，再选择名为 `HanaMesh` 的原生 section nav；页面本身仍由 `settings.section` 所有者渲染。
+浏览器 bundle 只注册原生 `settings.section` 与 `sidebar.footer.action` 两个席位，不使用 webserver index 注入，也不画 fixed 覆盖层。固定 D7 DSH `0.2.1-alpha.2` 上，侧栏按钮打开 Core 自有的原生 `<dialog>` 设置页；同一 HanaMesh 段仍注册在官方 `settings.section`，关闭时释放页面并恢复焦点。绑定返回通过窗口 focus/visibility 刷新，不依赖深链。
 
 客户端每 10 秒读取 `state`，同一轮再读 `points`。同意开关、注册重试、健康重查都在成功后重新读取；失败显示错误码并保留服务端真值。贡献与分的 unavailable 都不显示为 0。
 
@@ -73,3 +73,13 @@ rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载）�
 - 请求头：`x-hm-timestamp` 为 Unix **毫秒**；签名串 `METHOD|PATH|TIMESTAMP|NONCE|hex(sha256(body))`，`PATH` = 路径名（不含 query/fragment，O1 usage/identity 均按路由路径验签），含 `|` 的路径拒绝。
 - 所有请求带 `Origin = serverOrigin`（identity 对 POST/PATCH 强制精确 Origin）。
 - 证据：`docs/acceptance/recovery-20260919/real-server.log`（真实 `hanamesh-server@0.2.0-rc.1` + PostgreSQL 17.6：注册 201/幂等 200、`/v1/identity/me` 200、贡献 200 含 `bound`、篡改与 rc.8 旧格式均 401）。
+
+### Q61 配置与可见故障
+
+`timeoutMs` 默认10000、范围10..60000；`checkIntervalMs` 默认3000、范围250..60000。新增 `profileTimeoutMs` 默认1500（正安全整数，实际不超过timeoutMs）、`maxHanaRows` 默认200（正安全整数，本地响应行预算，不是服务分页限制）、`maxResponseBytes` 默认1048576（正安全整数，每个响应的内存预算）。插件配置可修改，state/diagnostics及设置展示当前值。超行预算返回CORE_POINTS_LIMIT_EXCEEDED，超响应预算返回CORE_RESPONSE_LIMIT_EXCEEDED；不截断积分或金额。
+
+名称结果包含displayNameStatus ready/not-found/failed与displayNameReason：404且响应码为REGISTRY_NOT_FOUND才判不存在；其他404仍为故障，传输/非法响应失败保留权威积分且显示故障，失败不缓存为不存在。显式refresh清名称缓存；窗口focus/visibility返回沿既有refresh更新。注册失败不安排后台指数重试，错误保留在registration.lastError及registrationFailure；失败状态无法保存时另外显示CORE_STORAGE_UNAVAILABLE，通过设置中重试注册重新发起。dispose中止本模块活动请求，不改变设备/同意/签名和持久化schema身份。
+
+客户端与读取调度配置：`clientPollIntervalMs=10000`、`pointsRefreshMs=60000`、`contributionIntervalMs=60000`、`activityPageBudget=5`、`activityDisplayRows=25`、`catalogConcurrency=4`。它们是本地展示、缓存或资源预算，不是签名/权限安全常量；均可在插件配置设置正安全整数，定时器上限为 JavaScript 有符号 32 位毫秒值。活动游标保持不透明，达到扫描预算仍明确显示未到末尾并支持继续加载。原 90 天业务窗口、上游单页 200 条、金额与签名约束保持。
+
+D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发到带自身认证 cookie 的宿主 Connection。Core 产品入口调用官方 `connection.requestRejection` 认证，只有被它接纳的原生请求可缺少 Origin；独立路由仍要求原同源 Origin，有 Origin 的产品写入仍核对同源。未取消认证或扩大来源白名单。

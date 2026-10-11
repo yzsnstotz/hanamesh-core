@@ -10,9 +10,9 @@ dsh plugin --profile web add hanamesh-core@0.2.0-rc.49
 
 ## 依赖与构建
 
-Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`。官方宿主 peer 精确钉 `@deepseek-ai/cordis@4.0.4` 和四项 `@deepseek-ai/dsh-*@0.2.0-rc.2`；React `18.3.1` 与 Zod `4.5.4` 由公开依赖闭包供给。Core 不 import Usage/AppHost。
+Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`。固定 D7 上游 `d743267388641bc76f17c45ce8b4c231aed1d32c` 的官方宿主 peer 精确钉 `@deepseek-ai/cordis@4.0.5-alpha.1` 与实际使用的 `@deepseek-ai/dsh-*@0.2.1-alpha.2`；React `18.3.1` 与 Zod `4.5.4` 由公开依赖闭包供给。Core 不 import Usage/AppHost。
 
-`dsh-typert-protocol@0.2.0-rc.2` 是严格类型检查需要的 devDependency：官方 connection 的公开类型引用它，但只将其列为 devDependency。无运行时补丁，构建不跳过库类型检查。构建使用实际公开官方包；历史 DSH 0.1.5-alpha.1 类型快照已归档到 `docs/archive/host-api-dsh-0.1.5-alpha.1/`，不参与构建与发布。版本范围判断用正常依赖 `semver@7.7.2`，不再随包携带复制件。
+`@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2` 是 connection 公开类型的活动依赖，和 scope/storage 一起明确列入本包宿主 peer 与开发依赖；干净消费者只供给已声明的宿主依赖。无运行时补丁，构建不跳过库类型检查。构建使用实际公开官方包；历史 DSH 0.1.5-alpha.1 类型快照已归档到 `docs/archive/host-api-dsh-0.1.5-alpha.1/`，不参与构建与发布。版本范围判断用正常依赖 `semver@7.7.2`，不再随包携带复制件。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -32,4 +32,4 @@ Server 注册 POST 的 Origin 为 serverOrigin；Server 的可信 Origin 须包�
 
 Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm run pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
 
-The package consumer checks JavaScript and strict TypeScript without devkit installed. The root type entry also needs the public DSH type prerequisite `@deepseek-ai/dsh-typert-protocol@0.2.0-rc.2`, already used by the local host type gate.
+The package consumer checks JavaScript and strict TypeScript without devkit installed. The root type entry also needs the public DSH type prerequisite `@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2`, already used by the local host type gate.

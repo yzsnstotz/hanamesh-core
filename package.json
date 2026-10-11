@@ -44,7 +44,7 @@
     "docs/SECURITY.md"
   ],
   "engines": {
-    "node": "24.13.1"
+    "node": ">=24.13.1 <25"
   },
   "packageManager": "pnpm@10.33.0",
   "scripts": {
@@ -53,7 +53,7 @@
     "pretest": "pnpm install:contract-tests",
     "test": "node --test --test-reporter=tap test/*.test.mjs contract-tests/identity/*.test.mjs",
     "test:mutations": "node scripts/mutation.mjs",
-    "test:contract": "node lib/contract-cli.js",
+    "test:contract": "pnpm run build && node lib/contract-cli.js",
     "test:crash": "node --test --test-reporter=tap test/crash.test.mjs",
     "verify:inputs": "node scripts/verify-inputs.mjs",
     "preflight": "node scripts/preflight.mjs",
@@ -65,41 +65,34 @@
     "install:contract-tests": "pnpm --dir contract-tests/identity install --frozen-lockfile"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "4.0.4",
-    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
+    "@deepseek-ai/cordis": "4.0.5-alpha.1",
+    "@deepseek-ai/dsh-client-connection": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
     "react": "18.3.1",
-    "zod": "4.5.4"
+    "zod": "4.5.4",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-scope": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-storage": "0.2.1-alpha.2"
   },
   "devDependencies": {
     "@hanamesh/api-contracts": "git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0",
-    "@deepseek-ai/cordis": "4.0.4",
-    "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
+    "@deepseek-ai/cordis": "4.0.5-alpha.1",
+    "@deepseek-ai/dsh-client-connection": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-alpha.2",
     "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
     "@types/node": "24.13.4",
     "@types/react": "18.3.12",
     "@types/semver": "7.7.1",
     "react": "18.3.1",
     "typescript": "5.9.3",
-    "zod": "4.5.4"
-  },
-  "pnpm": {
-    "overrides": {
-      "@deepseek-ai/cordis": "4.0.4",
-      "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-storage-domain": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-storage": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-invariants": "0.2.0-rc.2",
-      "@deepseek-ai/dsh-credentials": "0.2.0-rc.2"
-    }
+    "zod": "4.5.4",
+    "@deepseek-ai/dsh-scope": "0.2.1-alpha.2",
+    "@deepseek-ai/dsh-storage": "0.2.1-alpha.2"
   },
   "dsh": {
     "bundle": {

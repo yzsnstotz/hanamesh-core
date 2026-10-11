@@ -38,3 +38,12 @@ test('a five-page budget remains explicitly incomplete and the next scan can fin
   assert.equal(finished.nextAfter, null);
   assert.equal(finished.items.at(-1).occurredAt, at(1199));
 });
+
+test('named scan and display budgets keep cursors opaque and support continuation',async()=>{
+ let count=0;const fetchPage=async()=>({status:'ready',reason:null,items:[item(count++)],nextAfter:count<3?`opaque${count}`:null,window});
+ const first=await collectLatestActivity(fetchPage,null,{activityPageBudget:1,activityDisplayRows:2});
+ assert.equal(first.scanned,1);assert.equal(first.nextAfter,'opaque1');
+ const last=await collectLatestActivity(fetchPage,first,{activityPageBudget:3,activityDisplayRows:2});
+ assert.equal(last.scanned,3);assert.equal(last.items.length,2);assert.equal(last.nextAfter,null);
+ for(const value of [0,-1,NaN])await assert.rejects(collectLatestActivity(fetchPage,null,{activityPageBudget:value,activityDisplayRows:2}));
+});

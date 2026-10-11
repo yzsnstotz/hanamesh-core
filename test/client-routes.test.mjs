@@ -42,5 +42,5 @@ test('server responses larger than 1 MiB are rejected before JSON parsing', asyn
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {
     fetcher: async () => new Response(oversized, {headers: {'content-type': 'application/json'}}),
   });
-  assert.deepEqual(await controller.refreshContributions(), {status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE'});
+  assert.deepEqual(await controller.refreshContributions(), {status: 'unavailable', reason: 'CORE_RESPONSE_LIMIT_EXCEEDED'});
 });

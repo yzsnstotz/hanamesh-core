@@ -24,7 +24,12 @@ declare const BREAKDOWN_KEYS: readonly ["install", "open", "use", "claimBonus", 
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
 /** C-POINTS v0.10.0 OwnPointsDTO.bindingStatus; never inferred from balances or Usage's session. */
 type PointsBindingStatus = 'UNBOUND' | 'BOUND';
-export type HanaPoints = {
+type HanaName = {
+    displayName: string | null;
+    displayNameStatus: 'ready' | 'not-found' | 'failed';
+    displayNameReason: string | null;
+};
+export type HanaPoints = HanaName & {
     hanaId: string;
     displayName: string | null;
     points: number;

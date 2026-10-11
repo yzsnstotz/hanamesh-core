@@ -18,11 +18,11 @@ const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'c
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
 /** C-POINTS v0.10.0 OwnPointsDTO.bindingStatus; never inferred from balances or Usage's session. */
 type PointsBindingStatus = 'UNBOUND' | 'BOUND';
-export type HanaPoints = {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
+type HanaName = {displayName: string | null; displayNameStatus: 'ready' | 'not-found' | 'failed'; displayNameReason: string | null};
+export type HanaPoints = HanaName & {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type Points =
   | {status: 'unavailable'; reason: string; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
   | {status: 'ready'; reason: null; bindingStatus: PointsBindingStatus; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
-const MAX_HANA_ROWS = 200;
 const pointsUnavailable = (reason: string): Points => Object.freeze({status: 'unavailable', reason, totalPoints: 0, pendingTotal: 0, hanas: Object.freeze([] as HanaPoints[])} as const);
 const amount = (value: unknown): number => {
   if (typeof value !== 'number' || !Number.isFinite(value)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
@@ -33,7 +33,7 @@ function hanaPoints(value: unknown): HanaPoints {
   if (!row || typeof row !== 'object' || typeof row.hanaId !== 'string' || !row.hanaId || row.hanaId.length > 200) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
   const breakdown = {} as Record<BreakdownKey, number>;
   for (const key of BREAKDOWN_KEYS) breakdown[key] = row.breakdown?.[key] === undefined ? 0 : amount(row.breakdown[key]);
-  return Object.freeze({hanaId: row.hanaId, displayName: null, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
+  return Object.freeze({hanaId: row.hanaId, displayName: null, displayNameStatus: 'not-found', displayNameReason: null, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
 }
 type ActivityAction = 'install' | 'open' | 'use' | 'uninstall';
 type ActivityItem = {hanaRef: string; action: ActivityAction; occurredAt: string};
@@ -80,7 +80,7 @@ export class SessionController {
   #state: StoredCoreSnapshot;
   #publishTail: Promise<void> = Promise.resolve();
   #disposed = false;
-  #retryTimer: ReturnType<typeof setTimeout> | null = null;
+  #registrationFailure: {code: string; persistence: string | null} | null = null;
   #contributionsTimer: ReturnType<typeof setInterval> | null = null;
   #health: HealthProvider | null = null;
   #usageReady: (() => boolean) | null = null;
@@ -88,7 +88,7 @@ export class SessionController {
   #contributionsCheckedAt = 0;
   #points: Points = pointsUnavailable('NOT_CONNECTED');
   #pointsCheckedAt = 0;
-  readonly #hanaNames = new Map<string, string | null>();
+  readonly #hanaNames = new Map<string, HanaName>();
   #bound: boolean | null = null;
   #account: LinkedAccount | null = null;
   readonly #consentListeners = new Set<(state: 'granted' | 'withheld', changedAt: string) => void>();
@@ -97,8 +97,8 @@ export class SessionController {
     this.#config = configOf(config);
     this.#store = store;
     this.#shared = shared;
-    this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher);
-    this.#profileTransport = new ServerTransport(this.#config.serverOrigin, Math.min(1_500, this.#config.timeoutMs), fetcher);
+    this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher, this.#config.maxResponseBytes);
+    this.#profileTransport = new ServerTransport(this.#config.serverOrigin, Math.min(this.#config.profileTimeoutMs, this.#config.timeoutMs), fetcher, this.#config.maxResponseBytes);
     this.#state = snapshotOf(store.read());
     this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
     this.service = Object.freeze({
@@ -242,7 +242,6 @@ export class SessionController {
   }
 
   async register(): Promise<ReturnType<HanaMeshCoreContract['getSession']>> {
-    if (this.#retryTimer) { clearTimeout(this.#retryTimer); this.#retryTimer = null; }
     const attempts = this.#state.registration.attempts + 1;
     const checkedAt = new Date().toISOString();
     try {
@@ -252,17 +251,17 @@ export class SessionController {
         registration: {status: 'registered', principalId: result.principalId, registeredAt: checkedAt, lastError: null, attempts},
         serverObservation: {reachable: true, checkedAt},
       }));
+      this.#registrationFailure = null;
       return this.#session();
     } catch (error) {
       const safe = safeError(error);
-      await this.#publish(current => ({...current, revision: current.revision + 1,
+      this.#registrationFailure = {code: safe.code, persistence: null};
+      try { await this.#publish(current => ({...current, revision: current.revision + 1,
         registration: {...current.registration, status: 'failed', lastError: safe.code, attempts},
         serverObservation: {reachable: safe.code === 'CORE_DEVICE_ID_MISMATCH', checkedAt},
-      }));
-      if (this.#transport.configured && !this.#disposed) {
-        const delay = Math.min(15, 2 ** Math.max(0, attempts - 1)) * 60_000;
-        this.#retryTimer = setTimeout(() => { this.#retryTimer = null; void this.startRegistration().catch(() => undefined); }, delay);
-        this.#retryTimer.unref();
+      })); } catch {
+        this.#registrationFailure = {code: safe.code, persistence: 'CORE_STORAGE_UNAVAILABLE'};
+        throw new CoreError('CORE_STORAGE_UNAVAILABLE', 503);
       }
       throw safe;
     }
@@ -277,7 +276,7 @@ export class SessionController {
   startContributions(): void {
     if (!this.#transport.configured || this.#disposed || this.#contributionsTimer) return;
     void this.refreshContributions();
-    this.#contributionsTimer = setInterval(() => { void this.refreshContributions(); }, 60_000);
+    this.#contributionsTimer = setInterval(() => { void this.refreshContributions(); }, this.#config.contributionIntervalMs);
     this.#contributionsTimer.unref();
   }
 
@@ -322,7 +321,7 @@ export class SessionController {
       this.#contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
       return this.#contributions;
     }
-    if (Date.now() - this.#contributionsCheckedAt < 60_000 && this.#contributions.status === 'ready') return this.#contributions;
+    if (Date.now() - this.#contributionsCheckedAt < this.#config.contributionIntervalMs && this.#contributions.status === 'ready') return this.#contributions;
     const to = new Date();
     const from = new Date(to.getTime() - 90 * 24 * 60 * 60 * 1000);
     const path = `/v1/usage/me/contributions?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
@@ -356,6 +355,7 @@ export class SessionController {
     }
     this.#contributionsCheckedAt = 0;
     this.#pointsCheckedAt = 0;
+    this.#hanaNames.clear();
     await this.refreshContributions();
     await this.refreshPoints();
     return this.state();
@@ -367,7 +367,7 @@ export class SessionController {
     if (!this.#transport.configured) return (this.#points = pointsUnavailable('NOT_CONNECTED'));
     if (this.#state.consent.state !== 'granted') return (this.#points = pointsUnavailable('CONSENT_WITHHELD'));
     if (this.#state.registration.status !== 'registered') return (this.#points = pointsUnavailable('NOT_REGISTERED'));
-    if (Date.now() - this.#pointsCheckedAt < 60_000 && this.#points.status === 'ready') return this.#points;
+    if (Date.now() - this.#pointsCheckedAt < this.#config.pointsRefreshMs && this.#points.status === 'ready') return this.#points;
     const path = '/v1/custody/me/points';
     try {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
@@ -375,18 +375,19 @@ export class SessionController {
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const payload = await response.json() as {bindingStatus?: unknown; hanas?: unknown; totalPoints?: unknown};
       if (payload.bindingStatus !== 'UNBOUND' && payload.bindingStatus !== 'BOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      if (!Array.isArray(payload.hanas) || payload.hanas.length > MAX_HANA_ROWS) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (!Array.isArray(payload.hanas)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (payload.hanas.length > this.#config.maxHanaRows) throw new CoreError('CORE_POINTS_LIMIT_EXCEEDED', 503);
       const hanas = payload.hanas.map(hanaPoints);
       let next = 0;
-      const names = new Array<string | null>(hanas.length);
-      await Promise.all(Array.from({length: Math.min(4, hanas.length)}, async () => {
+      const names = new Array<HanaName>(hanas.length);
+      await Promise.all(Array.from({length: Math.min(this.#config.catalogConcurrency, hanas.length)}, async () => {
         for (;;) {
           const index = next++;
           if (index >= hanas.length) return;
           names[index] = await this.#hanaName(hanas[index]!.hanaId);
         }
       }));
-      const namedHanas = hanas.map((row, index) => Object.freeze({...row, displayName: names[index] ?? null}));
+      const namedHanas = hanas.map((row, index) => Object.freeze({...row, ...names[index]!}));
       const pendingTotal = namedHanas.reduce((sum, row) => sum + row.pending, 0);
       this.#points = Object.freeze({status: 'ready', reason: null, bindingStatus: payload.bindingStatus, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(namedHanas)} as const);
       this.#pointsCheckedAt = Date.now();
@@ -396,18 +397,28 @@ export class SessionController {
     return this.#points;
   }
 
-  async #hanaName(hanaId: string): Promise<string | null> {
-    if (this.#hanaNames.has(hanaId)) return this.#hanaNames.get(hanaId) ?? null;
-    let name: string | null = null;
+  async #hanaName(hanaId: string): Promise<HanaName> {
+    const cached = this.#hanaNames.get(hanaId);
+    if (cached) return cached;
     try {
       const response = await this.#profileTransport.request(`/v1/registry/hanas/${encodeURIComponent(hanaId)}`);
-      if (response.ok) {
-        const profile = await response.json() as {hanaId?: unknown; displayName?: unknown};
-        if (profile.hanaId === hanaId && typeof profile.displayName === 'string' && profile.displayName.trim() && profile.displayName.length <= 120) name = profile.displayName.trim();
+      if (response.status === 404) {
+        const error = await response.json() as {error?: {code?: unknown}};
+        if (error.error?.code !== 'REGISTRY_NOT_FOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+        const missing: HanaName = {displayName: null, displayNameStatus: 'not-found', displayNameReason: 'REGISTRY_NOT_FOUND'};
+        this.#hanaNames.set(hanaId, missing);
+        return missing;
       }
-    } catch { /* An unavailable catalog must not hide authoritative points. */ }
-    this.#hanaNames.set(hanaId, name);
-    return name;
+      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const profile = await response.json() as {hanaId?: unknown; displayName?: unknown};
+      if (profile.hanaId !== hanaId || typeof profile.displayName !== 'string' || !profile.displayName.trim() || profile.displayName.length > 120) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const result: HanaName = {displayName: profile.displayName.trim(), displayNameStatus: 'ready', displayNameReason: null};
+      this.#hanaNames.set(hanaId, result);
+      return result;
+    } catch (error) {
+      // Failure is visible beside authoritative points and never cached as absence.
+      return {displayName: null, displayNameStatus: 'failed', displayNameReason: safeError(error).code};
+    }
   }
 
   /** Usage's device-signed raw events are observations, not a per-event points ledger. */
@@ -438,7 +449,7 @@ export class SessionController {
     const points = await this.refreshPoints();
     const shownAt = this.#state.pointsBindPromptShownAt ?? null;
     const show = points.pendingTotal > 0 && this.#bound !== true && shownAt === null;
-    return publicJson({...points, bound: this.#bound, deviceId: this.#device().deviceId, prompt: {show, shownAt}});
+    return publicJson({...points, configuration: {pointsRefreshMs: this.#config.pointsRefreshMs}, bound: this.#bound, deviceId: this.#device().deviceId, prompt: {show, shownAt}});
   }
 
   /** Idempotent: the first call stamps the marker, later calls (restart, reinstall of the same profile) return it unchanged. */
@@ -456,20 +467,20 @@ export class SessionController {
     const components = health.components.map(component => component && typeof component === 'object' && (component as {id?: unknown}).id === 'usage'
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
-    return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registration: this.#state.registration, consent: this.#state.consent,
+    return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registration: this.#state.registration, consent: this.#state.consent,
       session: device ? this.#session() : null, account: this.#account, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
-      health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
+      configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
   }
   diagnostics(): unknown {
-    return publicJson({protocolVersion: '1', disposed: this.#disposed, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin});
+    return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin});
   }
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
-    if (this.#retryTimer) clearTimeout(this.#retryTimer);
     if (this.#contributionsTimer) clearInterval(this.#contributionsTimer);
-    this.#retryTimer = null;
     this.#contributionsTimer = null;
+    this.#transport.dispose();
+    this.#profileTransport.dispose();
     this.#consentListeners.clear();
     await this.#publishTail;
     await this.#store.close();

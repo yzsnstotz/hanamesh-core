@@ -20,6 +20,8 @@ type CoreState = {
   /** null while the shared identity cannot be read; `identity.reason` says why. */
   deviceId: string | null;
   identity: IdentityState;
+  registrationFailure?: {code: string; persistence: string | null} | null;
+  configuration?: {timeoutMs: number; checkIntervalMs: number; maxHanaRows: number; profileTimeoutMs: number; maxResponseBytes: number; clientPollIntervalMs: number; pointsRefreshMs: number; contributionIntervalMs: number; activityPageBudget: number; activityDisplayRows: number; catalogConcurrency: number; };
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
   consent: {state: 'withheld' | 'granted'};
   session: {bound: boolean | null} | null;
@@ -34,8 +36,9 @@ type CoreState = {
 
 /** T2 `GET /api/hanamesh/core/points` (host side signs the custody read). Every number is 分; the host decides `prompt.show`. */
 type BreakdownKey = 'install' | 'open' | 'use' | 'claimBonus' | 'creatorMirror' | 'launchInitiator';
-type HanaPoints = {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
+type HanaPoints = {displayNameStatus?: 'ready' | 'not-found' | 'failed'; displayNameReason?: string | null; hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type PointsState = {
+  configuration?: {pointsRefreshMs: number};
   reason: string | null;
   totalPoints: number;
   pendingTotal: number;
@@ -55,13 +58,14 @@ type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; it
 type ActivityView = ActivityState & {scanned: number};
 const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '应用活跃小时', uninstall: '卸载'};
 /** Usage pages are oldest-first. Never present a scanned prefix as "latest" until its cursor reaches the tail. */
-export async function collectLatestActivity(fetchPage: (query: {from?: string; to?: string; after?: string}) => Promise<ActivityState>, previous: ActivityView | null): Promise<ActivityView> {
+export async function collectLatestActivity(fetchPage: (query: {from?: string; to?: string; after?: string}) => Promise<ActivityState>, previous: ActivityView | null, limits: {activityPageBudget: number; activityDisplayRows: number} = {activityPageBudget: 5, activityDisplayRows: 25}): Promise<ActivityView> {
+  if (![limits.activityPageBudget, limits.activityDisplayRows].every(value => Number.isSafeInteger(value) && value > 0)) throw new Error('CORE_INPUT_INVALID');
   let current: ActivityView | null = previous?.status === 'ready' ? previous : null;
-  for (let page = 0; page < 5; page++) {
+  for (let page = 0; page < limits.activityPageBudget; page++) {
     const query = current?.status === 'ready' && current.window && current.nextAfter ? {...current.window, after: current.nextAfter} : {};
     const next = await fetchPage(query);
     if (next.status !== 'ready') return {...next, scanned: current?.scanned ?? 0};
-    const items = [...(current?.items ?? []), ...next.items].slice(-25);
+    const items = [...(current?.items ?? []), ...next.items].slice(-limits.activityDisplayRows);
     current = {...next, items, scanned: (current?.scanned ?? 0) + next.items.length};
     if (!next.nextAfter) break;
   }
@@ -74,6 +78,8 @@ const POINTS_REASONS: Record<string, string> = {
   NOT_CONNECTED: '未连接服务端，暂时读不到分',
   CONSENT_WITHHELD: '未开启数据授权，本设备不上报事件，因此没有分',
   NOT_REGISTERED: '本设备尚未注册成功，注册后才会记分',
+  CORE_POINTS_LIMIT_EXCEEDED: 'Hana 行数超过本地配置预算，请调整插件配置后刷新',
+  CORE_RESPONSE_LIMIT_EXCEEDED: '响应超过本地字节预算，请检查响应或调整插件配置',
   CORE_UPSTREAM_UNAVAILABLE: '服务端暂时不可达，稍后再看',
 };
 const pointsReason = (reason: string | null): string => POINTS_REASONS[reason ?? ''] ?? `暂不可用：${reason ?? '未知'}`;
@@ -161,7 +167,7 @@ function HanaMeshSection(): ReactNode {
       const next = await collectLatestActivity(async query => {
         const params = Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : '';
         return jsonRequest<ActivityState>(`/api/hanamesh/core/activity${params}`);
-      }, more ? activity : null);
+      }, more ? activity : null, state?.configuration);
       setActivity(next);
     } catch { setActivity({status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE', items: [], nextAfter: null, window: null, scanned: 0}); }
     finally { setActivityBusy(false); }
@@ -179,7 +185,7 @@ function HanaMeshSection(): ReactNode {
   useEffect(() => {
     void load();
     void loadActivity();
-    const timer = window.setInterval(() => void load(), 10_000);
+    const timer = window.setInterval(() => void load(), state?.configuration?.clientPollIntervalMs ?? 10_000);
     // Returning from website binding must bypass the host's state/points caches,
     // even when the website stayed open longer than three minutes.
     const refresh = (): void => { void load(true); };
@@ -191,7 +197,7 @@ function HanaMeshSection(): ReactNode {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', visible);
     };
-  }, []);
+  }, [state?.configuration?.clientPollIntervalMs]);
   const post = async (path: string, body?: unknown): Promise<void> => {
     try { await jsonRequest(path, {method: 'POST', ...(body === undefined ? {} : {body: JSON.stringify(body)})}); await load(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
@@ -246,6 +252,8 @@ function HanaMeshSection(): ReactNode {
     createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'optional-components'}, 'Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。'),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${error}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(Row, {label: '设备身份'}, identityRow),
+    state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${state.registrationFailure.code}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
+    state.configuration && createElement(Row, {label: '运行配置'}, createElement('span', {'data-hanamesh-core-configuration': 'visible'}, `请求时限 ${state.configuration.timeoutMs}ms；健康检查 ${state.configuration.checkIntervalMs}ms；名称请求时限 ${state.configuration.profileTimeoutMs}ms；Hana 行预算 ${state.configuration.maxHanaRows}；响应字节预算 ${state.configuration.maxResponseBytes}；界面轮询 ${state.configuration.clientPollIntervalMs ?? 10000}ms；积分刷新 ${state.configuration.pointsRefreshMs ?? 60000}ms；贡献刷新 ${state.configuration.contributionIntervalMs ?? 60000}ms；活动每次 ${state.configuration.activityPageBudget ?? 5} 页、显示 ${state.configuration.activityDisplayRows ?? 25} 行；名称并发 ${state.configuration.catalogConcurrency ?? 4}。可在插件配置中修改。`)),
     createElement(Row, {label: '数据授权'}, createElement('label', {className: 'hm-core-switch'}, createElement('input', {type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld')}), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'),
       createElement('span', {role: 'status'}, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`),
       consentError && createElement('p', {className: 'hm-core-error', role: 'alert'}, `授权保存未确认：${consentError}。请重新切换授权，或重新进入页面读取当前状态。`),
@@ -276,6 +284,7 @@ function HanaMeshSection(): ReactNode {
                 const other = Number((row.points - sources.reduce((sum, [, value]) => sum + value, 0)).toFixed(3));
                 return createElement('div', {key: row.hanaId, className: 'hm-core-hana', 'data-hanamesh-core-hana': row.hanaId},
                   createElement('span', null, createElement('b', null, row.displayName ?? `${row.hanaId.slice(0, 8)}…`), `　${fen(row.points)}${row.pending > 0 ? `（另有待绑定 ${fen(row.pending)}）` : ''}`),
+                  row.displayNameStatus === 'failed' && createElement('span', {role: 'alert', className: 'hm-core-error'}, `名称读取失败：${row.displayNameReason ?? 'CORE_UPSTREAM_UNAVAILABLE'}。积分仍有效，返回窗口时可重新读取。`),
                   createElement('small', {className: 'hm-core-muted'}, '积分来源（按类型汇总）：', sources.length ? sources.map(([label, value]) => `${label} ${fen(value)}`).join(' · ') : '暂无已分类分项', other !== 0 ? ` · 其他账项 ${fen(other)}` : ''));
               }),
             ),
@@ -297,7 +306,7 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.2 · DSH 0.2.0-rc.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.2 · DSH 0.2.1-alpha.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
@@ -328,10 +337,18 @@ function PointsBindPrompt(): ReactNode {
   useEffect(() => {
     let cancelled = false;
     let timer = 0;
+    let pointsRefreshMs = 60_000;
     const poll = async (): Promise<void> => {
       try {
         const next = await jsonRequest<PointsState>('/api/hanamesh/core/points');
-        if (cancelled || !next.prompt.show) return;
+        if (cancelled) return;
+        const configured = next.configuration?.pointsRefreshMs ?? 60_000;
+        if (configured !== pointsRefreshMs) {
+          pointsRefreshMs = configured;
+          window.clearInterval(timer);
+          timer = window.setInterval(() => void poll(), pointsRefreshMs);
+        }
+        if (!next.prompt.show) return;
         window.clearInterval(timer);
         await jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => undefined);
         if (cancelled) return;
@@ -339,7 +356,7 @@ function PointsBindPrompt(): ReactNode {
       } catch { /* the nudge is optional; a failed read simply waits for the next tick */ }
     };
     void poll();
-    timer = window.setInterval(() => void poll(), 60_000);
+    timer = window.setInterval(() => void poll(), pointsRefreshMs);
     return () => { cancelled = true; window.clearInterval(timer); };
   }, []);
   useEffect(() => {

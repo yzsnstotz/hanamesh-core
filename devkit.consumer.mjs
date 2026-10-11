@@ -19,6 +19,7 @@ await access(join(packageRoot, 'profile.schema.json'));
 await access(join(packageRoot, 'lib/client.js'));
 assert.equal(JSON.parse(await readFile(createRequire(join(await realpath(packageRoot), 'package.json')).resolve('semver/package.json'), 'utf8')).version, '7.7.2');
 await assert.rejects(access(resolve('node_modules/@hanamesh/devkit')));
+await assert.rejects(access(resolve('node_modules/@hanamesh/api-contracts')));
 const adapter = await import('hanamesh-core');
 assert.equal(adapter.name, (await import(pathToFileURL(join(packageRoot, 'lib/dsh.mjs')).href)).name);
 const contract = await import('hanamesh-core/contract');

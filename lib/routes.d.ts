@@ -13,5 +13,7 @@ export declare const ROUTES: Readonly<{
     bindLink: "/api/hanamesh/core/bind-link";
     diagnostics: "/api/hanamesh/core/diagnostics";
 }>;
-export declare function createRouteHandler(controller: SessionController): (request: Request) => Promise<Response>;
+export declare function createRouteHandler(controller: SessionController, admission?: {
+    requestRejection(request: Request): 401 | 403 | undefined;
+} | null): (request: Request) => Promise<Response>;
 export declare function requireSameCarrierOrigin(request: Request): void;

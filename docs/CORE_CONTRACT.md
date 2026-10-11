@@ -57,7 +57,7 @@
 
 包 SemVer 是发布/安装选择；wire `protocolVersion: '1'` 与内部数字 `schemaVersion: 1` 不是包 SemVer，Core 没有全 SemVer 严格相等的握手检查。v1 握手已接受额外可选成员，并拒绝不同 wire 主版本、数字替代和缺少必需方法；闭合 schema 与提供方私有成员边界继续生效。
 
-Identity 只在本仓独立 `contract-tests/identity` 验证包中以 `git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.2.0-rc.11` 正常安装。HTTP 注册与设备鉴权使用源包的 fixture/schema 验证；Core 不消费 IdentityServices 聚合端口，聚合消费方 suite 不冒作适用。产品包没有 Identity runtime dependency、协议副本或随包 Identity tgz。
+Identity 在独立 `contract-tests/identity` 开发验证包消费 `git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0` 的 C-IDENTITY 类型、schema 与fixture。Core 产品运行依赖不含 api-contracts 或 Identity 服务实现包；测试子包不进入发布 files。
 
 0.x caret 不是整个 major 范围：`^0.2.0-rc.11` 不接受 `0.3.0`，`^0.2.0-rc.55` 也不选择 Core `0.3.0`。安装选择与 wire 兼容分别记录；已有消费方不用为 v1 行为修改。
 

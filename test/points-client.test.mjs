@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {createPointsContractExamples} from '@hanamesh/api-contracts/points';
 
-const bundle = await readFile('lib/client.js', 'utf8');
+const bundle = await readFile(process.env.HM_CORE_CLIENT_BUNDLE ?? 'lib/client.js', 'utf8');
 const examples = createPointsContractExamples();
 // Render the shipped settings component through its actual slot, with host-supplied React hooks.
 function renderPoints(points, bound) {
@@ -12,6 +12,7 @@ function renderPoints(points, bound) {
     serverOrigin: 'https://server.example', websiteOrigin: 'https://web.example', deviceId: 'device',
     identity: {status: 'local-only', replacedDeviceIds: []}, registration: {status: 'registered'},
     consent: {state: 'granted'}, session: {bound}, account: null,
+    configuration:{timeoutMs:10000,checkIntervalMs:3000,profileTimeoutMs:1500,maxHanaRows:200,maxResponseBytes:1048576},
     contributions: {status: 'unavailable', reason: 'NOT_CONNECTED'}, health: {}, components: [],
   };
   const states = [core, points, null, false, null, false, null];
@@ -53,4 +54,13 @@ test('UNBOUND accumulated points preserve totals and pending amounts alongside t
 
 test('unavailable points do not assert an unbound state', () => {
   assert.doesNotMatch(renderPoints({status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE'}, false), /只累计、暂不可领/);
+});
+
+test('catalog failure is visible beside authoritative points without claiming the Hana is absent',()=>{
+ const text=renderPoints({status:'ready',bindingStatus:'BOUND',totalPoints:1,pendingTotal:0,hanas:[{hanaId:'hana',displayName:null,displayNameStatus:'failed',displayNameReason:'CORE_UPSTREAM_UNAVAILABLE',points:1,pending:0,breakdown:{install:1,open:0,use:0,claimBonus:0,creatorMirror:0,launchInitiator:0}}]},true);
+ assert.match(text,/名称读取失败.*CORE_UPSTREAM_UNAVAILABLE/);
+});
+
+test('settings expose named runtime budgets with their legal default values',()=>{
+ const text=renderPoints({...examples.boundZero,status:'ready',pendingTotal:0},true);assert.match(text,/健康检查 3000ms/);assert.match(text,/Hana 行预算 200/);assert.match(text,/响应字节预算 1048576/);
 });

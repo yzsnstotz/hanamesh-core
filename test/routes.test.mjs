@@ -46,3 +46,15 @@ test('DSH bridge accepts the authenticated carrier Host while rejecting foreign 
   assert.equal((await handle(request('https://evil.example'))).status, 403);
   assert.equal((await handle(request('http://127.0.0.1:41002'))).status, 403);
 });
+
+test('native authenticated Connection admission supports stripped Origin without weakening standalone or Web fences',async()=>{
+ const c=await SessionController.create({serverOrigin:null,websiteOrigin:null},memoryStore(INITIAL_CORE_SNAPSHOT).store);
+ const request=headers=>new Request(`${origin}${ROUTES.consent}`,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify({state:'granted'})});
+ const standalone=createRouteHandler(c);assert.equal((await standalone(request({}))).status,403);
+ const handle=createRouteHandler(c,{requestRejection:req=>req.headers.get('x-fixture-admitted')==='yes'?undefined:401});
+ try {
+  assert.equal((await handle(request({'x-fixture-admitted':'yes'}))).status,200);
+  assert.equal((await handle(request({}))).status,401);
+  assert.equal((await handle(request({...sameOriginHeaders,'x-fixture-admitted':'yes',origin:'https://evil.example'}))).status,403);
+ }finally{await c.dispose();}
+});

@@ -13,7 +13,7 @@ test('Core installs independently and pins its public official host peers', asyn
   assert.deepEqual(pkg.dependencies, {semver: '7.7.2'}); // D-3 / HM-4: semver is the only runtime dependency
   assert.equal(pkg.dsh.bundle.patch, './profile/cordis.patch.yml');
   for (const [name, version] of Object.entries(pkg.peerDependencies)) {
-    if (name.startsWith('@deepseek-ai/')) assert.equal(version, name.endsWith('/cordis') ? '4.0.4' : '0.2.0-rc.2');
+    if (name.startsWith('@deepseek-ai/')) assert.equal(version, name.endsWith('/cordis') ? '4.0.5-alpha.1' : '0.2.1-alpha.2');
   }
   assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
   assert.doesNotMatch(await readFile('pnpm-lock.yaml', 'utf8'), /file:vendor\/siblings/);

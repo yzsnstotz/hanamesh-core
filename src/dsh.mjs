@@ -4,7 +4,7 @@ import {SessionController} from './controller.js';
 import {createRouteHandler, ROUTES} from './routes.js';
 import {HealthService} from './health/service.js';
 import {LoaderObservationSource} from './health/loader.js';
-import {INITIAL_CORE_SNAPSHOT, snapshotOf} from './validation.js';
+import {INITIAL_CORE_SNAPSHOT, snapshotOf, configOf} from './validation.js';
 import {fileSharedDeviceStore, sharedIdentityRoot} from './shared-device.js';
 
 export const name = 'hanamesh-core';
@@ -20,6 +20,7 @@ export function usageServiceReady(ctx) {
 
 /** @param {import('@deepseek-ai/cordis').Context} ctx @param {import('./contracts.js').PluginConfig} config */
 export async function apply(ctx, config) {
+  config = configOf(config);
   const {defineDomain} = await import('@deepseek-ai/dsh-storage-domain');
   const {z} = await import('zod');
   const registration = z.object({status: z.enum(['unregistered', 'registered', 'failed']), principalId: z.string().nullable(), registeredAt: z.string().nullable(), lastError: z.string().nullable(), attempts: z.number().int().nonnegative()}).strict();
@@ -67,7 +68,7 @@ export async function apply(ctx, config) {
     controller.attachHealth(ownedHealth);
     controller.attachUsageProbe(() => usageServiceReady(/** @type {any} */ (ctx)));
     await ownedHealth.recheck();
-    const handler = createRouteHandler(controller);
+    const handler = createRouteHandler(controller, {requestRejection: request => ctx.connection.requestRejection(request)});
     disposers.push(ctx.provide('hanameshCore', controller.service));
     for (const path of Object.values(ROUTES)) {
       const methods = path === ROUTES.state || path === ROUTES.diagnostics || path === ROUTES.health || path === ROUTES.points || path === ROUTES.activity ? /** @type {const} */ (['GET']) : /** @type {const} */ (['POST']);
