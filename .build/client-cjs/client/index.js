@@ -107,7 +107,6 @@ function HanaMeshSection() {
     const [consentError, setConsentError] = (0, react_1.useState)(null);
     const consentWrite = (0, react_1.useRef)(false);
     const stateRead = (0, react_1.useRef)(0);
-    const bindTimer = (0, react_1.useRef)(null);
     const loadPoints = async () => {
         try {
             setPoints(await jsonRequest('/api/hanamesh/core/points'));
@@ -134,12 +133,12 @@ function HanaMeshSection() {
             setActivityBusy(false);
         }
     };
-    const load = async () => {
+    const load = async (refresh = false) => {
         if (consentWrite.current)
             return;
         const read = ++stateRead.current;
         try {
-            const next = await jsonRequest('/api/hanamesh/core/state');
+            const next = await jsonRequest(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? { method: 'POST' } : undefined);
             if (read === stateRead.current) {
                 setState(next);
                 setError(null);
@@ -151,8 +150,23 @@ function HanaMeshSection() {
         }
         await loadPoints();
     };
-    (0, react_1.useEffect)(() => { void load(); void loadActivity(); const timer = window.setInterval(() => void load(), 10_000); return () => { window.clearInterval(timer); if (bindTimer.current !== null)
-        window.clearInterval(bindTimer.current); }; }, []);
+    (0, react_1.useEffect)(() => {
+        void load();
+        void loadActivity();
+        const timer = window.setInterval(() => void load(), 10_000);
+        // Returning from website binding must bypass the host's state/points caches,
+        // even when the website stayed open longer than three minutes.
+        const refresh = () => { void load(true); };
+        const visible = () => { if (document.visibilityState === 'visible')
+            refresh(); };
+        window.addEventListener('focus', refresh);
+        document.addEventListener('visibilitychange', visible);
+        return () => {
+            window.clearInterval(timer);
+            window.removeEventListener('focus', refresh);
+            document.removeEventListener('visibilitychange', visible);
+        };
+    }, []);
     const post = async (path, body) => {
         try {
             await jsonRequest(path, { method: 'POST', ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
@@ -189,21 +203,6 @@ function HanaMeshSection() {
     const bind = async () => {
         try {
             await openBindPage();
-            // The bound flag rides on the contributions query (60 s cache). After sending the user to the
-            // website, ask the host to re-read for up to three minutes so the row flips without a restart.
-            if (bindTimer.current !== null)
-                window.clearInterval(bindTimer.current);
-            let polls = 0;
-            const timer = window.setInterval(() => {
-                polls += 1;
-                void jsonRequest('/api/hanamesh/core/refresh', { method: 'POST' }).then(next => {
-                    setState(next);
-                    if (next.session?.bound === true || polls >= 12)
-                        window.clearInterval(timer);
-                }).catch(() => { if (polls >= 12)
-                    window.clearInterval(timer); });
-            }, 15_000);
-            bindTimer.current = timer;
         }
         catch (cause) {
             setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE');

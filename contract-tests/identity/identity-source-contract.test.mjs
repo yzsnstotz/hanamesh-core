@@ -2,26 +2,39 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile, access} from 'node:fs/promises';
-import {createIdentityServicesFixture} from '@hanamesh/server-identity/contract/fixtures';
-import {loadIdentitySchema, validateIdentityValue} from '@hanamesh/server-identity/contract/suite';
+import {createIdentityServicesFixture} from '@hanamesh/api-contracts/identity';
+import Ajv2020 from 'ajv/dist/2020.js';
 import {SessionController} from '../../lib/controller.js';
 import {INITIAL_CORE_SNAPSHOT} from '../../lib/contracts.js';
 import {checkCoreService} from '../../lib/contract.js';
 import {createCoreProviderFixture, createCoreConsumerFixture} from '../../lib/contract-fixtures.js';
 import {memoryStore} from '../../test/fixtures/core-store.mjs';
 
-test('Identity contract comes from a published source range, with no packaged protocol copy', async () => {
+const schema = JSON.parse(await readFile(new URL(import.meta.resolve('@hanamesh/api-contracts/identity/schema.json')), 'utf8'));
+const ajv = new Ajv2020({strict: false, allErrors: true});
+ajv.addSchema(schema);
+const validateIdentityValue = (name, value) => {
+  const validate = ajv.getSchema(`${schema.$id}#/$defs/${name}`);
+  assert.ok(validate, `missing published C-IDENTITY schema definition: ${name}`);
+  return validate(value) ? [] : validate.errors;
+};
+
+test('C-IDENTITY comes from the published api-contracts tag, without a provider dependency or packaged protocol copy', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   assert.equal(pkg.devDependencies['@hanamesh/server-identity'], undefined);
   const checks = JSON.parse(await readFile('contract-tests/identity/package.json', 'utf8'));
-  assert.equal(checks.dependencies['@hanamesh/server-identity'], 'git+https://github.com/yzsnstotz/hanamesh-server-identity.git#semver:^0.3.0-rc.3');
+  assert.equal(checks.dependencies['@hanamesh/server-identity'], undefined);
+  assert.equal(checks.dependencies['@hanamesh/api-contracts'], pkg.devDependencies['@hanamesh/api-contracts']);
+  assert.doesNotMatch(await readFile('contract-tests/identity/pnpm-lock.yaml', 'utf8'), /@hanamesh\/server-identity/);
+  for (const name of ['source.mjs', 'public-contracts.ts', 'browser-http-types.ts', 'identity-source-contract.test.mjs']) {
+    assert.doesNotMatch(await readFile(`contract-tests/identity/${name}`, 'utf8'), /from ['"]@hanamesh\/server-identity/);
+  }
   assert.ok(!pkg.files.includes('vendor/srv-identity'));
   await assert.rejects(access('vendor/srv-identity/contracts.d.ts'));
   assert.ok(!('srvIdentity' in JSON.parse(await readFile('deps/LOCKS.json', 'utf8'))));
 });
 
 test('actual Core registration and signed request consume the installed Identity fixture and schema', async () => {
-  await loadIdentitySchema();
   const fixture = createIdentityServicesFixture();
   const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
   const calls = [];
@@ -78,8 +91,7 @@ test('Core wire major remains string 1 across package minors and rejects major 2
 });
 
 
-test('actual Core bind-link URL consumes rc3 named challenge and receiver DeviceBindInput schema', async () => {
-  await loadIdentitySchema();
+test('actual Core bind-link URL consumes published C-IDENTITY challenge and DeviceBindInput schema', async () => {
   const fixture = createIdentityServicesFixture();
   const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
   const calls = [];

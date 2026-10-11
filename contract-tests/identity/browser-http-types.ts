@@ -1,15 +1,13 @@
-import type {DeviceChallengeInput, DeviceRegisterInput, DeviceRegisterResponse, DeviceBindInput} from '@hanamesh/server-identity/contracts';
-import type {DeviceChallengeInput as ReexportChallenge, DeviceBindInput as ReexportBind} from '@hanamesh/server-identity/contract';
+import type {DeviceChallengeInput, DeviceRegisterInput, DeviceRegisterResponse, DeviceBindInput} from '@hanamesh/api-contracts/identity';
 declare const challenge: DeviceChallengeInput;
 const purpose: 'register' | 'bind' = challenge.purpose;
-const reexport: ReexportChallenge = challenge;
 declare const request: DeviceRegisterInput;
 declare const response: DeviceRegisterResponse;
 const key: string = request.publicKey;
 const principalId: string = response.principalId;
 declare const bind: DeviceBindInput;
-const namedBind: ReexportBind = bind;
+const namedBind: DeviceBindInput = bind;
 const id: string = namedBind.deviceId;
 const nonce: string = namedBind.nonce;
 const signature: string = namedBind.signature;
-void [purpose, reexport, key, principalId, id, nonce, signature];
+void [purpose, key, principalId, id, nonce, signature];

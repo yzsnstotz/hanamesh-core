@@ -150,7 +150,6 @@ function HanaMeshSection(): ReactNode {
   const [consentError, setConsentError] = useState<string | null>(null);
   const consentWrite = useRef(false);
   const stateRead = useRef(0);
-  const bindTimer = useRef<number | null>(null);
   const loadPoints = async (): Promise<void> => {
     try { setPoints(await jsonRequest<PointsState>('/api/hanamesh/core/points')); }
     catch (cause) { setPoints({status: 'unavailable', reason: cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE', totalPoints: 0, pendingTotal: 0, hanas: [], bound: null, prompt: {show: false, shownAt: null}}); }
@@ -167,17 +166,32 @@ function HanaMeshSection(): ReactNode {
     } catch { setActivity({status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE', items: [], nextAfter: null, window: null, scanned: 0}); }
     finally { setActivityBusy(false); }
   };
-  const load = async (): Promise<void> => {
+  const load = async (refresh = false): Promise<void> => {
     if (consentWrite.current) return;
     const read = ++stateRead.current;
     try {
-      const next = await jsonRequest<CoreState>('/api/hanamesh/core/state');
+      const next = await jsonRequest<CoreState>(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? {method: 'POST'} : undefined);
       if (read === stateRead.current) { setState(next); setError(null); }
     }
     catch (cause) { if (read === stateRead.current) setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
     await loadPoints();
   };
-  useEffect(() => { void load(); void loadActivity(); const timer = window.setInterval(() => void load(), 10_000); return () => { window.clearInterval(timer); if (bindTimer.current !== null) window.clearInterval(bindTimer.current); }; }, []);
+  useEffect(() => {
+    void load();
+    void loadActivity();
+    const timer = window.setInterval(() => void load(), 10_000);
+    // Returning from website binding must bypass the host's state/points caches,
+    // even when the website stayed open longer than three minutes.
+    const refresh = (): void => { void load(true); };
+    const visible = (): void => { if (document.visibilityState === 'visible') refresh(); };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', visible);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', visible);
+    };
+  }, []);
   const post = async (path: string, body?: unknown): Promise<void> => {
     try { await jsonRequest(path, {method: 'POST', ...(body === undefined ? {} : {body: JSON.stringify(body)})}); await load(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
@@ -201,18 +215,6 @@ function HanaMeshSection(): ReactNode {
   const bind = async (): Promise<void> => {
     try {
       await openBindPage();
-      // The bound flag rides on the contributions query (60 s cache). After sending the user to the
-      // website, ask the host to re-read for up to three minutes so the row flips without a restart.
-      if (bindTimer.current !== null) window.clearInterval(bindTimer.current);
-      let polls = 0;
-      const timer = window.setInterval(() => {
-        polls += 1;
-        void jsonRequest<CoreState>('/api/hanamesh/core/refresh', {method: 'POST'}).then(next => {
-          setState(next);
-          if (next.session?.bound === true || polls >= 12) window.clearInterval(timer);
-        }).catch(() => { if (polls >= 12) window.clearInterval(timer); });
-      }, 15_000);
-      bindTimer.current = timer;
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
   };
   const visit = (path = '/'): void => {

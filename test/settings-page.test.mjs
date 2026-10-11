@@ -12,6 +12,9 @@ import {memoryStore} from './fixtures/core-store.mjs';
 async function clientFixture(fetcher) {
   const slots = new Map();
   const timers = [];
+  const clearedTimers = [];
+  const windowEvents = new EventTarget();
+  const documentEvents = new EventTarget();
   let current;
   let hostQueries = 0;
   const React = {
@@ -34,11 +37,17 @@ async function clientFixture(fetcher) {
     fetch: fetcher,
     URLSearchParams,
     document: {
+      visibilityState: 'visible',
+      addEventListener: documentEvents.addEventListener.bind(documentEvents),
+      removeEventListener: documentEvents.removeEventListener.bind(documentEvents),
       createElement: () => ({dataset: {}, remove() {}}), head: {append() {}},
       querySelector() { hostQueries++; return null; },
       querySelectorAll() { hostQueries++; return []; },
     },
-    window: {__ModuleLoader__: {load: spec => { plugin = spec.factory(() => React); }}, setTimeout() {}, setInterval(run) { timers.push(run); return timers.length; }, clearInterval() {}},
+    window: {__ModuleLoader__: {load: spec => { plugin = spec.factory(() => React); }}, open() {},
+      addEventListener: windowEvents.addEventListener.bind(windowEvents),
+      removeEventListener: windowEvents.removeEventListener.bind(windowEvents),
+      setTimeout() {}, setInterval(run) { timers.push(run); return timers.length; }, clearInterval(id) { clearedTimers.push(id); }},
   };
   vm.runInNewContext(await readFile('lib/client.js', 'utf8'), sandbox);
   plugin.apply({effect: run => run(), slots: {
@@ -49,7 +58,10 @@ async function clientFixture(fetcher) {
     const owner = {state: [], cursor: 0, effects: []};
     return {render() { current = owner; owner.cursor = 0; owner.effects = []; return component(props); }, effects: () => owner.effects};
   };
-  return {slots, mount, timers, hostQueries: () => hostQueries};
+  return {slots, mount, timers, clearedTimers, hostQueries: () => hostQueries,
+    focus: () => windowEvents.dispatchEvent(new Event('focus')),
+    visibility(value) { sandbox.document.visibilityState = value; documentEvents.dispatchEvent(new Event('visibilitychange')); },
+  };
 }
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 
@@ -104,10 +116,85 @@ async function consentSection(override = () => undefined) {
   });
   const section = f.mount(f.slots.get('settings.section'));
   section.render();
-  section.effects().forEach(run => run());
+  const cleanups = section.effects().map(run => run());
   await settle();
-  return {f, section, controller, memory};
+  return {f, section, controller, memory, cleanup: () => cleanups.forEach(run => run?.())};
 }
+
+async function bindingSection() {
+  const requests = [];
+  let bound = false;
+  let failure = false;
+  let core;
+  const fixture = await consentSection((path, init) => {
+    requests.push({path, method: init.method ?? 'GET'});
+    if (path === ROUTES.bindLink) return Response.json({url: 'https://website.fixture.invalid/me/bind'});
+    if (path === ROUTES.openExternal) return Response.json({opened: false});
+    if (path === ROUTES.refresh) return failure
+      ? Response.json({error: {code: 'CORE_UPSTREAM_UNAVAILABLE'}}, {status: 503})
+      : Response.json({...core.state(), session: {...core.service.getSession(), bound}, account: bound ? {provider: 'github', displayName: 'fixture-bound-account'} : null});
+    if (path === ROUTES.points) return Response.json({status: 'ready', bindingStatus: bound ? 'BOUND' : 'UNBOUND', totalPoints: 0, pendingTotal: 0, hanas: [], prompt: {show: false}});
+  });
+  core = fixture.controller;
+  const bind = () => elements(fixture.section.render()).find(e => e.type === 'button' && e.children.includes('去网站绑定')).props.onClick();
+  return {...fixture, requests, bind, setBound: value => { bound = value; }, setFailure: value => { failure = value; }};
+}
+
+for (const event of ['focus', 'visibilitychange']) {
+  test(`binding return on ${event} forces fresh state and points without a polling limit`, async t => {
+    const fixture = await bindingSection();
+    t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
+    fixture.bind();
+    await settle();
+    assert.equal(fixture.f.timers.length, 1, 'opening the website must not start a bounded bind timer');
+    for (let returns = 0; returns < 13; returns++) {
+      if (event === 'focus') fixture.f.focus();
+      else fixture.f.visibility('visible');
+      await settle();
+    }
+    assert.equal(fixture.requests.filter(r => r.path === ROUTES.refresh && r.method === 'POST').length, 13);
+    fixture.setBound(true);
+    if (event === 'focus') fixture.f.focus();
+    else fixture.f.visibility('visible');
+    await settle();
+    const tree = fixture.section.render();
+    assert.ok(elements(tree).some(e => e.props['data-hanamesh-core-bound'] === 'true'));
+    assert.match(textIn(tree), /已绑定到 GitHub 账号 fixture-bound-account/);
+    assert.doesNotMatch(textIn(tree), /只累计、暂不可领/);
+  });
+}
+
+test('hidden visibility does not refresh and unmount removes both return listeners and the state timer', async t => {
+  const fixture = await bindingSection();
+  t.after(() => fixture.controller.dispose());
+  fixture.f.visibility('hidden');
+  await settle();
+  assert.equal(fixture.requests.filter(r => r.path === ROUTES.refresh).length, 0);
+  fixture.f.visibility('visible');
+  await settle();
+  assert.equal(fixture.requests.filter(r => r.path === ROUTES.refresh).length, 1);
+  fixture.cleanup();
+  fixture.f.focus();
+  fixture.f.visibility('visible');
+  await settle();
+  assert.equal(fixture.requests.filter(r => r.path === ROUTES.refresh).length, 1);
+  assert.deepEqual(fixture.f.clearedTimers, [1]);
+});
+
+test('return refresh errors stay visible and the next focus can read the bound account', async t => {
+  const fixture = await bindingSection();
+  t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
+  fixture.setFailure(true);
+  fixture.f.focus();
+  await settle();
+  assert.match(textIn(fixture.section.render()), /CORE_UPSTREAM_UNAVAILABLE/);
+  fixture.setFailure(false);
+  fixture.setBound(true);
+  fixture.f.focus();
+  await settle();
+  assert.match(textIn(fixture.section.render()), /fixture-bound-account/);
+  assert.doesNotMatch(textIn(fixture.section.render()), /CORE_UPSTREAM_UNAVAILABLE/);
+});
 
 test('consent UI reads the saved grant and withdrawal through Core routes', async () => {
   const {section, controller, memory} = await consentSection();
