@@ -5,11 +5,13 @@ import {SessionController} from '../lib/controller.js';
 import {createRouteHandler, ROUTES} from '../lib/routes.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
 import {memoryStore} from './fixtures/core-store.mjs';
+import {createPointsContractExamples} from '@hanamesh/api-contracts/points';
 
 const carrier = 'http://127.0.0.1:41001';
 const postHeaders = {origin: carrier, host: '127.0.0.1:41001', 'sec-fetch-site': 'same-origin', 'content-type': 'application/json'};
 
 const POINTS_BODY = {
+  bindingStatus: 'UNBOUND',
   totalPoints: 31.25,
   hanas: [
     {hanaId: 'b1f0c4a2-0000-4000-8000-000000000001', points: 26.25, pending: 0, breakdown: {install: 5, open: 0, use: 20, claimBonus: 0, creatorMirror: 1.25, launchInitiator: 0}},
@@ -36,7 +38,7 @@ async function ready(options = {}) {
     }
     if (path === '/v1/custody/me/points') {
       if (pointsStatus !== 200) return new Response('nope', {status: pointsStatus});
-      return Response.json(points);
+      return Response.json(points === POINTS_BODY && bound ? {...points, bindingStatus: 'BOUND'} : points);
     }
     if (path.startsWith('/v1/registry/hanas/')) {
       const hanaId = path.slice('/v1/registry/hanas/'.length);
@@ -62,6 +64,7 @@ test('GET /api/hanamesh/core/points returns the signed custody read with 分 tot
   const body = await response.json();
   assert.equal(body.status, 'ready');
   assert.equal(body.reason, null);
+  assert.equal(body.bindingStatus, 'UNBOUND');
   assert.equal(body.totalPoints, 31.25);
   assert.equal(body.pendingTotal, 5);
   assert.equal(body.hanas.length, 2);
@@ -72,6 +75,25 @@ test('GET /api/hanamesh/core/points returns the signed custody read with 分 tot
   assert.ok(signed, 'the host, not the client bundle, signs the custody read');
   for (const header of ['x-hm-device-id', 'x-hm-timestamp', 'x-hm-nonce', 'x-hm-signature']) assert.ok(signed.headers.get(header), header);
   assert.equal((await handle(new Request(`${carrier}${ROUTES.points}`, {method: 'POST', headers: postHeaders, body: '{}'}))).status, 405);
+});
+
+test('C-POINTS bindingStatus distinguishes identical zero balances independently of contributions', async () => {
+  const examples = createPointsContractExamples();
+  for (const points of [examples.unboundZero, examples.boundZero]) {
+    const {handle} = await ready({points, bound: points.bindingStatus !== 'BOUND'});
+    const body = await (await handle(new Request(`${carrier}${ROUTES.points}`))).json();
+    assert.equal(body.status, 'ready');
+    assert.equal(body.bindingStatus, points.bindingStatus);
+    assert.equal(body.totalPoints, 0);
+    assert.equal(body.pendingTotal, 0);
+  }
+});
+
+test('missing or invalid C-POINTS bindingStatus is unavailable rather than inferred from pending points', async () => {
+  for (const bindingStatus of [undefined, null, 'UNKNOWN', false]) {
+    const {controller} = await ready({points: {...POINTS_BODY, bindingStatus}});
+    assert.equal((await controller.refreshPoints()).status, 'unavailable');
+  }
 });
 
 test('points use public registry names where available and retain an honest ID fallback', async () => {
@@ -143,7 +165,7 @@ test('points empty states are readable: no consent, no registration, no server, 
   const broken = await ready({pointsStatus: 503});
   assert.equal((await broken.controller.refreshPoints()).reason, 'CORE_UPSTREAM_UNAVAILABLE');
 
-  const malformed = await ready({points: {totalPoints: 1, hanas: [{hanaId: 'x', points: 'lots', pending: 0, breakdown: {}}]}});
+  const malformed = await ready({points: {bindingStatus: 'UNBOUND', totalPoints: 1, hanas: [{hanaId: 'x', points: 'lots', pending: 0, breakdown: {}}]}});
   assert.equal((await malformed.controller.refreshPoints()).reason, 'CORE_UPSTREAM_UNAVAILABLE');
 });
 
@@ -177,7 +199,7 @@ test('the bind prompt never fires for a bound device, and never without pending 
   const bound = await ready({bound: true});
   assert.equal((await (await bound.handle(new Request(`${carrier}${ROUTES.points}`))).json()).prompt.show, false);
 
-  const nothingPending = await ready({points: {totalPoints: 5, hanas: [{hanaId: 'a', points: 5, pending: 0, breakdown: {install: 5}}]}});
+  const nothingPending = await ready({points: {bindingStatus: 'UNBOUND', totalPoints: 5, hanas: [{hanaId: 'a', points: 5, pending: 0, breakdown: {install: 5}}]}});
   const body = await (await nothingPending.handle(new Request(`${carrier}${ROUTES.points}`))).json();
   assert.equal(body.prompt.show, false);
   assert.equal(body.hanas[0].breakdown.use, 0); // missing breakdown keys read as a real zero, not undefined

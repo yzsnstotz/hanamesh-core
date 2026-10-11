@@ -74,6 +74,7 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
+    "@hanamesh/api-contracts": "git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0",
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh-client-connection": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.0-rc.2",

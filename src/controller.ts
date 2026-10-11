@@ -16,10 +16,12 @@ type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready';
  *  unbound-device balance, which the server moves into the account the moment the device is bound. */
 const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'creatorMirror', 'launchInitiator'] as const);
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
+/** C-POINTS v0.10.0 OwnPointsDTO.bindingStatus; never inferred from balances or Usage's session. */
+type PointsBindingStatus = 'UNBOUND' | 'BOUND';
 export type HanaPoints = {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type Points =
   | {status: 'unavailable'; reason: string; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
-  | {status: 'ready'; reason: null; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
+  | {status: 'ready'; reason: null; bindingStatus: PointsBindingStatus; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
 const MAX_HANA_ROWS = 200;
 const pointsUnavailable = (reason: string): Points => Object.freeze({status: 'unavailable', reason, totalPoints: 0, pendingTotal: 0, hanas: Object.freeze([] as HanaPoints[])} as const);
 const amount = (value: unknown): number => {
@@ -371,7 +373,8 @@ export class SessionController {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
       const response = await this.#transport.request(path, {method: 'GET', headers});
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {hanas?: unknown; totalPoints?: unknown};
+      const payload = await response.json() as {bindingStatus?: unknown; hanas?: unknown; totalPoints?: unknown};
+      if (payload.bindingStatus !== 'UNBOUND' && payload.bindingStatus !== 'BOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       if (!Array.isArray(payload.hanas) || payload.hanas.length > MAX_HANA_ROWS) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const hanas = payload.hanas.map(hanaPoints);
       let next = 0;
@@ -385,7 +388,7 @@ export class SessionController {
       }));
       const namedHanas = hanas.map((row, index) => Object.freeze({...row, displayName: names[index] ?? null}));
       const pendingTotal = namedHanas.reduce((sum, row) => sum + row.pending, 0);
-      this.#points = Object.freeze({status: 'ready', reason: null, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(namedHanas)} as const);
+      this.#points = Object.freeze({status: 'ready', reason: null, bindingStatus: payload.bindingStatus, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(namedHanas)} as const);
       this.#pointsCheckedAt = Date.now();
     } catch (error) {
       this.#points = pointsUnavailable(safeError(error).code);

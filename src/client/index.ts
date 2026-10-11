@@ -36,14 +36,17 @@ type CoreState = {
 type BreakdownKey = 'install' | 'open' | 'use' | 'claimBonus' | 'creatorMirror' | 'launchInitiator';
 type HanaPoints = {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type PointsState = {
-  status: 'ready' | 'unavailable';
   reason: string | null;
   totalPoints: number;
   pendingTotal: number;
   hanas: HanaPoints[];
   bound: boolean | null;
   prompt: {show: boolean; shownAt: string | null};
-};
+} & (
+  /** C-POINTS OwnPointsDTO.bindingStatus: account binding only, independent of balances or claim eligibility. */
+  | {status: 'ready'; bindingStatus: 'UNBOUND' | 'BOUND'}
+  | {status: 'unavailable'}
+);
 const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
   ['install', '安装贡献'], ['open', '打开贡献'], ['use', '应用活跃小时'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];
@@ -257,6 +260,7 @@ function HanaMeshSection(): ReactNode {
       // T9: the email form lives on the website; core only carries the entry point.
       createElement('button', {type: 'button', 'data-hanamesh-core-email': 'entry', onClick: () => visit('/me')}, '邮箱绑定'))),
     createElement(Row, {label: '我的Hana'}, createElement('div', {className: 'hm-core-points', 'data-hanamesh-core-points': points?.status ?? 'loading'},
+      points?.status === 'ready' && points.bindingStatus === 'UNBOUND' && createElement('span', {role: 'status', 'data-hanamesh-core-points-binding': 'UNBOUND'}, '未绑定：只累计、暂不可领'),
       points === null
         ? createElement('span', {className: 'hm-core-muted'}, '正在读取分…')
         : points.status === 'unavailable'

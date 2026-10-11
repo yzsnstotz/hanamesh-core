@@ -40,6 +40,9 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: 0.2.0-rc.2
         version: 0.2.0-rc.2(@deepseek-ai/cordis@4.0.4)
+      '@hanamesh/api-contracts':
+        specifier: git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0
+        version: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/7ddb2be334ad80dfed05d1e0f5128926bb82a3b3
       '@hanamesh/devkit':
         specifier: git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit
         version: git+ssh://git@github.com/yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit
@@ -136,6 +139,19 @@ packages:
 
   '@deepseek-ai/schemastery@3.18.4':
     resolution: {integrity: sha512-SSXO6tYuyrIqKVbmOnIq0s+riUywYzouFMcnBluHF9n4KMo2G8HvEzhCYj6pj2617/glOjbJuVInJ9hfONsjkg==}
+
+  '@hanamesh/api-contracts@https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/7ddb2be334ad80dfed05d1e0f5128926bb82a3b3':
+    resolution: {tarball: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/7ddb2be334ad80dfed05d1e0f5128926bb82a3b3}
+    version: 0.10.0
+    engines: {node: '>=20'}
+    peerDependencies:
+      fastify: ^5.12.3
+      viem: ^2.54.2
+    peerDependenciesMeta:
+      fastify:
+        optional: true
+      viem:
+        optional: true
 
   '@hanamesh/devkit@git+ssh://git@github.com/yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit':
     resolution: {commit: e6ccf710369a77c5fbf9ce4810b182727e4f2aa8, path: /packages/devkit, repo: git+ssh://git@github.com/yzsnstotz/hanamesh-server-shared.git, type: git}
@@ -257,6 +273,8 @@ snapshots:
     dependencies:
       '@deepseek-ai/cosmokit': 1.8.5
       '@standard-schema/spec': 1.1.0
+
+  '@hanamesh/api-contracts@https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/7ddb2be334ad80dfed05d1e0f5128926bb82a3b3': {}
 
   '@hanamesh/devkit@git+ssh://git@github.com/yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit': {}
 

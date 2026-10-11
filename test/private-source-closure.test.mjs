@@ -14,6 +14,7 @@ test('Core private source closure uses published ranges and keeps developer tool
   assert.equal(JSON.parse(await readFile('deps/LOCKS.json','utf8')).uiKit, undefined);
   // HM-4: semver is a normal runtime dependency; the vendored copy and the old host-api snapshot are archived.
   assert.deepEqual(root.dependencies, {semver: '7.7.2'});
+  assert.equal(root.devDependencies['@hanamesh/api-contracts'], 'git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0');
   assert.ok(!root.files.some(path => path.startsWith('vendor/')));
   await assert.rejects(access('vendor/semver'));
   await assert.rejects(access('vendor/host-api'));
@@ -24,7 +25,8 @@ test('Core private source closure uses published ranges and keeps developer tool
     const pkg=JSON.parse(await readFile(path,'utf8'));
     for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
       for(const [name,spec] of Object.entries(pkg[section] ?? {})) {
-        if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^git\+https:\/\/github\.com\/yzsnstotz\/.+\.git#semver:\^/u,`${path}:${section}:${name}`);
+        if(name === '@hanamesh/api-contracts') assert.equal(spec, 'git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0');
+        else if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^git\+https:\/\/github\.com\/yzsnstotz\/.+\.git#semver:\^/u,`${path}:${section}:${name}`);
       }
     }
   }
