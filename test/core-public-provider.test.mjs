@@ -7,7 +7,8 @@ import {CORE_REQUIRED_METHODS, CORE_OPTIONAL_METHODS, checkCoreService} from '..
 import {CORE_CONTRACT_DEFINITION} from '../lib/contract-fixtures.js';
 import {memoryStore} from './fixtures/core-store.mjs';
 
-// Public RFC 8032 test seed, never a user identity. SOURCE provider + FIXTURE storage;
+// Public RFC 8032 test seed, never a user identity. Six facts are FIXTURE bytes,
+// not the current C-USAGE business encoding authority. SOURCE + FIXTURE storage;
 // these tests do not claim native Cordis assembly or a real server acceptance.
 const seed = '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60';
 const publicKey = '11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo';
@@ -47,7 +48,7 @@ test('actual provider exposes string protocol 1 and all callable members; shape 
   for (const name of CORE_REQUIRED_METHODS) assert.deepEqual(checkCoreService({...service, [name]: undefined}), {status: 'incompatible', reason: 'CORE_METHOD_MISSING', missing: [name]});
 });
 
-test('raw sign signs exact six-fact JSON UTF-8 bytes, deterministically, with the matching device public key', async t => {
+test('raw sign signs exact FIXTURE six-fact JSON UTF-8 bytes, deterministically, with the matching device public key', async t => {
   const {controller, service} = await provider(t);
   assert.equal(service.getPublicKey(), publicKey);
   assert.equal(Buffer.from(publicKey, 'base64url').length, 32);
