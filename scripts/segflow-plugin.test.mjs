@@ -4,6 +4,8 @@ import {readFile, realpath} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {join, relative, isAbsolute} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import semver from 'semver';
+import {assertCallExamples, budgetPhrases} from '../test/fixtures/native-core-assertions.mjs';
 
 const CDP_COMMAND_TIMEOUT_MS = Number(process.env.SEGFLOW_CORE_CDP_TIMEOUT_MS ?? 10000);
 const UI_ASSERT_TIMEOUT_MS = Number(process.env.SEGFLOW_CORE_UI_TIMEOUT_MS ?? 10000);
@@ -14,6 +16,30 @@ for (const value of [CDP_COMMAND_TIMEOUT_MS, UI_ASSERT_TIMEOUT_MS, UI_CHECK_INTE
 // Product verification only: no fixture UI, alternate profile, account login or host restart.
 for (const name of Object.keys(process.env)) {
   if (/(?:_API_KEY|_TOKEN|_SECRET|_PASSWORD|_PRIVATE_KEY)$/.test(name) || name.startsWith('AWS_')) delete process.env[name];
+}
+
+async function installationReceipt(envDir, port) {
+  const receipt=JSON.parse(await readFile(join(envDir,'core-installation-receipt.json'),'utf8'));
+  assert.equal(await realpath(receipt.environmentRoot),envDir);
+  assert.equal(receipt.clientPort,port,'CDP must belong to the mechanism-supplied installation');
+  assert.equal(receipt.exitCode,0);assert.equal(receipt.pnpmVersion,'11.28.5');
+  assert.equal(typeof receipt.command,'string');assert.ok(receipt.command.length>0,'Normal installation command is required');
+  for(const key of ['profileManifest','profileLock']) {
+    const path=await realpath(receipt[key]),rel=relative(envDir,path);
+    assert.ok(rel&&!rel.startsWith('..')&&!isAbsolute(rel),'Manifest/lock must belong to this environment');
+    assert.ok((await readFile(path)).length>0);
+  }
+  assert.ok(receipt.preActivationConfig&&typeof receipt.preActivationConfig==='object');
+  const shared=await realpath(receipt.preActivationConfig.sharedIdentityDir),relativeShared=relative(envDir,shared);
+  assert.ok(relativeShared&&!relativeShared.startsWith('..')&&!isAbsolute(relativeShared),'Pre-activation identity must belong to this environment');
+  for(const key of ['serverOrigin','websiteOrigin']) {
+    const origin=receipt.preActivationConfig[key];if(origin===null) continue;
+    const url=new URL(origin);assert.ok(['http:','https:'].includes(url.protocol));assert.ok(['127.0.0.1','localhost','[::1]'].includes(url.hostname));assert.equal(url.origin,origin);
+    const service=key==='serverOrigin'?'server':'web',ownedPort=receipt.servicePorts?.[service];
+    assert.ok(Number.isInteger(ownedPort)&&ownedPort>0&&ownedPort<=65535);
+    assert.equal(Number(url.port||(url.protocol==='https:'?'443':'80')),ownedPort,'Origin must use the service port supplied for this case');
+  }
+  return receipt;
 }
 
 async function connect(port, signal) {
@@ -80,9 +106,10 @@ test('candidate declares its official host type closure without runtime contract
 
 test('installed Core provides native identity, consent and visible state-read failure', {timeout:TEST_TIMEOUT_MS},async t=>{
   const port=Number(process.env.SEGFLOW_PORT_CLIENT);
-  assert.ok(Number.isInteger(port)&&port>0&&port<=65535&&port!==3080,'SEGFLOW_PORT_CLIENT must name the isolated product environment, not a fixture or user runtime');
+  assert.ok(Number.isInteger(port)&&port>0&&port<=65535,'SEGFLOW_PORT_CLIENT must name the mechanism-owned product environment');
   assert.ok(process.env.SEGFLOW_ENV_DIR,'SEGFLOW_ENV_DIR is required; no implicit profile fallback');
   const envDir=await realpath(process.env.SEGFLOW_ENV_DIR);
+  const receipt=await installationReceipt(envDir,port);
   // The mechanism installs this test-only observer through the normal loader.
   // Reading its output does not substitute a consumer duckCore for native injection.
   const observationFile=join(envDir,'core-provider-observation.json');
@@ -108,30 +135,49 @@ test('installed Core provides native identity, consent and visible state-read fa
   assert.equal(publicBytes.length,32);
   assert.equal(createHash('sha256').update(publicBytes).digest('base64url'),initial.deviceId);
   assert.equal(initial.session.deviceId,initial.deviceId);
+  assertCallExamples(initial.callExamples);
+  assert.equal(initial.callExamples.deviceId,initial.deviceId);
+  assert.equal(initial.callExamples.serverOrigin,initial.serverOrigin);
+  assert.equal(initial.callExamples.consent,initial.initialConsent);
   const page=await connect(port,t.signal);
   const release=()=>page.close();
   t.signal.addEventListener('abort',release,{once:true});
   try {
     await page.until(`document.readyState === 'complete' && document.body.innerText.trim().length > 0`,'Native CLIENT page never rendered');
     await page.click('[aria-label="打开 HanaMesh 设置"]');
-    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-device]'))`,'Core identity did not become available; missing plugin/dependency/state must fail');
+    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-device]'))`,'Core identity did not become available; missing plugin/dependency/state must fail');
     const state=await page.evaluate(`fetch('/api/hanamesh/core/state').then(async r=>{if(!r.ok)throw new Error('CORE_STATE_READ_FAILED');return r.json()})`);
     assert.ok(state.deviceId,'Real Core must expose a device identity');
     assert.equal(state.deviceId,initial.deviceId,'Native page and injected service must use the same device');
     assert.equal(initial.serverOrigin,state.serverOrigin);
     inside(await realpath(state.identity.location));
+    assert.equal(state.serverOrigin,receipt.preActivationConfig.serverOrigin);
+    assert.equal(state.websiteOrigin,receipt.preActivationConfig.websiteOrigin);
+    const sharedRoot=await realpath(receipt.preActivationConfig.sharedIdentityDir);
+    inside(sharedRoot);
+    assert.equal(await realpath(state.identity.location),await realpath(join(sharedRoot,'identity/device.json')));
+    assert.ok((await page.evaluate(`document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-identity]').innerText`)).includes(state.identity.location),'Shared path must appear in the identity row, not the budget span');
     for(const [origin,portName] of [[state.serverOrigin,'SEGFLOW_PORT_SERVER'],[state.websiteOrigin,'SEGFLOW_PORT_WEB']]) {
       if(origin===null) continue;
       const url=new URL(origin);
-      assert.equal(url.protocol,'http:');assert.ok(['127.0.0.1','localhost','[::1]'].includes(url.hostname));
-      assert.equal(Number(url.port),Number(process.env[portName]),'Origin must use the owned service port');
+      assert.ok(['http:','https:'].includes(url.protocol));assert.ok(['127.0.0.1','localhost','[::1]'].includes(url.hostname));
+      assert.equal(Number(url.port||(url.protocol==='https:'?'443':'80')),Number(process.env[portName]),'Origin must use the owned service port');
       assert.equal(url.origin,origin,'Origin must be the root without credentials/path/query');
     }
     assert.equal(state.consent.state,'withheld','Fresh owned profile must retain the legal withheld default');
-    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-configuration="visible"]'))`,'Named runtime configuration must be visible');
-    const configurationText=await page.evaluate(`document.querySelector('[data-hanamesh-core-configuration="visible"]').innerText`);
-    for(const [key,value] of Object.entries(state.configuration)) assert.ok(configurationText.includes(String(value)),`Current configuration ${key} must be shown`);
+    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-configuration="visible"]'))`,'Named runtime configuration must be visible');
+    const configurationText=await page.evaluate(`document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-configuration="visible"]').innerText`);
+    for(const phrase of budgetPhrases(state.configuration)) assert.ok(configurationText.includes(phrase),`Named budget must be shown: ${phrase}`);
     await page.until(`document.querySelector('[data-hanamesh-core-page="settings"]')?.innerText.includes('HanaMesh套件')`,'Component health must remain visible');
+    // This supplied case is Core-only: absence is a real loader condition, not fabricated state JSON.
+    for(const id of ['usage','app-host']) {
+      const row=state.components.find(component=>component.id===id);
+      assert.equal(row?.status,'missing',`Core-only environment must really lack ${id}`);
+      assert.ok(row.reason,'Missing component must retain its concrete diagnostic');
+      await page.until(`document.querySelector('[data-hanamesh-core-page="settings"] .hm-core-components')?.innerText.includes(${JSON.stringify(row.label+'：未安装')})`,'Missing dependency must have a visible native reason');
+      const observed=initial.callExamples.health.components.find(component=>component.id===id);
+      assert.equal(observed?.status,'missing','Actual getHealth must expose the same missing loader condition');
+    }
     await page.click('[data-hanamesh-core-page="settings"] input[type="checkbox"]');
     await page.until(`document.querySelector('[data-hanamesh-core-page="settings"]')?.innerText.includes('当前：已开启')`,'Consent was not confirmed by the actual host');
     await page.click('[data-hanamesh-core-page="settings"] input[type="checkbox"]');
@@ -146,6 +192,8 @@ test('installed Core provides native identity, consent and visible state-read fa
     assert.deepEqual(observed.consentEvents.map(event=>event.state),['granted','withheld']);
     for(const event of observed.consentEvents) {assert.equal(event.observedConsent,event.state);assert.equal(new Date(event.changedAt).toISOString(),event.changedAt);}
     assert.equal(observed.consentEvents[1].changedAt,after.consent.changedAt,'Native event timestamp must match durable state');
+    assert.deepEqual(observed.releaseProbeEvents,[{state:'granted',changedAt:observed.consentEvents[0].changedAt}],'Released subscription must not receive withdrawal');
+    assert.deepEqual(observed.releaseProbeReturns,['undefined','undefined'],'Unsubscribe must be synchronous and idempotent');
     const interceptionErrors=[];
     page.listeners.set('Fetch.requestPaused',p=>{void page.call('Fetch.failRequest',{requestId:p.requestId,errorReason:'Failed'}).catch(error=>interceptionErrors.push(error.message));});
     await page.call('Fetch.enable',{patterns:[{urlPattern:'*/api/hanamesh/core/state',requestStage:'Request'}]});
@@ -156,8 +204,8 @@ test('installed Core provides native identity, consent and visible state-read fa
     } finally {await page.call('Fetch.disable');page.listeners.delete('Fetch.requestPaused');}
     assert.deepEqual(interceptionErrors,[],'Carrier-failure injection itself must not fail silently');
     await page.click('[data-hanamesh-core-page="settings"] button','重新读取');
-    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-device]'))`,'Explicit state re-read did not recover after carrier failure');
-    assert.equal(await page.evaluate(`document.querySelector('[data-hanamesh-core-device]').getAttribute('data-hanamesh-core-device')`),state.deviceId);
+    await page.until(`Boolean(document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-device]'))`,'Explicit state re-read did not recover after carrier failure');
+    assert.equal(await page.evaluate(`document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-device]').getAttribute('data-hanamesh-core-device')`),state.deviceId);
     const writes=[];
     page.listeners.set('Fetch.requestPaused',p=>{void page.call('Fetch.failRequest',{requestId:p.requestId,errorReason:'Failed'}).catch(error=>writes.push(error.message));});
     await page.call('Fetch.enable',{patterns:[{urlPattern:'*/api/hanamesh/core/consent',requestStage:'Request'}]});
@@ -174,5 +222,41 @@ test('installed Core provides native identity, consent and visible state-read fa
     await page.until(`document.querySelector('[data-hanamesh-core-page="settings"]')?.innerText.includes('当前：已关闭')`,'Reopened real settings must recover authoritative withheld consent');
     await page.click('[data-hanamesh-core-page="settings"] button','关闭');
     await page.until(`!document.querySelector('[data-hanamesh-core-page="settings"]')`,'Closing must release the native settings dialog');
+  } finally {t.signal.removeEventListener('abort',release);page.close();}
+});
+
+test('a normally installed incompatible suite component has an explicit native diagnostic', {timeout:TEST_TIMEOUT_MS},async t=>{
+  // Separate already-running, mechanism-owned case; this test never starts/stops
+  // CLIENT, installs siblings, edits profiles, or manufactures an incompatible package.
+  assert.ok(process.env.SEGFLOW_CORE_INCOMPATIBLE_CASE,'Mechanism must supply the real incompatible-case receipt');
+  const setup=JSON.parse(await readFile(process.env.SEGFLOW_CORE_INCOMPATIBLE_CASE,'utf8'));
+  const envDir=await realpath(setup.environmentRoot),port=setup.clientPort;
+  assert.ok(Number.isInteger(port)&&port>0&&port<=65535);
+  assert.ok(['usage','app-host'].includes(setup.componentId));
+  const receipt=await installationReceipt(envDir,port);
+  const packagePath=await realpath(setup.componentPackagePath);
+  const rel=relative(envDir,packagePath);assert.ok(rel&&!rel.startsWith('..')&&!isAbsolute(rel));
+  const pkg=JSON.parse(await readFile(packagePath,'utf8'));
+  const actual=JSON.parse(await readFile(join(envDir,'core-provider-observation.json'),'utf8'));
+  assert.equal(actual.evidence,'REAL_CORDIS_INJECTION_TEST_OBSERVER');assert.equal(actual.protocolVersion,'1');assert.equal(actual.providerVersion,'0.3.2');assertCallExamples(actual.callExamples);
+  const candidate=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
+  for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.equal(actual.resolvedPeers[name]?.version,version);
+  const row=actual.callExamples.health.components.find(component=>component.id===setup.componentId);
+  assert.equal(row?.moduleName,pkg.name);assert.equal(row.version,pkg.version);
+  assert.equal(row.status,'incompatible');assert.equal(semver.satisfies(pkg.version,row.requiredRange),false);
+  const page=await connect(port,t.signal),release=()=>page.close();t.signal.addEventListener('abort',release,{once:true});
+  try {
+    await page.until(`document.readyState==='complete'&&Boolean(document.querySelector('[aria-label="打开 HanaMesh 设置"]'))`,'Supplied incompatible case must render actual Core entry');
+    await page.click('[aria-label="打开 HanaMesh 设置"]');
+    await page.until(`document.querySelector('[data-hanamesh-core-page="settings"] .hm-core-components')?.innerText.includes(${JSON.stringify(`${row.label}：版本不匹配 ${row.version} ≠ ${row.requiredRange}`)})`,'Actual version mismatch must be visible');
+    const state=await page.evaluate(`fetch('/api/hanamesh/core/state').then(r=>r.json())`);
+    assert.equal(state.serverOrigin,receipt.preActivationConfig.serverOrigin);
+    assert.equal(state.websiteOrigin,receipt.preActivationConfig.websiteOrigin);
+    assert.equal(state.components.find(component=>component.id===setup.componentId)?.status,'incompatible');
+    assert.equal(state.deviceId,actual.deviceId,'Incompatible optional component must preserve Core identity');
+    assert.equal(await page.evaluate(`document.querySelector('[data-hanamesh-core-page="settings"] [data-hanamesh-core-device]').getAttribute('data-hanamesh-core-device')`),state.deviceId);
+    assert.equal(await page.evaluate(`Boolean(document.querySelector('[data-hanamesh-core-page="settings"] input[type="checkbox"]'))`),true,'Core consent remains available');
+    await page.click('[data-hanamesh-core-page="settings"] button','关闭');
+    await page.until(`!document.querySelector('[data-hanamesh-core-page="settings"]')`,'Native mismatch page must close cleanly');
   } finally {t.signal.removeEventListener('abort',release);page.close();}
 });

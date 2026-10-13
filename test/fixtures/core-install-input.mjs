@@ -8,8 +8,8 @@ export function coreInstallInput(environmentRoot, ports = {}) {
   assert.ok(isAbsolute(environmentRoot), 'Owned environment root must be absolute');
   const origin = port => {
     if (port === undefined) return null; // explicit offline configuration, never factory production defaults
-    assert.ok(Number.isInteger(port) && port > 0 && port <= 65535 && port !== 3080, 'Expected a mechanism-owned service port');
-    return `http://127.0.0.1:${port}`;
+    assert.ok(Number.isInteger(port) && port > 0 && port <= 65535, 'Expected a mechanism-owned service port');
+    return new URL(`http://127.0.0.1:${port}`).origin;
   };
   const config = {
     serverOrigin: origin(ports.server),

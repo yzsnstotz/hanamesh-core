@@ -1,9 +1,11 @@
 // Test-only observer loaded by the normal host loader, never part of the Core tgz.
-// Provides no service, HTTP route, UI, identity, signature or business state.
+// Provides no service, HTTP route, UI, identity or business state. Calls only
+// the real provider's signing primitives on explicit local FIXTURE bytes.
 import assert from 'node:assert/strict';
 import {readFile, realpath, writeFile, rename} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createRequire} from 'node:module';
+import {callExamples} from './call-examples.mjs';
 
 export const name = 'hanamesh-core-native-test-observer';
 export const inject = ['hanameshCore'];
@@ -38,6 +40,9 @@ export async function apply(ctx) {
     serverOrigin: core.getServerOrigin(),
     initialConsent: core.getConsent(),
     consentEvents: [],
+    callExamples: await callExamples(core),
+    releaseProbeEvents: [],
+    releaseProbeReturns: [],
   };
   let active = true;
   let tail = Promise.resolve();
@@ -56,9 +61,17 @@ export async function apply(ctx) {
     record.consentEvents.push({state, changedAt, observedConsent: core.getConsent()});
     void publish().catch(error => console.error('CORE_TEST_OBSERVER_PUBLICATION_FAILED', error.message));
   });
+  // A separate subscription releases itself on the grant. The main subscription
+  // observes the later withdrawal, proving that release suppresses only its own callback.
+  const releaseProbe = core.onConsentChange((state, changedAt) => {
+    record.releaseProbeEvents.push({state, changedAt});
+    record.releaseProbeReturns = [typeof releaseProbe(), typeof releaseProbe()];
+    void publish().catch(error => console.error('CORE_TEST_RELEASE_OBSERVATION_FAILED', error.message));
+  });
   ctx.effect(() => async () => {
     active = false;
     unsubscribe();
+    releaseProbe();
     await tail;
     if (failure) throw failure;
   });

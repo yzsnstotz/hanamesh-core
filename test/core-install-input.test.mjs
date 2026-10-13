@@ -25,7 +25,10 @@ test('pre-activation input uses only supplied loopback service ports and retains
   const input = coreInstallInput('/FIXTURE/current-environment', {server: 49151, web: 49152});
   assert.equal(configOf(input.config).serverOrigin, 'http://127.0.0.1:49151');
   assert.equal(configOf(input.config).websiteOrigin, 'http://127.0.0.1:49152');
-  for (const port of [0, 3080, 65536, NaN, '49151', 'https://api.hanamesh.com']) assert.throws(() => coreInstallInput('/FIXTURE/current-environment', {server: port}));
+  // Validate the input without connecting to this number or any running service.
+  assert.equal(configOf(coreInstallInput('/FIXTURE/current-environment', {server: 3080}).config).serverOrigin, 'http://127.0.0.1:3080');
+  assert.equal(configOf(coreInstallInput('/FIXTURE/current-environment', {server: 80}).config).serverOrigin, 'http://127.0.0.1');
+  for (const port of [0, 65536, NaN, '49151', 'https://api.hanamesh.com']) assert.throws(() => coreInstallInput('/FIXTURE/current-environment', {server: port}));
   assert.throws(() => coreInstallInput('relative/profile'));
   assert.throws(() => configOf({...input.config, sharedIdentityDir: 'relative'}), {code: 'CORE_INPUT_INVALID'});
   assert.throws(() => configOf({...input.config, serverOrigin: 'https://user:password@fixture.invalid'}), {code: 'CORE_ORIGIN_REJECTED'});
