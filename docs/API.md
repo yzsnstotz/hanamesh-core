@@ -83,3 +83,26 @@ rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载）�
 客户端与读取调度配置：`clientPollIntervalMs=10000`、`pointsRefreshMs=60000`、`contributionIntervalMs=60000`、`activityPageBudget=5`、`activityDisplayRows=25`、`catalogConcurrency=4`。它们是本地展示、缓存或资源预算，不是签名/权限安全常量；均可在插件配置设置正安全整数，定时器上限为 JavaScript 有符号 32 位毫秒值。活动游标保持不透明，达到扫描预算仍明确显示未到末尾并支持继续加载。原 90 天业务窗口、上游单页 200 条、金额与签名约束保持。
 
 D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发到带自身认证 cookie 的宿主 Connection。Core 产品入口调用官方 `connection.requestRejection` 认证，只有被它接纳的原生请求可缺少 Origin；独立路由仍要求原同源 Origin，有 Origin 的产品写入仍核对同源。未取消认证或扩大来源白名单。
+
+
+## 正常安装前配置与公开契约（D-77）
+
+固定官方目标是 Desktop/DSH 0.2.1-alpha.2、Cordis 4.0.5-alpha.1（D7源d743267388641bc76f17c45ce8b4c231aed1d32c），安装操作使用官方 bundled pnpm11.28.5的正常策略；源声明不是实际resolved证据。Desktop公开管理流程要求先初始化profile、完全退出，再通过其官方CLI `dsh plugin --profile desktop add <本候选tgz>`安装，然后重开。此操作由管理该Desktop生命周期的程序执行，Core测试不启停服务。本文不宣称当前机制已有准备/安装步骤或该版本已发布至npm。
+
+根入口导出PluginConfig；Core正常apply通过configOf校验。serverOrigin/websiteOrigin必填string|null，合法HTTPS或现行127.0.0.1/localhost HTTP根origin，无凭据/路径/query/fragment；共享身份sharedIdentityDir为绝对路径或null/未给。profile.schema.json是套件画像，不是插件配置schema，当前无导出的DSH config schema对象。
+
+隔离运行必须在Core首次激活前由管理程序将本轮配置应用到正常profile配置层；仅给本轮loopback服务或明确null，sharedIdentityDir明确指向环境内路径，清继承凭据并隔离HOME/DSH_HOME/用户数据。生产默认值不改，不能先激活默认生产origin再事后检查。
+
+```yaml
+# 路径示例须由管理程序替换为其当轮环境内绝对路径；不是用户手填的验收步骤。
+- id: hanamesh-core
+  config:
+    serverOrigin: null
+    websiteOrigin: null
+    sharedIdentityDir: /OWNED_CURRENT_ENVIRONMENT/core-shared
+    allowSystemBrowser: false
+```
+
+配置null是明确离线，不自动推断网络/身份失败。共享身份回退仍按原产品规则；隔离测试不得依靠回退。具名预算默认/合法范围沿上文；设置中的预算span只展示对应标签和值，origin应通过正式state/diagnostics读取，身份路径在设备身份行可见。
+
+完整C-CORE九调用/事件、错误分组、原字节与请求覆盖、SessionSnapshot与退订参见CORE_CONTRACT.md。getServerOrigin无条件string|null，不增加就绪抛错；onConsentChange真实回调为(state,changedAt)两个位置参数，旧对象摘要描述事件事实，changedAt取成功持久写入。六事实签名向量只作FIXTURE，不代替当前C-USAGE规范。发布包不包含原生测试观察插件或测试输入生成器。

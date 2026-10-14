@@ -2,8 +2,8 @@ import type { ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContra
 /** Every fixture carries this label so no screen, log or report can mistake it for the product provider. */
 export declare const CORE_FIXTURE_LABEL = "FIXTURE \u00B7 hanamesh-core contract v1 (not the product provider)";
 /** C-CORE types are re-exported here so the handoff has one import entry point. */
-export type { ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput, SessionSnapshot } from './contract.js';
-/** Transfer definition for api-contracts. References the existing v1 schema, without a second copy of its fields.
+export type { ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput, SessionSnapshot } from './contract.js';
+/** Provider-owned public definition. References the existing v1 schema, without a second copy of its fields.
  * `errors` records the card's public contract; implementationErrors records additional existing provider guards.
  * Handshake failures are observations returned by checkCoreService, not exceptions from getConsent.
  */
@@ -14,12 +14,17 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
     readonly types: Readonly<{
         [k: string]: unknown;
     }>;
+    readonly optionalTypes: Readonly<{
+        HealthSnapshot: unknown;
+    }>;
     readonly methods: {
         readonly getConsent: {
             readonly input: null;
             readonly output: "ConsentState";
             readonly errors: readonly ["CORE_ABSENT", "CORE_PROTOCOL_UNSUPPORTED", "CORE_METHOD_MISSING"];
             readonly errorChannel: "handshake";
+            readonly synchronous: true;
+            readonly note: "Handshake diagnostics are not exceptions from this unconditional consent getter.";
         };
         readonly signRequest: {
             readonly input: "RequestSignatureInput";
@@ -27,6 +32,7 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
             readonly errors: readonly ["CORE_NOT_READY", "CORE_DEVICE_CORRUPT"];
             readonly errorChannel: "exception";
             readonly implementationErrors: readonly ["CORE_INPUT_INVALID", "CORE_DISPOSED", "CORE_UPSTREAM_UNAVAILABLE"];
+            readonly synchronous: false;
         };
         readonly getSession: {
             readonly input: null;
@@ -34,6 +40,8 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
             readonly errors: readonly ["CORE_NOT_READY"];
             readonly errorChannel: "exception";
             readonly implementationErrors: readonly ["CORE_DISPOSED"];
+            readonly synchronous: true;
+            readonly note: "Registration, principal, binding and reachability are observations; null is not a fabricated account or an availability error. reason is registration.lastError.";
         };
         readonly getServerOrigin: {
             readonly input: null;
@@ -41,6 +49,7 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
             readonly errors: readonly ["CORE_NOT_READY"];
             readonly errorChannel: "exception";
             readonly implementationErrors: readonly [];
+            readonly synchronous: true;
             readonly note: "The current provider returns configured string | null unconditionally, including after disposal; null means offline. CORE_NOT_READY is card-declared availability, not a thrown guard in this implementation.";
         };
         readonly getDeviceId: {
@@ -49,7 +58,50 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
             readonly errors: readonly ["CORE_NOT_READY"];
             readonly errorChannel: "exception";
             readonly implementationErrors: readonly ["CORE_DISPOSED"];
+            readonly synchronous: true;
         };
+        readonly getPublicKey: {
+            readonly input: null;
+            readonly output: "PublicKey";
+            readonly errors: readonly ["CORE_NOT_READY"];
+            readonly errorChannel: "exception";
+            readonly implementationErrors: readonly ["CORE_DISPOSED"];
+            readonly synchronous: true;
+            readonly optional: true;
+            readonly note: "Reads the stored raw 32-byte Ed25519 public key as unpadded base64url; signing performs key consistency checks.";
+        };
+        readonly sign: {
+            readonly input: "Uint8Array";
+            readonly output: "Uint8Array";
+            readonly errors: readonly ["CORE_NOT_READY", "CORE_DEVICE_CORRUPT"];
+            readonly errorChannel: "exception";
+            readonly implementationErrors: readonly ["CORE_DISPOSED"];
+            readonly synchronous: true;
+            readonly note: "Signs exact supplied bytes with Ed25519, returning 64 raw bytes. No hashing, JSON encoding, framing, consent or registration gate is added.";
+        };
+        readonly onConsentChange: {
+            readonly input: "(state: ConsentState, changedAt: string) => void";
+            readonly output: "() => void";
+            readonly errors: readonly [];
+            readonly synchronous: true;
+            readonly note: "Two positional callback arguments after successful persistence; ISO timestamp is stored consent.changedAt. No initial replay; same-value writes notify. Unsubscribe is synchronous and idempotent; listener errors are isolated.";
+        };
+        readonly getHealth: {
+            readonly input: null;
+            readonly output: "HealthSnapshot";
+            readonly errors: readonly [];
+            readonly synchronous: true;
+            readonly optional: true;
+            readonly note: "Read-only advisory view; cold state is repair with CHECK_NOT_RUN. Not an authorization decision.";
+        };
+    };
+    readonly rawSigning: {
+        readonly algorithm: "Ed25519";
+        readonly input: "exact Uint8Array bytes";
+        readonly output: "64 raw signature bytes";
+        readonly deviceId: "unpadded base64url(sha256(rawPublicKey32))";
+        readonly consent: "The caller checks consent before collecting or sending events; signing primitives do not enforce consent.";
+        readonly businessEncoding: "Caller-owned. Six-fact JSON examples are FIXTURE bytes, not C-USAGE authority.";
     };
     readonly requestSigning: {
         readonly algorithm: "Ed25519";
@@ -59,7 +111,79 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
         readonly body: "Uint8Array | null; hash exact bytes; null hashes the empty byte sequence";
         readonly signature: "64-byte Ed25519 signature encoded as base64url";
         readonly publicKey: "raw 32-byte Ed25519 public key encoded as base64url";
+        readonly headerNames: readonly ["x-hm-device-id", "x-hm-timestamp", "x-hm-nonce", "x-hm-signature"];
+        readonly excluded: readonly ["deviceId header", "query", "fragment", "Origin", "Host", "cookie", "content-type", "other headers"];
     };
+}>;
+export declare const CORE_DETERMINISTIC_FIXTURE_VECTORS: Readonly<{
+    raw: Readonly<{
+        readonly utf8: "{\"deviceId\":\"If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk\",\"hanaRef\":\"hana_fixture_雪\",\"action\":\"use\",\"occurredAt\":\"2026-01-01T00:00:00.000Z\",\"eventId\":\"event-fixture-1\",\"nonce\":\"event-nonce-1\"}";
+        readonly signatureBase64url: "HvBngPnB1nkwPUex8f5ZdgPFTfmgpF6xbDGB9nhks-gVNrAn2Y_af4pe9TWIdepcTLUCIANOczsUwGWHaGrHBA";
+    }>;
+    requests: readonly Readonly<{
+        headers: Readonly<{
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "AGcqtZPgXwKDrA1J0yeWp9elokwB0NkxAJdn4aRCoWE50ADYohmBm-h8W_YhQ4TSjjhRLXzPfHMt3QyOpi9mAQ";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "qHL05B4S-Gu43iWUW-MKXZ87C3_8CoIQPxyIl0wH9tiBQ6plSOdTwcJPRpGza7Ke69oILo5I5ziioGrGwPU5Bg";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "JAioaucbnXDA2OBxRSK1ysWNIZV_EupdMAGDGpZ5TncIDEPwjRKflggKKxJRvd-yANBmMiXDiAXHRPne-E3IAg";
+        }>;
+        method: "post";
+        path: "/v1/usage/events?fixture=1#ignored";
+        bodyUtf8: "[]";
+    } | {
+        headers: Readonly<{
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "AGcqtZPgXwKDrA1J0yeWp9elokwB0NkxAJdn4aRCoWE50ADYohmBm-h8W_YhQ4TSjjhRLXzPfHMt3QyOpi9mAQ";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "qHL05B4S-Gu43iWUW-MKXZ87C3_8CoIQPxyIl0wH9tiBQ6plSOdTwcJPRpGza7Ke69oILo5I5ziioGrGwPU5Bg";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "JAioaucbnXDA2OBxRSK1ysWNIZV_EupdMAGDGpZ5TncIDEPwjRKflggKKxJRvd-yANBmMiXDiAXHRPne-E3IAg";
+        }>;
+        method: "GET";
+        path: "/v1/usage/me/contributions?from=fixture&to=fixture";
+        bodyUtf8: null;
+    } | {
+        headers: Readonly<{
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "AGcqtZPgXwKDrA1J0yeWp9elokwB0NkxAJdn4aRCoWE50ADYohmBm-h8W_YhQ4TSjjhRLXzPfHMt3QyOpi9mAQ";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "qHL05B4S-Gu43iWUW-MKXZ87C3_8CoIQPxyIl0wH9tiBQ6plSOdTwcJPRpGza7Ke69oILo5I5ziioGrGwPU5Bg";
+        } | {
+            readonly "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
+            readonly "x-hm-timestamp": "1767225600000";
+            readonly "x-hm-nonce": "auth-fixed-fixture-nonce";
+            readonly "x-hm-signature": "JAioaucbnXDA2OBxRSK1ysWNIZV_EupdMAGDGpZ5TncIDEPwjRKflggKKxJRvd-yANBmMiXDiAXHRPne-E3IAg";
+        }>;
+        method: "DELETE";
+        path: "/v1/usage/me/devices/If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk/events";
+        bodyUtf8: "";
+    }>[];
+    label: "FIXTURE · deterministic Ed25519 bytes; not product identity or C-USAGE encoding authority";
+    publicKey: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo";
+    deviceId: "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk";
 }>;
 export interface CoreContractExamples {
     readonly label: string;

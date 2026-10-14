@@ -7,12 +7,12 @@ import type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContrac
 export const CORE_FIXTURE_LABEL = 'FIXTURE · hanamesh-core contract v1 (not the product provider)';
 
 /** C-CORE types are re-exported here so the handoff has one import entry point. */
-export type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput, SessionSnapshot} from './contract.js';
+export type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput, SessionSnapshot} from './contract.js';
 
 const schema = JSON.parse(readFileSync(new URL('../contract/hanamesh-core.v1.schema.json', import.meta.url), 'utf8')) as {$defs: Record<string, unknown>};
 const typeNames = ['ConsentState', 'DeviceId', 'PublicKey', 'RequestSignatureInput', 'DeviceAuthHeaders', 'SessionSnapshot', 'ServerOrigin'] as const;
 
-/** Transfer definition for api-contracts. References the existing v1 schema, without a second copy of its fields.
+/** Provider-owned public definition. References the existing v1 schema, without a second copy of its fields.
  * `errors` records the card's public contract; implementationErrors records additional existing provider guards.
  * Handshake failures are observations returned by checkCoreService, not exceptions from getConsent.
  */
@@ -21,12 +21,23 @@ export const CORE_CONTRACT_DEFINITION = Object.freeze({
   service: 'hanameshCore',
   protocolVersion: '1',
   types: Object.freeze(Object.fromEntries(typeNames.map(name => [name, schema.$defs[name]]))),
+  optionalTypes: Object.freeze({HealthSnapshot: schema.$defs.HealthSnapshot}),
   methods: {
-    getConsent: {input: null, output: 'ConsentState', errors: ['CORE_ABSENT', 'CORE_PROTOCOL_UNSUPPORTED', 'CORE_METHOD_MISSING'], errorChannel: 'handshake'},
-    signRequest: {input: 'RequestSignatureInput', output: 'Promise<DeviceAuthHeaders>', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_INPUT_INVALID', 'CORE_DISPOSED', 'CORE_UPSTREAM_UNAVAILABLE']},
-    getSession: {input: null, output: 'SessionSnapshot', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED']},
-    getServerOrigin: {input: null, output: 'ServerOrigin', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: [], note: 'The current provider returns configured string | null unconditionally, including after disposal; null means offline. CORE_NOT_READY is card-declared availability, not a thrown guard in this implementation.'},
-    getDeviceId: {input: null, output: 'DeviceId', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED']},
+    getConsent: {input: null, output: 'ConsentState', errors: ['CORE_ABSENT', 'CORE_PROTOCOL_UNSUPPORTED', 'CORE_METHOD_MISSING'], errorChannel: 'handshake', synchronous: true, note: 'Handshake diagnostics are not exceptions from this unconditional consent getter.'},
+    signRequest: {input: 'RequestSignatureInput', output: 'Promise<DeviceAuthHeaders>', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_INPUT_INVALID', 'CORE_DISPOSED', 'CORE_UPSTREAM_UNAVAILABLE'], synchronous: false},
+    getSession: {input: null, output: 'SessionSnapshot', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED'], synchronous: true, note: 'Registration, principal, binding and reachability are observations; null is not a fabricated account or an availability error. reason is registration.lastError.'},
+    getServerOrigin: {input: null, output: 'ServerOrigin', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: [], synchronous: true, note: 'The current provider returns configured string | null unconditionally, including after disposal; null means offline. CORE_NOT_READY is card-declared availability, not a thrown guard in this implementation.'},
+    getDeviceId: {input: null, output: 'DeviceId', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED'], synchronous: true},
+    getPublicKey: {input: null, output: 'PublicKey', errors: ['CORE_NOT_READY'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED'], synchronous: true, optional: true, note: 'Reads the stored raw 32-byte Ed25519 public key as unpadded base64url; signing performs key consistency checks.'},
+    sign: {input: 'Uint8Array', output: 'Uint8Array', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED'], synchronous: true, note: 'Signs exact supplied bytes with Ed25519, returning 64 raw bytes. No hashing, JSON encoding, framing, consent or registration gate is added.'},
+    onConsentChange: {input: '(state: ConsentState, changedAt: string) => void', output: '() => void', errors: [], synchronous: true, note: 'Two positional callback arguments after successful persistence; ISO timestamp is stored consent.changedAt. No initial replay; same-value writes notify. Unsubscribe is synchronous and idempotent; listener errors are isolated.'},
+    getHealth: {input: null, output: 'HealthSnapshot', errors: [], synchronous: true, optional: true, note: 'Read-only advisory view; cold state is repair with CHECK_NOT_RUN. Not an authorization decision.'},
+  },
+  rawSigning: {
+    algorithm: 'Ed25519', input: 'exact Uint8Array bytes', output: '64 raw signature bytes',
+    deviceId: 'unpadded base64url(sha256(rawPublicKey32))',
+    consent: 'The caller checks consent before collecting or sending events; signing primitives do not enforce consent.',
+    businessEncoding: 'Caller-owned. Six-fact JSON examples are FIXTURE bytes, not C-USAGE authority.',
   },
   requestSigning: {
     algorithm: 'Ed25519',
@@ -36,8 +47,63 @@ export const CORE_CONTRACT_DEFINITION = Object.freeze({
     body: 'Uint8Array | null; hash exact bytes; null hashes the empty byte sequence',
     signature: '64-byte Ed25519 signature encoded as base64url',
     publicKey: 'raw 32-byte Ed25519 public key encoded as base64url',
+    headerNames: ['x-hm-device-id', 'x-hm-timestamp', 'x-hm-nonce', 'x-hm-signature'],
+    excluded: ['deviceId header', 'query', 'fragment', 'Origin', 'Host', 'cookie', 'content-type', 'other headers'],
   },
 } as const);
+
+/** Public deterministic byte vectors only. The fixed test key is not a product
+ * identity; HTTP headers below illustrate the canonical bytes with fixed time/nonce,
+ * not a live signRequest response. No private key or business encoding authority is exported. */
+const deterministicVectors = {
+  "label": "FIXTURE · deterministic Ed25519 bytes; not product identity or C-USAGE encoding authority",
+  "publicKey": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+  "deviceId": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk",
+  "raw": {
+    "utf8": "{\"deviceId\":\"If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk\",\"hanaRef\":\"hana_fixture_雪\",\"action\":\"use\",\"occurredAt\":\"2026-01-01T00:00:00.000Z\",\"eventId\":\"event-fixture-1\",\"nonce\":\"event-nonce-1\"}",
+    "signatureBase64url": "HvBngPnB1nkwPUex8f5ZdgPFTfmgpF6xbDGB9nhks-gVNrAn2Y_af4pe9TWIdepcTLUCIANOczsUwGWHaGrHBA"
+  },
+  "requests": [
+    {
+      "method": "post",
+      "path": "/v1/usage/events?fixture=1#ignored",
+      "bodyUtf8": "[]",
+      "headers": {
+        "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk",
+        "x-hm-timestamp": "1767225600000",
+        "x-hm-nonce": "auth-fixed-fixture-nonce",
+        "x-hm-signature": "AGcqtZPgXwKDrA1J0yeWp9elokwB0NkxAJdn4aRCoWE50ADYohmBm-h8W_YhQ4TSjjhRLXzPfHMt3QyOpi9mAQ"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/v1/usage/me/contributions?from=fixture&to=fixture",
+      "bodyUtf8": null,
+      "headers": {
+        "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk",
+        "x-hm-timestamp": "1767225600000",
+        "x-hm-nonce": "auth-fixed-fixture-nonce",
+        "x-hm-signature": "qHL05B4S-Gu43iWUW-MKXZ87C3_8CoIQPxyIl0wH9tiBQ6plSOdTwcJPRpGza7Ke69oILo5I5ziioGrGwPU5Bg"
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/usage/me/devices/If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk/events",
+      "bodyUtf8": "",
+      "headers": {
+        "x-hm-device-id": "If4x36FUomFia_hUBG_SJxt77UtqvkWqWId-9H-XIbk",
+        "x-hm-timestamp": "1767225600000",
+        "x-hm-nonce": "auth-fixed-fixture-nonce",
+        "x-hm-signature": "JAioaucbnXDA2OBxRSK1ysWNIZV_EupdMAGDGpZ5TncIDEPwjRKflggKKxJRvd-yANBmMiXDiAXHRPne-E3IAg"
+      }
+    }
+  ]
+} as const;
+export const CORE_DETERMINISTIC_FIXTURE_VECTORS = Object.freeze({
+  ...deterministicVectors,
+  raw: Object.freeze(deterministicVectors.raw),
+  requests: Object.freeze(deterministicVectors.requests.map(request => Object.freeze({...request, headers: Object.freeze(request.headers)}))),
+});
 
 export interface CoreContractExamples {
   readonly label: string;

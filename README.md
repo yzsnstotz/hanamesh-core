@@ -1,12 +1,12 @@
-# hanamesh-core · 0.2.0-rc.49
+# hanamesh-core · 0.3.2
 
-Core 可独立从公开 npm 安装到官方 `@deepseek-ai/dsh@0.2.0-rc.2`。设备身份、同意、套件入口和组件健康观察由本包提供；Usage 与 AppHost 可分别安装，默认三件套装配归 Desktop seed。Core 不再自动安装或插入 sibling 插件，因此不要求卸载已独立安装的组件。
+Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；Usage/AppHost独立安装，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
 
-```sh
-dsh plugin --profile web add hanamesh-core@0.2.0-rc.49
-```
+固定官方D7目标为Desktop/DSH0.2.1-alpha.2、Cordis4.0.5-alpha.1；正常Desktop包管理使用bundled pnpm11.28.5默认政策。Desktop初始化后须完全退出，管理程序用其公开CLI `dsh plugin --profile desktop add <已核验的Core候选tgz>`安装并重开。当前0.3.2是本地候选版本，本文不宣称npm发布或真实产品已验收。不能用旧rc.2 profile证明此组合。
 
-插件清单启用 Core 后，在设置页查看「HanaMesh 套件」「我的 Hana」和「数据授权」。缺少使用记录或应用容器时，组件健康区给出明确原因，设备身份和同意仍可使用。Core 不采集事件、不实现应用容器、不做钱包或奖励计算。
+Core首次激活前，由管理程序配置本轮loopback/null origins与环境内sharedIdentityDir、隔离HOME/DSH_HOME/用户数据并清继承凭据；正常profile配置输入见[API.md](docs/API.md)。出厂合法默认值保持。设备共享路径在身份行可见，预算区只展示具名数值。安装和真实resolved版本/路径须保留收据，声明文本不当安装证据。
+
+公开调用/类型及独立确定性FIXTURE验签向量见[CORE_CONTRACT.md](docs/CORE_CONTRACT.md)。sign仅签原Uint8Array；请求头签名与业务事件签名分开，六事实样例不是C-USAGE正式编码权威。
 
 ## 依赖与构建
 
