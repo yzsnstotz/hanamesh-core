@@ -2,7 +2,9 @@ import {isAbsolute} from 'node:path';
 import {CoreError} from './errors.js';
 import {INITIAL_CORE_SNAPSHOT, type PluginConfig, type StoredCoreSnapshot} from './contracts.js';
 
-export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4});
+export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4, contributionWindowDays: 90});
+/** C-USAGE: a raw-event window (contributions from/to, device events from/to) is at most 90 days. Contract invariant, not a setting. */
+export const USAGE_MAX_WINDOW_DAYS = 90;
 
 const SECRET_KEY = /(?:password|token|cookie|authorization|credential|secret|signer|private.?key)/i;
 
@@ -11,11 +13,18 @@ function originOf(value: unknown): string | null {
   if (typeof value !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
   let url: URL;
   try { url = new URL(value); } catch { throw new CoreError('CORE_ORIGIN_REJECTED', 400); }
-  const loopback = url.hostname === '127.0.0.1' || url.hostname === 'localhost' || url.hostname === '::1';
+  // WHATWG URL keeps IPv6 brackets in `hostname` (`http://[::1]:3000` → `[::1]`).
+  const loopback = url.hostname === '127.0.0.1' || url.hostname === 'localhost' || url.hostname === '[::1]';
   if ((url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) || url.username || url.password || url.pathname !== '/' || url.search || url.hash || value.replace(/\/$/, '') !== url.origin) {
     throw new CoreError('CORE_ORIGIN_REJECTED', 400);
   }
   return url.origin;
+}
+
+/** The same rules as the `serverOrigin` config, for the address set in Core's settings page (a non-null string). */
+export function serverOriginOf(value: unknown): string {
+  if (typeof value !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
+  return originOf(value)!;
 }
 
 export function configOf(input: PluginConfig): Required<PluginConfig> {
@@ -44,6 +53,8 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
   for (const value of [clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs]) {
     if (value > 2_147_483_647) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
+  const contributionWindowDays = input.contributionWindowDays ?? CORE_DEFAULTS.contributionWindowDays;
+  if (!Number.isSafeInteger(contributionWindowDays) || contributionWindowDays < 1 || contributionWindowDays > USAGE_MAX_WINDOW_DAYS) throw new CoreError('CORE_INPUT_INVALID', 400);
   const sharedIdentityDir = input.sharedIdentityDir ?? null;
   if (sharedIdentityDir !== null && (typeof sharedIdentityDir !== 'string' || !isAbsolute(sharedIdentityDir))) throw new CoreError('CORE_INPUT_INVALID', 400);
   return Object.freeze({
@@ -52,7 +63,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     allowSystemBrowser: input.allowSystemBrowser ?? false,
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
-    checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency,
+    checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
     sharedIdentityDir,
   });
 }

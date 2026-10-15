@@ -13,7 +13,7 @@ function renderPoints(points, bound) {
     configuration:{timeoutMs:10000,checkIntervalMs:3000,profileTimeoutMs:1500,maxHanaRows:200,maxResponseBytes:1048576},
     contributions: {status: 'unavailable', reason: 'NOT_CONNECTED'}, health: {}, components: [],
   };
-  const states = [core, points, null, false, null, false, null];
+  const states = [core, points, null, false, null, false, null, '', false, null];
   const react = {
     Fragment: Symbol('Fragment'),
     createElement: (type, props, ...children) => typeof type === 'function' ? type({...props, children}) : {props, children},

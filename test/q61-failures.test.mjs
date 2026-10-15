@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {SessionController} from '../lib/controller.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
-import {memoryStore} from './fixtures/core-store.mjs';
+import {grantedSnapshot, memoryStore} from './fixtures/core-store.mjs';
 import {configOf} from '../lib/validation.js';
 
 async function fixture(catalog, config = {}, rows = [{hanaId:'hana-one',points:1,pending:0}]) {
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   const controller = await SessionController.create({serverOrigin:'https://server.example',websiteOrigin:null},memory.store,{fetcher:async url => {
     if (new URL(url).pathname.includes('/registry/')) return catalog();
     return Response.json({bindingStatus:'UNBOUND',totalPoints:1,hanas:[{hanaId:'hana-one',points:1,pending:0}]});
@@ -32,7 +32,7 @@ test('catalog missing is distinct from malformed success and network failure',as
  }
 });
 test('registration failure stays visible and schedules no hidden retry',async t=>{
- const c=await SessionController.create({serverOrigin:'https://server.example',websiteOrigin:null},memoryStore(INITIAL_CORE_SNAPSHOT).store,{fetcher:async()=>{throw new Error('offline');}});
+ const c=await SessionController.create({serverOrigin:'https://server.example',websiteOrigin:null},memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store,{fetcher:async()=>{throw new Error('offline');}});
  t.mock.timers.enable({apis:['setTimeout']});
  let calls=0;
  const register=c.register.bind(c);c.register=async()=>{calls++;return register();};
@@ -45,7 +45,7 @@ test('Q61 named limits preserve legal defaults, expose values and reject invalid
 });
 test('registration storage failure is visible even when failed state cannot be published',async()=>{
  let fail=false;
- const memory=memoryStore(INITIAL_CORE_SNAPSHOT);
+ const memory=memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
  const c=await SessionController.create({serverOrigin:'https://server.example',websiteOrigin:null},{...memory.store,publish:async value=>{if(fail)throw new Error('disk full');await memory.store.publish(value);}},{fetcher:async()=>{throw new Error('offline');}});
  fail=true;
  try {await assert.rejects(c.startRegistration());assert.equal(c.state().registrationFailure.code,'CORE_UPSTREAM_UNAVAILABLE');assert.equal(c.state().registrationFailure.persistence,'CORE_STORAGE_UNAVAILABLE');}finally{await c.dispose();}

@@ -6,7 +6,7 @@ import {SessionController} from '../lib/controller.js';
 import {deviceLabel, registerDevice} from '../lib/registration.js';
 import {ServerTransport} from '../lib/transport.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
-import {memoryStore} from './fixtures/core-store.mjs';
+import {grantedSnapshot, memoryStore} from './fixtures/core-store.mjs';
 
 function serverStub({mismatch = false, unavailable = false} = {}) {
   const calls = [];
@@ -23,7 +23,7 @@ function serverStub({mismatch = false, unavailable = false} = {}) {
 
 test('registration challenge flow succeeds and repeated registration stays idempotent', async () => {
   const remote = serverStub();
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
   const first = await controller.register();
   const second = await controller.register();
@@ -36,7 +36,7 @@ test('registration challenge flow succeeds and repeated registration stays idemp
 
 test('device id mismatch and upstream failure are persisted as failed observations', async () => {
   for (const [remote, code] of [[serverStub({mismatch: true}), 'CORE_DEVICE_ID_MISMATCH'], [serverStub({unavailable: true}), 'CORE_UPSTREAM_UNAVAILABLE']]) {
-    const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+    const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
     const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
     await assert.rejects(controller.register(), error => error?.code === code);
     assert.equal(memory.read().registration.status, 'failed');
@@ -47,7 +47,7 @@ test('device id mismatch and upstream failure are persisted as failed observatio
 
 test('offline configuration never emits a request', async () => {
   const remote = serverStub();
-  const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: remote.fetcher});
+  const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: remote.fetcher});
   await assert.rejects(controller.register(), error => error?.code === 'CORE_UPSTREAM_UNAVAILABLE');
   assert.equal(remote.calls.length, 0);
 });
@@ -57,7 +57,7 @@ test('registration is never published before the remote registration response', 
   let registrationRequested;
   const requested = new Promise(resolve => { registrationRequested = resolve; });
   const response = new Promise(resolve => { releaseRegistration = resolve; });
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   let calls = 0;
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: async (_url, init) => {
     if (++calls === 1) return Response.json({nonce: 'register-nonce', expiresAt: new Date(Date.now() + 60_000).toISOString()});
@@ -77,7 +77,7 @@ test('registration is never published before the remote registration response', 
 
 test('automatic contributions start only after registration succeeds', async () => {
   const calls = [];
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: async (url, init) => {
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: async (url, init) => {
     const path = new URL(url).pathname;
     calls.push(path);
     if (path.endsWith('/challenge')) return Response.json({nonce: 'register-nonce'});
@@ -125,7 +125,7 @@ test('device label is hostname / platform-arch / HANAMESH_SHELL-or-dsh, each wit
 
 test('registration payload carries the label and the server echo is accepted', async () => {
   const remote = labelServer();
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
   const session = await controller.register();
   assert.equal(session.registration, 'registered');
@@ -137,7 +137,7 @@ test('registration payload carries the label and the server echo is accepted', a
 
 test('identity rc.2 (400 on unknown `label`) makes core re-register once without the label using a fresh challenge', async () => {
   const remote = labelServer({rejectLabel: true});
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
   const session = await controller.register();
   assert.equal(session.registration, 'registered');
@@ -150,7 +150,7 @@ test('identity rc.2 (400 on unknown `label`) makes core re-register once without
 
 test('a 400 on a label-free registration is not retried and surfaces as upstream unavailable', async () => {
   const remote = labelServer({rejectLabel: true});
-  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
   const transport = new ServerTransport('https://server.example', 5_000, async (url, init) => {
     if (String(url).endsWith('/challenge')) return remote.fetcher(url, init);

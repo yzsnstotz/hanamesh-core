@@ -10,6 +10,8 @@ export type CoreErrorCode =
   | 'CORE_DEVICE_ID_MISMATCH'
   | 'CORE_UPSTREAM_UNAVAILABLE'
   | 'CORE_URL_NOT_ALLOWED'
+  /** 409: the action sends this device's identity to the server, which waits for the data consent. */
+  | 'CORE_CONSENT_REQUIRED'
   | 'CORE_DISPOSED';
 
 export class CoreError extends Error {

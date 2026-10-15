@@ -6,12 +6,16 @@ import {CoreError, safeError} from './errors.js';
 import {registerDevice} from './registration.js';
 import {ServerTransport} from './transport.js';
 import {openExternal as openSystemExternal} from './external.js';
-import {configOf, publicJson, snapshotOf} from './validation.js';
+import {configOf, publicJson, serverOriginOf, snapshotOf} from './validation.js';
 import type {SharedDeviceStore} from './shared-device.js';
 
 const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
-type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: 90; actions: {install: number; open: number; use: number; uninstall: number}};
+/** `availability` is Usage's own completeness verdict for the window (`unavailable` = part of it is past the server's raw
+ *  retention or not exactly recoverable); `null` = the server did not say. The numbers are kept either way. */
+type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: number; availability: 'available' | 'unavailable' | null; actions: {install: number; open: number; use: number; uninstall: number}};
+const DAY_MS = 86_400_000;
+const UNREGISTERED = Object.freeze({status: 'unregistered', principalId: null, registeredAt: null, lastError: null, attempts: 0} as const);
 /** T2 custody `GET /v1/custody/me/points`: every number is 分 (points), never a token amount. `pending` is this device's
  *  unbound-device balance, which the server moves into the account the moment the device is bound. */
 const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'creatorMirror', 'launchInitiator'] as const);
@@ -71,8 +75,15 @@ type Identity = {
 export class SessionController {
   readonly #config: Required<PluginConfig>;
   readonly #store: CoreStore;
-  readonly #transport: ServerTransport;
-  readonly #profileTransport: ServerTransport;
+  readonly #fetcher: typeof fetch | undefined;
+  #transport: ServerTransport;
+  #profileTransport: ServerTransport;
+  /** Address set in Core's settings page (storage domain); null = the plugin config `serverOrigin` is effective. */
+  #serverOverride: string | null = null;
+  /** A stored override that no longer validates; the configured origin is effective and the state says so. */
+  #serverOriginFault: 'CORE_ORIGIN_REJECTED' | null = null;
+  /** Bumped on every effective server change: results of requests to the previous server are never committed. */
+  #serverGeneration = 0;
   readonly #shared: SharedDeviceStore | null;
   #identity: Identity;
   #state: StoredCoreSnapshot;
@@ -95,9 +106,13 @@ export class SessionController {
     this.#config = configOf(config);
     this.#store = store;
     this.#shared = shared;
-    this.#transport = new ServerTransport(this.#config.serverOrigin, this.#config.timeoutMs, fetcher, this.#config.maxResponseBytes);
-    this.#profileTransport = new ServerTransport(this.#config.serverOrigin, Math.min(this.#config.profileTimeoutMs, this.#config.timeoutMs), fetcher, this.#config.maxResponseBytes);
+    this.#fetcher = fetcher;
     this.#state = snapshotOf(store.read());
+    const stored = this.#state.serverOriginOverride ?? null;
+    if (stored !== null) {
+      try { this.#serverOverride = serverOriginOf(stored); } catch { this.#serverOriginFault = 'CORE_ORIGIN_REJECTED'; }
+    }
+    [this.#transport, this.#profileTransport] = this.#transportsFor(this.#serverOrigin());
     this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
     this.service = Object.freeze({
       protocolVersion: '1' as const,
@@ -111,9 +126,18 @@ export class SessionController {
         return () => { this.#consentListeners.delete(listener); };
       },
       getSession: () => this.#session(),
-      getServerOrigin: () => this.#config.serverOrigin,
+      getServerOrigin: () => this.#serverOrigin(),
       getHealth: () => this.#health?.getHealth() ?? COLD_HEALTH,
     });
+  }
+
+  #serverOrigin(): string | null { return this.#serverOverride ?? this.#config.serverOrigin; }
+
+  #transportsFor(origin: string | null): [ServerTransport, ServerTransport] {
+    return [
+      new ServerTransport(origin, this.#config.timeoutMs, this.#fetcher, this.#config.maxResponseBytes),
+      new ServerTransport(origin, Math.min(this.#config.profileTimeoutMs, this.#config.timeoutMs), this.#fetcher, this.#config.maxResponseBytes),
+    ];
   }
 
   /** `sharedDevice` is the product path (dsh.mjs always passes it). Without it the identity is this client's own
@@ -236,25 +260,67 @@ export class SessionController {
     for (const listener of this.#consentListeners) {
       try { listener(state, changedAt); } catch { /* listener isolation is part of the contract */ }
     }
+    // Registration sends the device key and label to the server, so it waits for consent. Withdrawing does not
+    // unregister: Usage needs the registration to send the server-side deletion.
+    if (state === 'granted') {
+      if (this.#state.registration.status === 'registered') this.startContributions();
+      else void this.startRegistration().catch(() => undefined); // failure is kept in registration.lastError / registrationFailure
+    } else this.#stopContributions();
     return {state, changedAt};
   }
 
+  /** Core settings page "服务端": null clears the override (back to the plugin config). Registration belongs to a server,
+   *  so a change of the effective origin resets it, drops every server-owned cache and re-registers when consent allows. */
+  async setServerOrigin(input: string | null): Promise<unknown> {
+    if (input !== null && typeof input !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
+    const override = input === null ? null : serverOriginOf(input);
+    const next = override ?? this.#config.serverOrigin;
+    const changed = next !== this.#serverOrigin();
+    if (changed) this.#serverGeneration++;
+    await this.#publish(current => ({...current, revision: current.revision + 1, serverOriginOverride: override,
+      ...(changed ? {registration: {...UNREGISTERED}, serverObservation: {reachable: null, checkedAt: null}} : {})}));
+    this.#serverOverride = override;
+    this.#serverOriginFault = null;
+    if (!changed) return this.state();
+    this.#stopContributions();
+    this.#transport.dispose();
+    this.#profileTransport.dispose();
+    [this.#transport, this.#profileTransport] = this.#transportsFor(next);
+    this.#registrationFailure = null;
+    this.#contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
+    this.#contributionsCheckedAt = 0;
+    this.#points = pointsUnavailable('NOT_CONNECTED');
+    this.#pointsCheckedAt = 0;
+    this.#hanaNames.clear();
+    this.#bound = null;
+    this.#account = null;
+    if (this.#state.consent.state === 'granted') void this.startRegistration().catch(() => undefined);
+    return this.state();
+  }
+
   async register(): Promise<ReturnType<HanaMeshCoreContract['getSession']>> {
+    if (this.#state.consent.state !== 'granted') throw new CoreError('CORE_CONSENT_REQUIRED', 409);
     const attempts = this.#state.registration.attempts + 1;
     const checkedAt = new Date().toISOString();
+    const generation = this.#serverGeneration;
+    const transport = this.#transport;
+    const same = (): boolean => generation === this.#serverGeneration;
     try {
-      if (!this.#transport.configured) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const result = await registerDevice(this.#transport, this.#device());
-      await this.#publish(current => ({...current, revision: current.revision + 1,
+      if (!transport.configured) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const result = await registerDevice(transport, this.#device());
+      // The server changed meanwhile: this registration belongs to the old one and is not recorded.
+      if (!same()) return this.#session();
+      await this.#publish(state => !same() ? state : {...state, revision: state.revision + 1,
         registration: {status: 'registered', principalId: result.principalId, registeredAt: checkedAt, lastError: null, attempts},
         serverObservation: {reachable: true, checkedAt},
-      }));
-      this.#registrationFailure = null;
+      });
+      if (same()) this.#registrationFailure = null;
       return this.#session();
     } catch (error) {
+      if (!same()) return this.#session();
       const safe = safeError(error);
       this.#registrationFailure = {code: safe.code, persistence: null};
-      try { await this.#publish(current => ({...current, revision: current.revision + 1,
+      try { await this.#publish(current => !same() ? current : ({...current, revision: current.revision + 1,
         registration: {...current.registration, status: 'failed', lastError: safe.code, attempts},
         serverObservation: {reachable: safe.code === 'CORE_DEVICE_ID_MISMATCH', checkedAt},
       })); } catch {
@@ -265,14 +331,21 @@ export class SessionController {
     }
   }
 
+  /** Activation and consent grant. Without consent nothing is sent; the settings page shows "打开数据授权后注册". */
   async startRegistration(): Promise<void> {
     if (!this.#transport.configured || this.#disposed || this.#identity.status === 'failed') return;
+    if (this.#state.consent.state !== 'granted') return;
     await this.register();
-    this.startContributions();
+    if (this.#state.registration.status === 'registered') this.startContributions();
+  }
+
+  #stopContributions(): void {
+    if (this.#contributionsTimer) clearInterval(this.#contributionsTimer);
+    this.#contributionsTimer = null;
   }
 
   startContributions(): void {
-    if (!this.#transport.configured || this.#disposed || this.#contributionsTimer) return;
+    if (!this.#transport.configured || this.#disposed || this.#contributionsTimer || this.#state.consent.state !== 'granted') return;
     void this.refreshContributions();
     this.#contributionsTimer = setInterval(() => { void this.refreshContributions(); }, this.#config.contributionIntervalMs);
     this.#contributionsTimer.unref();
@@ -301,6 +374,7 @@ export class SessionController {
   async bindLink(): Promise<{url: string; expiresAt: string}> {
     const device = this.#device();
     if (!this.#transport.configured || !this.#config.websiteOrigin) throw new CoreError('CORE_URL_NOT_ALLOWED', 409);
+    if (this.#state.consent.state !== 'granted') throw new CoreError('CORE_CONSENT_REQUIRED', 409);
     const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'bind'})});
     if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
     let challenge: {nonce?: unknown; expiresAt?: unknown};
@@ -319,29 +393,42 @@ export class SessionController {
       this.#contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
       return this.#contributions;
     }
+    if (this.#state.consent.state !== 'granted') {
+      this.#contributions = Object.freeze({status: 'unavailable', reason: 'CONSENT_WITHHELD'});
+      return this.#contributions;
+    }
     if (Date.now() - this.#contributionsCheckedAt < this.#config.contributionIntervalMs && this.#contributions.status === 'ready') return this.#contributions;
+    const windowDays = this.#config.contributionWindowDays;
     const to = new Date();
-    const from = new Date(to.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const from = new Date(to.getTime() - windowDays * DAY_MS);
     const path = `/v1/usage/me/contributions?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
+    const generation = this.#serverGeneration;
+    const transport = this.#transport;
+    let next: Contributions;
     try {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
-      const response = await this.#transport.request(path, {method: 'GET', headers});
+      const response = await transport.request(path, {method: 'GET', headers});
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {bound?: unknown; account?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
+      const payload = await response.json() as {bound?: unknown; account?: unknown; availability?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
       if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      const availability = payload.availability === undefined ? null : payload.availability;
+      if (availability !== null && availability !== 'available' && availability !== 'unavailable') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const actions = {install: 0, open: 0, use: 0, uninstall: 0};
       for (const row of payload.byHana) for (const key of Object.keys(actions) as Array<keyof typeof actions>) {
         const value = row.actions?.[key];
         if (!Number.isSafeInteger(value) || (value as number) < 0) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
         actions[key] += value as number;
       }
-      this.#contributions = Object.freeze({status: 'ready', windowDays: 90, actions: Object.freeze(actions)});
+      next = Object.freeze({status: 'ready', windowDays, availability, actions: Object.freeze(actions)});
+      if (generation !== this.#serverGeneration) return this.#contributions; // answer of the previous server
       this.#contributionsCheckedAt = Date.now();
       this.#bound = typeof payload.bound === 'boolean' ? payload.bound : null;
       this.#account = this.#bound === true ? linkedAccount(payload.account) : null;
     } catch (error) {
-      this.#contributions = Object.freeze({status: 'unavailable', reason: safeError(error).code});
+      if (generation !== this.#serverGeneration) return this.#contributions;
+      next = Object.freeze({status: 'unavailable', reason: safeError(error).code});
     }
+    this.#contributions = next;
     return this.#contributions;
   }
 
@@ -367,9 +454,11 @@ export class SessionController {
     if (this.#state.registration.status !== 'registered') return (this.#points = pointsUnavailable('NOT_REGISTERED'));
     if (Date.now() - this.#pointsCheckedAt < this.#config.pointsRefreshMs && this.#points.status === 'ready') return this.#points;
     const path = '/v1/custody/me/points';
+    const generation = this.#serverGeneration;
+    const transport = this.#transport;
     try {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
-      const response = await this.#transport.request(path, {method: 'GET', headers});
+      const response = await transport.request(path, {method: 'GET', headers});
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const payload = await response.json() as {bindingStatus?: unknown; hanas?: unknown; totalPoints?: unknown};
       // C-POINTS v0.10.0 requires bindingStatus UNBOUND|BOUND; the shape is validated as the server contract, but
@@ -384,36 +473,39 @@ export class SessionController {
         for (;;) {
           const index = next++;
           if (index >= hanas.length) return;
-          names[index] = await this.#hanaName(hanas[index]!.hanaId);
+          names[index] = await this.#hanaName(hanas[index]!.hanaId, generation);
         }
       }));
       const namedHanas = hanas.map((row, index) => Object.freeze({...row, ...names[index]!}));
       const pendingTotal = namedHanas.reduce((sum, row) => sum + row.pending, 0);
+      if (generation !== this.#serverGeneration) return this.#points; // answer of the previous server
       this.#points = Object.freeze({status: 'ready', reason: null, totalPoints: amount(payload.totalPoints), pendingTotal, hanas: Object.freeze(namedHanas)} as const);
       this.#pointsCheckedAt = Date.now();
     } catch (error) {
+      if (generation !== this.#serverGeneration) return this.#points;
       this.#points = pointsUnavailable(safeError(error).code);
     }
     return this.#points;
   }
 
-  async #hanaName(hanaId: string): Promise<HanaName> {
+  async #hanaName(hanaId: string, generation: number): Promise<HanaName> {
     const cached = this.#hanaNames.get(hanaId);
     if (cached) return cached;
+    const remember = (name: HanaName): void => { if (generation === this.#serverGeneration) this.#hanaNames.set(hanaId, name); };
     try {
       const response = await this.#profileTransport.request(`/v1/registry/hanas/${encodeURIComponent(hanaId)}`);
       if (response.status === 404) {
         const error = await response.json() as {error?: {code?: unknown}};
         if (error.error?.code !== 'REGISTRY_NOT_FOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
         const missing: HanaName = {displayName: null, displayNameStatus: 'not-found', displayNameReason: 'REGISTRY_NOT_FOUND'};
-        this.#hanaNames.set(hanaId, missing);
+        remember(missing);
         return missing;
       }
       if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const profile = await response.json() as {hanaId?: unknown; displayName?: unknown};
       if (profile.hanaId !== hanaId || typeof profile.displayName !== 'string' || !profile.displayName.trim() || profile.displayName.length > 120) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
       const result: HanaName = {displayName: profile.displayName.trim(), displayNameStatus: 'ready', displayNameReason: null};
-      this.#hanaNames.set(hanaId, result);
+      remember(result);
       return result;
     } catch (error) {
       // Failure is visible beside authoritative points and never cached as absence.
@@ -427,7 +519,7 @@ export class SessionController {
     if (this.#state.consent.state !== 'granted') return activityUnavailable('CONSENT_WITHHELD');
     if (this.#state.registration.status !== 'registered') return activityUnavailable('NOT_REGISTERED');
     const to = query.to ?? new Date().toISOString();
-    const from = query.from ?? new Date(Date.parse(to) - 90 * 86400000).toISOString();
+    const from = query.from ?? new Date(Date.parse(to) - this.#config.contributionWindowDays * DAY_MS).toISOString();
     const window = {from, to};
     const path = `/v1/usage/me/devices/${encodeURIComponent(this.#device().deviceId)}/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&limit=200${query.after ? `&after=${encodeURIComponent(query.after)}` : ''}`;
     try {
@@ -461,6 +553,12 @@ export class SessionController {
     return {shownAt};
   }
 
+  /** Effective server plus where it came from, so the settings page can show both the address and the default. */
+  #serverFacts() {
+    return {serverOrigin: this.#serverOrigin(), serverOriginSource: this.#serverOverride === null ? 'config' as const : 'setting' as const,
+      configuredServerOrigin: this.#config.serverOrigin, serverOriginFault: this.#serverOriginFault};
+  }
+
   state(): unknown {
     const device = this.#identity.status === 'failed' && !this.#disposed ? null : this.#device();
     const health = this.service.getHealth();
@@ -468,17 +566,16 @@ export class SessionController {
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
     return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registration: this.#state.registration, consent: this.#state.consent,
-      session: device ? this.#session() : null, account: this.#account, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin,
+      session: device ? this.#session() : null, account: this.#account, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin,
       configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
   }
   diagnostics(): unknown {
-    return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, serverOrigin: this.#config.serverOrigin, websiteOrigin: this.#config.websiteOrigin});
+    return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin});
   }
   async dispose(): Promise<void> {
     if (this.#disposed) return;
     this.#disposed = true;
-    if (this.#contributionsTimer) clearInterval(this.#contributionsTimer);
-    this.#contributionsTimer = null;
+    this.#stopContributions();
     this.#transport.dispose();
     this.#profileTransport.dispose();
     this.#consentListeners.clear();

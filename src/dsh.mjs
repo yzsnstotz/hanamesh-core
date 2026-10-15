@@ -18,11 +18,9 @@ export function usageServiceReady(ctx) {
   catch { return false; }
 }
 
-/** @param {import('@deepseek-ai/cordis').Context} ctx @param {import('./contracts.js').PluginConfig} config */
-export async function apply(ctx, config) {
-  config = configOf(config);
-  const {defineDomain} = await import('@deepseek-ai/dsh-storage-domain');
-  const {z} = await import('zod');
+/** Stored `hanamesh_core` snapshot. New fields are optional so snapshots from older releases keep loading.
+ * @param {typeof import('zod').z} z */
+export function coreSnapshotSchema(z) {
   const registration = z.object({status: z.enum(['unregistered', 'registered', 'failed']), principalId: z.string().nullable(), registeredAt: z.string().nullable(), lastError: z.string().nullable(), attempts: z.number().int().nonnegative()}).strict();
   const consent = z.object({state: z.enum(['withheld', 'granted']), changedAt: z.string().nullable()}).strict();
   const serverObservation = z.object({reachable: z.boolean().nullable(), checkedAt: z.string().nullable()}).strict();
@@ -33,8 +31,18 @@ export async function apply(ctx, config) {
   // lost to it. Optional so pre-J1.S4 snapshots keep loading.
   const device = z.object(deviceFields).strict().nullable();
   const replacedDevices = z.array(z.object({...deviceFields, replacedAt: z.string()}).strict()).optional();
+  // 0.3.4: server address set in Core's settings page; null/absent = plugin config `serverOrigin`.
+  const serverOriginOverride = z.string().nullable().optional();
+  return z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices, serverOriginOverride}).strict();
+}
+
+/** @param {import('@deepseek-ai/cordis').Context} ctx @param {import('./contracts.js').PluginConfig} config */
+export async function apply(ctx, config) {
+  config = configOf(config);
+  const {defineDomain} = await import('@deepseek-ai/dsh-storage-domain');
+  const {z} = await import('zod');
   const spec = defineDomain({name: 'hanamesh_core', version: 1, layout: 'single', tables: {}, global: {
-    schema: z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices}).strict(),
+    schema: coreSnapshotSchema(z),
     initial: INITIAL_CORE_SNAPSHOT,
   }});
   const domain = await ctx.storageDomain.open(spec);
@@ -77,6 +85,7 @@ export async function apply(ctx, config) {
     healthTimer = setInterval(() => { void ownedHealth.recheck(); }, config.checkIntervalMs ?? 3000);
     healthTimer.unref();
     disposers.push(/** @type {any} */ (ctx).on('loader/config-update', () => { void ownedHealth.recheck(); }));
+    // 0.3.4: registers only when consent is already granted; otherwise setConsent(granted) starts it.
     void controller.startRegistration().catch(() => undefined);
     const owned = controller;
     ctx.effect(() => async () => {

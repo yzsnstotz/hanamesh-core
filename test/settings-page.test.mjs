@@ -354,3 +354,84 @@ test('settings section names a replaced identity after a conflict', async t => {
   assert.match(textIn(row), /已保留在本客户端/);
   await controller.dispose();
 });
+
+async function coreSection(t, config, snapshot = INITIAL_CORE_SNAPSHOT, fetcher = async () => Response.json({}, {status: 404})) {
+  const memory = memoryStore(snapshot);
+  const controller = await SessionController.create({websiteOrigin: null, ...config}, memory.store, {fetcher});
+  t.after(() => controller.dispose());
+  const handle = createRouteHandler(controller);
+  const requests = [];
+  const f = await clientFixture(async (path, init = {}) => {
+    requests.push({path, method: init.method ?? 'GET', body: init.body});
+    return handle(new Request(`http://127.0.0.1:41001${path}`, {...init, headers: {...init.headers, origin: 'http://127.0.0.1:41001', 'sec-fetch-site': 'same-origin'}}));
+  });
+  const section = f.mount(f.slots.get('settings.section'));
+  section.render();
+  const cleanups = section.effects().map(run => run());
+  t.after(() => cleanups.forEach(run => run?.()));
+  await settle();
+  return {f, section, controller, memory, requests};
+}
+const serverRow = section => elements(section.render()).find(e => e.props['data-hanamesh-core-server']);
+const buttonIn = (tree, label) => elements(tree).find(e => e.type === 'button' && textIn(e).includes(label));
+
+test('服务端 row shows the effective address and its source, saves a new one and restores the default', async t => {
+  const {section, controller, requests} = await coreSection(t, {serverOrigin: 'https://api.fixture.invalid'});
+  let row = serverRow(section);
+  assert.ok(row, 'server row is rendered');
+  assert.equal(row.props['data-hanamesh-core-server'], 'config');
+  assert.match(textIn(row), /https:\/\/api\.fixture\.invalid/);
+  assert.match(textIn(row), /出厂默认/);
+  const input = () => elements(serverRow(section)).find(e => e.type === 'input');
+  input().props.onChange({currentTarget: {value: 'http://127.0.0.1:49151'}});
+  buttonIn(serverRow(section), '保存').props.onClick();
+  await settle();
+  row = serverRow(section);
+  assert.equal(row.props['data-hanamesh-core-server'], 'setting');
+  assert.match(textIn(row), /你设置的/);
+  assert.match(textIn(row), /http:\/\/127\.0\.0\.1:49151/);
+  assert.equal(controller.service.getServerOrigin(), 'http://127.0.0.1:49151');
+  assert.deepEqual(JSON.parse(requests.find(r => r.path === ROUTES.server).body), {serverOrigin: 'http://127.0.0.1:49151'});
+
+  input().props.onChange({currentTarget: {value: 'http://evil.fixture.invalid'}});
+  buttonIn(serverRow(section), '保存').props.onClick();
+  await settle();
+  assert.match(textIn(serverRow(section)), /地址无效/);
+  assert.equal(controller.service.getServerOrigin(), 'http://127.0.0.1:49151', 'an invalid address changes nothing');
+
+  buttonIn(serverRow(section), '恢复默认').props.onClick();
+  await settle();
+  row = serverRow(section);
+  assert.equal(row.props['data-hanamesh-core-server'], 'config');
+  assert.match(textIn(row), /出厂默认/);
+  assert.doesNotMatch(textIn(row), /地址无效/);
+  assert.equal(controller.service.getServerOrigin(), 'https://api.fixture.invalid');
+});
+
+test('an unregistered device with consent withheld says registration waits for consent; bind explains the same', async t => {
+  const {section} = await coreSection(t, {serverOrigin: 'https://api.fixture.invalid', websiteOrigin: 'https://web.fixture.invalid'});
+  const tree = section.render();
+  assert.match(textIn(tree), /未注册：打开数据授权后注册/);
+  buttonIn(tree, '去网站绑定').props.onClick();
+  await settle();
+  assert.match(textIn(section.render()), /打开数据授权后才会向服务端注册设备/);
+});
+
+test('contribution labels follow contributionWindowDays and an incomplete window is marked as such', async t => {
+  const snapshot = {...INITIAL_CORE_SNAPSHOT, consent: {state: 'granted', changedAt: '2026-10-15T00:00:00.000Z'}};
+  const fetcher = async url => String(url).includes('/v1/usage/me/contributions')
+    ? Response.json({availability: 'unavailable', byHana: [{actions: {install: 1, open: 2, use: 3, uninstall: 0}}]})
+    : Response.json({}, {status: 404});
+  const {f, section, controller} = await coreSection(t, {serverOrigin: 'https://api.fixture.invalid', contributionWindowDays: 30}, snapshot, fetcher);
+  await controller.refreshContributions();
+  f.timers[0](); // the regular state poll
+  await settle();
+  const tree = section.render();
+  const text = textIn(tree);
+  assert.match(text, /本设备近 30 天贡献事件/);
+  assert.match(text, /贡献窗口 30 天/);
+  assert.doesNotMatch(text, /近 90 天/);
+  assert.match(text, /窗口：近 30 天/);
+  assert.match(text, /服务端只保留了这个窗口的一部分记录，数字不完整/);
+  assert.match(text, /install 1 · open 2 · use 3/);
+});

@@ -5,12 +5,15 @@ interface HealthProvider {
     getHealth(): HealthSnapshot;
     recheck(): Promise<HealthSnapshot>;
 }
+/** `availability` is Usage's own completeness verdict for the window (`unavailable` = part of it is past the server's raw
+ *  retention or not exactly recoverable); `null` = the server did not say. The numbers are kept either way. */
 type Contributions = {
     status: 'unavailable';
     reason: string;
 } | {
     status: 'ready';
-    windowDays: 90;
+    windowDays: number;
+    availability: 'available' | 'unavailable' | null;
     actions: {
         install: number;
         open: number;
@@ -78,7 +81,11 @@ export declare class SessionController {
         state: 'granted' | 'withheld';
         changedAt: string;
     }>;
+    /** Core settings page "服务端": null clears the override (back to the plugin config). Registration belongs to a server,
+     *  so a change of the effective origin resets it, drops every server-owned cache and re-registers when consent allows. */
+    setServerOrigin(input: string | null): Promise<unknown>;
     register(): Promise<ReturnType<HanaMeshCoreContract['getSession']>>;
+    /** Activation and consent grant. Without consent nothing is sent; the settings page shows "打开数据授权后注册". */
     startRegistration(): Promise<void>;
     startContributions(): void;
     attachHealth(provider: HealthProvider): void;

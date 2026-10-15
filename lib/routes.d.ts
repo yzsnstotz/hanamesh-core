@@ -2,6 +2,7 @@ import { SessionController } from './controller.js';
 export declare const ROUTES: Readonly<{
     state: "/api/hanamesh/core/state";
     consent: "/api/hanamesh/core/consent";
+    server: "/api/hanamesh/core/server";
     register: "/api/hanamesh/core/device/register";
     health: "/api/hanamesh/core/health";
     points: "/api/hanamesh/core/points";

@@ -62,7 +62,7 @@ test('P01-U04: native points distinguish typed totals from signed device event h
   assert.match(source, /积分来源（按类型汇总）/);
   assert.match(source, /filter\(\(\[, value\]\) => value !== 0\)/);
   assert.match(source, /\/api\/hanamesh\/core\/activity/);
-  assert.match(source, /本设备近 90 天贡献事件/);
+  assert.match(source, /本设备近 \$\{windowDays\} 天贡献事件/);
   assert.match(source, /最新事件（新到旧）/);
   assert.match(source, /事件不等于逐笔积分/);
   assert.match(source, /尚未抵达最新/);
