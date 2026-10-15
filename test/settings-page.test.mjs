@@ -121,6 +121,49 @@ async function consentSection(override = () => undefined) {
   return {f, section, controller, memory, cleanup: () => cleanups.forEach(run => run?.())};
 }
 
+test('suite repair text shows the safe startup reason and action, and recheck clears it after recovery', async t => {
+  const fixture = await consentSection();
+  t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
+  let repaired = false;
+  fixture.controller.attachHealth({getHealth: () => ({revision: 1, mode: repaired ? 'normal' : 'repair', components: [{
+    id: 'usage', label: '使用记录', status: repaired ? 'satisfied' : 'failed', version: '0.2.0-rc.27', requiredRange: '>=0.2.0-rc.26 <0.3.0-0',
+    reason: repaired ? '正常' : 'invalid-record（hanamesh_usage_events）：本地存储记录不符合当前组件的数据格式。',
+    nextStep: repaired ? null : '先备份本地数据，再安装支持此数据格式的组件版本；保留原数据并重新检查。',
+  }]}), recheck: async () => { repaired = true; return fixture.controller.service.getHealth(); }});
+  fixture.f.timers[0]();
+  await settle();
+  const failed = textIn(fixture.section.render());
+  assert.match(failed, /invalid-record（hanamesh_usage_events）/);
+  assert.match(failed, /本地存储记录不符合/);
+  assert.match(failed, /先备份本地数据/);
+  const button = elements(fixture.section.render()).find(e => e.type === 'button' && e.children.includes('重新检查'));
+  button.props.onClick();
+  await settle();
+  const healthy = textIn(fixture.section.render());
+  assert.match(healthy, /已安装 0\.2\.0-rc\.27/);
+  assert.doesNotMatch(healthy, /invalid-record|先备份本地数据/);
+});
+
+test('suite repair rows from older providers remain renderable without reason', async t => {
+  const fixture = await consentSection();
+  t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
+  fixture.controller.attachHealth({getHealth: () => ({revision: 1, mode: 'repair', components: [{id: 'usage', label: '使用记录', status: 'failed', version: null, requiredRange: '*', nextStep: 'restore-pinned-component'}]}), recheck: async () => {}});
+  fixture.f.timers[0]();
+  await settle();
+  assert.match(textIn(fixture.section.render()), /使用记录：需修复：restore-pinned-component/);
+  assert.doesNotMatch(textIn(fixture.section.render()), /undefined/);
+});
+
+test('About displays the package release and supported DSH line', async t => {
+  const pkg = JSON.parse(await readFile('package.json', 'utf8'));
+  const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
+  assert.equal(pkg.version, '0.3.8');
+  assert.equal(profile.version, pkg.version);
+  const fixture = await consentSection();
+  t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
+  assert.ok(textIn(fixture.section.render()).includes(`hanamesh-core ${pkg.version} · 支持 DSH 0.2.x`));
+});
+
 async function bindingSection() {
   const requests = [];
   let bound = false;

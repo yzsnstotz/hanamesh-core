@@ -3,9 +3,40 @@ import {readFile, stat} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
 import type {ComponentObservation, ObservationSource, SuiteComponent} from './types.js';
 
-type LoaderEntry = {id: string; disabled?: boolean; options: {name?: string; group?: boolean}; fiber?: {state?: number}; parent?: {tree?: {ctx?: {baseUrl?: string}}}};
+type FiberLike = {state?: number; await?: () => Promise<unknown>};
+type LoaderEntry = {id: string; disabled?: boolean; options: {name?: string; group?: boolean}; fiber?: FiberLike; parent?: {tree?: {ctx?: {baseUrl?: string}}}};
 type LoaderLike = {entries(): Iterable<LoaderEntry>};
 const phase: Record<number, NonNullable<ComponentObservation['phase']>> = {0: 'pending', 1: 'loading', 2: 'active', 3: 'failed', 4: 'disabled', 5: 'unloading'};
+type StartupFailure = NonNullable<ComponentObservation['startupFailure']>;
+
+function safeStartupFailure(error: unknown): StartupFailure {
+  try {
+    if (!error || typeof error !== 'object') return {code: 'startup-failed'};
+    const {name, code, message} = error as {name?: unknown; code?: unknown; message?: unknown};
+    if (name === 'DomainError' && code === 'invalid-record') {
+      // DomainError has no structured domain field. Match one finite public prefix;
+      // never retain prose, record locations, causes, stacks, or arbitrary domains.
+      return typeof message === 'string' && message.startsWith("domain 'hanamesh_usage_events':")
+        ? {code: 'invalid-record', domain: 'hanamesh_usage_events'} : {code: 'invalid-record'};
+    }
+    if (name === 'StorageError' && (code === 'version-mismatch' || code === 'backend-not-found' || code === 'malformed-medium')) return {code};
+    if (name === 'ValidationError' || (name === 'UsageError' && code === 'INVALID_CONFIG')) return {code: 'invalid-config'};
+  } catch { /* hostile fields must not break inventory or expose their errors */ }
+  return {code: 'startup-failed'};
+}
+
+async function startupFailure(fiber: FiberLike | undefined, timeoutMs: number): Promise<StartupFailure> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    if (typeof fiber?.await !== 'function') return {code: 'startup-failed'};
+    const settled = Promise.resolve().then(() => fiber.await!()).then<StartupFailure, StartupFailure>(
+      () => ({code: 'startup-failed'}), safeStartupFailure);
+    return await Promise.race([settled, new Promise<StartupFailure>(resolve => {
+      timer = setTimeout(() => resolve({code: 'diagnostic-timeout'}), timeoutMs);
+    })]);
+  } catch { return {code: 'startup-failed'}; }
+  finally { if (timer !== undefined) clearTimeout(timer); }
+}
 
 export async function inspectPackage(moduleName: string, baseUrl: string, entrySpecifier = moduleName): Promise<ComponentObservation> {
   try {
@@ -31,7 +62,7 @@ export async function inspectPackage(moduleName: string, baseUrl: string, entryS
 }
 
 export class LoaderObservationSource implements ObservationSource {
-  constructor(readonly loader: LoaderLike, readonly baseUrl: string, readonly inspector = inspectPackage) {}
+  constructor(readonly loader: LoaderLike, readonly baseUrl: string, readonly inspector = inspectPackage, readonly diagnosticTimeoutMs = 250) {}
   async observe(requirements: readonly SuiteComponent[]): Promise<readonly ComponentObservation[]> {
     const entries = [...this.loader.entries()].filter(entry => !entry.options.group);
     return Promise.all(requirements.map(async requirement => {
@@ -44,7 +75,10 @@ export class LoaderObservationSource implements ObservationSource {
       if (matches.length > 1) return {kind: 'ambiguous'} as const;
       const entry = matches[0]!;
       const observed = await this.inspector(requirement.moduleName, entry.parent?.tree?.ctx?.baseUrl ?? this.baseUrl, entry.options.name ?? requirement.moduleName);
-      return {...observed, kind: observed.kind === 'missing' ? 'damaged' : observed.kind, phase: entry.disabled ? 'disabled' : phase[entry.fiber?.state ?? 0] ?? 'pending'};
+      const observedPhase = entry.disabled ? 'disabled' : phase[entry.fiber?.state ?? 0] ?? 'pending';
+      const diagnostic = observedPhase === 'failed'
+        ? {startupFailure: await startupFailure(entry.fiber, Number.isFinite(this.diagnosticTimeoutMs) ? Math.min(1000, Math.max(1, this.diagnosticTimeoutMs)) : 250)} : {};
+      return {...observed, kind: observed.kind === 'missing' ? 'damaged' : observed.kind, phase: observedPhase, ...diagnostic};
     }));
   }
 }

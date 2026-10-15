@@ -1,4 +1,8 @@
 import type { ComponentObservation, ObservationSource, SuiteComponent } from './types.js';
+type FiberLike = {
+    state?: number;
+    await?: () => Promise<unknown>;
+};
 type LoaderEntry = {
     id: string;
     disabled?: boolean;
@@ -6,9 +10,7 @@ type LoaderEntry = {
         name?: string;
         group?: boolean;
     };
-    fiber?: {
-        state?: number;
-    };
+    fiber?: FiberLike;
     parent?: {
         tree?: {
             ctx?: {
@@ -25,7 +27,8 @@ export declare class LoaderObservationSource implements ObservationSource {
     readonly loader: LoaderLike;
     readonly baseUrl: string;
     readonly inspector: typeof inspectPackage;
-    constructor(loader: LoaderLike, baseUrl: string, inspector?: typeof inspectPackage);
+    readonly diagnosticTimeoutMs: number;
+    constructor(loader: LoaderLike, baseUrl: string, inspector?: typeof inspectPackage, diagnosticTimeoutMs?: number);
     observe(requirements: readonly SuiteComponent[]): Promise<readonly ComponentObservation[]>;
 }
 export {};

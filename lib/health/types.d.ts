@@ -22,6 +22,11 @@ export interface ComponentObservation {
     readonly version?: string;
     readonly phase?: 'active' | 'staged' | 'disabled' | 'pending' | 'loading' | 'failed' | 'unloading';
     readonly stagedVersion?: string;
+    /** Transient allowlisted tokens; persisted health uses existing reason/nextStep only. */
+    readonly startupFailure?: {
+        readonly code: 'invalid-record' | 'version-mismatch' | 'backend-not-found' | 'malformed-medium' | 'invalid-config' | 'startup-failed' | 'diagnostic-timeout';
+        readonly domain?: 'hanamesh_usage_events';
+    };
 }
 export interface ComponentHealth {
     readonly id: string;

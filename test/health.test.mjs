@@ -78,3 +78,41 @@ test('package integrity accepts the loader subpath when the package root is not 
     kind: 'present', version: '0.1.0-rc.8',
   });
 });
+
+test('failed startup diagnostic persists safe reason and action in the existing health shape, then recovers', async () => {
+  const secret = '/private/owner/token-DO-NOT-EXPOSE';
+  const fiber = {state: 3, async await() { throw Object.assign(new Error(`domain 'hanamesh_usage_events': stored global does not match its schema ${secret}`), {name: 'DomainError', code: 'invalid-record', stack: secret, detail: {key: secret}, cause: new Error(secret)}); }};
+  const source = new LoaderObservationSource({entries: () => [{id: 'hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber}, {id: 'hanamesh-app-host', options: {name: '@hanamesh/dsh-app-host'}, fiber: {state: 2}}]}, import.meta.url,
+    async name => ({kind: 'present', version: name === 'hanamesh-usage' ? '0.2.0-rc.27' : '0.5.9'}));
+  const writes = [];
+  const service = new HealthService(profile, source, {publish: async value => writes.push(value)});
+  const failed = await service.recheck();
+  assert.equal(failed.mode, 'repair');
+  assert.equal(failed.newProtectedOperations, 'reject');
+  assert.equal(failed.components[0].status, 'failed');
+  assert.match(failed.components[0].reason, /invalid-record（hanamesh_usage_events）.*本地存储记录不符合/);
+  assert.match(failed.components[0].nextStep, /先备份本地数据/);
+  assert.match(failed.components[0].nextStep, /完全退出并重开 DSH/);
+  assert.match(failed.nextStep, /各组件提示/);
+  assert.doesNotMatch(JSON.stringify(writes), /private|owner|token|stack|detail|cause|startupFailure/);
+  assert.deepEqual(Object.keys(failed.components[0]).sort(), Object.keys(evaluate(profile, active, 1).components[0]).sort());
+  fiber.state = 2;
+  const healthy = await service.recheck();
+  assert.equal(healthy.mode, 'normal');
+  assert.equal(healthy.components[0].status, 'satisfied');
+  assert.equal(healthy.components[0].nextStep, null);
+  assert.doesNotMatch(healthy.components[0].reason, /invalid-record/);
+});
+
+test('startup diagnostics never override version policy or echo unrecognized error tokens', () => {
+  const bad = '/private/owner/token-DO-NOT-EXPOSE';
+  const diagnostic = {code: bad, domain: bad, message: bad, stack: bad};
+  const failed = evaluate(profile, [{...active[0], phase: 'failed', startupFailure: diagnostic}, active[1]], 1);
+  assert.equal(failed.components[0].status, 'failed');
+  assert.match(failed.components[0].reason, /startup-failed/);
+  assert.match(failed.components[0].nextStep, /组件日志/);
+  assert.doesNotMatch(JSON.stringify(failed), /private|owner|token/);
+  const incompatible = evaluate(profile, [{...active[0], version: '0.3.0', phase: 'failed', startupFailure: {code: 'invalid-record', domain: 'hanamesh_usage_events'}}, active[1]], 1);
+  assert.equal(incompatible.components[0].status, 'incompatible');
+  assert.equal(incompatible.components[0].nextStep, 'restore-pinned-component');
+});

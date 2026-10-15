@@ -6,7 +6,7 @@ interface SlotRegistry {
 }
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
-type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; nextStep: string | null; serviceReady?: boolean};
+type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
 type IdentityState = {
   status: 'shared' | 'local-only' | 'failed';
@@ -150,7 +150,7 @@ function componentText(row: ComponentRow): string {
   if (row.status === 'missing') return '未安装';
   if (row.status === 'inactive') return '已禁用';
   if (row.status === 'incompatible') return `版本不匹配 ${row.version ?? '未知'} ≠ ${row.requiredRange}`;
-  return `需修复${row.nextStep ? `：${row.nextStep}` : ''}`;
+  return `需修复${row.reason ? `：${row.reason}` : ''}${row.nextStep ? `${row.reason ? ' ' : '：'}${row.nextStep}` : ''}`;
 }
 
 function Row({label, children}: {label: string; children?: ReactNode}): ReactNode {
@@ -354,7 +354,7 @@ function HanaMeshSection(): ReactNode {
       createElement('span', null, contributions),
       contributionsNote && createElement('small', {className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted'}, contributionsNote))),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.7 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.8 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
