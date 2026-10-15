@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, writeFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -63,8 +63,9 @@ test('real DSH include-prefixed ids and package root or subpath names match suit
   }
 });
 
-test('package integrity accepts the loader subpath when the package root is not exported', async () => {
+test('package integrity accepts the loader subpath when the package root is not exported', async t => {
   const root = await mkdtemp(join(tmpdir(), 'hm-health-subpath-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
   const packageRoot = join(root, 'node_modules', '@hanamesh', 'dsh-app-host');
   await mkdir(join(packageRoot, 'lib'), {recursive: true});
   await writeFile(join(packageRoot, 'package.json'), JSON.stringify({
