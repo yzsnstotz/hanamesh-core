@@ -167,7 +167,7 @@ test('suite repair rows from older providers remain renderable without reason', 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.11');
+  assert.equal(pkg.version, '0.3.12');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
@@ -501,7 +501,7 @@ test('main settings show the actual version for installed, inactive and failed c
   fixture.controller.attachHealth({getHealth:()=>({revision:1,mode:'repair',components}),recheck:async()=>{}});
   fixture.f.timers[0]();await settle();const text=textIn(fixture.section.render());
   assert.match(text,/使用记录：版本 0\.2\.0-rc\.33 · 需修复：真实加载错误/);
-  assert.match(text,/应用宿主：版本 0\.6\.2 · 已禁用/);
+  assert.match(text,/应用宿主：版本 0\.6\.2 · 已安装但未启用/);
   assert.match(text,/未读组件：版本 未知 · 需修复/);
   assert.doesNotMatch(text,/未读组件：版本 0\.9\.9/,'a required range cannot pretend to be the installed version');
   const pkg=JSON.parse(await readFile('package.json','utf8'));assert.ok(text.includes(`HanaMesh Core：版本 ${pkg.version}`));

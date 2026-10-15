@@ -6,7 +6,8 @@ interface SlotRegistry {
 }
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
-const CORE_VERSION = '0.3.11';
+const CORE_VERSION = '0.3.12';
+const SUITE_INSTALL_COMMAND = "dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
@@ -170,8 +171,8 @@ async function openWebsite(url: string): Promise<void> {
 function componentText(row: ComponentRow): string {
   if (row.status === 'satisfied' && row.id === 'usage' && row.serviceReady === false) return '已安装，服务未就绪';
   if (row.status === 'satisfied') return '已安装';
-  if (row.status === 'missing') return '未安装';
-  if (row.status === 'inactive') return '已禁用';
+  if (row.status === 'missing') return '未安装或未加入当前加载配置';
+  if (row.status === 'inactive') return '已安装但未启用';
   if (row.status === 'incompatible') return `版本不匹配（要求 ${row.requiredRange}）`;
   return `需修复${row.reason ? `：${row.reason}` : ''}${row.nextStep ? `${row.reason ? ' ' : '：'}${row.nextStep}` : ''}`;
 }
@@ -212,6 +213,7 @@ function HanaMeshSection(): ReactNode {
   const [serverError, setServerError] = useState<string | null>(null);
   const [localUsage, setLocalUsage] = useState<LocalUsageSummary>({status: 'loading'});
   const [localUsageOpen, setLocalUsageOpen] = useState(false);
+  const [suiteCopyStatus, setSuiteCopyStatus] = useState<string | null>(null);
   const localUsageEntry = useRef<HTMLButtonElement | null>(null);
   const localUsageRead = useRef(0);
   const consentWrite = useRef(false);
@@ -351,9 +353,23 @@ function HanaMeshSection(): ReactNode {
   const contributionsNote = state.contributions.status !== 'ready' ? null
     : state.contributions.availability === 'unavailable' ? '服务端只保留了这个窗口的一部分记录，数字不完整'
       : state.contributions.availability === 'available' ? null : '服务端未说明这个窗口的记录是否完整';
+  const missingComponents = state.components.filter(row => row.status === 'missing');
+  const inactiveComponents = state.components.filter(row => row.status === 'inactive');
+  const copySuiteCommand = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(SUITE_INSTALL_COMMAND);
+      setSuiteCopyStatus('已复制安装/修复命令');
+    } catch { setSuiteCopyStatus('复制失败，请手动选择并复制上方命令。'); }
+  };
   return createElement('section', {className: 'hm-core-section', 'data-hanamesh-core': 'ready'},
     createElement('h2', null, 'HanaMesh'),
-    createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'optional-components'}, 'Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。'),
+    createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'suite-components'}, 'HanaMesh 套件由 Core、使用记录（Usage）和应用容器（App Host）组成。'),
+    (missingComponents.length > 0 || inactiveComponents.length > 0) && createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-hint': 'suite-repair'},
+      missingComponents.length > 0 && createElement('p', {className: 'hm-core-error'}, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`),
+      inactiveComponents.length > 0 && createElement('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`),
+      createElement('p', {className: 'hm-core-muted'}, '在终端手动运行下方官方命令，安装/修复并启用套件；此页面不会自动执行。'),
+      createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, SUITE_INSTALL_COMMAND),
+      createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: copySuiteCommand}, '复制安装/修复命令'), suiteCopyStatus && createElement('span', {role: 'status'}, suiteCopyStatus))),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(Row, {label: '设备身份'}, identityRow),
     state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${coreErrorText(state.registrationFailure.code, state.registrationFailure.upstreamStatus)}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
