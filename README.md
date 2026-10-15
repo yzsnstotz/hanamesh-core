@@ -41,3 +41,5 @@ The package consumer checks JavaScript and strict TypeScript without devkit inst
 请求示例（根与地址由调用方明确配置）：`{"config":{"sharedHome":"<绝对路径>","serverOrigin":null,"websiteOrigin":null},"input":{"operation":"state"}}`。结果 `{result:{…}}`；错误 `{error:{code}}` 并退出1；不导出私钥。进程接口细节与错误见 `docs/AGENT.md`。
 
 本轮平台证据：macOS arm64 / Node24.13.1。Intel macOS、Windows x64、Linux x64 真机为 NOT_RUN（无本轮机器）；Linux/Windows arm64 无本轮支持承诺。CLI/单元/包检查不能替代真实宿主和 owner 验收。
+
+Agent0.3.6 signs explicit consent generations and requires a transactional v2 withdrawal barrier; see docs/AGENT.md. A matching committed server tombstone closes delayed old grants/uploads. No-device is distinguished from a completed remote deletion.

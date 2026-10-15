@@ -1,0 +1,5 @@
+{
+  "exit": 0,
+  "stdout": "\n> hanamesh-core@0.3.6 verify:pack /Users/yzliu/work/projects/hanamesh/hanamesh-core\n> node scripts/check-package.mjs /Users/yzliu/.cache/hanamesh-runs/session-g-20261015/followup/hanamesh-core-0.3.6.tgz\n\n{\"event\":\"check_package_ok\",\"version\":\"0.3.6\",\"dependencies\":1}\n{\"event\":\"pack_verified\",\"sha256\":\"51c61cca0e9623bcf38dc12aa098f94e34836db9ef7e99188c9df0d5975a2063\",\"entries\":58,\"artifactConsumer\":true}\n",
+  "stderr": ""
+}

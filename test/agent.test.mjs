@@ -44,3 +44,22 @@ test('status is read-only on a fresh install and request signatures cover exact 
  const canonical=`POST|/v2/usage/events|${a['x-hm-timestamp']}|${a['x-hm-nonce']}|${createHash('sha256').update('[]').digest('hex')}`;
  assert.ok(verify(null,Buffer.from(canonical),key,Buffer.from(a['x-hm-signature'],'base64url')));
 });
+test('agent explicit opt-in has a stable UUID generation, retained on withdraw and replaced only on new opt-in',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'hm-core-agent-generation-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const {agentCall}=await import('../lib/agent.js'),config={sharedHome:root,serverOrigin:null,websiteOrigin:null};
+ const a=await agentCall(config,{operation:'consent',state:'granted'});assert.match(a.consent.consentId,/^[a-f0-9-]{36}$/);
+ assert.equal((await agentCall(config,{operation:'consent',state:'granted'})).consent.consentId,a.consent.consentId);
+ assert.equal((await agentCall(config,{operation:'consent',state:'withheld'})).consent.consentId,a.consent.consentId);
+ assert.notEqual((await agentCall(config,{operation:'consent',state:'granted'})).consent.consentId,a.consent.consentId);
+});
+test('agent opt-out signs only its fixed generation DELETE and requires a matching committed barrier',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'hm-core-agent-barrier-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const {createServer}=await import('node:http');let answer='committed',seen;
+ const server=createServer((req,res)=>{seen={path:req.url,method:req.method,device:req.headers['x-hm-device-id']};res.setHeader('content-type','application/json');res.end(JSON.stringify({deletedEvents:1,consentId:req.url.split('/').at(-1),state:'withdrawn',barrier:answer}));});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+ const {agentCall}=await import('../lib/agent.js'),config={sharedHome:root,serverOrigin:`http://127.0.0.1:${server.address().port}`,websiteOrigin:null};
+ const grant=await agentCall(config,{operation:'consent',state:'granted'});await agentCall(config,{operation:'sign',bytes:'aGk='});const state=await agentCall(config,{operation:'state'});
+ await agentCall(config,{operation:'consent',state:'withheld'});const result=await agentCall(config,{operation:'withdraw'});
+ assert.equal(result.barrier,'committed');assert.equal(result.consentId,grant.consent.consentId);assert.equal(seen.path,`/v2/usage/me/devices/${state.deviceId}/consents/${grant.consent.consentId}`);assert.equal(seen.method,'DELETE');
+ answer='pending-host-commit';await assert.rejects(agentCall(config,{operation:'withdraw'}),/CORE_WITHDRAWAL_UNCONFIRMED/);
+});

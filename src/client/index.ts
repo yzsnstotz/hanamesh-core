@@ -354,7 +354,7 @@ function HanaMeshSection(): ReactNode {
       createElement('span', null, contributions),
       contributionsNote && createElement('small', {className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted'}, contributionsNote))),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.5 · DSH 0.2.1-alpha.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.6 · DSH 0.2.1-alpha.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 
