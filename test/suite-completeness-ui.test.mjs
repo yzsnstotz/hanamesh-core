@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = "dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
+const command = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -55,7 +55,7 @@ test('missing required suite components have an exact manual repair command and 
   assert.equal(textIn(elements(tree).find(e => e.type === 'code')), command);
   assert.deepEqual(copied, [], 'rendering never copies or executes the command');
   const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
-  assert.ok(copy); await copy.props.onClick();
+  assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
   assert.deepEqual(copied, [command]);
   assert.match(textIn(f.render()), /已复制安装\/修复命令/);
   assert.ok(f.requests.every(r => r.method === 'GET'), 'hint and copy cannot mutate settings, health, or install plugins');
@@ -99,7 +99,7 @@ test('clipboard denial or absence preserves the selectable command and offers ma
   for (const clipboard of [undefined, {writeText: async () => { throw new Error('denied'); }}]) {
     const f = await fixture([component('usage', 'missing')], clipboard);
     const copy = elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
-    assert.ok(copy); await copy.props.onClick();
+    assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
     assert.match(textIn(f.render()), /复制失败，请手动选择并复制上方命令/);
     assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
   }

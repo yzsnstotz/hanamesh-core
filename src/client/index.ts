@@ -7,7 +7,7 @@ interface SlotRegistry {
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
 const CORE_VERSION = '0.3.12';
-const SUITE_INSTALL_COMMAND = "dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
+const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
@@ -367,7 +367,7 @@ function HanaMeshSection(): ReactNode {
     (missingComponents.length > 0 || inactiveComponents.length > 0) && createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-hint': 'suite-repair'},
       missingComponents.length > 0 && createElement('p', {className: 'hm-core-error'}, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`),
       inactiveComponents.length > 0 && createElement('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`),
-      createElement('p', {className: 'hm-core-muted'}, '在终端手动运行下方官方命令，安装/修复并启用套件；此页面不会自动执行。'),
+      createElement('p', {className: 'hm-core-muted'}, '下方官方命令仅适用于 macOS / Linux 终端；Windows 安全命令暂未提供。请手动安装/修复并启用套件；此页面不会自动执行。'),
       createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, SUITE_INSTALL_COMMAND),
       createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: copySuiteCommand}, '复制安装/修复命令'), suiteCopyStatus && createElement('span', {role: 'status'}, suiteCopyStatus))),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
