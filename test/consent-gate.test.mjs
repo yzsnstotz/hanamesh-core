@@ -84,3 +84,18 @@ test('register and bind-link routes answer 409 CORE_CONSENT_REQUIRED while conse
   assert.deepEqual(remote.calls, []);
   assert.equal(memory.read().registration.attempts, 0, 'a refused registration is not a failed attempt');
 });
+
+test('state reports CONSENT_WITHHELD for contributions before consent (not NOT_CONNECTED) and again after withdrawal', async t => {
+  const remote = server();
+  const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
+  const controller = await SessionController.create(CONFIG, memory.store, {fetcher: remote.fetcher});
+  t.after(() => controller.dispose());
+  assert.deepEqual(controller.state().contributions, {status: 'unavailable', reason: 'CONSENT_WITHHELD'});
+  await controller.setConsent('granted');
+  await until(() => controller.state().contributions.status === 'ready');
+  await controller.setConsent('withheld');
+  assert.deepEqual(controller.state().contributions, {status: 'unavailable', reason: 'CONSENT_WITHHELD'});
+  const offline = await SessionController.create({...CONFIG, serverOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: remote.fetcher});
+  t.after(() => offline.dispose());
+  assert.deepEqual(offline.state().contributions, {status: 'unavailable', reason: 'NOT_CONNECTED'});
+});

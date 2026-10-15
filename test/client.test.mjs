@@ -109,3 +109,10 @@ test('standalone Core explains optional components without instructing duplicate
   assert.doesNotMatch(bundle, /套件与单包互斥|duplicate loader entry id|@hanamesh\/lib-provision/);
   assert.match(bundle, /可分别安装/);
 });
+
+test('the consent switch says which server it will register with and send to, and how to change it first', async () => {
+  const source = await readFile('src/client/index.ts', 'utf8');
+  assert.match(source, /开启后会立即向 \$\{state\.serverOrigin\}/);
+  assert.match(source, /要换服务端，请先在上方「服务端」里改好再开启/);
+  assert.match(source, /没有设置服务端：开启后只在本机记录，不发送/);
+});

@@ -559,6 +559,14 @@ export class SessionController {
       configuredServerOrigin: this.#config.serverOrigin, serverOriginFault: this.#serverOriginFault};
   }
 
+  /** What the page should say about contributions right now: without a server there is nothing to read; without consent
+   *  nothing is requested (the cached value may be from before consent was withdrawn). */
+  #contributionsView(): Contributions {
+    if (!this.#transport.configured) return Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
+    if (this.#state.consent.state !== 'granted') return Object.freeze({status: 'unavailable', reason: 'CONSENT_WITHHELD'});
+    return this.#contributions;
+  }
+
   state(): unknown {
     const device = this.#identity.status === 'failed' && !this.#disposed ? null : this.#device();
     const health = this.service.getHealth();
@@ -567,7 +575,7 @@ export class SessionController {
       : component);
     return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registration: this.#state.registration, consent: this.#state.consent,
       session: device ? this.#session() : null, account: this.#account, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin,
-      configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributions});
+      configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributionsView()});
   }
   diagnostics(): unknown {
     return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin});
