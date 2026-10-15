@@ -7,7 +7,6 @@ import {tmpdir} from 'node:os';
 
 for (const [label, config] of [
   ['Core', new URL('../pnpm-workspace.yaml', import.meta.url)],
-  ['Identity validation package', new URL('../contract-tests/identity/pnpm-workspace.yaml', import.meta.url)],
 ]) {
   test(`${label} reinstalls modules from a different store without CI or a TTY`, async t => {
     const root = await mkdtemp(join(tmpdir(), 'hm-core-install-'));

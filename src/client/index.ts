@@ -43,13 +43,11 @@ type PointsState = {
   totalPoints: number;
   pendingTotal: number;
   hanas: HanaPoints[];
+  /** Mirrors Usage contributions `bound`; the settings section reads the same fact from `CoreState.session.bound`. */
   bound: boolean | null;
   prompt: {show: boolean; shownAt: string | null};
-} & (
-  /** C-POINTS OwnPointsDTO.bindingStatus: account binding only, independent of balances or claim eligibility. */
-  | {status: 'ready'; bindingStatus: 'UNBOUND' | 'BOUND'}
-  | {status: 'unavailable'}
-);
+  status: 'ready' | 'unavailable';
+};
 const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
   ['install', '安装贡献'], ['open', '打开贡献'], ['use', '应用活跃小时'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];
@@ -270,7 +268,8 @@ function HanaMeshSection(): ReactNode {
       // T9: the email form lives on the website; core only carries the entry point.
       createElement('button', {type: 'button', 'data-hanamesh-core-email': 'entry', onClick: () => visit('/me')}, '邮箱绑定'))),
     createElement(Row, {label: '我的Hana'}, createElement('div', {className: 'hm-core-points', 'data-hanamesh-core-points': points?.status ?? 'loading'},
-      points?.status === 'ready' && points.bindingStatus === 'UNBOUND' && createElement('span', {role: 'status', 'data-hanamesh-core-points-binding': 'UNBOUND'}, '未绑定：只累计、暂不可领'),
+      // Single source for "bound": Usage contributions (state.session.bound), the same fact the binding row shows.
+      points?.status === 'ready' && bound === false && createElement('span', {role: 'status', 'data-hanamesh-core-points-binding': 'UNBOUND'}, '未绑定：只累计、暂不可领'),
       points === null
         ? createElement('span', {className: 'hm-core-muted'}, '正在读取分…')
         : points.status === 'unavailable'
@@ -306,7 +305,7 @@ function HanaMeshSection(): ReactNode {
         activity?.status === 'ready' && activity.nextAfter && createElement('button', {type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true)}, '继续读取到最新')))),
     createElement(Row, {label: '本设备贡献累计'}, createElement('span', null, contributions)),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.2 · DSH 0.2.1-alpha.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.3 · DSH 0.2.1-alpha.2'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 

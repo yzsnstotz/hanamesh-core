@@ -15,19 +15,20 @@ const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'))
 // Fixed current product seed parameters; package/loader fixtures, not a product install.
 const seeds = [
   ['hanamesh-core', profile.version, 'hanamesh-core'],
-  ['hanamesh-usage', '0.2.0-rc.10', 'hanamesh-usage'],
-  ['@hanamesh/dsh-app-host', '0.2.0-rc.2', 'hanamesh-app-host'],
+  ['hanamesh-usage', '0.2.0-rc.27', 'hanamesh-usage'],
+  ['@hanamesh/dsh-app-host', '0.5.9', 'hanamesh-app-host'],
   ['@hanamesh/app-vibe-trading', '0.2.0-rc.1', 'hanamesh-vibe'],
   ['dsh-codex-subscription', '2.5.2', 'dsh-codex-subscription'],
 ];
 
 for (const [name, version, omittedEntry, expected] of [
-  ['current five seeds', '0.2.0-rc.2', false, 'satisfied'],
-  ['wrong current version', '0.2.0-rc.3', false, 'incompatible'],
+  ['current five seeds', '0.5.9', false, 'satisfied'],
+  ['next major line', '0.6.0', false, 'incompatible'],
+  ['stale rc.2 pin', '0.2.0-rc.2', false, 'incompatible'],
   ['legacy pin is rejected', '0.1.0-rc.41', false, 'incompatible'],
   ['missing version', undefined, false, 'unreadable'],
   ['invalid version', 'unknown', false, 'unreadable'],
-  ['missing loader entry', '0.2.0-rc.2', true, 'missing'],
+  ['missing loader entry', '0.5.9', true, 'missing'],
 ]) {
   test(`fixed suite health through package inspection and HTTP: ${name}`, async t => {
     const root = await mkdtemp(join(tmpdir(), 'hm-suite-health-f2-'));
@@ -61,11 +62,11 @@ for (const [name, version, omittedEntry, expected] of [
     assert.deepEqual(health.components.map(row => row.id), ['usage', 'app-host']);
     assert.equal(health.components[0].status, 'satisfied');
     const appHost = health.components[1];
-    assert.equal(appHost.requiredRange, '0.2.0-rc.2');
+    assert.equal(appHost.requiredRange, '>=0.5.9 <0.6.0');
     assert.equal(appHost.status, expected);
     assert.equal(appHost.nextStep, expected === 'satisfied' ? null : 'restore-pinned-component');
     const state = await (await handle(new Request(`${origin}${ROUTES.state}`))).json();
     assert.equal(state.components[1].status, expected);
-    assert.equal(state.components[1].requiredRange, '0.2.0-rc.2');
+    assert.equal(state.components[1].requiredRange, '>=0.5.9 <0.6.0');
   });
 }
