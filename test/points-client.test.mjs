@@ -17,7 +17,7 @@ function renderPoints(points, bound) {
   const react = {
     Fragment: Symbol('Fragment'),
     createElement: (type, props, ...children) => typeof type === 'function' ? type({...props, children}) : {props, children},
-    useState: () => [states.shift(), () => {}], useRef: value => ({current: value}), useEffect: () => {},
+    useState: initial => [states.length ? states.shift() : initial, () => {}], useRef: value => ({current: value}), useEffect: () => {},
   };
   let client, section;
   vm.runInNewContext(bundle, {window: {__ModuleLoader__: {load: spec => {client = spec.factory(() => react);}}},

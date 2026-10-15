@@ -1,0 +1,74 @@
+TAP version 13
+# Subtest: live server forgetting a registered device recovers same key and exposes rebind notice
+ok 1 - live server forgetting a registered device recovers same key and exposes rebind notice
+  ---
+  duration_ms: 14.965542
+  type: 'test'
+  ...
+# Subtest: the existing contribution timer detects server loss without address edits or a manual refresh
+ok 2 - the existing contribution timer detects server loss without address edits or a manual refresh
+  ---
+  duration_ms: 22.748
+  type: 'test'
+  ...
+# Subtest: revoked and replay errors never trigger automatic re-registration
+ok 3 - revoked and replay errors never trigger automatic re-registration
+  ---
+  duration_ms: 1.316833
+  type: 'test'
+  ...
+# Subtest: concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
+not ok 4 - concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
+  ---
+  duration_ms: 1.435084
+  type: 'test'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-wV1n4z/test/registration-recovery.test.mjs:33:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    2 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-wV1n4z/test/registration-recovery.test.mjs:34:331)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
+ok 5 - concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
+  ---
+  duration_ms: 2.58325
+  type: 'test'
+  ...
+# Subtest: withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
+ok 6 - withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
+  ---
+  duration_ms: 1.203458
+  type: 'test'
+  ...
+# Subtest: temporary Identity failure after registration is retried even when contributions already succeeds
+ok 7 - temporary Identity failure after registration is retried even when contributions already succeeds
+  ---
+  duration_ms: 27.5995
+  type: 'test'
+  ...
+# Subtest: withdrawal while signing an Identity recovery read stops that read
+ok 8 - withdrawal while signing an Identity recovery read stops that read
+  ---
+  duration_ms: 0.651833
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 109.284417

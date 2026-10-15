@@ -2,21 +2,21 @@ TAP version 13
 # Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
 not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
   ---
-  duration_ms: 105.138125
+  duration_ms: 116.990375
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/adapter.test.mjs:2:1'
+  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/adapter.test.mjs:2:1'
   failureType: 'testCodeFailure'
   error: |-
     TAP version 13
-    # (node:91542) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+    # (node:27097) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
     # --import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./test/fixtures/host-loader.mjs", pathToFileURL("./")); register("./test/fixtures/host-loader.mjs", pathToFileURL("./"));'
     # (Use `node --trace-warnings ...` to show where the warning was created)
     # Subtest: adapter uses the core domain, core service name and no legacy web assets
     not ok 1 - adapter uses the core domain, core service name and no legacy web assets
       ---
-      duration_ms: 15.919792
+      duration_ms: 17.290791
       type: 'test'
-      location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/fixtures/adapter-check.test.mjs:20:1'
+      location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/fixtures/adapter-check.test.mjs:21:1'
       failureType: 'testCodeFailure'
       error: |-
         Expected values to be strictly deep-equal:
@@ -38,34 +38,34 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
         1: 'hanamesh_core_health'
       operator: 'deepStrictEqual'
       stack: |-
-        TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/fixtures/adapter-check.test.mjs:22:10)
+        TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/fixtures/adapter-check.test.mjs:23:10)
         async Test.run (node:internal/test_runner/test:1110:7)
         async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
       ...
     # Subtest: adapter activation failures do not silently install an anonymous substitute
     ok 2 - adapter activation failures do not silently install an anonymous substitute
       ---
-      duration_ms: 1.373084
+      duration_ms: 2.287458
       type: 'test'
       ...
     # Subtest: disposing after the storage facility closes still clears public access
     ok 3 - disposing after the storage facility closes still clears public access
       ---
-      duration_ms: 0.882625
+      duration_ms: 1.159416
       type: 'test'
       ...
     # Subtest: product path resolves the shared identity file and a corrupt one is reported, not replaced
     not ok 4 - product path resolves the shared identity file and a corrupt one is reported, not replaced
       ---
-      duration_ms: 5.173583
+      duration_ms: 6.076
       type: 'test'
-      location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/fixtures/adapter-check.test.mjs:39:1'
+      location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/fixtures/adapter-check.test.mjs:41:1'
       failureType: 'testCodeFailure'
       error: "Cannot read properties of undefined (reading 'value')"
       code: 'ERR_TEST_FAILURE'
       name: 'TypeError'
       stack: |-
-        TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/fixtures/adapter-check.test.mjs:41:153)
+        TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/fixtures/adapter-check.test.mjs:43:153)
         async Test.run (node:internal/test_runner/test:1110:7)
         async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
       ...
@@ -77,7 +77,7 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
     # cancelled 0
     # skipped 0
     # todo 0
-    # duration_ms 81.936125
+    # duration_ms 92.733875
     
     
     1 !== 0
@@ -88,7 +88,7 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
   actual: 1
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-4Oezfn/test/adapter.test.mjs:8:43)
+    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-hVXrBN/test/adapter.test.mjs:8:43)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1103:25)
     Test.start (node:internal/test_runner/test:1000:17)
@@ -102,4 +102,4 @@ not ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 139.471416
+# duration_ms 150.738125

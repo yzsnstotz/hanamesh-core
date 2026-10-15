@@ -28,11 +28,13 @@ async function jsonOf<T>(response: Response): Promise<T> {
   catch { throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503); }
 }
 
-async function attempt(transport: ServerTransport, device: StoredDevice, label: DeviceLabel | null): Promise<Response> {
+async function attempt(transport: ServerTransport, device: StoredDevice, label: DeviceLabel | null, active: () => boolean): Promise<Response> {
+  if (!active()) throw new CoreError('CORE_CONSENT_REQUIRED', 409);
   const challenge = await jsonOf<ChallengeResponse>(await transport.request('/v1/identity/devices/challenge', {
     method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'register'}),
   }));
   if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  if (!active()) throw new CoreError('CORE_CONSENT_REQUIRED', 409);
   // O1 identity docs/API.md: signature = ed25519(utf8(nonce ‖ publicKey)) where publicKey is the base64url string as sent (P1 A1-1: identity API.md is authoritative).
   const signed = Buffer.from(challenge.nonce + device.publicKey, 'utf8');
   return transport.request('/v1/identity/devices', {
@@ -45,11 +47,11 @@ async function attempt(transport: ServerTransport, device: StoredDevice, label: 
   });
 }
 
-export async function registerDevice(transport: ServerTransport, device: StoredDevice, label: DeviceLabel | null = deviceLabel()): Promise<RegistrationResponse> {
-  let response = await attempt(transport, device, label);
+export async function registerDevice(transport: ServerTransport, device: StoredDevice, label: DeviceLabel | null = deviceLabel(), active: () => boolean = () => true): Promise<RegistrationResponse> {
+  let response = await attempt(transport, device, label, active);
   // identity ≤0.2.0-rc.2 rejects unknown body keys with 400 before consuming the nonce; re-register label-free so the
   // client keeps working against the server that is online now. Any other status is reported as-is.
-  if (label && response.status === 400) response = await attempt(transport, device, null);
+  if (label && response.status === 400) response = await attempt(transport, device, null, active);
   const result = await jsonOf<RegistrationResponse>(response);
   if (result.deviceId !== device.deviceId) throw new CoreError('CORE_DEVICE_ID_MISMATCH', 502);
   if (typeof result.principalId !== 'string' || !result.principalId) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);

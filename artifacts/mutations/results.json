@@ -44,6 +44,27 @@
       "mutantExit": 1,
       "detected": true,
       "assertionFailure": true
+    },
+    {
+      "id": "recovery-no-auth-repair",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "detected": true,
+      "assertionFailure": true
+    },
+    {
+      "id": "recovery-ignores-withdrawal",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "detected": true,
+      "assertionFailure": true
+    },
+    {
+      "id": "recovery-unbounded-registration",
+      "baselineExit": 0,
+      "mutantExit": 1,
+      "detected": true,
+      "assertionFailure": true
     }
   ]
 }

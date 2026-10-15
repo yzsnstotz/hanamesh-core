@@ -21,6 +21,7 @@ type CoreState = {
   deviceId: string | null;
   identity: IdentityState;
   registrationFailure?: {code: string; persistence: string | null} | null;
+  registrationRecovery?: {state: 'checking'|'recovered'|'failed'|'blocked'; message: string; nextAttemptAt: string|null; principalChanged: boolean}|null;
   configuration?: {timeoutMs: number; checkIntervalMs: number; maxHanaRows: number; profileTimeoutMs: number; maxResponseBytes: number; clientPollIntervalMs: number; pointsRefreshMs: number; contributionIntervalMs: number; activityPageBudget: number; activityDisplayRows: number; catalogConcurrency: number; contributionWindowDays?: number; };
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
   consent: {state: 'withheld' | 'granted'};
@@ -59,6 +60,7 @@ const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
 type ActivityItem = {hanaRef: string; action: 'install' | 'open' | 'use' | 'uninstall'; occurredAt: string};
 type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; items: ActivityItem[]; nextAfter: string | null; window: {from: string; to: string} | null};
 type ActivityView = ActivityState & {scanned: number};
+type LocalUsageSummary = {status: 'loading' | 'missing' | 'unavailable'} | {status: 'ready'; total: number; pending: number};
 const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '使用', uninstall: '卸载'};
 /** Usage pages are oldest-first. Never present a scanned prefix as "latest" until its cursor reaches the tail. */
 export async function collectLatestActivity(fetchPage: (query: {from?: string; to?: string; after?: string}) => Promise<ActivityState>, previous: ActivityView | null, limits: {activityPageBudget: number; activityDisplayRows: number} = {activityPageBudget: 5, activityDisplayRows: 25}): Promise<ActivityView> {
@@ -157,6 +159,22 @@ function Row({label, children}: {label: string; children?: ReactNode}): ReactNod
   return createElement('div', {className: 'hm-core-row'}, createElement('strong', null, label), createElement('div', {className: 'hm-core-copy'}, children));
 }
 
+/** Public same-origin Usage view; opening it never navigates the host settings. */
+function LocalUsageDialog({onClose, restoreFocus}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
+  const dialog = useRef<HTMLDialogElement | null>(null);
+  useEffect(() => {
+    const node = dialog.current;
+    if (!node) return;
+    node.showModal();
+    return () => { if (node.open) node.close(); restoreFocus(); };
+  }, []);
+  return createElement('dialog', {ref: dialog, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'local-usage', 'aria-labelledby': 'hm-core-local-usage-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); onClose(); }},
+    createElement('header', {className: 'hm-core-settings-header'},
+      createElement('h1', {id: 'hm-core-local-usage-title'}, '本机使用记录'),
+      createElement('button', {type: 'button', onClick: onClose}, '返回 HanaMesh 设置')),
+    createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', height: 'calc(100dvh - 88px)', border: 0}}));
+}
+
 function HanaMeshSection(): ReactNode {
   const [state, setState] = useState<CoreState | null>(null);
   const [points, setPoints] = useState<PointsState | null>(null);
@@ -168,8 +186,28 @@ function HanaMeshSection(): ReactNode {
   const [serverDraft, setServerDraft] = useState('');
   const [serverBusy, setServerBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [localUsage, setLocalUsage] = useState<LocalUsageSummary>({status: 'loading'});
+  const [localUsageOpen, setLocalUsageOpen] = useState(false);
+  const localUsageEntry = useRef<HTMLButtonElement | null>(null);
+  const localUsageRead = useRef(0);
   const consentWrite = useRef(false);
   const stateRead = useRef(0);
+  const loadLocalUsage = async (): Promise<void> => {
+    const read = ++localUsageRead.current;
+    let next: LocalUsageSummary;
+    try {
+      const response = await fetch('/api/hanamesh/usage/panel', {headers: {accept: 'application/json'}});
+      if (response.status === 404 || response.status === 503) next = {status: 'missing'};
+      else {
+        if (!response.ok) throw new Error('LOCAL_USAGE_UNAVAILABLE');
+        const panel = await response.json() as {total?: unknown; outbox?: {pending?: unknown}};
+        const total = panel?.total, pending = panel?.outbox?.pending;
+        if (typeof total !== 'number' || !Number.isSafeInteger(total) || total < 0 || typeof pending !== 'number' || !Number.isSafeInteger(pending) || pending < 0) throw new Error('LOCAL_USAGE_UNAVAILABLE');
+        next = {status: 'ready', total, pending};
+      }
+    } catch { next = {status: 'unavailable'}; }
+    if (read === localUsageRead.current) setLocalUsage(next);
+  };
   const loadPoints = async (): Promise<void> => {
     try { setPoints(await jsonRequest<PointsState>('/api/hanamesh/core/points')); }
     catch (cause) { setPoints({status: 'unavailable', reason: cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE', totalPoints: 0, pendingTotal: 0, hanas: [], bound: null, prompt: {show: false, shownAt: null}}); }
@@ -188,6 +226,7 @@ function HanaMeshSection(): ReactNode {
   };
   const load = async (refresh = false): Promise<void> => {
     if (consentWrite.current) return;
+    void loadLocalUsage();
     const read = ++stateRead.current;
     try {
       const next = await jsonRequest<CoreState>(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? {method: 'POST'} : undefined);
@@ -229,6 +268,7 @@ function HanaMeshSection(): ReactNode {
       if (next.consent.state !== requested) throw new Error('CORE_CONSENT_NOT_CONFIRMED');
       void loadPoints();
       void loadActivity();
+      void loadLocalUsage();
     } catch (cause) { setConsentError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
     finally { consentWrite.current = false; setConsentBusy(false); }
   };
@@ -284,6 +324,8 @@ function HanaMeshSection(): ReactNode {
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(Row, {label: '设备身份'}, identityRow),
     state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${state.registrationFailure.code}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
+    state.registrationRecovery && createElement('p', {role: 'status', 'data-hanamesh-registration-recovery': state.registrationRecovery.state}, state.registrationRecovery.message,
+      state.registrationRecovery.nextAttemptAt && createElement('span', null, ' 下次自动核对：', createElement('time', {dateTime: state.registrationRecovery.nextAttemptAt}, new Date(state.registrationRecovery.nextAttemptAt).toLocaleString()))),
     createElement(Row, {label: '服务端'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-server': serverFromSetting ? 'setting' : 'config'},
       createElement('span', null, `当前：${state.serverOrigin ?? '未设置（不连接服务端）'}（${serverFromSetting ? '你设置的' : '出厂默认'}）`),
       serverFromSetting && createElement('small', {className: 'hm-core-muted'}, `出厂默认：${state.configuredServerOrigin ?? '未设置'}`),
@@ -303,6 +345,15 @@ function HanaMeshSection(): ReactNode {
         : `开启后会立即向 ${state.serverOrigin}（${state.serverOriginSource === 'setting' ? '你设置的服务端' : '出厂默认服务端'}）注册本设备并上报使用记录；要换服务端，请先在上方「服务端」里改好再开启。`),
       consentError && createElement('p', {className: 'hm-core-error', role: 'alert'}, `授权保存未确认：${consentError}。请重新切换授权，或重新进入页面读取当前状态。`),
       createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；服务端按其保留设置保存原始记录（默认 90 天）。')),
+    createElement(Row, {label: '本机使用记录'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-local-usage': localUsage.status},
+      createElement('span', {role: 'status'}, localUsage.status === 'ready' ? `本机已保留 ${localUsage.total} 条记录 · ${localUsage.pending} 条待上传`
+        : localUsage.status === 'loading' ? '正在读取本机使用记录…'
+          : localUsage.status === 'missing' ? 'Usage 服务未安装或未启动，无法读取本机使用记录。' : '本机使用记录暂时无法读取，请重试。'),
+      createElement('small', {className: 'hm-core-muted'}, '读取本机 Usage 保存的记录与上传队列。'),
+      createElement('div', {className: 'hm-core-actions'},
+        createElement('button', {type: 'button', ref: localUsageEntry, disabled: localUsage.status !== 'ready', onClick: () => setLocalUsageOpen(true)}, '查看本机记录'),
+        createElement('button', {type: 'button', onClick: () => void loadLocalUsage()}, '刷新本机记录')))),
+    localUsageOpen && createElement(LocalUsageDialog, {onClose: () => setLocalUsageOpen(false), restoreFocus: () => localUsageEntry.current?.focus()}),
     createElement(Row, {label: '账号'}, createElement('div', {className: 'hm-core-actions'},
       bound === true
         ? createElement('span', {'data-hanamesh-core-bound': 'true', ...(state.account ? {'data-hanamesh-core-account': state.account.displayName} : {})}, state.account?.provider === 'github'
@@ -354,7 +405,7 @@ function HanaMeshSection(): ReactNode {
       createElement('span', null, contributions),
       contributionsNote && createElement('small', {className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted'}, contributionsNote))),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.8 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.9 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
   );
 }
 

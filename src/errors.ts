@@ -8,6 +8,10 @@ export type CoreErrorCode =
   | 'CORE_DEVICE_CORRUPT'
   | 'CORE_DEVICE_STORE_UNAVAILABLE'
   | 'CORE_DEVICE_ID_MISMATCH'
+  | 'CORE_DEVICE_REVALIDATING'
+  | 'CORE_DEVICE_REVALIDATION_FAILED'
+  | 'CORE_DEVICE_REVOKED'
+  | 'CORE_DEVICE_REPLAY'
   | 'CORE_UPSTREAM_UNAVAILABLE'
   | 'CORE_URL_NOT_ALLOWED'
   /** 409: the action sends this device's identity to the server, which waits for the data consent. */

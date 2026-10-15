@@ -105,6 +105,16 @@ test('HanaMesh footer opens complete Core-owned settings without querying host n
 const settle = () => new Promise(resolve => setImmediate(resolve));
 const switchIn = section => elements(section.render()).find(e => e.type === 'input' && e.props.type === 'checkbox');
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
+test('main settings visibly explains registration recovery and its real retry deadline', async t => {
+  let state;
+  const fixture=await consentSection(path=>path==='/api/hanamesh/core/state'&&state?Response.json(state):undefined);
+  t.after(async()=>{fixture.cleanup();await fixture.controller.dispose();});
+  state={...fixture.controller.state(),registrationRecovery:{state:'failed',message:'设备重新注册尚未完成，请核对服务端。',nextAttemptAt:'2026-10-16T01:02:03.000Z',principalChanged:false}};
+  fixture.f.timers[0]();await settle();
+  assert.match(textIn(fixture.section.render()),/设备重新注册尚未完成/);
+  const row=elements(fixture.section.render()).find(e=>e.props['data-hanamesh-registration-recovery']==='failed');assert.ok(row);
+  assert.ok(elements(row).some(e=>e.type==='time'&&e.props.dateTime==='2026-10-16T01:02:03.000Z'));
+});
 async function consentSection(override = () => undefined) {
   const memory = memoryStore(INITIAL_CORE_SNAPSHOT);
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memory.store);
@@ -157,7 +167,7 @@ test('suite repair rows from older providers remain renderable without reason', 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.8');
+  assert.equal(pkg.version, '0.3.9');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });

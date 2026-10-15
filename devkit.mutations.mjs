@@ -1,4 +1,4 @@
-// Core owns the original six mutation cases and loading-error policy.
+// Core owns the original integrity cases plus registration recovery and consent barriers.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
@@ -23,8 +23,8 @@ export const cases = [
     {
       id: 'registration-reverse-order', file: 'lib/controller.js',
       mutate: code => code.replace(
-        'const result = await registerDevice(transport, this.#device());',
-        "await this.#publish({ ...this.#state, revision: this.#state.revision + 1, registration: { status: 'registered', principalId: 'premature', registeredAt: checkedAt, lastError: null, attempts } });\n            const result = await registerDevice(transport, this.#device());",
+        'const result = await registerDevice(transport, this.#device(), undefined, same);',
+        "await this.#publish(state => ({ ...state, revision: state.revision + 1, registration: { status: 'registered', principalId: 'premature', registeredAt: checkedAt, lastError: null, attempts } }));\n            const result = await registerDevice(transport, this.#device(), undefined, same);",
       ),
       test: 'test/mutations/registration-reverse-order.test.mjs',
     },
@@ -37,6 +37,21 @@ export const cases = [
       id: 'points-prompt-once', file: 'lib/controller.js',
       mutate: code => code.replace("const show = points.pendingTotal > 0 && this.#bound !== true && shownAt === null;", 'const show = true;'),
       test: 'test/mutations/points-prompt-once.test.mjs',
+    },
+    {
+      id: 'recovery-no-auth-repair', file: 'lib/controller.js',
+      mutate: code => code.replace('if (!response.ok && await this.#recoverRegistration(response, generation))', 'if (false)'),
+      test: 'test/registration-recovery.test.mjs',
+    },
+    {
+      id: 'recovery-ignores-withdrawal', file: 'lib/registration.js',
+      mutate: code => code.replaceAll('if (!active())', 'if (false)'),
+      test: 'test/registration-recovery.test.mjs',
+    },
+    {
+      id: 'recovery-unbounded-registration', file: 'lib/controller.js',
+      mutate: code => code.replace('if (this.#recoveryAttemptAt !== null && Date.now() - this.#recoveryAttemptAt < this.#config.contributionIntervalMs)', 'if (false)'),
+      test: 'test/registration-recovery.test.mjs',
     },
   ];
 export const mutationConfig = {
