@@ -4,15 +4,16 @@
 
 | 方法 | 路径 | 返回 / 语义 |
 |---|---|---|
-| `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥 |
-| `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播 |
-| `POST` | `device/register` | 手动重试挑战→注册；失败仍保留本地设备能力 |
+| `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥。0.3.4 起另有 `serverOrigin`（**生效**地址）、`serverOriginSource: 'setting'|'config'`、`configuredServerOrigin`（插件配置的出厂默认）、`serverOriginFault`（已存地址不再合法时为 `CORE_ORIGIN_REJECTED`，此时出厂默认生效，否则 `null`）；`contributions` 为 `{status:'ready', windowDays, availability:'available'|'unavailable'|null, actions}` 或 `{status:'unavailable', reason}`（`reason` 含 `CONSENT_WITHHELD`）|
+| `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播。0.3.4 起：改为 `granted` 时，未注册则立即注册并启动贡献刷新，已注册则只启动贡献刷新；改为 `withheld` 时停止贡献刷新但**不注销**（Usage 需要已注册的设备去发服务端删除）|
+| `POST` | `server` | 0.3.4。请求恰好一个键 `{serverOrigin:'<origin>'}` 设置、`{serverOrigin:null}` 清除（回到插件配置的出厂默认）。约定同 `consent`：同源 POST、`content-type: application/json`、≤4096 字节；形状不对 400 `CORE_INPUT_INVALID`，415/413 同为 `CORE_INPUT_INVALID`；地址校验与配置 `serverOrigin` 相同（HTTPS，或 loopback HTTP `127.0.0.1`/`localhost`/`[::1]`，可带端口；不能带路径、query、fragment、账号密码），不合法 400 `CORE_ORIGIN_REJECTED`。设置持久化在 `hanamesh_core` 快照的可选字段 `serverOriginOverride`（旧快照无此字段仍可加载）。生效地址 = 设置 ?? 配置，立即生效：重建服务端传输，`getServerOrigin()` 返回新地址（Usage 每次上传都读它）。生效地址改变时：注册重置为 `unregistered`（注册属于某个服务端），清空贡献/分/名称缓存与 `bound`/`account`，停止贡献刷新，已授权则立即向新服务端注册；仍在飞往旧服务端的请求结果一律不记录。返回新的 `state` |
+| `POST` | `device/register` | 手动重试挑战→注册；失败仍保留本地设备能力。0.3.4 起数据授权未开启 → 409 `CORE_CONSENT_REQUIRED`（不计入 `attempts`、不发任何请求）；激活时也只有已授权才自动注册 |
 | `GET` | `health` | 当前 `hanamesh_core_health` 快照 |
 | `POST` | `health/recheck` | 重新读取 Loader 与包元数据并发布一个完整快照 |
 | `POST` | `open-external` | 请求 `{url}`；只允许 `url.origin === websiteOrigin`；系统打开器默认关闭 |
-| `POST` | `bind-link` | 无 body；向 Server 取 `bind` 挑战并用设备私钥签 `utf8(nonce)`，返回 `{url, expiresAt}`，`url` = `websiteOrigin` + `/me/bind?deviceId&nonce&signature`（O2 绑定落地页；identity `POST /v1/identity/me/devices/bind` 验签 nonce）；未配置 `serverOrigin` 或 `websiteOrigin` → 409 `CORE_URL_NOT_ALLOWED` |
+| `POST` | `bind-link` | 无 body；向 Server 取 `bind` 挑战并用设备私钥签 `utf8(nonce)`，返回 `{url, expiresAt}`，`url` = `websiteOrigin` + `/me/bind?deviceId&nonce&signature`（O2 绑定落地页；identity `POST /v1/identity/me/devices/bind` 验签 nonce）；未配置 `serverOrigin` 或 `websiteOrigin` → 409 `CORE_URL_NOT_ALLOWED`；0.3.4 起数据授权未开启 → 409 `CORE_CONSENT_REQUIRED` |
 | `GET` | `points` | rc.42：宿主用设备签名读服务端 `GET /v1/custody/me/points`，并以公开 Registry profile 补充可读的 `displayName`（不存在则 `not-found`，读取失败则 `failed` 与原因，客户端保留积分并显示故障）。返回 `{status:'ready'|'unavailable', reason, totalPoints, pendingTotal, hanas:[{hanaId,displayName,points,pending,breakdown:{install,open,use,claimBonus,creatorMirror,launchInitiator}}], bound, deviceId, prompt:{show, shownAt}}`。六类是**按类型汇总**，不是逐笔历史；所有数值单位是**分**，不是代币。`status:'unavailable'` 的 `reason`：`NOT_CONNECTED`、`CONSENT_WITHHELD`、`NOT_REGISTERED`、`CORE_UPSTREAM_UNAVAILABLE`。「已绑定」只有一个来源：Usage `GET /v1/usage/me/contributions` 的 `bound`（及 `account`），即本结果的 `bound` 与 `state.session.bound`（`null` 表示未知）。custody 返回的 C-POINTS 必填 `bindingStatus: UNBOUND | BOUND` 仍按服务端合约校验（缺失或非法时返回 `CORE_UPSTREAM_UNAVAILABLE`），但不输出、不使用。设置页仅在积分 `ready` 且 `bound === false` 时显示「未绑定：只累计、暂不可领」（包括零积分空态）；`bound === null` 时不显示该行。`bound: true` 只表示账号已绑定，不表示钱包或领取资格。成功结果默认缓存 60 秒（`pointsRefreshMs`），`refresh` 与同意开关会清缓存。`prompt.show` 由宿主判定：`pendingTotal > 0 && bound !== true && shownAt === null` |
-| `GET` | `activity[?from=<ISO>&to=<ISO>&after=<opaque>]` | rc.42：宿主用**本设备签名**读现有 Usage `GET /v1/usage/me/devices/:deviceId/events`；返回 `{status,reason,items:[{hanaRef,action,occurredAt}],nextAfter,window}`。缺省近 90 天、每页最多 200、服务端原有升序游标；后续页必须原样带 `window.from/to` 与 opaque `after`，不接受任意设备 ID。宿主只投影这三个字段，不把原始事件的签名、nonce、主体或回执给浏览器。它仅是本设备未撤回且未过保留期的**事件历史**，无逐事件获分；客户端到尾后才将最新 25 项倒序展示，未到尾必须告知不完整。|
+| `GET` | `activity[?from=<ISO>&to=<ISO>&after=<opaque>]` | rc.42：宿主用**本设备签名**读现有 Usage `GET /v1/usage/me/devices/:deviceId/events`；返回 `{status,reason,items:[{hanaRef,action,occurredAt}],nextAfter,window}`。缺省近 `contributionWindowDays` 天（默认 90）、显式窗口最长 90 天（C-USAGE 上限）、每页最多 200、服务端原有升序游标；后续页必须原样带 `window.from/to` 与 opaque `after`，不接受任意设备 ID。宿主只投影这三个字段，不把原始事件的签名、nonce、主体或回执给浏览器。它仅是本设备未撤回且未过保留期的**事件历史**，无逐事件获分；客户端到尾后才将最新 25 项倒序展示，未到尾必须告知不完整。|
 | `POST` | `points/prompt-shown` | rc.31（T2）。无 body；把一次性绑定引导标记 `pointsBindPromptShownAt` 落到 `hanamesh_core` storage-domain 并返回 `{shownAt}`。幂等：已有标记时原样返回，不覆盖。该字段在 schema 里是 optional，rc.30 及更早的快照仍能加载 |
 | `POST` | `refresh` | 无 body；共享设备身份处于 `failed` 时先重新解析，再刷新贡献与分，返回 `state` |
 | `GET` | `diagnostics` | 生命周期与 origin 诊断；再次经过秘密字段过滤 |
@@ -60,11 +61,12 @@ rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载）�
 ## 主要错误码
 
 - `CORE_INPUT_INVALID`：请求体、方法或同源围栏不满足。
-- `CORE_ORIGIN_REJECTED`：配置的 Server/Website origin 非允许的 HTTPS 或 loopback HTTP 根 origin。
+- `CORE_ORIGIN_REJECTED`：配置或设置页填写的 Server/Website origin 非允许的 HTTPS 或 loopback HTTP 根 origin。
 - `CORE_DEVICE_CORRUPT`：公钥、私钥和 device id 不自洽，签名关闭。
 - `CORE_DEVICE_ID_MISMATCH`：注册响应 device id 与本机派生值不一致。
 - `CORE_UPSTREAM_UNAVAILABLE`：Server 未配置、网络失败或响应不合法。
 - `CORE_URL_NOT_ALLOWED`：外链不是配置的 Website origin。
+- `CORE_CONSENT_REQUIRED`（409，0.3.4）：该操作会把本设备公钥与标签发给服务端（注册、绑定链接），需先打开数据授权。设置页显示「打开数据授权后才会向服务端注册设备」；未注册且未授权时注册行显示「未注册：打开数据授权后注册」。
 - `CORE_NOT_READY` / `CORE_DISPOSED`：服务尚未准备或已释放。
 
 ## 与 O1 identity 的线上格式（rc.9 定稿，以 identity `docs/API.md` 为准）
@@ -80,7 +82,11 @@ rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载）�
 
 名称结果包含displayNameStatus ready/not-found/failed与displayNameReason：404且响应码为REGISTRY_NOT_FOUND才判不存在；其他404仍为故障，传输/非法响应失败保留权威积分且显示故障，失败不缓存为不存在。显式refresh清名称缓存；窗口focus/visibility返回沿既有refresh更新。注册失败不安排后台指数重试，错误保留在registration.lastError及registrationFailure；失败状态无法保存时另外显示CORE_STORAGE_UNAVAILABLE，通过设置中重试注册重新发起。dispose中止本模块活动请求，不改变设备/同意/签名和持久化schema身份。
 
-客户端与读取调度配置：`clientPollIntervalMs=10000`、`pointsRefreshMs=60000`、`contributionIntervalMs=60000`、`activityPageBudget=5`、`activityDisplayRows=25`、`catalogConcurrency=4`。它们是本地展示、缓存或资源预算，不是签名/权限安全常量；均可在插件配置设置正安全整数，定时器上限为 JavaScript 有符号 32 位毫秒值。活动游标保持不透明，达到扫描预算仍明确显示未到末尾并支持继续加载。原 90 天业务窗口、上游单页 200 条、金额与签名约束保持。
+客户端与读取调度配置：`clientPollIntervalMs=10000`、`pointsRefreshMs=60000`、`contributionIntervalMs=60000`、`activityPageBudget=5`、`activityDisplayRows=25`、`catalogConcurrency=4`。它们是本地展示、缓存或资源预算，不是签名/权限安全常量；均可在插件配置设置正安全整数，定时器上限为 JavaScript 有符号 32 位毫秒值。活动游标保持不透明，达到扫描预算仍明确显示未到末尾并支持继续加载。上游单页 200 条、金额与签名约束保持。
+
+`contributionWindowDays`（0.3.4）：贡献累计与活动缺省窗口的天数，默认 90，整数 1..90（C-USAGE 规定原始事件窗口最长 90 天；服务端自己的原始事件保留天数 `retentionDays` 是服务端设置，服务端不公布）。state/diagnostics 的 `configuration` 与设置页「运行配置」行展示当前值，所有「近 N 天」文案随它变化。贡献响应 `availability:'unavailable'`（窗口有一部分超出服务端保留或无法精确恢复）时保留数字并在设置页注明「服务端只保留了这个窗口的一部分记录，数字不完整」；服务端未给 `availability` 时为 `null`，设置页注明未说明是否完整；其他取值视为非法响应 `CORE_UPSTREAM_UNAVAILABLE`。
+
+服务端地址（0.3.4）：设置页「服务端」行显示生效地址及其来源（「出厂默认」/「你设置的」，后者同时显示出厂默认），可填写并「保存」、或「恢复默认」，不合法时显示原因；经 `POST server` 写入，立即生效，不需要改 profile 的 `cordis.patch.yml`。
 
 D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发到带自身认证 cookie 的宿主 Connection。Core 产品入口调用官方 `connection.requestRejection` 认证，只有被它接纳的原生请求可缺少 Origin；独立路由仍要求原同源 Origin，有 Origin 的产品写入仍核对同源。未取消认证或扩大来源白名单。
 
@@ -89,7 +95,7 @@ D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发�
 
 固定官方目标是 Desktop/DSH 0.2.1-alpha.2、Cordis 4.0.5-alpha.1（D7源d743267388641bc76f17c45ce8b4c231aed1d32c），安装操作使用官方 bundled pnpm11.28.5的正常策略；源声明不是实际resolved证据。Desktop公开管理流程要求先初始化profile、完全退出，再通过其官方CLI `dsh plugin --profile desktop add <本候选tgz>`安装，然后重开。此操作由管理该Desktop生命周期的程序执行，Core测试不启停服务。本文不宣称当前机制已有准备/安装步骤或该版本已发布至npm。
 
-根入口导出PluginConfig；Core正常apply通过configOf校验。serverOrigin/websiteOrigin必填string|null，合法HTTPS或现行127.0.0.1/localhost HTTP根origin，无凭据/路径/query/fragment；共享身份sharedIdentityDir为绝对路径或null/未给。profile.schema.json是套件画像，不是插件配置schema，当前无导出的DSH config schema对象。
+根入口导出PluginConfig；Core正常apply通过configOf校验。serverOrigin/websiteOrigin必填string|null，合法HTTPS或现行127.0.0.1/localhost/[::1] HTTP根origin（0.3.4 修正：WHATWG URL 的 IPv6 hostname 带方括号，此前 `[::1]` 实际被拒），无凭据/路径/query/fragment；共享身份sharedIdentityDir为绝对路径或null/未给。profile.schema.json是套件画像，不是插件配置schema，当前无导出的DSH config schema对象。
 
 隔离运行必须在Core首次激活前由管理程序将本轮配置应用到正常profile配置层；仅给本轮loopback服务或明确null，sharedIdentityDir明确指向环境内路径，清继承凭据并隔离HOME/DSH_HOME/用户数据。生产默认值不改，不能先激活默认生产origin再事后检查。
 
