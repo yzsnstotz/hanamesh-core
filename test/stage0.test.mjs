@@ -96,6 +96,7 @@ test('consistency declaration is renamed to core', async () => {
 test('settings about text matches package and describes support instead of a guessed running host', async () => {
   const pkg = await readJson('package.json');
   const client = await readFile(new URL('../src/client/index.ts', import.meta.url), 'utf8');
-  assert.ok(client.includes(`hanamesh-core ${pkg.version} · 支持 DSH 0.2.x`));
+  assert.ok(client.includes(`const CORE_VERSION = '${pkg.version}';`));
+  assert.ok(client.includes('hanamesh-core ${CORE_VERSION} · 支持 DSH 0.2.x'));
   assert.ok(!client.includes('· DSH 0.2.1-alpha.2'));
 });

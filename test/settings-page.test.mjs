@@ -150,7 +150,7 @@ test('suite repair text shows the safe startup reason and action, and recheck cl
   button.props.onClick();
   await settle();
   const healthy = textIn(fixture.section.render());
-  assert.match(healthy, /已安装 0\.2\.0-rc\.27/);
+  assert.match(healthy, /使用记录：版本 0\.2\.0-rc\.27 · 已安装/);
   assert.doesNotMatch(healthy, /invalid-record|先备份本地数据/);
 });
 
@@ -160,14 +160,14 @@ test('suite repair rows from older providers remain renderable without reason', 
   fixture.controller.attachHealth({getHealth: () => ({revision: 1, mode: 'repair', components: [{id: 'usage', label: '使用记录', status: 'failed', version: null, requiredRange: '*', nextStep: 'restore-pinned-component'}]}), recheck: async () => {}});
   fixture.f.timers[0]();
   await settle();
-  assert.match(textIn(fixture.section.render()), /使用记录：需修复：restore-pinned-component/);
+  assert.match(textIn(fixture.section.render()), /使用记录：版本 未知 · 需修复：restore-pinned-component/);
   assert.doesNotMatch(textIn(fixture.section.render()), /undefined/);
 });
 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.10');
+  assert.equal(pkg.version, '0.3.11');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
@@ -487,4 +487,22 @@ test('contribution labels follow contributionWindowDays and an incomplete window
   assert.match(text, /窗口：近 30 天/);
   assert.match(text, /服务端只保留了这个窗口的一部分记录，数字不完整/);
   assert.match(text, /install 1 · open 2 · use 3/);
+});
+
+
+test('main settings show the actual version for installed, inactive and failed components, and mark unread versions', async t => {
+  const fixture = await consentSection();
+  t.after(async () => {fixture.cleanup();await fixture.controller.dispose();});
+  const components = [
+    {id:'usage',label:'使用记录',status:'failed',version:'0.2.0-rc.33',requiredRange:'>=0.2.0-rc.26 <0.3.0-0',reason:'真实加载错误',nextStep:'重新安装'},
+    {id:'app-host',label:'应用宿主',status:'inactive',version:'0.6.2',requiredRange:'*',nextStep:null},
+    {id:'unknown',label:'未读组件',status:'failed',version:null,requiredRange:'0.9.9',nextStep:null},
+  ];
+  fixture.controller.attachHealth({getHealth:()=>({revision:1,mode:'repair',components}),recheck:async()=>{}});
+  fixture.f.timers[0]();await settle();const text=textIn(fixture.section.render());
+  assert.match(text,/使用记录：版本 0\.2\.0-rc\.33 · 需修复：真实加载错误/);
+  assert.match(text,/应用宿主：版本 0\.6\.2 · 已禁用/);
+  assert.match(text,/未读组件：版本 未知 · 需修复/);
+  assert.doesNotMatch(text,/未读组件：版本 0\.9\.9/,'a required range cannot pretend to be the installed version');
+  const pkg=JSON.parse(await readFile('package.json','utf8'));assert.ok(text.includes(`HanaMesh Core：版本 ${pkg.version}`));
 });

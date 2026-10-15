@@ -6,6 +6,8 @@ interface SlotRegistry {
 }
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
+const CORE_VERSION = '0.3.11';
+
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
 type IdentityState = {
@@ -166,11 +168,11 @@ async function openWebsite(url: string): Promise<void> {
 }
 
 function componentText(row: ComponentRow): string {
-  if (row.status === 'satisfied' && row.id === 'usage' && row.serviceReady === false) return `已安装 ${row.version ?? ''}，服务未就绪`.trim();
-  if (row.status === 'satisfied') return `已安装 ${row.version ?? ''}`.trim();
+  if (row.status === 'satisfied' && row.id === 'usage' && row.serviceReady === false) return '已安装，服务未就绪';
+  if (row.status === 'satisfied') return '已安装';
   if (row.status === 'missing') return '未安装';
   if (row.status === 'inactive') return '已禁用';
-  if (row.status === 'incompatible') return `版本不匹配 ${row.version ?? '未知'} ≠ ${row.requiredRange}`;
+  if (row.status === 'incompatible') return `版本不匹配（要求 ${row.requiredRange}）`;
   return `需修复${row.reason ? `：${row.reason}` : ''}${row.nextStep ? `${row.reason ? ' ' : '：'}${row.nextStep}` : ''}`;
 }
 
@@ -446,8 +448,8 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '本设备贡献累计'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-contributions': state.contributions.status === 'ready' ? (state.contributions.availability ?? 'unknown') : 'unavailable'},
       createElement('span', null, contributions),
       contributionsNote && createElement('small', {className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted'}, contributionsNote))),
-    createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.10 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '组件与版本'}, createElement('div', {className: 'hm-core-components'}, createElement('span', {'data-hanamesh-component': 'core'}, `HanaMesh Core：版本 ${CORE_VERSION}`), state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id, 'data-hanamesh-component': row.id}, `${row.label}：版本 ${row.version ?? '未知'} · ${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, `hanamesh-core ${CORE_VERSION} · 支持 DSH 0.2.x`), createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/')}, '去网站'))),
   );
 }
 
