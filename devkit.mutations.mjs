@@ -23,8 +23,8 @@ export const cases = [
     {
       id: 'registration-reverse-order', file: 'lib/controller.js',
       mutate: code => code.replace(
-        'const result = await registerDevice(this.#transport, this.#device());',
-        "await this.#publish({ ...this.#state, revision: this.#state.revision + 1, registration: { status: 'registered', principalId: 'premature', registeredAt: checkedAt, lastError: null, attempts } });\n            const result = await registerDevice(this.#transport, this.#device());",
+        'const result = await registerDevice(transport, this.#device());',
+        "await this.#publish({ ...this.#state, revision: this.#state.revision + 1, registration: { status: 'registered', principalId: 'premature', registeredAt: checkedAt, lastError: null, attempts } });\n            const result = await registerDevice(transport, this.#device());",
       ),
       test: 'test/mutations/registration-reverse-order.test.mjs',
     },

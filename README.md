@@ -33,3 +33,11 @@ Server 注册 POST 的 Origin 为 serverOrigin；Server 的可信 Origin 须包�
 Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm run pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
 
 The package consumer checks JavaScript and strict TypeScript without devkit installed. The root type entry also needs the public DSH type prerequisite `@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2`, already used by the local host type gate.
+
+## Session G · agent 本地进程面（0.3.5）
+
+`node lib/agent-cli.js` 通过 stdin/stdout JSON 提供不加载 DSH 的设备、同意、签名、注册、绑定链接与撤回入口。Usage 只调进程协议，不 import 本插件。设备沿用共享根 `identity/device.json`；agent 同意独立、默认关闭。`state` 为只读，不创建目录；任意签名/注册都等待同意。已撤回后只开放本设备固定 DELETE 操作，不开放任意签名。没有默认线上地址。
+
+请求示例（根与地址由调用方明确配置）：`{"config":{"sharedHome":"<绝对路径>","serverOrigin":null,"websiteOrigin":null},"input":{"operation":"state"}}`。结果 `{result:{…}}`；错误 `{error:{code}}` 并退出1；不导出私钥。进程接口细节与错误见 `docs/AGENT.md`。
+
+本轮平台证据：macOS arm64 / Node24.13.1。Intel macOS、Windows x64、Linux x64 真机为 NOT_RUN（无本轮机器）；Linux/Windows arm64 无本轮支持承诺。CLI/单元/包检查不能替代真实宿主和 owner 验收。

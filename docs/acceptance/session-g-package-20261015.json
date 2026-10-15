@@ -1,0 +1,11 @@
+{
+  "command": "fnm exec --using=24.13.1 pnpm run verify:pack /Users/yzliu/.cache/hanamesh-runs/session-g-20261015/hanamesh-core-0.3.5.tgz",
+  "exit": 0,
+  "result": {
+    "event": "pack_verified",
+    "sha256": "6f2b3911ed049446eb0fc3d4097a7813b3890ffba526367e7f117847f0a0bf70",
+    "entries": 58,
+    "artifactConsumer": true
+  },
+  "note": "Default consumer temp root moved outside the pnpm workspace; failed workspace attempt changed only autoInstallPeers, restored to HEAD before final successful verification."
+}

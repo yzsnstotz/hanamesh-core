@@ -1,0 +1,26 @@
+[
+  {
+    "command": "fnm exec --using=24.13.1 pnpm run build",
+    "exit": 0,
+    "tail": "\n> hanamesh-core@0.3.5 build /Users/yzliu/work/projects/hanamesh/hanamesh-core\n> node scripts/build.mjs --target\n\n{\"node\":\"v24.13.1\",\"platform\":\"darwin\",\"arch\":\"arm64\",\"typescript\":\"Version 5.9.3\",\"pnpm\":\"10.33.0\",\"mode\":\"--target\"}\nCompiled portable TypeScript; checked adapter JavaScript syntax. Host type gate is separate from offline compilation.\n",
+    "stderr": ""
+  },
+  {
+    "command": "fnm exec --using=24.13.1 pnpm run test",
+    "exit": 0,
+    "tail": "bind URL carrying deviceId, bind nonce and its device signature\nok 166 - bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature\n  ---\n  duration_ms: 4.478834\n  type: 'test'\n  ...\n# Subtest: contributions response `bound` flows into getSession().bound\nok 167 - contributions response `bound` flows into getSession().bound\n  ---\n  duration_ms: 1.804917\n  type: 'test'\n  ...\n# Subtest: B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null\nok 168 - B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null\n  ---\n  duration_ms: 6.484459\n  type: 'test'\n  ...\n# Subtest: POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback\nok 169 - POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback\n  ---\n  duration_ms: 3.075458\n  type: 'test'\n  ...\n1..169\n# tests 169\n# suites 0\n# pass 169\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1414.776917\n",
+    "stderr": ""
+  },
+  {
+    "command": "fnm exec --using=24.13.1 pnpm run check",
+    "exit": 0,
+    "tail": "ackageRoot\":\"/Users/yzliu/work/projects/hanamesh/hanamesh-core/node_modules/.pnpm/@hanamesh+devkit@git+ssh+++git@github.com+yzsnstotz+hanamesh-server-shared.git+e6ccf710_6f9608e9069ecab86491a68693ffe1fd/node_modules/@hanamesh/devkit\",\"commit\":\"e6ccf710369a77c5fbf9ce4810b182727e4f2aa8\",\"path\":\"/packages/devkit\",\"repo\":\"git+ssh://git@github.com/yzsnstotz/hanamesh-server-shared.git\",\"exports\":[\".\",\"./mutations\",\"./preflight\",\"./verify-pack\",\"./check-toolchain\"],\"cli\":{\"clean\":0,\"copied\":1}}\n{\"command\":\"dsh --version\",\"exit\":1,\"output\":null,\"error\":null}\n{\"command\":\"psql --version\",\"exit\":0,\"output\":\"psql (PostgreSQL) 17.11 (Homebrew)\",\"error\":null}\n{\"path\":\"~/work/projects/hanamesh/hanamesh-dsh-runtime\",\"exists\":false}\n{\"path\":\"~/work/projects/hanamesh/hanamesh-ui-kit\",\"exists\":false}\n{\"path\":\"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/upstream\",\"exists\":false}\n{\"path\":\"~/work/Docs/Projects/hanamesh/research/dsh-greenfield-2026-09-09/rt\",\"exists\":false}\n{\"os\":\"darwin\",\"arch\":\"arm64\",\"userProfileAccessed\":false,\"userPort3080Accessed\":false,\"databaseAccessed\":false}\n",
+    "stderr": ""
+  },
+  {
+    "command": "fnm exec --using=24.13.1 pnpm run test:mutations",
+    "exit": 0,
+    "tail": "\n> hanamesh-core@0.3.5 test:mutations /Users/yzliu/work/projects/hanamesh/hanamesh-core\n> node scripts/mutation.mjs\n\n{\"id\":\"domain-name\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n{\"id\":\"device-integrity\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n{\"id\":\"registration-device-id\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n{\"id\":\"registration-reverse-order\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n{\"id\":\"health-repair-priority\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n{\"id\":\"points-prompt-once\",\"baselineExit\":0,\"mutantExit\":1,\"detected\":true,\"assertionFailure\":true}\n",
+    "stderr": ""
+  }
+]

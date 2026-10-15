@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
+import {tmpdir} from 'node:os';
 const source = JSON.parse(await readFile('package.json', 'utf8'));
 const tarball = resolve(process.argv[2] ?? `artifacts/hanamesh-core-${source.version}.tgz`);
 export const packConfig = {
   root: process.cwd(), tarball,
-  temporaryRoot: resolve(process.env.HM_CORE_RUN ?? 'artifacts'),
-  required: ['profile/cordis.patch.yml', 'profile/suite.profile.json', 'profile.schema.json', 'lib/client.js', 'contract/hanamesh-core.v1.schema.json', 'lib/contract-suite.js', 'lib/contract-fixtures.js', 'lib/contract-cli.js'],
+  temporaryRoot: resolve(process.env.HM_CORE_RUN ?? tmpdir()),
+  required: ['lib/agent-cli.js', 'lib/agent.js', 'docs/AGENT.md', 'profile/cordis.patch.yml', 'profile/suite.profile.json', 'profile.schema.json', 'lib/client.js', 'contract/hanamesh-core.v1.schema.json', 'lib/contract-suite.js', 'lib/contract-fixtures.js', 'lib/contract-cli.js'],
   forbidden: /(?:node_modules|test|artifacts|vendor)\/|devkit/u,
   validate: async ({read}) => {
     assert.equal(read('lib/dsh.mjs').toString(), await readFile('src/dsh.mjs', 'utf8'));
