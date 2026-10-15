@@ -1,0 +1,20 @@
+[
+  {
+    "command": "test",
+    "exit": 0,
+    "tail": ")`\nok 168 - signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`\n  ---\n  duration_ms: 2.345958\n  type: 'test'\n  ...\n# Subtest: bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature\nok 169 - bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature\n  ---\n  duration_ms: 7.942125\n  type: 'test'\n  ...\n# Subtest: contributions response `bound` flows into getSession().bound\nok 170 - contributions response `bound` flows into getSession().bound\n  ---\n  duration_ms: 4.322375\n  type: 'test'\n  ...\n# Subtest: B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null\nok 171 - B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null\n  ---\n  duration_ms: 14.528792\n  type: 'test'\n  ...\n# Subtest: POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback\nok 172 - POST /api/hanamesh/core/refresh bypasses the contribution cache after a bind callback\n  ---\n  duration_ms: 2.62475\n  type: 'test'\n  ...\n1..172\n# tests 172\n# suites 0\n# pass 172\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 2889.770042\n",
+    "stderr": ""
+  },
+  {
+    "command": "pack",
+    "exit": 0,
+    "tail": "hanamesh-core-0.3.6.tgz\n",
+    "stderr": "ts\nnpm notice 3.3kB lib/transport.js\nnpm notice 1.1kB lib/validation.d.ts\nnpm notice 5.5kB lib/validation.js\nnpm notice 3.9kB package.json\nnpm notice 2.3kB profile.schema.json\nnpm notice 472B profile/cordis.patch.yml\nnpm notice 421B profile/core.config.example.json\nnpm notice 799B profile/suite.profile.json\nnpm notice 635B types/index.d.ts\nnpm notice Tarball Details\nnpm notice name: hanamesh-core\nnpm notice version: 0.3.6\nnpm notice filename: hanamesh-core-0.3.6.tgz\nnpm notice package size: 91.6 kB\nnpm notice unpacked size: 297.2 kB\nnpm notice shasum: a727ef7ee67e56883214e0fc1839c3a6913cc1bb\nnpm notice integrity: sha512-5zW2jcErwlV4x[...]jx+3Ij079S4bg==\nnpm notice total files: 58\nnpm notice\n"
+  },
+  {
+    "command": "verify:pack",
+    "exit": 0,
+    "tail": "\n> hanamesh-core@0.3.6 verify:pack /Users/yzliu/work/projects/hanamesh/hanamesh-core\n> node scripts/check-package.mjs /Users/yzliu/.cache/hanamesh-runs/session-g-20261015/followup/hanamesh-core-0.3.6.tgz\n\n{\"event\":\"check_package_ok\",\"version\":\"0.3.6\",\"dependencies\":1}\n{\"event\":\"pack_verified\",\"sha256\":\"cd1c856aed07bbd3b2137d76687ddf7af53af17461c4ef8e36afc427c04a9db5\",\"entries\":58,\"artifactConsumer\":true}\n",
+    "stderr": ""
+  }
+]

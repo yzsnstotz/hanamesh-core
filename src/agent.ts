@@ -36,7 +36,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
   if (input.operation === 'consent') {
     if (!['granted','withheld'].includes(String(input.state))) fail('CORE_INPUT_INVALID');
     if(input.state==='granted'&&consent.state==='granted'&&consent.consentId)return {consent};
-    consent = {state:input.state as Consent['state'],changedAt:new Date().toISOString(),consentId:input.state==='granted'?randomUUID():consent.consentId};
+    consent = {state:input.state as Consent['state'],changedAt:new Date().toISOString(),consentId:input.state==='granted'?randomUUID():(consent.consentId??randomUUID())};
     await mkdir(dir,{recursive:true,mode:0o700});
     const temp = `${consentFile}.${randomUUID()}.tmp`;
     try {const fd = await open(temp,'wx',0o600);try{await fd.writeFile(JSON.stringify(consent));await fd.sync();}finally{await fd.close();}await rename(temp,consentFile);}finally{await rm(temp,{force:true});}

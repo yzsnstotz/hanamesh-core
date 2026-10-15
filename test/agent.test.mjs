@@ -63,3 +63,10 @@ test('agent opt-out signs only its fixed generation DELETE and requires a matchi
  assert.equal(result.barrier,'committed');assert.equal(result.consentId,grant.consent.consentId);assert.equal(seen.path,`/v2/usage/me/devices/${state.deviceId}/consents/${grant.consent.consentId}`);assert.equal(seen.method,'DELETE');
  answer='pending-host-commit';await assert.rejects(agentCall(config,{operation:'withdraw'}),/CORE_WITHDRAWAL_UNCONFIRMED/);
 });
+test('an existing DSH shared device can opt out before agent ever opted in, then opt in normally',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'hm-core-agent-existing-dsh-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const {agentCall}=await import('../lib/agent.js'),{fileSharedDeviceStore}=await import('../lib/shared-device.js'),{createDevice}=await import('../lib/device.js');await fileSharedDeviceStore(root).claim(createDevice());
+ const config={sharedHome:root,serverOrigin:null,websiteOrigin:null};const before=await agentCall(config,{operation:'state'});assert.equal(before.consent.state,'withheld');assert.equal(before.consent.consentId,null);
+ const stopped=await agentCall(config,{operation:'consent',state:'withheld'});assert.match(stopped.consent.consentId,/^[a-f0-9-]{36}$/,'explicit withdrawal needs a tombstone generation even before first opt-in');
+ const next=await agentCall(config,{operation:'consent',state:'granted'});assert.notEqual(next.consent.consentId,stopped.consent.consentId);assert.equal((await agentCall(config,{operation:'state'})).deviceId,before.deviceId);
+});
