@@ -49,12 +49,12 @@ type PointsState = {
   status: 'ready' | 'unavailable';
 };
 const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
-  ['install', '安装贡献'], ['open', '打开贡献'], ['use', '应用活跃小时'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
+  ['install', '安装贡献'], ['open', '打开贡献'], ['use', '使用贡献'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];
 type ActivityItem = {hanaRef: string; action: 'install' | 'open' | 'use' | 'uninstall'; occurredAt: string};
 type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; items: ActivityItem[]; nextAfter: string | null; window: {from: string; to: string} | null};
 type ActivityView = ActivityState & {scanned: number};
-const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '应用活跃小时', uninstall: '卸载'};
+const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '使用', uninstall: '卸载'};
 /** Usage pages are oldest-first. Never present a scanned prefix as "latest" until its cursor reaches the tail. */
 export async function collectLatestActivity(fetchPage: (query: {from?: string; to?: string; after?: string}) => Promise<ActivityState>, previous: ActivityView | null, limits: {activityPageBudget: number; activityDisplayRows: number} = {activityPageBudget: 5, activityDisplayRows: 25}): Promise<ActivityView> {
   if (![limits.activityPageBudget, limits.activityDisplayRows].every(value => Number.isSafeInteger(value) && value > 0)) throw new Error('CORE_INPUT_INVALID');
@@ -70,7 +70,7 @@ export async function collectLatestActivity(fetchPage: (query: {from?: string; t
   if (current === null) throw new Error('ACTIVITY_PAGE_MISSING');
   return current;
 }
-/** 分 can carry thousandths (creator mirror is 5% of a whole point); trim trailing zeros so the row reads as 分, not a float. */
+/** 分 can carry thousandths (the creator mirror is a server-set fraction of a point); trim trailing zeros so the row reads as 分, not a float. */
 const fen = (value: number): string => `${Number(value.toFixed(3))} 分`;
 const POINTS_REASONS: Record<string, string> = {
   NOT_CONNECTED: '未连接服务端，暂时读不到分',
@@ -255,7 +255,7 @@ function HanaMeshSection(): ReactNode {
     createElement(Row, {label: '数据授权'}, createElement('label', {className: 'hm-core-switch'}, createElement('input', {type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld')}), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'),
       createElement('span', {role: 'status'}, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`),
       consentError && createElement('p', {className: 'hm-core-error', role: 'alert'}, `授权保存未确认：${consentError}。请重新切换授权，或重新进入页面读取当前状态。`),
-      createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；原始记录服务端保留 90 天。')),
+      createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；服务端按其保留设置保存原始记录（默认 90 天）。')),
     createElement(Row, {label: '账号'}, createElement('div', {className: 'hm-core-actions'},
       bound === true
         ? createElement('span', {'data-hanamesh-core-bound': 'true', ...(state.account ? {'data-hanamesh-core-account': state.account.displayName} : {})}, state.account?.provider === 'github'
@@ -287,11 +287,11 @@ function HanaMeshSection(): ReactNode {
                   createElement('small', {className: 'hm-core-muted'}, '积分来源（按类型汇总）：', sources.length ? sources.map(([label, value]) => `${label} ${fen(value)}`).join(' · ') : '暂无已分类分项', other !== 0 ? ` · 其他账项 ${fen(other)}` : ''));
               }),
             ),
-      createElement('small', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'points-not-token'}, '分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像按 5% 计。'),
+      createElement('small', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'points-not-token'}, '分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像比例以服务端设置为准。'),
       createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站')))),
     createElement(Row, {label: '贡献事件'}, createElement('div', {className: 'hm-core-events', 'data-hanamesh-core-activity': activity?.status ?? 'loading'},
       createElement('b', null, '本设备近 90 天贡献事件'),
-      createElement('small', {className: 'hm-core-muted'}, '活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分。积分以“我的 Hana”账本汇总为准。'),
+      createElement('small', {className: 'hm-core-muted'}, '「打开」记插件页面被打开，「使用」记插件命令成功执行；聊天回合不计。事件不等于逐笔积分，积分以“我的 Hana”账本汇总为准。'),
       activityBusy && createElement('span', {className: 'hm-core-muted'}, '正在读取最新事件…'),
       activity === null ? createElement('span', {className: 'hm-core-muted'}, '正在读取事件…')
         : activity.status === 'unavailable' ? createElement('span', {className: 'hm-core-muted'}, pointsReason(activity.reason))
