@@ -40,7 +40,7 @@ test('contributions read the configured window and carry availability', async t 
 
   availability = 'partial';
   await controller.refresh();
-  assert.deepEqual(controller.state().contributions, {status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE'});
+  assert.deepEqual(controller.state().contributions, {status: 'unavailable', reason: 'CORE_UPSTREAM_RESPONSE_INVALID'});
 });
 
 test('activity defaults to the configured window', async t => {

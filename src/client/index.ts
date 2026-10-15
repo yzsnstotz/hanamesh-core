@@ -20,7 +20,7 @@ type CoreState = {
   /** null while the shared identity cannot be read; `identity.reason` says why. */
   deviceId: string | null;
   identity: IdentityState;
-  registrationFailure?: {code: string; persistence: string | null} | null;
+  registrationFailure?: {code: string; status?: number; upstreamStatus?: number; persistence: string | null} | null;
   registrationRecovery?: {state: 'checking'|'recovered'|'failed'|'blocked'; message: string; nextAttemptAt: string|null; principalChanged: boolean}|null;
   configuration?: {timeoutMs: number; checkIntervalMs: number; maxHanaRows: number; profileTimeoutMs: number; maxResponseBytes: number; clientPollIntervalMs: number; pointsRefreshMs: number; contributionIntervalMs: number; activityPageBudget: number; activityDisplayRows: number; catalogConcurrency: number; contributionWindowDays?: number; };
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
@@ -35,17 +35,22 @@ type CoreState = {
   /** A stored address that no longer validates; the default is in effect until it is saved again or cleared. */
   serverOriginFault?: string | null;
   websiteOrigin: string | null;
+  websiteOriginSource?: 'setting' | 'config';
+  configuredWebsiteOrigin?: string | null;
+  websiteOriginFault?: string | null;
+  websiteBinding?: {ready: boolean; reason: string | null; message: string | null};
   health: {mode: 'normal' | 'restricted' | 'blocked' | 'repair'; fault: string | null};
   components: ComponentRow[];
-  contributions: {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: number; availability?: 'available' | 'unavailable' | null; actions: Record<'install' | 'open' | 'use' | 'uninstall', number>};
+  contributions: {status: 'unavailable'; reason: string; upstreamStatus?: number} | {status: 'ready'; windowDays: number; availability?: 'available' | 'unavailable' | null; actions: Record<'install' | 'open' | 'use' | 'uninstall', number>};
 };
 
 /** T2 `GET /api/hanamesh/core/points` (host side signs the custody read). Every number is 分; the host decides `prompt.show`. */
 type BreakdownKey = 'install' | 'open' | 'use' | 'claimBonus' | 'creatorMirror' | 'launchInitiator';
-type HanaPoints = {displayNameStatus?: 'ready' | 'not-found' | 'failed'; displayNameReason?: string | null; hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
+type HanaPoints = {displayNameStatus?: 'ready' | 'not-found' | 'failed'; displayNameReason?: string | null; upstreamStatus?: number; hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type PointsState = {
   configuration?: {pointsRefreshMs: number};
   reason: string | null;
+  upstreamStatus?: number;
   totalPoints: number;
   pendingTotal: number;
   hanas: HanaPoints[];
@@ -58,7 +63,7 @@ const BREAKDOWN_LABELS: ReadonlyArray<readonly [BreakdownKey, string]> = [
   ['install', '安装贡献'], ['open', '打开贡献'], ['use', '使用贡献'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];
 type ActivityItem = {hanaRef: string; action: 'install' | 'open' | 'use' | 'uninstall'; occurredAt: string};
-type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; items: ActivityItem[]; nextAfter: string | null; window: {from: string; to: string} | null};
+type ActivityState = {status: 'ready' | 'unavailable'; reason: string | null; upstreamStatus?: number; items: ActivityItem[]; nextAfter: string | null; window: {from: string; to: string} | null};
 type ActivityView = ActivityState & {scanned: number};
 type LocalUsageSummary = {status: 'loading' | 'missing' | 'unavailable'} | {status: 'ready'; total: number; pending: number};
 const ACTION_LABELS: Record<ActivityItem['action'], string> = {install: '安装', open: '打开', use: '使用', uninstall: '卸载'};
@@ -85,10 +90,19 @@ const POINTS_REASONS: Record<string, string> = {
   NOT_REGISTERED: '本设备尚未注册成功，注册后才会记分',
   CORE_POINTS_LIMIT_EXCEEDED: 'Hana 行数超过本地配置预算，请调整插件配置后刷新',
   CORE_RESPONSE_LIMIT_EXCEEDED: '响应超过本地字节预算，请检查响应或调整插件配置',
-  CORE_UPSTREAM_UNAVAILABLE: '服务端暂时不可达，稍后再看',
+  CORE_UPSTREAM_UNAVAILABLE: '服务端暂时不可达 CORE_UPSTREAM_UNAVAILABLE，稍后再看',
 };
-const pointsReason = (reason: string | null): string => POINTS_REASONS[reason ?? ''] ?? `暂不可用：${reason ?? '未知'}`;
+export function coreErrorText(code: string | null, upstreamStatus?: number): string {
+  if (code === 'CORE_UPSTREAM_RESPONSE_INVALID') return `服务端响应格式不符合协议 ${code}${upstreamStatus === undefined ? '' : `（HTTP ${upstreamStatus}）`}`;
+  if (upstreamStatus !== undefined) return `${upstreamStatus < 500 ? '服务端拒绝' : '服务端返回错误'}：${code === 'IDENTITY_ORIGIN_REJECTED' ? '来源未被信任 ' : ''}${code ?? 'CORE_UPSTREAM_HTTP_ERROR'}（HTTP ${upstreamStatus}）`;
+  if (code === 'CORE_SERVER_NOT_CONFIGURED') return '尚未配置服务端地址';
+  if (code === 'CORE_INTERNAL_ERROR') return '客户端处理失败 CORE_INTERNAL_ERROR，请查看组件健康信息';
+  return POINTS_REASONS[code ?? ''] ?? `暂不可用：${code ?? '未知'}`;
+}
+const pointsReason = coreErrorText;
 const ACTION_ERRORS: Record<string, string> = {
+  CORE_WEBSITE_CONFIGURATION_REQUIRED: '服务端已更换，请先在 HanaMesh 设置中保存对应的网站地址；本机服务端只能打开本机网站。',
+  CORE_CONFIGURATION_CHANGED: '地址已改变，请重新点击绑定。',
   CORE_CONSENT_REQUIRED: '打开数据授权后才会向服务端注册设备（绑定也需要已注册的设备）',
 };
 const actionError = (code: string): string => ACTION_ERRORS[code] ?? code;
@@ -133,17 +147,22 @@ const styleText = `
 
 async function jsonRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {...init, headers: {...init?.headers, ...(init?.body ? {'content-type': 'application/json'} : {})}});
-  const body = await response.json() as T & {error?: {code?: string}};
-  if (!response.ok) throw new Error(body.error?.code ?? `HTTP_${response.status}`);
+  let body: T & {error?: {code?: string; upstreamStatus?: number}};
+  try { body = await response.json(); } catch { throw new Error(coreErrorText('CORE_UPSTREAM_RESPONSE_INVALID', response.status)); }
+  if (!response.ok) {const code=body.error?.code ?? `HTTP_${response.status}`;throw new Error(body.error?.upstreamStatus === undefined ? code : coreErrorText(code,body.error.upstreamStatus));}
   return body;
 }
 
 /** The bind landing needs a server `bind` challenge, so the link is minted by our own host route, never in the bundle. */
 async function openBindPage(): Promise<string> {
   const link = await jsonRequest<{url: string}>('/api/hanamesh/core/bind-link', {method: 'POST'});
-  window.open(link.url, '_blank', 'noopener,noreferrer');
-  await jsonRequest('/api/hanamesh/core/open-external', {method: 'POST', body: JSON.stringify({url: link.url})}).catch(() => undefined);
+  await openWebsite(link.url);
   return link.url;
+}
+
+async function openWebsite(url: string): Promise<void> {
+  const result = await jsonRequest<{opened: boolean}>('/api/hanamesh/core/open-external', {method: 'POST', body: JSON.stringify({url})});
+  if (!result.opened) window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function componentText(row: ComponentRow): string {
@@ -183,6 +202,9 @@ function HanaMeshSection(): ReactNode {
   const [error, setError] = useState<string | null>(null);
   const [consentBusy, setConsentBusy] = useState(false);
   const [consentError, setConsentError] = useState<string | null>(null);
+  const [websiteDraft, setWebsiteDraft] = useState('');
+  const [websiteBusy, setWebsiteBusy] = useState(false);
+  const [websiteError, setWebsiteError] = useState<string | null>(null);
   const [serverDraft, setServerDraft] = useState('');
   const [serverBusy, setServerBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -192,6 +214,7 @@ function HanaMeshSection(): ReactNode {
   const localUsageRead = useRef(0);
   const consentWrite = useRef(false);
   const stateRead = useRef(0);
+  const configurationWrites = useRef(0);
   const loadLocalUsage = async (): Promise<void> => {
     const read = ++localUsageRead.current;
     let next: LocalUsageSummary;
@@ -210,7 +233,7 @@ function HanaMeshSection(): ReactNode {
   };
   const loadPoints = async (): Promise<void> => {
     try { setPoints(await jsonRequest<PointsState>('/api/hanamesh/core/points')); }
-    catch (cause) { setPoints({status: 'unavailable', reason: cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE', totalPoints: 0, pendingTotal: 0, hanas: [], bound: null, prompt: {show: false, shownAt: null}}); }
+    catch (cause) { setPoints({status: 'unavailable', reason: cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR', totalPoints: 0, pendingTotal: 0, hanas: [], bound: null, prompt: {show: false, shownAt: null}}); }
   };
   const loadActivity = async (more = false): Promise<void> => {
     if (activityBusy) return;
@@ -221,18 +244,18 @@ function HanaMeshSection(): ReactNode {
         return jsonRequest<ActivityState>(`/api/hanamesh/core/activity${params}`);
       }, more ? activity : null, state?.configuration);
       setActivity(next);
-    } catch { setActivity({status: 'unavailable', reason: 'CORE_UPSTREAM_UNAVAILABLE', items: [], nextAfter: null, window: null, scanned: 0}); }
+    } catch (cause) { setActivity({status: 'unavailable', reason: cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR', items: [], nextAfter: null, window: null, scanned: 0}); }
     finally { setActivityBusy(false); }
   };
   const load = async (refresh = false): Promise<void> => {
-    if (consentWrite.current) return;
+    if (consentWrite.current || configurationWrites.current > 0) return;
     void loadLocalUsage();
     const read = ++stateRead.current;
     try {
       const next = await jsonRequest<CoreState>(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? {method: 'POST'} : undefined);
-      if (read === stateRead.current) { setState(next); setError(null); }
+      if (configurationWrites.current === 0 && read === stateRead.current) { setState(next); setError(null); }
     }
-    catch (cause) { if (read === stateRead.current) setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
+    catch (cause) { if (configurationWrites.current === 0 && read === stateRead.current) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
     await loadPoints();
   };
   useEffect(() => {
@@ -253,7 +276,7 @@ function HanaMeshSection(): ReactNode {
   }, [state?.configuration?.clientPollIntervalMs]);
   const post = async (path: string, body?: unknown): Promise<void> => {
     try { await jsonRequest(path, {method: 'POST', ...(body === undefined ? {} : {body: JSON.stringify(body)})}); await load(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
   };
   const saveConsent = async (requested: CoreState['consent']['state']): Promise<void> => {
     if (consentWrite.current) return;
@@ -269,10 +292,11 @@ function HanaMeshSection(): ReactNode {
       void loadPoints();
       void loadActivity();
       void loadLocalUsage();
-    } catch (cause) { setConsentError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
+    } catch (cause) { setConsentError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
     finally { consentWrite.current = false; setConsentBusy(false); }
   };
   const saveServer = async (serverOrigin: string | null): Promise<void> => {
+    configurationWrites.current++; stateRead.current++;
     setServerBusy(true);
     setServerError(null);
     try {
@@ -280,25 +304,32 @@ function HanaMeshSection(): ReactNode {
       setServerDraft('');
       void loadPoints();
       void loadActivity();
-    } catch (cause) { setServerError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
-    finally { setServerBusy(false); }
+    } catch (cause) { setServerError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
+    finally {configurationWrites.current--; stateRead.current++; setServerBusy(false); }
+  };
+  const saveWebsite = async (websiteOrigin: string | null): Promise<void> => {
+    configurationWrites.current++; stateRead.current++;
+    setWebsiteBusy(true); setWebsiteError(null);
+    try {setState(await jsonRequest<CoreState>('/api/hanamesh/core/website', {method: 'POST', body: JSON.stringify({websiteOrigin})}));setWebsiteDraft('');}
+    catch(cause){setWebsiteError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR');}
+    finally{configurationWrites.current--; stateRead.current++; setWebsiteBusy(false);}
   };
   const bind = async (): Promise<void> => {
     try {
       await openBindPage();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_UPSTREAM_UNAVAILABLE'); }
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
   };
   const visit = (path = '/'): void => {
     if (!state?.websiteOrigin) { setError('CORE_URL_NOT_ALLOWED'); return; }
     const url = new URL(path, state.websiteOrigin).href;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    void post('/api/hanamesh/core/open-external', {url});
+    void openWebsite(url).catch(cause => setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'));
   };
   if (!state) return createElement('section', {className: 'hm-core-section', 'data-hanamesh-core': 'loading'}, createElement('h2', null, 'HanaMesh'), createElement('p', {className: error ? 'hm-core-error' : 'hm-core-muted'}, error ? `未能读取：${error}` : '正在读取…'), error && createElement('button', {type: 'button', onClick: () => void load()}, '重新读取'));
   const waitingForConsent = state.registration.status !== 'registered' && state.consent.state !== 'granted';
   const registration = state.serverOrigin === null ? '未连接' : state.registration.status === 'registered' ? '已注册' : waitingForConsent ? '未注册：打开数据授权后注册' : state.registration.status === 'failed' ? `注册失败：${state.registration.lastError ?? '未知'}` : '未注册';
   const windowDays = state.configuration?.contributionWindowDays ?? 90;
   const serverFromSetting = state.serverOriginSource === 'setting';
+  const websiteReady = state.websiteBinding?.ready ?? !!state.websiteOrigin;
   const bound = state.session?.bound ?? null;
   const identity = state.identity;
   const identityRow = identity.status === 'failed'
@@ -314,7 +345,7 @@ function HanaMeshSection(): ReactNode {
       identity.replacedDeviceIds.length > 0 && createElement('small', {className: 'hm-core-muted'}, `本客户端原有身份 ${identity.replacedDeviceIds.map(short).join('、')} 与本机共享身份冲突，已改用共享身份；原身份的密钥已保留在本客户端存储中，未删除。原身份未绑定时的待绑定分不会自动转入。`));
   const contributions = state.contributions.status === 'ready'
     ? `install ${state.contributions.actions.install} · open ${state.contributions.actions.open} · use ${state.contributions.actions.use} · uninstall ${state.contributions.actions.uninstall}　窗口：近 ${state.contributions.windowDays} 天`
-    : pointsReason(state.contributions.reason);
+    : pointsReason(state.contributions.reason, state.contributions.upstreamStatus);
   const contributionsNote = state.contributions.status !== 'ready' ? null
     : state.contributions.availability === 'unavailable' ? '服务端只保留了这个窗口的一部分记录，数字不完整'
       : state.contributions.availability === 'available' ? null : '服务端未说明这个窗口的记录是否完整';
@@ -323,7 +354,7 @@ function HanaMeshSection(): ReactNode {
     createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'optional-components'}, 'Core 只安装设备身份与同意设置。使用记录和应用容器可分别安装；缺少组件时，下方会显示原因，设备身份与同意开关仍可使用。'),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(Row, {label: '设备身份'}, identityRow),
-    state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${state.registrationFailure.code}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
+    state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${coreErrorText(state.registrationFailure.code, state.registrationFailure.upstreamStatus)}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
     state.registrationRecovery && createElement('p', {role: 'status', 'data-hanamesh-registration-recovery': state.registrationRecovery.state}, state.registrationRecovery.message,
       state.registrationRecovery.nextAttemptAt && createElement('span', null, ' 下次自动核对：', createElement('time', {dateTime: state.registrationRecovery.nextAttemptAt}, new Date(state.registrationRecovery.nextAttemptAt).toLocaleString()))),
     createElement(Row, {label: '服务端'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-server': serverFromSetting ? 'setting' : 'config'},
@@ -336,6 +367,17 @@ function HanaMeshSection(): ReactNode {
         createElement('button', {type: 'button', disabled: serverBusy || !serverFromSetting, onClick: () => void saveServer(null)}, '恢复默认')),
       serverError && createElement('span', {className: 'hm-core-error', role: 'alert'}, SERVER_ERRORS[serverError] ?? `保存失败：${serverError}`),
       createElement('small', {className: 'hm-core-muted'}, '立即生效。注册属于某个服务端：更换后本设备在新服务端重新注册（需已打开数据授权），贡献、分与使用记录改读新服务端。'))),
+    createElement(Row, {label: '网站'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-website': state.websiteOriginSource ?? 'config'},
+      createElement('span', null, `当前：${state.websiteOrigin ?? '未设置'}（${state.websiteOriginSource === 'setting' ? '你设置的' : '出厂默认'}）`),
+      state.websiteOriginSource === 'setting' && createElement('small', {className: 'hm-core-muted'}, `出厂默认：${state.configuredWebsiteOrigin ?? '未设置'}`),
+      state.websiteOriginFault && createElement('span', {role: 'alert', className: 'hm-core-error'}, `已保存的网站地址无效（${state.websiteOriginFault}），请重新保存或恢复默认。`),
+      createElement('div', {className: 'hm-core-actions'},
+        createElement('input', {type: 'text', 'aria-label': '网站地址', placeholder: 'https://market.example.com', value: websiteDraft, disabled: websiteBusy, onChange: (event: {currentTarget: {value: string}}) => setWebsiteDraft(event.currentTarget.value)}),
+        createElement('button', {type: 'button', disabled: websiteBusy || websiteDraft.trim() === '', onClick: () => saveWebsite(websiteDraft.trim())}, '保存'),
+        createElement('button', {type: 'button', disabled: websiteBusy || state.websiteOriginSource !== 'setting', onClick: () => saveWebsite(null)}, '恢复默认')),
+      websiteError && createElement('span', {className: 'hm-core-error', role: 'alert'}, SERVER_ERRORS[websiteError] ?? `保存失败：${websiteError}`),
+      !websiteReady && createElement('p', {role: 'alert', className: 'hm-core-error'}, state.websiteBinding?.message ?? '请先设置对应的网站地址。'),
+      createElement('small', {className: 'hm-core-muted'}, '立即生效。更换服务端后，须同时保存对应网站；本机服务端只能使用本机网站。'))),
     state.configuration && createElement(Row, {label: '运行配置'}, createElement('span', {'data-hanamesh-core-configuration': 'visible'}, `请求时限 ${state.configuration.timeoutMs}ms；健康检查 ${state.configuration.checkIntervalMs}ms；名称请求时限 ${state.configuration.profileTimeoutMs}ms；Hana 行预算 ${state.configuration.maxHanaRows}；响应字节预算 ${state.configuration.maxResponseBytes}；界面轮询 ${state.configuration.clientPollIntervalMs ?? 10000}ms；积分刷新 ${state.configuration.pointsRefreshMs ?? 60000}ms；贡献刷新 ${state.configuration.contributionIntervalMs ?? 60000}ms；活动每次 ${state.configuration.activityPageBudget ?? 5} 页、显示 ${state.configuration.activityDisplayRows ?? 25} 行；名称并发 ${state.configuration.catalogConcurrency ?? 4}；贡献窗口 ${windowDays} 天。可在插件配置中修改。`)),
     createElement(Row, {label: '数据授权'}, createElement('label', {className: 'hm-core-switch'}, createElement('input', {type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld')}), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'),
       createElement('span', {role: 'status'}, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`),
@@ -361,17 +403,17 @@ function HanaMeshSection(): ReactNode {
           : `已绑定到网站账号（设备 ${short(state.deviceId ?? '')} 已关联你的 GitHub 登录）`)
         : createElement('span', {'data-hanamesh-core-bound': String(bound)}, bound === false ? '未绑定：绑定后网站才能把本设备的贡献记到你的账号' : state.serverOrigin === null ? '未连接服务端' : identity.status === 'failed' ? '设备身份不可用，暂不能绑定' : '绑定状态读取中…'),
       bound === true
-        ? createElement('button', {type: 'button', onClick: () => visit('/me')}, '在网站查看账号与设备')
-        : createElement('button', {type: 'button', onClick: () => void bind()}, '去网站绑定'),
+        ? createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/me')}, '在网站查看账号与设备')
+        : createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => void bind()}, '去网站绑定'),
       // T9: the email form lives on the website; core only carries the entry point.
-      createElement('button', {type: 'button', 'data-hanamesh-core-email': 'entry', onClick: () => visit('/me')}, '邮箱绑定'))),
+      createElement('button', {type: 'button', disabled: !websiteReady, 'data-hanamesh-core-email': 'entry', onClick: () => visit('/me')}, '邮箱绑定'))),
     createElement(Row, {label: '我的Hana'}, createElement('div', {className: 'hm-core-points', 'data-hanamesh-core-points': points?.status ?? 'loading'},
       // Single source for "bound": Usage contributions (state.session.bound), the same fact the binding row shows.
       points?.status === 'ready' && bound === false && createElement('span', {role: 'status', 'data-hanamesh-core-points-binding': 'UNBOUND'}, '未绑定：只累计、暂不可领'),
       points === null
         ? createElement('span', {className: 'hm-core-muted'}, '正在读取分…')
         : points.status === 'unavailable'
-          ? createElement('span', {className: 'hm-core-muted'}, pointsReason(points.reason))
+          ? createElement('span', {className: 'hm-core-muted'}, pointsReason(points.reason, points.upstreamStatus))
           : points.hanas.length === 0
             ? createElement('span', {className: 'hm-core-muted'}, '还没有分：安装并使用 Hana 后这里会出现每个 Hana 的分')
             : createElement(Fragment, null,
@@ -381,18 +423,18 @@ function HanaMeshSection(): ReactNode {
                 const other = Number((row.points - sources.reduce((sum, [, value]) => sum + value, 0)).toFixed(3));
                 return createElement('div', {key: row.hanaId, className: 'hm-core-hana', 'data-hanamesh-core-hana': row.hanaId},
                   createElement('span', null, createElement('b', null, row.displayName ?? `${row.hanaId.slice(0, 8)}…`), `　${fen(row.points)}${row.pending > 0 ? `（另有待绑定 ${fen(row.pending)}）` : ''}`),
-                  row.displayNameStatus === 'failed' && createElement('span', {role: 'alert', className: 'hm-core-error'}, `名称读取失败：${row.displayNameReason ?? 'CORE_UPSTREAM_UNAVAILABLE'}。积分仍有效，返回窗口时可重新读取。`),
+                  row.displayNameStatus === 'failed' && createElement('span', {role: 'alert', className: 'hm-core-error'}, `名称读取失败：${coreErrorText(row.displayNameReason ?? 'CORE_INTERNAL_ERROR', row.upstreamStatus)}。积分仍有效，返回窗口时可重新读取。`),
                   createElement('small', {className: 'hm-core-muted'}, '积分来源（按类型汇总）：', sources.length ? sources.map(([label, value]) => `${label} ${fen(value)}`).join(' · ') : '暂无已分类分项', other !== 0 ? ` · 其他账项 ${fen(other)}` : ''));
               }),
             ),
       createElement('small', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'points-not-token'}, '分不是代币：分只记录贡献，兑换比例与发币另行公布；创作者镜像比例以服务端设置为准。'),
-      createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: () => visit('/me')}, '去网站')))),
+      createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/me')}, '去网站')))),
     createElement(Row, {label: '贡献事件'}, createElement('div', {className: 'hm-core-events', 'data-hanamesh-core-activity': activity?.status ?? 'loading'},
       createElement('b', null, `本设备近 ${windowDays} 天贡献事件`),
       createElement('small', {className: 'hm-core-muted'}, '「打开」记插件页面被打开，「使用」记插件命令成功执行；聊天回合不计。事件不等于逐笔积分，积分以“我的 Hana”账本汇总为准。'),
       activityBusy && createElement('span', {className: 'hm-core-muted'}, '正在读取最新事件…'),
       activity === null ? createElement('span', {className: 'hm-core-muted'}, '正在读取事件…')
-        : activity.status === 'unavailable' ? createElement('span', {className: 'hm-core-muted'}, pointsReason(activity.reason))
+        : activity.status === 'unavailable' ? createElement('span', {className: 'hm-core-muted'}, pointsReason(activity.reason, activity.upstreamStatus))
           : activity.nextAfter ? createElement('span', {className: 'hm-core-muted'}, `已扫描 ${activity.scanned} 条，尚未抵达最新；请继续读取。`)
             : activity.items.length === 0 ? createElement('span', {className: 'hm-core-muted'}, '本设备在此窗口没有可读的原始事件')
               : createElement(Fragment, null, createElement('small', {className: 'hm-core-muted'}, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item, index) => createElement('div', {key: `${item.occurredAt}:${item.hanaRef}:${item.action}:${index}`, className: 'hm-core-event'},
@@ -405,7 +447,7 @@ function HanaMeshSection(): ReactNode {
       createElement('span', null, contributions),
       contributionsNote && createElement('small', {className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted'}, contributionsNote))),
     createElement(Row, {label: 'HanaMesh套件'}, createElement('div', {className: 'hm-core-components'}, state.health.fault && createElement('span', {className: 'hm-core-error'}, `检查未完成（${state.health.fault}）`), ...state.components.map(row => createElement('span', {key: row.id}, `${row.label}：${componentText(row)}`)), createElement('button', {type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck')}, '重新检查'))),
-    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.9 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', onClick: () => visit('/')}, '去网站'))),
+    createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, 'hanamesh-core 0.3.10 · 支持 DSH 0.2.x'), createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/')}, '去网站'))),
   );
 }
 
@@ -432,6 +474,8 @@ function HanaMeshSettingsPage({onClose, restoreFocus}: {onClose: () => void; res
  *  Rendered as a native `<dialog>` in the browser top layer, so no layout hack covers the host chrome permanently. */
 function PointsBindPrompt(): ReactNode {
   const [pending, setPending] = useState<number | null>(null);
+  const [binding, setBinding] = useState<CoreState['websiteBinding']>(undefined);
+  const [bindError, setBindError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -451,6 +495,9 @@ function PointsBindPrompt(): ReactNode {
         window.clearInterval(timer);
         await jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => undefined);
         if (cancelled) return;
+        const settings = await jsonRequest<CoreState>('/api/hanamesh/core/state');
+        if (cancelled) return;
+        setBinding(settings.websiteBinding ?? {ready: !!settings.websiteOrigin, reason: null, message: null});
         setPending(next.pendingTotal);
       } catch { /* the nudge is optional; a failed read simply waits for the next tick */ }
     };
@@ -469,8 +516,10 @@ function PointsBindPrompt(): ReactNode {
     createElement('h3', null, '绑定后这些分才归入你的账号'),
     createElement('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`),
     createElement('div', {className: 'hm-core-actions'},
-      createElement('button', {type: 'button', onClick: () => { void openBindPage().catch(() => undefined); close(); }}, '去网站绑定'),
-      createElement('button', {type: 'button', onClick: close}, '以后再说')));
+      createElement('button', {type: 'button', disabled: !binding?.ready, onClick: () => {void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')));}}, '去网站绑定'),
+      createElement('button', {type: 'button', onClick: close}, '以后再说')),
+    !binding?.ready && createElement('p', {role: 'alert'}, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'),
+    bindError && createElement('p', {role: 'alert'}, bindError));
 }
 
 function FooterAction({wide}: {wide: boolean}): ReactNode {

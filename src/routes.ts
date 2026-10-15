@@ -1,11 +1,12 @@
 import {SessionController} from './controller.js';
-import {CoreError, safeError} from './errors.js';
+import {CoreError, safeError, upstreamFacts} from './errors.js';
 import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
   consent: '/api/hanamesh/core/consent',
   server: '/api/hanamesh/core/server',
+  website: '/api/hanamesh/core/website',
   register: '/api/hanamesh/core/device/register',
   health: '/api/hanamesh/core/health',
   points: '/api/hanamesh/core/points',
@@ -81,13 +82,19 @@ export function createRouteHandler(controller: SessionController, admission: {re
         if (serverOrigin !== null && typeof serverOrigin !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
         return response(await controller.setServerOrigin(serverOrigin));
       }
+      if (url.pathname === ROUTES.website) {
+        if(!('websiteOrigin' in parsed))throw new CoreError('CORE_INPUT_INVALID',400);
+        const website=(parsed as {websiteOrigin?:unknown}).websiteOrigin;
+        if(website!==null&&typeof website!=='string')throw new CoreError('CORE_INPUT_INVALID',400);
+        return response(await controller.setWebsiteOrigin(website));
+      }
       if (!('state' in parsed)) throw new CoreError('CORE_INPUT_INVALID', 400);
       const state = (parsed as {state?: unknown}).state;
       if (state !== 'granted' && state !== 'withheld') throw new CoreError('CORE_INPUT_INVALID', 400);
       return response(await controller.setConsent(state));
     } catch (error) {
       const safe = safeError(error);
-      return response({error: {code: safe.code, message: safe.message}}, safe.status);
+      return response({error: {code: safe.code, message: safe.message, ...upstreamFacts(safe)}}, safe.status);
     }
   };
 }

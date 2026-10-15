@@ -46,7 +46,7 @@ export class ServerTransport {
   dispose(): void { this.#disposed = true; for (const controller of this.#active) controller.abort(); }
   async request(path: string, init: RequestInit = {}): Promise<Response> {
     if (this.#disposed) throw new CoreError('CORE_DISPOSED', 503);
-    if (!this.#origin) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+    if (!this.#origin) throw new CoreError('CORE_SERVER_NOT_CONFIGURED', 503);
     const url = new URL(path, this.#origin);
     if (url.origin !== this.#origin) throw new CoreError('CORE_INPUT_INVALID', 400);
     const controller = new AbortController();

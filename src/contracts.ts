@@ -52,6 +52,8 @@ export interface StoredCoreSnapshot {
   /** The server address set in Core's own settings page; null/absent = the plugin config `serverOrigin`.
    *  Optional so snapshots written before 0.3.4 stay loadable. */
   readonly serverOriginOverride?: string | null;
+  /** Optional: legacy profiles inherit the configured website until explicitly changed. */
+  readonly websiteOriginOverride?: string | null;
 }
 
 export interface CoreStore {

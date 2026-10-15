@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {homedir} from 'node:os';
 import {join} from 'node:path';
+import {CoreError, upstreamFacts} from './errors.js';
 import {agentCall} from './agent.js';
 
 // One JSON request per short-lived process. The Usage adapter supplies configuration explicitly.
@@ -17,5 +18,5 @@ try {
 } catch(error) {
   const candidate = (error as {code?:string;message?:string}).code ?? (error as Error).message;
   const code = /^[A-Z][A-Z0-9_]{0,79}$/.test(candidate ?? '') ? candidate : 'CORE_AGENT_FAILED';
-  process.stdout.write(`${JSON.stringify({error:{code}})}\n`); process.exitCode = 1;
+  process.stdout.write(`${JSON.stringify({error:{code,...(error instanceof CoreError?{status:error.status,...upstreamFacts(error)}:{})}})}\n`); process.exitCode = 1;
 }

@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
 import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput} from './contract.js';
 import {createDevice, requestNonce, signWithDevice, type StoredDevice} from './device.js';
-import {CoreError, safeError} from './errors.js';
+import {CoreError, safeError, upstreamError, upstreamJson, upstreamFacts} from './errors.js';
 import {registerDevice} from './registration.js';
 import {ServerTransport} from './transport.js';
 import {openExternal as openSystemExternal} from './external.js';
@@ -13,26 +13,26 @@ const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', 
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
 /** `availability` is Usage's own completeness verdict for the window (`unavailable` = part of it is past the server's raw
  *  retention or not exactly recoverable); `null` = the server did not say. The numbers are kept either way. */
-type Contributions = {status: 'unavailable'; reason: string} | {status: 'ready'; windowDays: number; availability: 'available' | 'unavailable' | null; actions: {install: number; open: number; use: number; uninstall: number}};
+type Contributions = {status: 'unavailable'; reason: string; upstreamStatus?: number} | {status: 'ready'; windowDays: number; availability: 'available' | 'unavailable' | null; actions: {install: number; open: number; use: number; uninstall: number}};
 const DAY_MS = 86_400_000;
 const UNREGISTERED = Object.freeze({status: 'unregistered', principalId: null, registeredAt: null, lastError: null, attempts: 0} as const);
 /** T2 custody `GET /v1/custody/me/points`: every number is 分 (points), never a token amount. `pending` is this device's
  *  unbound-device balance, which the server moves into the account the moment the device is bound. */
 const BREAKDOWN_KEYS = Object.freeze(['install', 'open', 'use', 'claimBonus', 'creatorMirror', 'launchInitiator'] as const);
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
-type HanaName = {displayName: string | null; displayNameStatus: 'ready' | 'not-found' | 'failed'; displayNameReason: string | null};
+type HanaName = {displayName: string | null; displayNameStatus: 'ready' | 'not-found' | 'failed'; displayNameReason: string | null; upstreamStatus?: number};
 export type HanaPoints = HanaName & {hanaId: string; displayName: string | null; points: number; pending: number; breakdown: Record<BreakdownKey, number>};
 type Points =
-  | {status: 'unavailable'; reason: string; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
+  | {status: 'unavailable'; reason: string; upstreamStatus?: number; totalPoints: 0; pendingTotal: 0; hanas: readonly HanaPoints[]}
   | {status: 'ready'; reason: null; totalPoints: number; pendingTotal: number; hanas: readonly HanaPoints[]};
-const pointsUnavailable = (reason: string): Points => Object.freeze({status: 'unavailable', reason, totalPoints: 0, pendingTotal: 0, hanas: Object.freeze([] as HanaPoints[])} as const);
+const pointsUnavailable = (reason: string, facts: {upstreamStatus?: number} = {}): Points => Object.freeze({status: 'unavailable', reason, ...facts, totalPoints: 0, pendingTotal: 0, hanas: Object.freeze([] as HanaPoints[])} as const);
 const amount = (value: unknown): number => {
-  if (typeof value !== 'number' || !Number.isFinite(value)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
   return value;
 };
 function hanaPoints(value: unknown): HanaPoints {
   const row = value as {hanaId?: unknown; points?: unknown; pending?: unknown; breakdown?: Record<string, unknown>} | null;
-  if (!row || typeof row !== 'object' || typeof row.hanaId !== 'string' || !row.hanaId || row.hanaId.length > 200) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  if (!row || typeof row !== 'object' || typeof row.hanaId !== 'string' || !row.hanaId || row.hanaId.length > 200) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
   const breakdown = {} as Record<BreakdownKey, number>;
   for (const key of BREAKDOWN_KEYS) breakdown[key] = row.breakdown?.[key] === undefined ? 0 : amount(row.breakdown[key]);
   return Object.freeze({hanaId: row.hanaId, displayName: null, displayNameStatus: 'not-found', displayNameReason: null, points: amount(row.points), pending: amount(row.pending), breakdown: Object.freeze(breakdown)});
@@ -40,14 +40,14 @@ function hanaPoints(value: unknown): HanaPoints {
 type ActivityAction = 'install' | 'open' | 'use' | 'uninstall';
 type ActivityItem = {hanaRef: string; action: ActivityAction; occurredAt: string};
 type ActivityWindow = {from: string; to: string};
-type ActivityPage = {status: 'ready' | 'unavailable'; reason: string | null; items: readonly ActivityItem[]; nextAfter: string | null; window: ActivityWindow | null};
-const activityUnavailable = (reason: string): ActivityPage => ({status: 'unavailable', reason, items: [], nextAfter: null, window: null});
+type ActivityPage = {status: 'ready' | 'unavailable'; reason: string | null; upstreamStatus?: number; items: readonly ActivityItem[]; nextAfter: string | null; window: ActivityWindow | null};
+const activityUnavailable = (reason: string, facts: {upstreamStatus?: number} = {}): ActivityPage => ({status: 'unavailable', reason, ...facts, items: [], nextAfter: null, window: null});
 const activityItem = (value: unknown, window: ActivityWindow): ActivityItem => {
   const row = value as Record<string, unknown> | null;
   if (!row || typeof row !== 'object' || typeof row.hanaRef !== 'string' || !row.hanaRef || row.hanaRef.length > 200 ||
       !['install', 'open', 'use', 'uninstall'].includes(String(row.action)) || typeof row.occurredAt !== 'string' ||
       Number.isNaN(Date.parse(row.occurredAt)) || new Date(row.occurredAt).toISOString() !== row.occurredAt ||
-      row.occurredAt < window.from || row.occurredAt >= window.to) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      row.occurredAt < window.from || row.occurredAt >= window.to) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
   return {hanaRef: row.hanaRef, action: row.action as ActivityAction, occurredAt: row.occurredAt};
 };
 /** usage >=0.2.0-rc.3 contributions `account`: the GitHub account name of the bound canonical principal. Older servers omit it -> null. */
@@ -90,7 +90,11 @@ export class SessionController {
   #state: StoredCoreSnapshot;
   #publishTail: Promise<void> = Promise.resolve();
   #disposed = false;
-  #registrationFailure: {code: string; persistence: string | null} | null = null;
+  #websiteOverride: string | null = null;
+  #websiteOriginFault: string | null = null;
+  #websiteGeneration = 0;
+  #configurationWrites = 0;
+  #registrationFailure: {code: string; status: number; upstreamStatus?: number; persistence: string | null} | null = null;
   #registrationRecovery: {state: 'checking' | 'recovered' | 'failed' | 'blocked'; message: string; nextAttemptAt: string | null; principalChanged: boolean} | null = null;
   #recoveryInFlight: Promise<boolean> | null = null;
   #recoveryAttemptAt: number | null = null;
@@ -116,6 +120,8 @@ export class SessionController {
     if (stored !== null) {
       try { this.#serverOverride = serverOriginOf(stored); } catch { this.#serverOriginFault = 'CORE_ORIGIN_REJECTED'; }
     }
+    const storedWebsite = this.#state.websiteOriginOverride ?? null;
+    if (storedWebsite !== null) {try {this.#websiteOverride = serverOriginOf(storedWebsite);} catch {this.#websiteOriginFault = 'CORE_ORIGIN_REJECTED';}}
     [this.#transport, this.#profileTransport] = this.#transportsFor(this.#serverOrigin());
     this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
     this.service = Object.freeze({
@@ -237,9 +243,9 @@ export class SessionController {
     let nonce = requestNonce();
     if (this.#config.authNonceSource === 'server') {
       const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'auth'})});
-      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const challenge = await response.json() as {nonce?: unknown};
-      if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (!response.ok) throw await upstreamError(response);
+      const challenge = await upstreamJson(response) as {nonce?: unknown};
+      if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       nonce = challenge.nonce;
     }
     const bodyHash = createHash('sha256').update(input.body ?? new Uint8Array()).digest('hex');
@@ -283,11 +289,13 @@ export class SessionController {
     const next = override ?? this.#config.serverOrigin;
     const changed = next !== this.#serverOrigin();
     if (changed) this.#serverGeneration++;
+    this.#configurationWrites++; this.#websiteGeneration++;
+    try {
     await this.#publish(current => ({...current, revision: current.revision + 1, serverOriginOverride: override,
       ...(changed ? {registration: {...UNREGISTERED}, serverObservation: {reachable: null, checkedAt: null}} : {})}));
     this.#serverOverride = override;
     this.#serverOriginFault = null;
-    if (!changed) return this.state();
+    if (changed) {
     this.#stopContributions();
     this.#transport.dispose();
     this.#profileTransport.dispose();
@@ -302,6 +310,8 @@ export class SessionController {
     this.#bound = null;
     this.#account = null;
     if (this.#state.consent.state === 'granted') void this.startRegistration().catch(() => undefined);
+    }
+    } finally {this.#configurationWrites--;this.#websiteGeneration++;}
     return this.state();
   }
 
@@ -314,7 +324,7 @@ export class SessionController {
     const transport = this.#transport;
     const same = (): boolean => generation === this.#serverGeneration && consentGeneration === this.#consentGeneration && !this.#disposed && this.#state.consent.state === 'granted';
     try {
-      if (!transport.configured) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (!transport.configured) throw new CoreError('CORE_SERVER_NOT_CONFIGURED', 503);
       const result = await registerDevice(transport, this.#device(), undefined, same);
       // The server changed meanwhile: this registration belongs to the old one and is not recorded.
       if (!same()) return this.#session();
@@ -327,12 +337,12 @@ export class SessionController {
     } catch (error) {
       if (!same()) return this.#session();
       const safe = safeError(error);
-      this.#registrationFailure = {code: safe.code, persistence: null};
+      this.#registrationFailure = {code: safe.code, status: safe.status, ...upstreamFacts(safe), persistence: null};
       try { await this.#publish(current => !same() ? current : ({...current, revision: current.revision + 1,
         registration: {...current.registration, status: 'failed', lastError: safe.code, attempts},
-        serverObservation: {reachable: safe.code === 'CORE_DEVICE_ID_MISMATCH', checkedAt},
+        serverObservation: {reachable: safe.upstreamStatus !== undefined || safe.code === 'CORE_DEVICE_ID_MISMATCH' || safe.code === 'CORE_UPSTREAM_RESPONSE_INVALID', checkedAt},
       })); } catch {
-        this.#registrationFailure = {code: safe.code, persistence: 'CORE_STORAGE_UNAVAILABLE'};
+        this.#registrationFailure = {code: safe.code, status: safe.status, ...upstreamFacts(safe), persistence: 'CORE_STORAGE_UNAVAILABLE'};
         throw new CoreError('CORE_STORAGE_UNAVAILABLE', 503);
       }
       throw safe;
@@ -374,22 +384,49 @@ export class SessionController {
     return this.#health.recheck();
   }
 
+  #websiteOrigin(): string | null {return this.#websiteOverride ?? this.#config.websiteOrigin;}
+  #websiteBinding() {
+    if(this.#configurationWrites>0)return {ready:false,reason:'CORE_CONFIGURATION_CHANGED',message:'地址正在保存，请完成后重新点击绑定。'};
+    const server=this.#serverOrigin(),website=this.#websiteOrigin();
+    const local=(origin:string):boolean=>['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname);
+    const missing=!server||!website;
+    const mismatch=!!server&&!!website&&((local(server)&&!local(website))||(server!==this.#config.serverOrigin&&this.#websiteOverride===null));
+    return {ready:!missing&&!mismatch,reason:mismatch?'CORE_WEBSITE_CONFIGURATION_REQUIRED':missing?'CORE_URL_NOT_ALLOWED':null,
+      message:mismatch?'服务端已改为本机或非默认地址；请在同一处设置对应的网站地址。本机服务端只能使用本机网站，设置前不会签发绑定码或打开网站。':missing?'请先设置服务端和网站地址。':null};
+  }
+  async setWebsiteOrigin(input:string|null):Promise<unknown>{
+    if(input!==null&&typeof input!=='string')throw new CoreError('CORE_INPUT_INVALID',400);
+    const override=input===null?null:serverOriginOf(input);
+    this.#configurationWrites++;this.#websiteGeneration++;
+    try {await this.#publish(current=>({...current,revision:current.revision+1,websiteOriginOverride:override}));
+      this.#websiteOverride=override;this.#websiteOriginFault=null;
+    }finally{this.#configurationWrites--;this.#websiteGeneration++;}
+    return this.state();
+  }
+  #websiteFacts(){return {websiteOrigin:this.#websiteOrigin(),websiteOriginSource:this.#websiteOverride===null?'config':'setting',configuredWebsiteOrigin:this.#config.websiteOrigin,websiteOriginFault:this.#websiteOriginFault,websiteBinding:this.#websiteBinding()};}
+
   openExternal(url: string): {opened: boolean; reason?: 'DISABLED'} {
-    return openSystemExternal(url, this.#config.websiteOrigin, this.#config.allowSystemBrowser);
+    const websiteReason=this.#websiteBinding().reason;
+    if(websiteReason==='CORE_WEBSITE_CONFIGURATION_REQUIRED'||websiteReason==='CORE_CONFIGURATION_CHANGED')throw new CoreError(websiteReason,409);
+    return openSystemExternal(url, this.#websiteOrigin(), this.#config.allowSystemBrowser);
   }
 
   /** Website bind landing (O2 `/me/bind?deviceId&nonce&signature`): a server `bind` challenge nonce signed by this device. */
   async bindLink(): Promise<{url: string; expiresAt: string}> {
     const device = this.#device();
-    if (!this.#transport.configured || !this.#config.websiteOrigin) throw new CoreError('CORE_URL_NOT_ALLOWED', 409);
+    const websiteReason=this.#websiteBinding().reason;
+    if(websiteReason==='CORE_WEBSITE_CONFIGURATION_REQUIRED'||websiteReason==='CORE_CONFIGURATION_CHANGED')throw new CoreError(websiteReason,409);
+    if (!this.#transport.configured || !this.#websiteOrigin()) throw new CoreError('CORE_URL_NOT_ALLOWED', 409);
     if (this.#state.consent.state !== 'granted') throw new CoreError('CORE_CONSENT_REQUIRED', 409);
+    const serverGeneration=this.#serverGeneration,websiteGeneration=this.#websiteGeneration,website=this.#websiteOrigin()!;
     const response = await this.#transport.request('/v1/identity/devices/challenge', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'bind'})});
-    if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+    if (!response.ok) throw await upstreamError(response);
     let challenge: {nonce?: unknown; expiresAt?: unknown};
-    try { challenge = await response.json() as {nonce?: unknown; expiresAt?: unknown}; } catch { throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503); }
-    if (typeof challenge.nonce !== 'string' || !challenge.nonce || typeof challenge.expiresAt !== 'string') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+    try { challenge = await upstreamJson(response) as {nonce?: unknown; expiresAt?: unknown}; } catch (error) { throw safeError(error); }
+    if (typeof challenge.nonce !== 'string' || !challenge.nonce || typeof challenge.expiresAt !== 'string') throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
     const signature = Buffer.from(signWithDevice(device, Buffer.from(challenge.nonce, 'utf8'))).toString('base64url');
-    const url = new URL('/me/bind', this.#config.websiteOrigin);
+    if(serverGeneration!==this.#serverGeneration||websiteGeneration!==this.#websiteGeneration)throw new CoreError('CORE_CONFIGURATION_CHANGED',409);
+    const url = new URL('/me/bind', website);
     url.searchParams.set('deviceId', device.deviceId);
     url.searchParams.set('nonce', challenge.nonce);
     url.searchParams.set('signature', signature);
@@ -412,9 +449,10 @@ export class SessionController {
     const verification = await identityRequest();
     if (!current()) return false;
     const retryVerification = response === null && this.#registrationRecovery?.state === 'failed' && verification.ok;
-    if (verification.status !== 401 && !retryVerification) return false;
-    let code: unknown;
-    if (!retryVerification) try { code = ((await verification.json()) as {error?: {code?: unknown}}).error?.code; } catch { return false; }
+    if (verification.ok && !retryVerification) return false;
+    const verificationError = retryVerification ? null : await upstreamError(verification);
+    const code = verificationError?.code;
+    if (verification.status !== 401 && !retryVerification) throw verificationError!;
     if (!current()) return false;
     if (code === 'IDENTITY_DEVICE_REVOKED' || code === 'IDENTITY_DEVICE_REPLAY') {
       const revoked = code === 'IDENTITY_DEVICE_REVOKED';
@@ -422,7 +460,8 @@ export class SessionController {
       await this.#publish(state => !current() ? state : {...state, revision: state.revision + 1, registration: {...state.registration, status: 'failed', lastError: revoked ? 'CORE_DEVICE_REVOKED' : 'CORE_DEVICE_REPLAY'}});
       return false;
     }
-    if ((!retryVerification && code !== 'IDENTITY_DEVICE_SIGNATURE_INVALID') || !current()) return false;
+    if (!current()) return false;
+    if (!retryVerification && code !== 'IDENTITY_DEVICE_SIGNATURE_INVALID') throw verificationError!;
     if (this.#recoveryInFlight) return this.#recoveryInFlight;
     if (this.#recoveryAttemptAt !== null && Date.now() - this.#recoveryAttemptAt < this.#config.contributionIntervalMs) return false;
     this.#recoveryAttemptAt = Date.now();
@@ -437,8 +476,8 @@ export class SessionController {
         if (!current()) return false;
         const confirmed = await identityRequest();
         if (!current()) return false;
-        if (!confirmed.ok) throw new CoreError('CORE_DEVICE_REVALIDATION_FAILED', 503);
-        const payload = await confirmed.json() as {principal?: {principalId?: unknown}};
+        if (!confirmed.ok) throw await upstreamError(confirmed);
+        const payload = await upstreamJson(confirmed) as {principal?: {principalId?: unknown}};
         if (!current()) return false;
         if (payload.principal?.principalId !== this.#state.registration.principalId) throw new CoreError('CORE_DEVICE_REVALIDATION_FAILED', 503);
         this.#registrationRecovery = {state: 'recovered', message: '已用原设备密钥重新注册，服务端校验通过；请核对网站账号绑定，数据恢复前的积分不会由客户端重建。', nextAttemptAt: null, principalChanged: previousPrincipal !== this.#state.registration.principalId};
@@ -447,7 +486,8 @@ export class SessionController {
         if (!current()) return false;
         this.#registrationRecovery = {state: 'failed', message: '设备重新注册或校验尚未完成；请核对服务端与本机时间，将按贡献检查间隔自动重试。', nextAttemptAt: new Date((this.#recoveryAttemptAt ?? Date.now()) + this.#config.contributionIntervalMs).toISOString(), principalChanged: false};
         await this.#publish(state => !current() ? state : {...state, revision: state.revision + 1, registration: {...state.registration, status: 'failed', lastError: safeError(error).code}});
-        return false;
+        this.#registrationFailure={code:safeError(error).code,status:safeError(error).status,...upstreamFacts(safeError(error)),persistence:null};
+        throw error;
       }
     })();
     this.#recoveryInFlight = recovery;
@@ -489,15 +529,15 @@ export class SessionController {
         response = await transport.request(path, {method: 'GET', headers: retryHeaders});
       }
       if (!current()) return this.#contributions;
-      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {bound?: unknown; account?: unknown; availability?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
-      if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (!response.ok) throw await upstreamError(response);
+      const payload = await upstreamJson(response) as {bound?: unknown; account?: unknown; availability?: unknown; byHana?: Array<{actions?: Partial<Record<'install' | 'open' | 'use' | 'uninstall', unknown>>}>};
+      if (!Array.isArray(payload.byHana)) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       const availability = payload.availability === undefined ? null : payload.availability;
-      if (availability !== null && availability !== 'available' && availability !== 'unavailable') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (availability !== null && availability !== 'available' && availability !== 'unavailable') throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       const actions = {install: 0, open: 0, use: 0, uninstall: 0};
       for (const row of payload.byHana) for (const key of Object.keys(actions) as Array<keyof typeof actions>) {
         const value = row.actions?.[key];
-        if (!Number.isSafeInteger(value) || (value as number) < 0) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+        if (!Number.isSafeInteger(value) || (value as number) < 0) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
         actions[key] += value as number;
       }
       next = Object.freeze({status: 'ready', windowDays, availability, actions: Object.freeze(actions)});
@@ -507,7 +547,7 @@ export class SessionController {
       this.#account = this.#bound === true ? linkedAccount(payload.account) : null;
     } catch (error) {
       if (!current()) return this.#contributions;
-      next = Object.freeze({status: 'unavailable', reason: safeError(error).code});
+      next = Object.freeze({status: 'unavailable', reason: safeError(error).code, ...upstreamFacts(safeError(error))});
     }
     this.#contributions = next;
     return this.#contributions;
@@ -540,12 +580,12 @@ export class SessionController {
     try {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
       const response = await transport.request(path, {method: 'GET', headers});
-      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {bindingStatus?: unknown; hanas?: unknown; totalPoints?: unknown};
+      if (!response.ok) throw await upstreamError(response);
+      const payload = await upstreamJson(response) as {bindingStatus?: unknown; hanas?: unknown; totalPoints?: unknown};
       // C-POINTS v0.10.0 requires bindingStatus UNBOUND|BOUND; the shape is validated as the server contract, but
       // "bound" has exactly one source — Usage contributions `bound` (+`account`) — so it is not exposed or used here.
-      if (payload.bindingStatus !== 'UNBOUND' && payload.bindingStatus !== 'BOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      if (!Array.isArray(payload.hanas)) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (payload.bindingStatus !== 'UNBOUND' && payload.bindingStatus !== 'BOUND') throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
+      if (!Array.isArray(payload.hanas)) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       if (payload.hanas.length > this.#config.maxHanaRows) throw new CoreError('CORE_POINTS_LIMIT_EXCEEDED', 503);
       const hanas = payload.hanas.map(hanaPoints);
       let next = 0;
@@ -564,7 +604,7 @@ export class SessionController {
       this.#pointsCheckedAt = Date.now();
     } catch (error) {
       if (generation !== this.#serverGeneration) return this.#points;
-      this.#points = pointsUnavailable(safeError(error).code);
+      this.#points = pointsUnavailable(safeError(error).code, upstreamFacts(safeError(error)));
     }
     return this.#points;
   }
@@ -576,21 +616,21 @@ export class SessionController {
     try {
       const response = await this.#profileTransport.request(`/v1/registry/hanas/${encodeURIComponent(hanaId)}`);
       if (response.status === 404) {
-        const error = await response.json() as {error?: {code?: unknown}};
-        if (error.error?.code !== 'REGISTRY_NOT_FOUND') throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+        const error = await upstreamError(response);
+        if (error.code !== 'REGISTRY_NOT_FOUND') throw error;
         const missing: HanaName = {displayName: null, displayNameStatus: 'not-found', displayNameReason: 'REGISTRY_NOT_FOUND'};
         remember(missing);
         return missing;
       }
-      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const profile = await response.json() as {hanaId?: unknown; displayName?: unknown};
-      if (profile.hanaId !== hanaId || typeof profile.displayName !== 'string' || !profile.displayName.trim() || profile.displayName.length > 120) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      if (!response.ok) throw await upstreamError(response);
+      const profile = await upstreamJson(response) as {hanaId?: unknown; displayName?: unknown};
+      if (profile.hanaId !== hanaId || typeof profile.displayName !== 'string' || !profile.displayName.trim() || profile.displayName.length > 120) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       const result: HanaName = {displayName: profile.displayName.trim(), displayNameStatus: 'ready', displayNameReason: null};
       remember(result);
       return result;
     } catch (error) {
       // Failure is visible beside authoritative points and never cached as absence.
-      return {displayName: null, displayNameStatus: 'failed', displayNameReason: safeError(error).code};
+      return {displayName: null, displayNameStatus: 'failed', displayNameReason: safeError(error).code, ...upstreamFacts(safeError(error))};
     }
   }
 
@@ -606,14 +646,14 @@ export class SessionController {
     try {
       const headers = await this.#signRequest({method: 'GET', path, body: null});
       const response = await this.#transport.request(path, {method: 'GET', headers});
-      if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-      const payload = await response.json() as {items?: unknown; nextAfter?: unknown; window?: ActivityWindow};
+      if (!response.ok) throw await upstreamError(response);
+      const payload = await upstreamJson(response) as {items?: unknown; nextAfter?: unknown; window?: ActivityWindow};
       if (!Array.isArray(payload.items) || payload.items.length > 200 || payload.window?.from !== from || payload.window?.to !== to ||
-          !(payload.nextAfter === null || (typeof payload.nextAfter === 'string' && /^[A-Za-z0-9_-]{1,512}$/u.test(payload.nextAfter)))) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+          !(payload.nextAfter === null || (typeof payload.nextAfter === 'string' && /^[A-Za-z0-9_-]{1,512}$/u.test(payload.nextAfter)))) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       const items = payload.items.map(value => activityItem(value, window));
-      for (let i = 1; i < items.length; i++) if (items[i]!.occurredAt < items[i - 1]!.occurredAt) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+      for (let i = 1; i < items.length; i++) if (items[i]!.occurredAt < items[i - 1]!.occurredAt) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
       return {status: 'ready', reason: null, items, nextAfter: payload.nextAfter, window};
-    } catch (error) { return activityUnavailable(safeError(error).code); }
+    } catch (error) { return activityUnavailable(safeError(error).code, upstreamFacts(safeError(error))); }
   }
 
   /** Public JSON for `GET /api/hanamesh/core/points`. `prompt.show` is decided here, never in the client bundle:
@@ -655,11 +695,11 @@ export class SessionController {
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
     return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registrationRecovery: this.#registrationRecovery, registration: this.#state.registration, consent: this.#state.consent,
-      session: device ? this.#session() : null, account: this.#account, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin,
+      session: device ? this.#session() : null, account: this.#account, ...this.#serverFacts(), ...this.#websiteFacts(),
       configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributionsView()});
   }
   diagnostics(): unknown {
-    return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, ...this.#serverFacts(), websiteOrigin: this.#config.websiteOrigin});
+    return publicJson({configuration: this.#config, registrationFailure: this.#registrationFailure, registration: this.#state.registration, protocolVersion: '1', disposed: this.#disposed, ...this.#serverFacts(), ...this.#websiteFacts()});
   }
   async dispose(): Promise<void> {
     if (this.#disposed) return;

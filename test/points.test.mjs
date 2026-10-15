@@ -170,10 +170,10 @@ test('points empty states are readable: no consent, no registration, no server, 
   assert.equal((await unregistered.refreshPoints()).reason, 'NOT_REGISTERED');
 
   const broken = await ready({pointsStatus: 503});
-  assert.equal((await broken.controller.refreshPoints()).reason, 'CORE_UPSTREAM_UNAVAILABLE');
+  assert.equal((await broken.controller.refreshPoints()).reason, 'CORE_UPSTREAM_HTTP_ERROR');
 
   const malformed = await ready({points: {bindingStatus: 'UNBOUND', totalPoints: 1, hanas: [{hanaId: 'x', points: 'lots', pending: 0, breakdown: {}}]}});
-  assert.equal((await malformed.controller.refreshPoints()).reason, 'CORE_UPSTREAM_UNAVAILABLE');
+  assert.equal((await malformed.controller.refreshPoints()).reason, 'CORE_UPSTREAM_RESPONSE_INVALID');
 });
 
 test('the bind prompt fires once: pending 分 on an unbound device, then never again — restart included', async () => {

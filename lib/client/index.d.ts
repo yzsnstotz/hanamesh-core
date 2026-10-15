@@ -19,6 +19,7 @@ type ActivityItem = {
 type ActivityState = {
     status: 'ready' | 'unavailable';
     reason: string | null;
+    upstreamStatus?: number;
     items: ActivityItem[];
     nextAfter: string | null;
     window: {
@@ -38,6 +39,7 @@ export declare function collectLatestActivity(fetchPage: (query: {
     activityPageBudget: number;
     activityDisplayRows: number;
 }): Promise<ActivityView>;
+export declare function coreErrorText(code: string | null, upstreamStatus?: number): string;
 export declare const name = "hanamesh-core-client";
 export declare const inject: string[];
 export declare function apply(ctx: ClientContext): void;

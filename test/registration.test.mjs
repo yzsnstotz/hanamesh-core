@@ -48,7 +48,7 @@ test('device id mismatch and upstream failure are persisted as failed observatio
 test('offline configuration never emits a request', async () => {
   const remote = serverStub();
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: remote.fetcher});
-  await assert.rejects(controller.register(), error => error?.code === 'CORE_UPSTREAM_UNAVAILABLE');
+  await assert.rejects(controller.register(), error => error?.code === 'CORE_SERVER_NOT_CONFIGURED');
   assert.equal(remote.calls.length, 0);
 });
 
@@ -148,7 +148,7 @@ test('identity rc.2 (400 on unknown `label`) makes core re-register once without
   assert.notEqual(remote.bodies[0].nonce, remote.bodies[1].nonce, 'the retry signs a new challenge');
 });
 
-test('a 400 on a label-free registration is not retried and surfaces as upstream unavailable', async () => {
+test('a 400 on a label-free registration is not retried and retains the explicit refusal', async () => {
   const remote = labelServer({rejectLabel: true});
   const memory = memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT));
   await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memory.store, {fetcher: remote.fetcher});
@@ -157,6 +157,6 @@ test('a 400 on a label-free registration is not retried and surfaces as upstream
     remote.bodies.push(JSON.parse(init.body));
     return Response.json({error: {code: 'IDENTITY_INPUT_INVALID'}}, {status: 400});
   });
-  await assert.rejects(registerDevice(transport, memory.read().device, null), error => error?.code === 'CORE_UPSTREAM_UNAVAILABLE');
+  await assert.rejects(registerDevice(transport, memory.read().device, null), error => error?.code === 'IDENTITY_INPUT_INVALID' && error.status === 400);
   assert.equal(remote.bodies.length, 1);
 });

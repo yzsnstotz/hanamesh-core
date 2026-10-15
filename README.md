@@ -1,4 +1,4 @@
-# hanamesh-core · 0.3.9
+# hanamesh-core · 0.3.10
 
 Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；Usage/AppHost独立安装，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
 

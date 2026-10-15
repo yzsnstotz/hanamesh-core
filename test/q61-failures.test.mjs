@@ -21,7 +21,7 @@ test('catalog failures remain visible beside points and recover on explicit refr
  let healthy=false;
  const c=await fixture(()=>healthy ? Response.json({hanaId:'hana-one',displayName:'Recovered'}) : new Response('',{status:503}));
  try {
-  const p=await c.refreshPoints(); assert.equal(p.status,'ready');assert.equal(p.hanas[0].displayNameStatus,'failed');assert.equal(p.hanas[0].displayNameReason,'CORE_UPSTREAM_UNAVAILABLE');
+  const p=await c.refreshPoints(); assert.equal(p.status,'ready');assert.equal(p.hanas[0].displayNameStatus,'failed');assert.equal(p.hanas[0].displayNameReason,'CORE_UPSTREAM_HTTP_ERROR');
   healthy=true; await c.refresh(); const recovered=await c.refreshPoints();assert.equal(recovered.hanas[0].displayName,'Recovered');assert.equal(recovered.hanas[0].displayNameStatus,'ready');
  } finally {await c.dispose();}
 });

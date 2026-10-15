@@ -1,7 +1,7 @@
 import {hostname} from 'node:os';
 import type {StoredDevice} from './device.js';
 import {signWithDevice} from './device.js';
-import {CoreError} from './errors.js';
+import {CoreError, upstreamJson as jsonOf} from './errors.js';
 import {ServerTransport} from './transport.js';
 
 interface ChallengeResponse {nonce: string; expiresAt: string}
@@ -22,18 +22,12 @@ export function deviceLabel(env: NodeJS.ProcessEnv = process.env): DeviceLabel |
   return label.hostname && label.os && label.shell ? Object.freeze(label) : null;
 }
 
-async function jsonOf<T>(response: Response): Promise<T> {
-  if (!response.ok) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
-  try { return await response.json() as T; }
-  catch { throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503); }
-}
-
 async function attempt(transport: ServerTransport, device: StoredDevice, label: DeviceLabel | null, active: () => boolean): Promise<Response> {
   if (!active()) throw new CoreError('CORE_CONSENT_REQUIRED', 409);
   const challenge = await jsonOf<ChallengeResponse>(await transport.request('/v1/identity/devices/challenge', {
     method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({purpose: 'register'}),
   }));
-  if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  if (typeof challenge.nonce !== 'string' || !challenge.nonce) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
   if (!active()) throw new CoreError('CORE_CONSENT_REQUIRED', 409);
   // O1 identity docs/API.md: signature = ed25519(utf8(nonce ‖ publicKey)) where publicKey is the base64url string as sent (P1 A1-1: identity API.md is authoritative).
   const signed = Buffer.from(challenge.nonce + device.publicKey, 'utf8');
@@ -54,6 +48,6 @@ export async function registerDevice(transport: ServerTransport, device: StoredD
   if (label && response.status === 400) response = await attempt(transport, device, null, active);
   const result = await jsonOf<RegistrationResponse>(response);
   if (result.deviceId !== device.deviceId) throw new CoreError('CORE_DEVICE_ID_MISMATCH', 502);
-  if (typeof result.principalId !== 'string' || !result.principalId) throw new CoreError('CORE_UPSTREAM_UNAVAILABLE', 503);
+  if (typeof result.principalId !== 'string' || !result.principalId) throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
   return result;
 }

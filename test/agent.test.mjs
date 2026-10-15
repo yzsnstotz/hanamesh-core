@@ -70,3 +70,10 @@ test('an existing DSH shared device can opt out before agent ever opted in, then
  const stopped=await agentCall(config,{operation:'consent',state:'withheld'});assert.match(stopped.consent.consentId,/^[a-f0-9-]{36}$/,'explicit withdrawal needs a tombstone generation even before first opt-in');
  const next=await agentCall(config,{operation:'consent',state:'granted'});assert.notEqual(next.consent.consentId,stopped.consent.consentId);assert.equal((await agentCall(config,{operation:'state'})).deviceId,before.deviceId);
 });
+
+test('portable binding also blocks a public website paired with a loopback backend before network',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'hm-core-agent-website-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const {agentCall}=await import('../lib/agent.js');const config={sharedHome:root,serverOrigin:'http://127.0.0.1:1',websiteOrigin:'https://market.fixture.invalid'};
+ await agentCall(config,{operation:'consent',state:'granted'});
+ await assert.rejects(agentCall(config,{operation:'bindLink'}),/CORE_WEBSITE_CONFIGURATION_REQUIRED/);
+});

@@ -6,6 +6,7 @@ import {createDevice, requestNonce, signWithDevice} from './device.js';
 import {fileSharedDeviceStore} from './shared-device.js';
 import {serverOriginOf} from './validation.js';
 import {ServerTransport} from './transport.js';
+import {upstreamError, upstreamJson} from './errors.js';
 import {registerDevice} from './registration.js';
 
 export interface AgentCoreConfig {sharedHome:string; serverOrigin:string|null; websiteOrigin:string|null; timeoutMs?:number}
@@ -53,8 +54,8 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
     const transport=new ServerTransport(origin,config.timeoutMs ?? 10000);
     try{const path=`/v2/usage/me/devices/${existing.deviceId}/consents/${consent.consentId}`;
       const response=await transport.request(path,{method:'DELETE',headers:headersFor(existing,'DELETE',path,null)});
-      if(!response.ok)return fail('CORE_WITHDRAWAL_UNCONFIRMED');
-      const value=await response.json() as {deletedEvents?:unknown;consentId?:unknown;state?:unknown;barrier?:unknown};
+      if(!response.ok)throw await upstreamError(response);
+      const value=await upstreamJson(response) as {deletedEvents?:unknown;consentId?:unknown;state?:unknown;barrier?:unknown};
       if(Object.keys(value).sort().join('|')!=='barrier|consentId|deletedEvents|state'||value.consentId!==consent.consentId||value.state!=='withdrawn'||value.barrier!=='committed'||!Number.isSafeInteger(value.deletedEvents)||Number(value.deletedEvents)<0)return fail('CORE_WITHDRAWAL_UNCONFIRMED');
       return {deletedEvents:value.deletedEvents,consentId:value.consentId,state:value.state,barrier:value.barrier};
     }finally{transport.dispose();}
@@ -70,10 +71,12 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
     if (input.operation === 'register') {if(!origin)fail('SERVER_ORIGIN_UNAVAILABLE');return {...await registerDevice(transport,device,null)};}
     if (input.operation === 'bindLink') {
       if(!website || !origin) fail('BIND_ORIGIN_UNAVAILABLE');
+      const loopback=(value:string)=>['127.0.0.1','localhost','[::1]'].includes(new URL(value).hostname);
+      if(loopback(origin!)&&!loopback(website!)) fail('CORE_WEBSITE_CONFIGURATION_REQUIRED');
       const response=await transport.request('/v1/identity/devices/challenge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({purpose:'bind'})});
-      if(!response.ok)fail('CORE_UPSTREAM_UNAVAILABLE');
-      const challenge=await response.json() as {nonce?:unknown;expiresAt?:unknown};
-      if(typeof challenge.nonce!=='string' || typeof challenge.expiresAt!=='string')fail('CORE_UPSTREAM_UNAVAILABLE');
+      if(!response.ok)throw await upstreamError(response);
+      const challenge=await upstreamJson(response) as {nonce?:unknown;expiresAt?:unknown};
+      if(typeof challenge.nonce!=='string' || typeof challenge.expiresAt!=='string')fail('CORE_UPSTREAM_RESPONSE_INVALID');
       const url=new URL('/me/bind',website as string);
       url.searchParams.set('deviceId',device.deviceId);url.searchParams.set('nonce',challenge.nonce as string);
       url.searchParams.set('signature',Buffer.from(signWithDevice(device,Buffer.from(challenge.nonce as string))).toString('base64url'));

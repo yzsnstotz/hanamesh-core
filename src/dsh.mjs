@@ -33,7 +33,8 @@ export function coreSnapshotSchema(z) {
   const replacedDevices = z.array(z.object({...deviceFields, replacedAt: z.string()}).strict()).optional();
   // 0.3.4: server address set in Core's settings page; null/absent = plugin config `serverOrigin`.
   const serverOriginOverride = z.string().nullable().optional();
-  return z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices, serverOriginOverride}).strict();
+  const websiteOriginOverride = z.string().nullable().optional();
+  return z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices, serverOriginOverride, websiteOriginOverride}).strict();
 }
 
 /** @param {import('@deepseek-ai/cordis').Context} ctx @param {import('./contracts.js').PluginConfig} config */

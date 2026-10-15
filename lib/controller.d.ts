@@ -10,6 +10,7 @@ interface HealthProvider {
 type Contributions = {
     status: 'unavailable';
     reason: string;
+    upstreamStatus?: number;
 } | {
     status: 'ready';
     windowDays: number;
@@ -29,6 +30,7 @@ type HanaName = {
     displayName: string | null;
     displayNameStatus: 'ready' | 'not-found' | 'failed';
     displayNameReason: string | null;
+    upstreamStatus?: number;
 };
 export type HanaPoints = HanaName & {
     hanaId: string;
@@ -40,6 +42,7 @@ export type HanaPoints = HanaName & {
 type Points = {
     status: 'unavailable';
     reason: string;
+    upstreamStatus?: number;
     totalPoints: 0;
     pendingTotal: 0;
     hanas: readonly HanaPoints[];
@@ -63,6 +66,7 @@ type ActivityWindow = {
 type ActivityPage = {
     status: 'ready' | 'unavailable';
     reason: string | null;
+    upstreamStatus?: number;
     items: readonly ActivityItem[];
     nextAfter: string | null;
     window: ActivityWindow | null;
@@ -91,6 +95,7 @@ export declare class SessionController {
     attachHealth(provider: HealthProvider): void;
     attachUsageProbe(probe: () => boolean): void;
     recheckHealth(): Promise<HealthSnapshot>;
+    setWebsiteOrigin(input: string | null): Promise<unknown>;
     openExternal(url: string): {
         opened: boolean;
         reason?: 'DISABLED';
