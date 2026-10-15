@@ -117,7 +117,7 @@ test('installed Core provides native identity, consent and visible state-read fa
   const initial=await observer();
   assert.equal(initial.evidence,'REAL_CORDIS_INJECTION_TEST_OBSERVER');
   inside(await realpath(initial.providerPackagePath));
-  assert.equal(initial.providerVersion,'0.3.3');
+  assert.equal(initial.providerVersion,'0.3.4');
   const candidate=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
   for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.equal(initial.resolvedPeers[name]?.version,version,`Actual resolved peer ${name} must match the formal host combination`);
   const installedRoot=new URL('./',pathToFileURL(initial.providerPackagePath));
@@ -237,7 +237,7 @@ test('a normally installed incompatible suite component has an explicit native d
   const rel=relative(envDir,packagePath);assert.ok(rel&&!rel.startsWith('..')&&!isAbsolute(rel));
   const pkg=JSON.parse(await readFile(packagePath,'utf8'));
   const actual=JSON.parse(await readFile(join(envDir,'core-provider-observation.json'),'utf8'));
-  assert.equal(actual.evidence,'REAL_CORDIS_INJECTION_TEST_OBSERVER');assert.equal(actual.protocolVersion,'1');assert.equal(actual.providerVersion,'0.3.3');assertCallExamples(actual.callExamples);
+  assert.equal(actual.evidence,'REAL_CORDIS_INJECTION_TEST_OBSERVER');assert.equal(actual.protocolVersion,'1');assert.equal(actual.providerVersion,'0.3.4');assertCallExamples(actual.callExamples);
   const candidate=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
   for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.equal(actual.resolvedPeers[name]?.version,version);
   const row=actual.callExamples.health.components.find(component=>component.id===setup.componentId);
