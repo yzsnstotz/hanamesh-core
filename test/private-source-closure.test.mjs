@@ -14,20 +14,20 @@ test('Core private source closure uses published ranges and keeps developer tool
   assert.equal(JSON.parse(await readFile('deps/LOCKS.json','utf8')).uiKit, undefined);
   // HM-4: semver is a normal runtime dependency; the vendored copy and the old host-api snapshot are archived.
   assert.deepEqual(root.dependencies, {semver: '7.7.2'});
-  assert.equal(root.devDependencies['@hanamesh/api-contracts'], 'git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0');
+  // Tests own their fixtures: no contract package in any dependency section, and no separate contract-check install root.
+  for (const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) assert.equal(root[section]?.['@hanamesh/api-contracts'], undefined, section);
+  assert.doesNotMatch(await readFile('pnpm-lock.yaml','utf8'), /api-contracts/);
+  await assert.rejects(access('contract-tests/identity'));
+  assert.doesNotMatch(JSON.stringify(root.scripts), /contract-tests|api-contracts/);
   assert.ok(!root.files.some(path => path.startsWith('vendor/')));
   await assert.rejects(access('vendor/semver'));
   await assert.rejects(access('vendor/host-api'));
   await assert.rejects(access('deps/HOST_API.sha256.json'));
   await access('docs/archive/host-api-dsh-0.1.5-alpha.1/HOST_API.sha256.json');
   assert.match(await readFile('src/health/evaluate.ts','utf8'), /^import semver from 'semver';$/m);
-  for(const path of ['package.json','contract-tests/identity/package.json']) {
-    const pkg=JSON.parse(await readFile(path,'utf8'));
-    for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
-      for(const [name,spec] of Object.entries(pkg[section] ?? {})) {
-        if(name === '@hanamesh/api-contracts') assert.equal(spec, 'git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0');
-        else if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^git\+https:\/\/github\.com\/yzsnstotz\/.+\.git#semver:\^/u,`${path}:${section}:${name}`);
-      }
+  for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
+    for(const [name,spec] of Object.entries(root[section] ?? {})) {
+      if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^git\+https:\/\/github\.com\/yzsnstotz\/.+\.git#semver:\^/u,`package.json:${section}:${name}`);
     }
   }
 });

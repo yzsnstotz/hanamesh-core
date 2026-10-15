@@ -22,8 +22,6 @@ type Contributions = {
  *  unbound-device balance, which the server moves into the account the moment the device is bound. */
 declare const BREAKDOWN_KEYS: readonly ["install", "open", "use", "claimBonus", "creatorMirror", "launchInitiator"];
 type BreakdownKey = (typeof BREAKDOWN_KEYS)[number];
-/** C-POINTS v0.10.0 OwnPointsDTO.bindingStatus; never inferred from balances or Usage's session. */
-type PointsBindingStatus = 'UNBOUND' | 'BOUND';
 type HanaName = {
     displayName: string | null;
     displayNameStatus: 'ready' | 'not-found' | 'failed';
@@ -45,7 +43,6 @@ type Points = {
 } | {
     status: 'ready';
     reason: null;
-    bindingStatus: PointsBindingStatus;
     totalPoints: number;
     pendingTotal: number;
     hanas: readonly HanaPoints[];

@@ -74,12 +74,12 @@ test('P01-U04: native points distinguish typed totals from signed device event h
   assert.match(source, /row\.displayName \?\? `\$\{row\.hanaId\.slice\(0, 8\)\}…`/);
 });
 
-test('P01-U04: gateway activity is named by active hour, without implying a model call or a per-event award', async () => {
+test('use is a successful plugin command and open a presented plugin page; copy carries no hardcoded server settings', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /\['use', '应用活跃小时'\]/);
-  assert.match(source, /use: '应用活跃小时'/);
-  assert.match(source, /活跃小时按授权视图的应用网关请求计算，可能包含页面后台请求，不代表模型调用次数；事件不等于逐笔积分/);
-  assert.doesNotMatch(source, /\['use', '使用贡献'\]|use: '使用'/);
+  assert.match(source, /\['use', '使用贡献'\]/);
+  assert.match(source, /use: '使用'/);
+  assert.match(source, /「打开」记插件页面被打开，「使用」记插件命令成功执行；聊天回合不计/);
+  assert.doesNotMatch(source, /5%|保留 90 天。/, 'no hardcoded server settings in copy');
 });
 
 test('T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows', async () => {

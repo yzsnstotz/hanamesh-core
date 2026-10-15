@@ -5,7 +5,7 @@ import {SessionController} from '../lib/controller.js';
 import {createRouteHandler, ROUTES} from '../lib/routes.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
 import {memoryStore} from './fixtures/core-store.mjs';
-import {createPointsContractExamples} from '@hanamesh/api-contracts/points';
+import {unboundZero, boundZero} from './fixtures/points-contract-examples.mjs';
 
 const carrier = 'http://127.0.0.1:41001';
 const postHeaders = {origin: carrier, host: '127.0.0.1:41001', 'sec-fetch-site': 'same-origin', 'content-type': 'application/json'};
@@ -64,7 +64,7 @@ test('GET /api/hanamesh/core/points returns the signed custody read with 分 tot
   const body = await response.json();
   assert.equal(body.status, 'ready');
   assert.equal(body.reason, null);
-  assert.equal(body.bindingStatus, 'UNBOUND');
+  assert.equal('bindingStatus' in body, false, 'bound has one source: Usage contributions');
   assert.equal(body.totalPoints, 31.25);
   assert.equal(body.pendingTotal, 5);
   assert.equal(body.hanas.length, 2);
@@ -77,16 +77,24 @@ test('GET /api/hanamesh/core/points returns the signed custody read with 分 tot
   assert.equal((await handle(new Request(`${carrier}${ROUTES.points}`, {method: 'POST', headers: postHeaders, body: '{}'}))).status, 405);
 });
 
-test('C-POINTS bindingStatus distinguishes identical zero balances independently of contributions', async () => {
-  const examples = createPointsContractExamples();
-  for (const points of [examples.unboundZero, examples.boundZero]) {
-    const {handle} = await ready({points, bound: points.bindingStatus !== 'BOUND'});
+test('custody bindingStatus is validated but never exposed: bound comes only from Usage contributions', async () => {
+  for (const points of [unboundZero, boundZero]) for (const bound of [true, false]) {
+    const {handle} = await ready({points, bound});
     const body = await (await handle(new Request(`${carrier}${ROUTES.points}`))).json();
     assert.equal(body.status, 'ready');
-    assert.equal(body.bindingStatus, points.bindingStatus);
+    assert.equal('bindingStatus' in body, false);
+    assert.equal(body.bound, bound, `custody ${points.bindingStatus} must not override Usage bound=${bound}`);
     assert.equal(body.totalPoints, 0);
     assert.equal(body.pendingTotal, 0);
   }
+});
+
+test('points report bound as unknown (null) when Usage contributions omit or fail it', async () => {
+  const {handle} = await ready({contributions: false});
+  const body = await (await handle(new Request(`${carrier}${ROUTES.points}`))).json();
+  assert.equal(body.status, 'ready');
+  assert.equal(body.bound, null);
+  assert.equal('bindingStatus' in body, false);
 });
 
 test('missing or invalid C-POINTS bindingStatus is unavailable rather than inferred from pending points', async () => {

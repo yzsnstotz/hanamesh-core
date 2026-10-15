@@ -1,15 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, writeFile, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {HealthService} from '../lib/health/service.js';
 import {inspectPackage, LoaderObservationSource} from '../lib/health/loader.js';
+import {evaluate} from '../lib/health/evaluate.js';
 
 const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.10', phase: 'active'}));
-active[1].version = '0.2.0-rc.2';
+const active = profile.components.map(() => ({kind: 'present', version: '0.2.0-rc.26', phase: 'active'}));
+active[1].version = '0.5.9';
+
+test('shipped suite profile accepts the current usage and app-host release lines, prereleases included', () => {
+  const at = (usage, appHost) => evaluate(profile, [{kind: 'present', version: usage, phase: 'active'}, {kind: 'present', version: appHost, phase: 'active'}], 1).components.map(row => row.status);
+  for (const usage of ['0.2.0-rc.26', '0.2.0-rc.27', '0.2.0', '0.2.5']) assert.equal(at(usage, '0.5.9')[0], 'satisfied', usage);
+  for (const usage of ['0.2.0-rc.25', '0.2.0-rc.10', '0.3.0', '0.3.0-rc.1']) assert.equal(at(usage, '0.5.9')[0], 'incompatible', usage);
+  for (const appHost of ['0.5.9', '0.5.12', '0.6.0', '0.6.3']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'satisfied', appHost);
+  for (const appHost of ['0.5.8', '0.7.0', '0.2.0-rc.2']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'incompatible', appHost);
+});
 
 test('notice components distinguish present, missing and disabled without restricting healthy core', async () => {
   for (const [name, observations, expected] of [
@@ -48,14 +57,15 @@ test('real DSH include-prefixed ids and package root or subpath names match suit
       {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
       {id: 'include:hanamesh-app-host', options: {name: appHostName}, fiber: {state: 2}},
     ];
-    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.10' : '0.2.0-rc.2'}));
+    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.27' : '0.5.9'}));
     const observations = await source.observe(profile.components);
     assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']], appHostName);
   }
 });
 
-test('package integrity accepts the loader subpath when the package root is not exported', async () => {
+test('package integrity accepts the loader subpath when the package root is not exported', async t => {
   const root = await mkdtemp(join(tmpdir(), 'hm-health-subpath-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
   const packageRoot = join(root, 'node_modules', '@hanamesh', 'dsh-app-host');
   await mkdir(join(packageRoot, 'lib'), {recursive: true});
   await writeFile(join(packageRoot, 'package.json'), JSON.stringify({

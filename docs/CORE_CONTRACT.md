@@ -57,7 +57,7 @@
 
 包 SemVer 是发布/安装选择；wire `protocolVersion: '1'` 与内部数字 `schemaVersion: 1` 不是包 SemVer，Core 没有全 SemVer 严格相等的握手检查。v1 握手已接受额外可选成员，并拒绝不同 wire 主版本、数字替代和缺少必需方法；闭合 schema 与提供方私有成员边界继续生效。
 
-Identity 在独立 `contract-tests/identity` 开发验证包消费 `git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#v0.10.0` 的 C-IDENTITY 类型、schema 与fixture。Core 产品运行依赖不含 api-contracts 或 Identity 服务实现包；测试子包不进入发布 files。
+0.3.3 起本仓不再依赖任何合约包（含开发依赖），也不再保留 `contract-tests/identity` 独立验证包；测试所需 fixture 内联在 `test/fixtures/`，测试不读取文档仓或合约包。Core 产品运行依赖不含 Identity 服务实现包。
 
 0.x caret 不是整个 major 范围：`^0.2.0-rc.11` 不接受 `0.3.0`，`^0.2.0-rc.55` 也不选择 Core `0.3.0`。安装选择与 wire 兼容分别记录；已有消费方不用为 v1 行为修改。
 
@@ -65,7 +65,7 @@ Identity 在独立 `contract-tests/identity` 开发验证包消费 `git+https://
 
 0.3.0 的候选 tgz 消费通过，但 npm Git 包准备会安装根开发依赖；根 Identity 依赖引入其 devkit rc2 peer 与本仓 rc1 冲突，真实正常 Git 消费失败 404。0.3.1 将同一源范围移到独立验证包，Core 源包的正常构建不引入 Identity 提供方依赖；不改上游 peer、不放宽包管理检查、不复制合约。验证包单独正常安装并冻结其 lock。
 
-开发门：先 `pnpm install --frozen-lockfile --store-dir <共享缓存>`，随后 `pnpm build`、`pnpm check`、`pnpm test`。`pnpm test` 的 `pretest` 会调用 `pnpm install:contract-tests`，以独立 lock 冻结安装 Identity 验证依赖；需要先跑类型门时可提前执行该命令。独立验证包不在产品包 files 内，仍通过正常包名直接引用发布源的 schema/fixture/suite。
+开发门：先 `pnpm install --frozen-lockfile --store-dir <共享缓存>`，随后 `pnpm build`、`pnpm check`、`pnpm test`。0.3.3 起没有独立验证包与 `pretest` 安装步骤。
 
 
 ## C-CORE 提供方定义交接（J1S2-CORE-01）
@@ -89,12 +89,12 @@ await provider.setConsent('granted');
 
 J1.S4 起 `CORE_NOT_READY` 有了具体触发条件：本机共享设备身份文件不可读或损坏时，`getDeviceId` / `getPublicKey` / `sign` / `signRequest` / `getSession` 都抛 `CORE_NOT_READY`（503），Core 不会新建身份顶替；原因与文件位置在 `GET state` 的 `identity` 字段与设置段里（见 API.md「本机共享设备身份」）。修复后经 `POST refresh` 恢复，无需重启。合约形状与错误码集合不变。
 
-本交接只整理本仓定义。api-contracts 仓的合入、版本 tag 和消费方接入由对应卡片负责，未在此发布新的合约包。
+本交接只整理本仓定义，未在此发布新的合约包。
 
 
 ### 无 TTY 自检的依赖目录重建
 
-根目录与 `contract-tests/identity` 各自的 `pnpm-workspace.yaml` 均明确只选择当前包（`packages: ['.']`），并设置 `confirmModulesPurge: false`。两者继续使用各自既有冻结 lock；不将 Identity 验证包纳入根包依赖图。已装依赖来自另一个 HOME/store 时，pnpm 可重建生成的 node_modules，不依赖调用方设置 CI 或提供 TTY。无 CI、无 TTY 的两 store 实际安装回归验证此路径，仍使用 `--frozen-lockfile`。该选项在本仓固定 pnpm 10.33.0 的 YAML 设置中生效，放入 .npmrc 不会传入对应安装选项。
+根目录 `pnpm-workspace.yaml` 明确只选择当前包（`packages: ['.']`），并设置 `confirmModulesPurge: false`，继续使用既有冻结 lock。已装依赖来自另一个 HOME/store 时，pnpm 可重建生成的 node_modules，不依赖调用方设置 CI 或提供 TTY。无 CI、无 TTY 的两 store 实际安装回归验证此路径，仍使用 `--frozen-lockfile`。该选项在本仓固定 pnpm 10.33.0 的 YAML 设置中生效，放入 .npmrc 不会传入对应安装选项。
 
 
 ## D-77 完整提供方说明
@@ -133,7 +133,7 @@ getDeviceId为`base64url(sha256(rawPublicKey32))`，43字符无填充；getPubli
 
 以下六事实仅为本方密码学FIXTURE输入，验证sign原样签Uint8Array，不是当前C-USAGE正式业务字段顺序/JSON/UTF-8编码规范；Core不依赖其正式确认才能交付。本例选择deviceId、hanaRef、action、occurredAt、eventId、nonce顺序JSON.stringify，然后UTF-8编码；更改字段/属性顺序/空白会改变给定字节，不能冒充已被原签名保护。扩展字段如何进入业务签名由C-USAGE提供方定义，Core不会替对端限制或剔除字段。
 
-历史出处只登记：本模块合法devDependencies `@hanamesh/api-contracts` git-tag v0.10.0，resolved7ddb2be334ad80dfed05d1e0f5128926bb82a3b3；contracts/usage/events.js SHA256 `930fa4db27b08c76b6320a0b5f9198632e75b4466bed9a8b2d0acec6609ccdc3`。它不是当前API权威，不新增包/tag或移除合法开发引用。正式业务编码需求已由PM写入原ServerUsage提供方卡，Core不设反向依赖。
+历史出处只登记：0.3.2 及以前曾以devDependencies引用 `@hanamesh/api-contracts` git-tag v0.10.0（resolved 7ddb2be334ad80dfed05d1e0f5128926bb82a3b3；contracts/usage/events.js SHA256 `930fa4db27b08c76b6320a0b5f9198632e75b4466bed9a8b2d0acec6609ccdc3`），0.3.3 已移除。它不是当前API权威。正式业务编码需求已由PM写入原ServerUsage提供方卡，Core不设反向依赖。
 
 固定公开测试设备示例（仅FIXTURE，不属于真实账号/设备）：
 ```

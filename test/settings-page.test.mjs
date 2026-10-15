@@ -133,7 +133,7 @@ async function bindingSection() {
     if (path === ROUTES.refresh) return failure
       ? Response.json({error: {code: 'CORE_UPSTREAM_UNAVAILABLE'}}, {status: 503})
       : Response.json({...core.state(), session: {...core.service.getSession(), bound}, account: bound ? {provider: 'github', displayName: 'fixture-bound-account'} : null});
-    if (path === ROUTES.points) return Response.json({status: 'ready', bindingStatus: bound ? 'BOUND' : 'UNBOUND', totalPoints: 0, pendingTotal: 0, hanas: [], prompt: {show: false}});
+    if (path === ROUTES.points) return Response.json({status: 'ready', reason: null, totalPoints: 0, pendingTotal: 0, hanas: [], bound, prompt: {show: false, shownAt: null}});
   });
   core = fixture.controller;
   const bind = () => elements(fixture.section.render()).find(e => e.type === 'button' && e.children.includes('去网站绑定')).props.onClick();
@@ -195,6 +195,27 @@ test('return refresh errors stay visible and the next focus can read the bound a
   assert.match(textIn(fixture.section.render()), /fixture-bound-account/);
   assert.doesNotMatch(textIn(fixture.section.render()), /CORE_UPSTREAM_UNAVAILABLE/);
 });
+
+for (const [bound, unboundLine, boundRow] of [[true, false, true], [false, true, false], [null, false, false]]) {
+  test(`granting consent and refreshing points keeps one bound state (Usage bound=${bound})`, async () => {
+    let core;
+    const fixture = await consentSection(path => {
+      if (core && path === ROUTES.state) return Response.json({...core.state(), session: {...core.service.getSession(), bound}, account: bound ? {provider: 'github', displayName: 'fixture-bound-account'} : null});
+      // A stale custody view must not leak into the client: points carry no binding fact of their own.
+      if (path === ROUTES.points) return Response.json({status: 'ready', reason: null, bindingStatus: bound ? 'UNBOUND' : 'BOUND', totalPoints: 0, pendingTotal: 0, hanas: [], bound: !bound, prompt: {show: false, shownAt: null}});
+    });
+    core = fixture.controller;
+    switchIn(fixture.section).props.onChange({currentTarget: {checked: true}});
+    await settle();
+    const tree = fixture.section.render();
+    assert.equal(switchIn(fixture.section).props.checked, true);
+    assert.equal(elements(tree).find(e => 'data-hanamesh-core-bound' in e.props).props['data-hanamesh-core-bound'], String(bound));
+    assert.equal(/已绑定到 GitHub 账号/.test(textIn(tree)), boundRow);
+    assert.equal(/只累计、暂不可领/.test(textIn(tree)), unboundLine);
+    fixture.cleanup();
+    await core.dispose();
+  });
+}
 
 test('consent UI reads the saved grant and withdrawal through Core routes', async () => {
   const {section, controller, memory} = await consentSection();
