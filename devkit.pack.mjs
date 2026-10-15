@@ -19,7 +19,7 @@ export const packConfig = {
   },
   consumer: {
     // The consumer stands in for the DSH host: it supplies the published peers and the host packages' own peers.
-    packageJson: {private: true, type: 'module', dependencies: {'hanamesh-core': 'file:' + tarball, ...source.peerDependencies, '@types/node': '24.13.4'}},
+    packageJson: {private: true, type: 'module', dependencies: {'hanamesh-core': 'file:' + tarball, ...Object.fromEntries(Object.keys(source.peerDependencies).map(name=>[name,source.devDependencies[name]])), '@types/node': '24.13.4'}},
     javascript: (await readFile(new URL('./devkit.consumer.mjs', import.meta.url), 'utf8')).replace("'__CORE_VERSION__'", JSON.stringify(source.version)),
     typescript: "import {name, apply} from 'hanamesh-core';\nconst pluginName: 'hanamesh-core' = name;\nvoid [pluginName, apply];\nimport type {HanaMeshCoreContract} from 'hanamesh-core/contract';\ndeclare const core: HanaMeshCoreContract;\nconst deviceId: string = core.getDeviceId();\nconst consent: 'granted' | 'withheld' = core.getConsent();\nconst signature: Uint8Array = core.sign(new Uint8Array());\nvoid [deviceId, consent, signature];\nimport {checkCoreService, type CoreHandshake} from 'hanamesh-core/contract';\nimport {runCoreProviderSuite, type CoreSuiteResult} from 'hanamesh-core/contract/suite';\nimport {createCoreProviderFixture} from 'hanamesh-core/contract/fixtures';\nconst handshake: CoreHandshake = checkCoreService(core);\nconst pending: Promise<CoreSuiteResult> = runCoreProviderSuite(createCoreProviderFixture());\nvoid [handshake, pending];\n",
   },

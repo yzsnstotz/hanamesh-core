@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, access, readdir} from 'node:fs/promises';
 import {join} from 'node:path';
+import semver from 'semver';
 
 const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 
-test('Core installs independently and pins its public official host peers', async () => {
+test('Core admits official rc.2 and compatible 0.2.x prereleases without admitting 0.3', async () => {
   const pkg = await readJson('package.json');
   assert.equal(pkg.name, 'hanamesh-core');
   assert.equal(pkg.private, undefined);
@@ -13,7 +14,13 @@ test('Core installs independently and pins its public official host peers', asyn
   assert.deepEqual(pkg.dependencies, {semver: '7.7.2'}); // D-3 / HM-4: semver is the only runtime dependency
   assert.equal(pkg.dsh.bundle.patch, './profile/cordis.patch.yml');
   for (const [name, version] of Object.entries(pkg.peerDependencies)) {
-    if (name.startsWith('@deepseek-ai/')) assert.equal(version, name.endsWith('/cordis') ? '4.0.5-alpha.1' : '0.2.1-alpha.2');
+    if (name.startsWith('@deepseek-ai/dsh-')) {
+      for (const host of ['0.2.0-rc.2','0.2.0','0.2.1-alpha.1','0.2.1-alpha.9','0.2.1','0.2.9-alpha.1','0.2.99']) assert.equal(semver.satisfies(host,version,{includePrerelease:true}),true,`${name} rejects ${host}`);
+      for (const host of ['0.2.0-rc.1','0.1.9','0.3.0-alpha.1','0.3.0','1.0.0']) assert.equal(semver.satisfies(host,version,{includePrerelease:true}),false,`${name} admits ${host}`);
+      for (const host of ['0.2.0-rc.2','0.2.1-alpha.2']) assert.equal(semver.satisfies(host,version),true,`normal package resolver rejects ${host}`);
+    }
+    if (name==='@deepseek-ai/cordis') for (const host of ['4.0.4','4.0.5-alpha.1','4.0.5']) assert.equal(semver.satisfies(host,version),true);
+    if (pkg.devDependencies[name] && name.startsWith('@deepseek-ai/')) assert.ok(semver.valid(pkg.devDependencies[name]),'development input remains exact');
   }
   assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
   assert.doesNotMatch(await readFile('pnpm-lock.yaml', 'utf8'), /file:vendor\/siblings/);
@@ -84,4 +91,11 @@ test('consistency declaration is renamed to core', async () => {
   assert.equal(consistency.boundaries.length, 1);
   assert.match(consistency.groups[0].medium, /^storage-domain:hanamesh_core$/);
   assert.match(consistency.groups[1].medium, /^storage-domain:hanamesh_core_health$/);
+});
+
+test('settings about text matches package and describes support instead of a guessed running host', async () => {
+  const pkg = await readJson('package.json');
+  const client = await readFile(new URL('../src/client/index.ts', import.meta.url), 'utf8');
+  assert.ok(client.includes(`hanamesh-core ${pkg.version} · 支持 DSH 0.2.x`));
+  assert.ok(!client.includes('· DSH 0.2.1-alpha.2'));
 });

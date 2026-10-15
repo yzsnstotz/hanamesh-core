@@ -1,8 +1,8 @@
-# hanamesh-core · 0.3.4
+# hanamesh-core · 0.3.7
 
 Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；Usage/AppHost独立安装，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
 
-固定官方D7目标为Desktop/DSH0.2.1-alpha.2、Cordis4.0.5-alpha.1；正常Desktop包管理使用bundled pnpm11.28.5默认政策。Desktop初始化后须完全退出，管理程序用其公开CLI `dsh plugin --profile desktop add <已核验的Core候选tgz>`安装并重开。当前0.3.4是本地候选版本，本文不宣称npm发布或真实产品已验收。不能用旧rc.2 profile证明此组合。
+宿主兼容目标为用户可安装的官方 Desktop/DSH 0.2.0-rc.2 起的0.2.x（包含0.2.1-alpha.x）。公开 DSH peer 使用范围，精确版本仅保留在开发/构建输入。DSH 管理器按 includePrerelease=true 检查，另列0.2.1预发布比较项以兼容普通包管理器；上限0.3.0-0排除下一minor的预发布。实际桌面测试结果见 docs/acceptance/dsh-rc2-compat-20261015.md，不把声明当运行证明。
 
 Core首次激活前，由管理程序配置本轮loopback/null origins与环境内sharedIdentityDir、隔离HOME/DSH_HOME/用户数据并清继承凭据；正常profile配置输入见[API.md](docs/API.md)。出厂合法默认值保持。设备共享路径在身份行可见，预算区只展示具名数值。安装和真实resolved版本/路径须保留收据，声明文本不当安装证据。
 
@@ -10,7 +10,7 @@ Core首次激活前，由管理程序配置本轮loopback/null origins与环境�
 
 ## 依赖与构建
 
-Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`。固定 D7 上游 `d743267388641bc76f17c45ce8b4c231aed1d32c` 的官方宿主 peer 精确钉 `@deepseek-ai/cordis@4.0.5-alpha.1` 与实际使用的 `@deepseek-ai/dsh-*@0.2.1-alpha.2`；React `18.3.1` 与 Zod `4.5.4` 由公开依赖闭包供给。Core 不 import Usage/AppHost。
+Node `24.13.1`、pnpm `10.33.0`、TypeScript `5.9.3`。开发输入固定公开 alpha.2/Cordis4.0.5-alpha.1，宿主peer放行rc.2及0.2.x；Cordis覆盖实际rc.2的4.0.4与alpha的4.0.5-alpha.1，React18与Zod4保持同major范围。Core 不 import Usage/AppHost。
 
 `@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2` 是 connection 公开类型的活动依赖，和 scope/storage 一起明确列入本包宿主 peer 与开发依赖；干净消费者只供给已声明的宿主依赖。无运行时补丁，构建不跳过库类型检查。构建使用实际公开官方包；历史 DSH 0.1.5-alpha.1 类型快照已归档到 `docs/archive/host-api-dsh-0.1.5-alpha.1/`，不参与构建与发布。版本范围判断用正常依赖 `semver@7.7.2`，不再随包携带复制件。
 

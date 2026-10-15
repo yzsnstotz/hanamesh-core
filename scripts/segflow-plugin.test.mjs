@@ -100,7 +100,7 @@ async function connect(port, signal) {
 test('candidate declares its official host type closure without runtime contracts',async()=>{
   const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
   for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) assert.equal(pkg[section]?.['@hanamesh/api-contracts'],undefined,section);
-  for(const name of ['@deepseek-ai/dsh-client-connection','@deepseek-ai/dsh-storage-domain','@deepseek-ai/dsh-typert-protocol','@deepseek-ai/dsh-scope','@deepseek-ai/dsh-storage']) assert.equal(pkg.peerDependencies[name],'0.2.1-alpha.2');
+  for(const name of ['@deepseek-ai/dsh-client-connection','@deepseek-ai/dsh-storage-domain','@deepseek-ai/dsh-typert-protocol','@deepseek-ai/dsh-scope','@deepseek-ai/dsh-storage']) assert.ok(['0.2.0-rc.2','0.2.1-alpha.2'].every(version=>semver.satisfies(version,pkg.peerDependencies[name],{includePrerelease:true})));
 });
 
 test('installed Core provides native identity, consent and visible state-read failure', {timeout:TEST_TIMEOUT_MS},async t=>{
@@ -119,7 +119,7 @@ test('installed Core provides native identity, consent and visible state-read fa
   inside(await realpath(initial.providerPackagePath));
   assert.equal(initial.providerVersion,'0.3.4');
   const candidate=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
-  for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.equal(initial.resolvedPeers[name]?.version,version,`Actual resolved peer ${name} must match the formal host combination`);
+  for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.ok(semver.satisfies(initial.resolvedPeers[name]?.version??'',version,{includePrerelease:true}),`Actual resolved peer ${name} must satisfy its supported host range`);
   const installedRoot=new URL('./',pathToFileURL(initial.providerPackagePath));
   for(const file of ['package.json','lib/dsh.mjs','lib/controller.js','lib/contract.js','lib/contract-fixtures.js','types/index.d.ts','profile/cordis.patch.yml']) {
     const expected=await readFile(new URL('../'+file,import.meta.url));
@@ -239,7 +239,7 @@ test('a normally installed incompatible suite component has an explicit native d
   const actual=JSON.parse(await readFile(join(envDir,'core-provider-observation.json'),'utf8'));
   assert.equal(actual.evidence,'REAL_CORDIS_INJECTION_TEST_OBSERVER');assert.equal(actual.protocolVersion,'1');assert.equal(actual.providerVersion,'0.3.4');assertCallExamples(actual.callExamples);
   const candidate=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
-  for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.equal(actual.resolvedPeers[name]?.version,version);
+  for(const [name,version] of Object.entries(candidate.peerDependencies)) assert.ok(semver.satisfies(actual.resolvedPeers[name]?.version??'',version,{includePrerelease:true}));
   const row=actual.callExamples.health.components.find(component=>component.id===setup.componentId);
   assert.equal(row?.moduleName,pkg.name);assert.equal(row.version,pkg.version);
   assert.equal(row.status,'incompatible');assert.equal(semver.satisfies(pkg.version,row.requiredRange),false);
