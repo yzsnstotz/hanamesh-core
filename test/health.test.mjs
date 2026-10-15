@@ -16,8 +16,8 @@ test('shipped suite profile accepts the current usage and app-host release lines
   const at = (usage, appHost) => evaluate(profile, [{kind: 'present', version: usage, phase: 'active'}, {kind: 'present', version: appHost, phase: 'active'}], 1).components.map(row => row.status);
   for (const usage of ['0.2.0-rc.26', '0.2.0-rc.27', '0.2.0', '0.2.5']) assert.equal(at(usage, '0.5.9')[0], 'satisfied', usage);
   for (const usage of ['0.2.0-rc.25', '0.2.0-rc.10', '0.3.0', '0.3.0-rc.1']) assert.equal(at(usage, '0.5.9')[0], 'incompatible', usage);
-  for (const appHost of ['0.5.9', '0.5.12']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'satisfied', appHost);
-  for (const appHost of ['0.5.8', '0.6.0', '0.2.0-rc.2']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'incompatible', appHost);
+  for (const appHost of ['0.5.9', '0.5.12', '0.6.0', '0.6.3']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'satisfied', appHost);
+  for (const appHost of ['0.5.8', '0.7.0', '0.2.0-rc.2']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'incompatible', appHost);
 });
 
 test('notice components distinguish present, missing and disabled without restricting healthy core', async () => {

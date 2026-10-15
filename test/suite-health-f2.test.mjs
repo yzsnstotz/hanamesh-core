@@ -23,7 +23,8 @@ const seeds = [
 
 for (const [name, version, omittedEntry, expected] of [
   ['current five seeds', '0.5.9', false, 'satisfied'],
-  ['next major line', '0.6.0', false, 'incompatible'],
+  ['app-host 0.6.0 (current main)', '0.6.0', false, 'satisfied'],
+  ['next line', '0.7.0', false, 'incompatible'],
   ['stale rc.2 pin', '0.2.0-rc.2', false, 'incompatible'],
   ['legacy pin is rejected', '0.1.0-rc.41', false, 'incompatible'],
   ['missing version', undefined, false, 'unreadable'],
@@ -62,11 +63,11 @@ for (const [name, version, omittedEntry, expected] of [
     assert.deepEqual(health.components.map(row => row.id), ['usage', 'app-host']);
     assert.equal(health.components[0].status, 'satisfied');
     const appHost = health.components[1];
-    assert.equal(appHost.requiredRange, '>=0.5.9 <0.6.0');
+    assert.equal(appHost.requiredRange, '>=0.5.9 <0.7.0');
     assert.equal(appHost.status, expected);
     assert.equal(appHost.nextStep, expected === 'satisfied' ? null : 'restore-pinned-component');
     const state = await (await handle(new Request(`${origin}${ROUTES.state}`))).json();
     assert.equal(state.components[1].status, expected);
-    assert.equal(state.components[1].requiredRange, '>=0.5.9 <0.6.0');
+    assert.equal(state.components[1].requiredRange, '>=0.5.9 <0.7.0');
   });
 }
