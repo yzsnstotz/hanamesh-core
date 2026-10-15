@@ -62,7 +62,7 @@ test('P01-U04: native points distinguish typed totals from signed device event h
   assert.match(source, /积分来源（按类型汇总）/);
   assert.match(source, /filter\(\(\[, value\]\) => value !== 0\)/);
   assert.match(source, /\/api\/hanamesh\/core\/activity/);
-  assert.match(source, /本设备近 90 天贡献事件/);
+  assert.match(source, /本设备近 \$\{windowDays\} 天贡献事件/);
   assert.match(source, /最新事件（新到旧）/);
   assert.match(source, /事件不等于逐笔积分/);
   assert.match(source, /尚未抵达最新/);
@@ -108,4 +108,11 @@ test('standalone Core explains optional components without instructing duplicate
   const bundle = await readFile('lib/client.js', 'utf8');
   assert.doesNotMatch(bundle, /套件与单包互斥|duplicate loader entry id|@hanamesh\/lib-provision/);
   assert.match(bundle, /可分别安装/);
+});
+
+test('the consent switch says which server it will register with and send to, and how to change it first', async () => {
+  const source = await readFile('src/client/index.ts', 'utf8');
+  assert.match(source, /开启后会立即向 \$\{state\.serverOrigin\}/);
+  assert.match(source, /要换服务端，请先在上方「服务端」里改好再开启/);
+  assert.match(source, /没有设置服务端：开启后只在本机记录，不发送/);
 });

@@ -5,7 +5,7 @@ import {createHash, createPublicKey, verify} from 'node:crypto';
 import {SessionController} from '../lib/controller.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
 import {createRouteHandler} from '../lib/routes.js';
-import {memoryStore} from './fixtures/core-store.mjs';
+import {grantedSnapshot, memoryStore} from './fixtures/core-store.mjs';
 
 const SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 const publicKeyOf = controller => createPublicKey({key: Buffer.concat([SPKI_PREFIX, Buffer.from(controller.service.getPublicKey(), 'base64url')]), format: 'der', type: 'spki'});
@@ -27,7 +27,7 @@ function identityStub() {
 
 test('registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly what identity verifies', async () => {
   const remote = identityStub();
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: remote.fetcher});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: remote.fetcher});
   await controller.register();
   const body = JSON.parse(remote.calls[1].init.body);
   for (const call of remote.calls) assert.equal(new Headers(call.init.headers).get('origin'), 'https://server.example', 'identity assertMutationOrigin needs Origin = serverOrigin');
@@ -38,7 +38,7 @@ test('registration signs utf8(nonce ‖ publicKey-as-base64url-string), exactly 
 });
 
 test('signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NONCE|sha256(body)`', async () => {
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: async () => { throw new Error('unused'); }});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: async () => { throw new Error('unused'); }});
   const body = new TextEncoder().encode('{"a":1}');
   const before = Date.now();
   const headers = await controller.service.signRequest({method: 'post', path: '/v1/usage/events', body});
@@ -59,7 +59,7 @@ test('signRequest emits Unix-millisecond timestamp and `METHOD|PATH|TIMESTAMP|NO
 
 test('bind-link returns the website /me/bind URL carrying deviceId, bind nonce and its device signature', async () => {
   const remote = identityStub();
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: 'https://market.example'}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: remote.fetcher});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: 'https://market.example'}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: remote.fetcher});
   const handler = createRouteHandler(controller);
   const response = await handler(new Request('http://127.0.0.1:1/api/hanamesh/core/bind-link', {method: 'POST', headers: {origin: 'http://127.0.0.1:1', host: '127.0.0.1:1'}}));
   assert.equal(response.status, 200);
@@ -72,7 +72,7 @@ test('bind-link returns the website /me/bind URL carrying deviceId, bind nonce a
   assert.ok(Date.parse(expiresAt) > Date.now());
   // identity links.bindDevice: validSignature(row.publicKey, input.nonce, input.signature)
   assert.equal(verifies(controller, parsed.searchParams.get('nonce'), parsed.searchParams.get('signature')), true);
-  const offline = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher: remote.fetcher});
+  const offline = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher: remote.fetcher});
   await assert.rejects(offline.bindLink(), error => error?.code === 'CORE_URL_NOT_ALLOWED');
 });
 
@@ -80,7 +80,7 @@ test('contributions response `bound` flows into getSession().bound', async () =>
   const fetcher = async url => String(url).includes('/v1/usage/me/contributions')
     ? Response.json({window: {}, bound: true, deviceCount: 1, byHana: [{hanaRef: 'x', actions: {install: 1, open: 0, use: 0, uninstall: 0}, devices: 1}], sources: {events: 1, rollups: 0}})
     : Response.json({}, {status: 500});
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher});
   assert.equal(controller.service.getSession().bound, null);
   await controller.refreshContributions();
   assert.equal(controller.service.getSession().bound, true);
@@ -89,7 +89,7 @@ test('contributions response `bound` flows into getSession().bound', async () =>
 test('B7: contributions `account` {provider:github, displayName} rides into state.account only while bound; malformed or absent -> null', async () => {
   let payload = {window: {}, bound: true, deviceCount: 1, account: {provider: 'github', displayName: 'yzsnstotz', token: 'must-not-leak'}, byHana: [], sources: {events: 0, rollups: 0}};
   const fetcher = async url => String(url).includes('/v1/usage/me/contributions') ? Response.json(payload) : Response.json({}, {status: 500});
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher});
   assert.equal(controller.state().account, null);
   await controller.refresh();
   assert.deepEqual(controller.state().account, {provider: 'github', displayName: 'yzsnstotz'});
@@ -115,7 +115,7 @@ test('POST /api/hanamesh/core/refresh bypasses the contribution cache after a bi
     contributionCalls += 1;
     return Response.json({window: {}, bound, deviceCount: 1, byHana: [{hanaRef: 'x', actions: {install: 1, open: 0, use: 0, uninstall: 0}, devices: 1}], sources: {events: 1, rollups: 0}});
   };
-  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {fetcher});
+  const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: null}, memoryStore(grantedSnapshot(INITIAL_CORE_SNAPSHOT)).store, {fetcher});
   await controller.refreshContributions();
   assert.equal(controller.service.getSession().bound, false);
   bound = true;

@@ -1,9 +1,11 @@
 import {SessionController} from './controller.js';
 import {CoreError, safeError} from './errors.js';
+import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
   consent: '/api/hanamesh/core/consent',
+  server: '/api/hanamesh/core/server',
   register: '/api/hanamesh/core/device/register',
   health: '/api/hanamesh/core/health',
   points: '/api/hanamesh/core/points',
@@ -25,7 +27,7 @@ function activityQuery(url: URL): {from?: string; to?: string; after?: string} {
   const to = url.searchParams.get('to');
   const after = url.searchParams.get('after');
   const canonical = (value: string | null): value is string => value !== null && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString() === value;
-  if (!canonical(from) || !canonical(to) || Date.parse(to) <= Date.parse(from) || Date.parse(to) - Date.parse(from) > 90 * 86400000 || Date.parse(to) > Date.now() + 60_000 ||
+  if (!canonical(from) || !canonical(to) || Date.parse(to) <= Date.parse(from) || Date.parse(to) - Date.parse(from) > USAGE_MAX_WINDOW_DAYS * 86400000 || Date.parse(to) > Date.now() + 60_000 ||
       (after !== null && !/^[A-Za-z0-9_-]{1,512}$/u.test(after))) throw new CoreError('CORE_INPUT_INVALID', 400);
   return {...(after === null ? {} : {after}), from, to};
 }
@@ -72,6 +74,12 @@ export function createRouteHandler(controller: SessionController, admission: {re
         const target = (parsed as {url?: unknown}).url;
         if (typeof target !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
         return response(controller.openExternal(target));
+      }
+      if (url.pathname === ROUTES.server) {
+        if (!('serverOrigin' in parsed)) throw new CoreError('CORE_INPUT_INVALID', 400);
+        const serverOrigin = (parsed as {serverOrigin?: unknown}).serverOrigin;
+        if (serverOrigin !== null && typeof serverOrigin !== 'string') throw new CoreError('CORE_INPUT_INVALID', 400);
+        return response(await controller.setServerOrigin(serverOrigin));
       }
       if (!('state' in parsed)) throw new CoreError('CORE_INPUT_INVALID', 400);
       const state = (parsed as {state?: unknown}).state;

@@ -10,7 +10,7 @@
 | `getConsent()` | `() => 'granted' \| 'withheld'` | 当前同意状态（本机真相） | 是 |
 | `onConsentChange(listener)` | `(listener: (state, changedAt: string) => void) => () => void` | 订阅；返回取消函数；注册时不回放当前值 | 是 |
 | `getSession()` | `() => SessionSnapshot` | 设备注册观察；可能陈旧，不是授权证明 | 是（只读展示） |
-| `getServerOrigin()` | `() => string \| null` | 配置的 Server origin；null = 离线 | 是 |
+| `getServerOrigin()` | `() => string \| null` | 生效的 Server origin（0.3.4：设置页地址 ?? 配置）；null = 离线 | 是 |
 | `getHealth()` | `() => HealthSnapshot` | 组件健康快照 | 否 |
 
 契约明确不暴露私钥、PKCS8、token、cookie、nonce、传输实例或 storage-domain 写接口。
@@ -85,7 +85,7 @@ const provider = createCoreProviderFixture({initialConsent: 'withheld'});
 await provider.setConsent('granted');
 ```
 
-卡片中的 `getConsent` 错误来自调用前的服务握手，是 `{status,reason,...}`，不能当成 getConsent 抛出的异常。既有握手还返回 `CORE_NOT_OBJECT`。卡片声明的运行错误保留原码：`CORE_NOT_READY`（503）、`CORE_DEVICE_CORRUPT`（500）；后者对应设备密钥读取/签名的损坏守卫。现有实现的输入、销毁及可选 server nonce 路径守卫另列在 `implementationErrors`，不隐藏为卡片错误。`getServerOrigin()` 的产品实现直接返回配置的 `string | null`（销毁后仍如此），没有就绪异常守卫：`CORE_NOT_READY` 是卡片声明的可用性错误，`implementationErrors: []` 表示当前 getter 不抛此码。离线的 null 不是错误；`getSession()` 为可能陈旧的观察，不是授权证明。
+卡片中的 `getConsent` 错误来自调用前的服务握手，是 `{status,reason,...}`，不能当成 getConsent 抛出的异常。既有握手还返回 `CORE_NOT_OBJECT`。卡片声明的运行错误保留原码：`CORE_NOT_READY`（503）、`CORE_DEVICE_CORRUPT`（500）；后者对应设备密钥读取/签名的损坏守卫。现有实现的输入、销毁及可选 server nonce 路径守卫另列在 `implementationErrors`，不隐藏为卡片错误。`getServerOrigin()` 的产品实现直接返回生效的 `string | null`（0.3.4 起 = Core 设置页保存的地址 ?? 插件配置；更换后下一次调用即返回新值；销毁后仍如此），没有就绪异常守卫：`CORE_NOT_READY` 是卡片声明的可用性错误，`implementationErrors: []` 表示当前 getter 不抛此码。离线的 null 不是错误；`getSession()` 为可能陈旧的观察，不是授权证明。
 
 J1.S4 起 `CORE_NOT_READY` 有了具体触发条件：本机共享设备身份文件不可读或损坏时，`getDeviceId` / `getPublicKey` / `sign` / `signRequest` / `getSession` 都抛 `CORE_NOT_READY`（503），Core 不会新建身份顶替；原因与文件位置在 `GET state` 的 `identity` 字段与设置段里（见 API.md「本机共享设备身份」）。修复后经 `POST refresh` 恢复，无需重启。合约形状与错误码集合不变。
 
@@ -120,7 +120,7 @@ Cordis服务名`hanameshCore`；`protocolVersion`实际为字符串`'1'`，不�
 |getConsent|无|同步'granted'\|'withheld'|直接读当前存储值；CORE_ABSENT/PROTOCOL_UNSUPPORTED/METHOD_MISSING是调用前诊断，不是此getter抛出的业务错误|
 |onConsentChange|(state,changedAt)=>void|同步返回()=>void退订函数；不返回Promise|没有初始回放；两个位置参数不是单一对象；监听器异常隔离，见下节|
 |getSession|无|同步只读SessionSnapshot|CORE_NOT_READY/CORE_DISPOSED；不要求已注册或已同意|
-|getServerOrigin|无|同步规范化origin string\|null|实际无条件读取配置，包括身份失败和释放后；null表示本地离线配置，无自动网络探测|
+|getServerOrigin|无|同步规范化origin string\|null|实际无条件读取生效地址（0.3.4：设置页地址 ?? 配置），包括身份失败和释放后；null表示本地离线配置，无自动网络探测|
 |getHealth|无|同步HealthSnapshot|可选只读健康视图，不是授权依据；尚未检查时返回repair/CHECK_NOT_RUN|
 
 **逐方法适用条件（Q-212已澄清）**：旧摘要getServerOrigin合列CORE_NOT_READY，按上表将设备准备错误限于实际受保护调用；现有配置getter无条件string或null，保留旧摘要与协议，不新增抛错，不把null当网络或身份失败。协议诊断与getConsent实际调用也须分开。不存在“主体未知原因”新字段，不为消费者私有实现新增字段/错误。

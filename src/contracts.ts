@@ -17,6 +17,9 @@ export interface PluginConfig {
   readonly activityPageBudget?: number;
   readonly activityDisplayRows?: number;
   readonly catalogConcurrency?: number;
+  /** Days of raw usage events that contributions and activity read, default 90, integer 1..90 (C-USAGE caps a
+   *  raw-event window at 90 days; the server's own retention is a server setting it does not publish). */
+  readonly contributionWindowDays?: number;
 
   /** Absolute root of the machine-wide shared identity (`<root>/identity/device.json`). null/absent → env
    *  `HANAMESH_SHARED_HOME`, then `~/.hanamesh-shared`. Every client on the machine must resolve the same root. */
@@ -46,6 +49,9 @@ export interface StoredCoreSnapshot {
   /** J1.S4: this client's own identity that lost to an existing shared identity. Kept (not deleted) so it stays
    *  recoverable; optional so pre-J1.S4 snapshots stay loadable. */
   readonly replacedDevices?: ReadonlyArray<NonNullable<StoredCoreSnapshot['device']> & {readonly replacedAt: string}>;
+  /** The server address set in Core's own settings page; null/absent = the plugin config `serverOrigin`.
+   *  Optional so snapshots written before 0.3.4 stay loadable. */
+  readonly serverOriginOverride?: string | null;
 }
 
 export interface CoreStore {
@@ -62,4 +68,5 @@ export const INITIAL_CORE_SNAPSHOT: StoredCoreSnapshot = Object.freeze({
   consent: Object.freeze({state: 'withheld', changedAt: null}),
   serverObservation: Object.freeze({reachable: null, checkedAt: null}),
   pointsBindPromptShownAt: null,
+  serverOriginOverride: null,
 });

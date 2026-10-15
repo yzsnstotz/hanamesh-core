@@ -4,7 +4,7 @@ import {createHash, createPublicKey, verify} from 'node:crypto';
 import {SessionController} from '../lib/controller.js';
 import {createRouteHandler, ROUTES} from '../lib/routes.js';
 import {INITIAL_CORE_SNAPSHOT} from '../lib/contracts.js';
-import {memoryStore} from './fixtures/core-store.mjs';
+import {grantedSnapshot, memoryStore} from './fixtures/core-store.mjs';
 import {unboundZero, boundZero} from './fixtures/points-contract-examples.mjs';
 
 const carrier = 'http://127.0.0.1:41001';
@@ -22,7 +22,7 @@ const POINTS_BODY = {
 /** A controller whose device is already registered, consent granted, and whose upstream answers the two signed reads. */
 async function ready(options = {}) {
   const {points = POINTS_BODY, pointsStatus = 200, bound = false, initial = INITIAL_CORE_SNAPSHOT, contributions = true, profiles = {}, events = []} = options;
-  const memory = memoryStore(initial);
+  const memory = memoryStore(grantedSnapshot(initial));
   const calls = [];
   const fetcher = async (url, init) => {
     const path = new URL(String(url)).pathname;
@@ -51,8 +51,7 @@ async function ready(options = {}) {
     return new Response('unexpected', {status: 404});
   };
   const controller = await SessionController.create({serverOrigin: 'https://server.example', websiteOrigin: 'https://web.example'}, memory.store, {fetcher});
-  await controller.register();
-  await controller.setConsent('granted');
+  await controller.register(); // consent is granted in the initial snapshot (0.3.4: registration waits for consent)
   await controller.refreshContributions();
   return {controller, memory, calls, handle: createRouteHandler(controller)};
 }
