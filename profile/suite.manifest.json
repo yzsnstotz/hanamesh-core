@@ -3,14 +3,14 @@
   "id": "hanamesh-suite",
   "core": {
     "name": "hanamesh-core",
-    "version": "0.3.13",
+    "version": "0.3.14",
     "repository": "https://github.com/yzsnstotz/hanamesh-core"
   },
   "components": [
     {
       "id": "usage",
       "moduleName": "hanamesh-usage",
-      "versionRange": ">=0.2.0-rc.26 <0.3.0",
+      "versionRange": ">=0.2.0-rc.26 <0.3.0 || >=0.3.0-rc.1 <0.4.0",
       "repository": "https://github.com/yzsnstotz/hanamesh-usage"
     },
     {

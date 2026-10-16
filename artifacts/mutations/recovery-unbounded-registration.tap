@@ -2,33 +2,33 @@ TAP version 13
 # Subtest: live server forgetting a registered device recovers same key and exposes rebind notice
 ok 1 - live server forgetting a registered device recovers same key and exposes rebind notice
   ---
-  duration_ms: 14.624917
+  duration_ms: 14.866291
   type: 'test'
   ...
 # Subtest: the existing contribution timer detects server loss without address edits or a manual refresh
 ok 2 - the existing contribution timer detects server loss without address edits or a manual refresh
   ---
-  duration_ms: 23.913417
+  duration_ms: 45.48725
   type: 'test'
   ...
 # Subtest: revoked and replay errors never trigger automatic re-registration
 ok 3 - revoked and replay errors never trigger automatic re-registration
   ---
-  duration_ms: 1.437834
+  duration_ms: 1.644084
   type: 'test'
   ...
 # Subtest: concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
 ok 4 - concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
   ---
-  duration_ms: 1.023
+  duration_ms: 1.087833
   type: 'test'
   ...
 # Subtest: concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
 not ok 5 - concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
   ---
-  duration_ms: 3.253792
+  duration_ms: 3.076583
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-t3fnFf/test/registration-recovery.test.mjs:36:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-MM31gx/test/registration-recovery.test.mjs:36:1'
   failureType: 'testCodeFailure'
   error: |-
     no registration loop within contributionIntervalMs
@@ -41,26 +41,26 @@ not ok 5 - concurrent denied reads re-register once and unresolved authenticatio
   actual: 3
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-t3fnFf/test/registration-recovery.test.mjs:38:374)
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-MM31gx/test/registration-recovery.test.mjs:38:374)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
 # Subtest: withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
 ok 6 - withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
   ---
-  duration_ms: 0.912625
+  duration_ms: 0.968166
   type: 'test'
   ...
 # Subtest: temporary Identity failure after registration is retried even when contributions already succeeds
 ok 7 - temporary Identity failure after registration is retried even when contributions already succeeds
   ---
-  duration_ms: 27.581959
+  duration_ms: 28.302083
   type: 'test'
   ...
 # Subtest: withdrawal while signing an Identity recovery read stops that read
 ok 8 - withdrawal while signing an Identity recovery read stops that read
   ---
-  duration_ms: 0.671917
+  duration_ms: 0.695958
   type: 'test'
   ...
 1..8
@@ -71,4 +71,4 @@ ok 8 - withdrawal while signing an Identity recovery read stops that read
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 107.653375
+# duration_ms 138.576542

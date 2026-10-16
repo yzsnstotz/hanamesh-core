@@ -2,15 +2,15 @@ TAP version 13
 # Subtest: mismatch rejected
 not ok 1 - mismatch rejected
   ---
-  duration_ms: 10.994708
+  duration_ms: 10.341708
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-SJm9DE/test/mutations/registration-device-id.test.mjs:1:176'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-JwQ6Md/test/mutations/registration-device-id.test.mjs:1:176'
   failureType: 'testCodeFailure'
   error: 'Missing expected rejection.'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
-    async TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-SJm9DE/test/mutations/registration-device-id.test.mjs:1:388)
+    async TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-JwQ6Md/test/mutations/registration-device-id.test.mjs:1:388)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
@@ -22,4 +22,4 @@ not ok 1 - mismatch rejected
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 46.761667
+# duration_ms 79.709833

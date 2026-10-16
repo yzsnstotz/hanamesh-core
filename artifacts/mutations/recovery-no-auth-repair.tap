@@ -2,9 +2,9 @@ TAP version 13
 # Subtest: live server forgetting a registered device recovers same key and exposes rebind notice
 not ok 1 - live server forgetting a registered device recovers same key and exposes rebind notice
   ---
-  duration_ms: 15.347042
+  duration_ms: 14.473167
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:24:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:24:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
@@ -17,16 +17,16 @@ not ok 1 - live server forgetting a registered device recovers same key and expo
   actual: 1
   operator: 'strictEqual'
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:25:152)
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:25:152)
     async Test.run (node:internal/test_runner/test:1110:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
   ...
 # Subtest: the existing contribution timer detects server loss without address edits or a manual refresh
 not ok 2 - the existing contribution timer detects server loss without address edits or a manual refresh
   ---
-  duration_ms: 1503.140375
+  duration_ms: 1503.122
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:27:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:27:1'
   failureType: 'testCodeFailure'
   error: 'automatic recovery did not run'
   code: 'ERR_ASSERTION'
@@ -35,101 +35,105 @@ not ok 2 - the existing contribution timer detects server loss without address e
   actual: false
   operator: '=='
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:28:223)
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:28:223)
+    runNextTicks (node:internal/process/task_queues:64:5)
+    process.processTimers (node:internal/timers:538:9)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
 # Subtest: revoked and replay errors never trigger automatic re-registration
 not ok 3 - revoked and replay errors never trigger automatic re-registration
   ---
-  duration_ms: 1.019416
+  duration_ms: 1.309708
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:30:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:30:1'
   failureType: 'testCodeFailure'
   error: "Cannot read properties of null (reading 'state')"
   code: 'ERR_TEST_FAILURE'
   name: 'TypeError'
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:31:231)
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:31:231)
+    runNextTicks (node:internal/process/task_queues:64:5)
+    process.processTimers (node:internal/timers:538:9)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
 # Subtest: concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
 not ok 4 - concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
   ---
-  duration_ms: 1003.042709
+  duration_ms: 1001.651083
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:33:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:33:1'
   failureType: 'testCodeFailure'
   error: 'expected async boundary was not reached'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
     new AssertionError (node:internal/assert/assertion_error:380:5)
-    Timeout._onTimeout (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:8:134)
+    Timeout._onTimeout (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:8:134)
     listOnTimeout (node:internal/timers:605:17)
     process.processTimers (node:internal/timers:541:7)
   ...
 # Subtest: concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
 not ok 5 - concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
   ---
-  duration_ms: 1005.497084
+  duration_ms: 1002.805
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:36:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:36:1'
   failureType: 'testCodeFailure'
   error: 'expected async boundary was not reached'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
     new AssertionError (node:internal/assert/assertion_error:380:5)
-    Timeout._onTimeout (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:8:134)
+    Timeout._onTimeout (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:8:134)
     listOnTimeout (node:internal/timers:605:17)
     process.processTimers (node:internal/timers:541:7)
   ...
 # Subtest: withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
 not ok 6 - withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
   ---
-  duration_ms: 1005.259958
+  duration_ms: 1003.500792
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:40:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:40:1'
   failureType: 'testCodeFailure'
   error: 'expected async boundary was not reached'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
     new AssertionError (node:internal/assert/assertion_error:380:5)
-    Timeout._onTimeout (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:8:134)
+    Timeout._onTimeout (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:8:134)
     listOnTimeout (node:internal/timers:605:17)
     process.processTimers (node:internal/timers:541:7)
   ...
 # Subtest: temporary Identity failure after registration is retried even when contributions already succeeds
 not ok 7 - temporary Identity failure after registration is retried even when contributions already succeeds
   ---
-  duration_ms: 3.355625
+  duration_ms: 1.121917
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:56:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:56:1'
   failureType: 'testCodeFailure'
   error: "Cannot read properties of null (reading 'state')"
   code: 'ERR_TEST_FAILURE'
   name: 'TypeError'
   stack: |-
-    TestContext.<anonymous> (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:65:102)
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:65:102)
     async Test.run (node:internal/test_runner/test:1110:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
   ...
 # Subtest: withdrawal while signing an Identity recovery read stops that read
 not ok 8 - withdrawal while signing an Identity recovery read stops that read
   ---
-  duration_ms: 1002.3425
+  duration_ms: 1002.18025
   type: 'test'
-  location: '/Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:67:1'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:67:1'
   failureType: 'testCodeFailure'
   error: 'expected async boundary was not reached'
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   stack: |-
     new AssertionError (node:internal/assert/assertion_error:380:5)
-    Timeout._onTimeout (file:///Users/yzliu/work/projects/hanamesh/hanamesh-core/artifacts/devkit-mut-fF8tjc/test/registration-recovery.test.mjs:8:134)
+    Timeout._onTimeout (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-zFvlY4/test/registration-recovery.test.mjs:8:134)
     listOnTimeout (node:internal/timers:605:17)
     process.processTimers (node:internal/timers:541:7)
   ...
@@ -141,4 +145,4 @@ not ok 8 - withdrawal while signing an Identity recovery read stops that read
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 5578.983292
+# duration_ms 5575.395375

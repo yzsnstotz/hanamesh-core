@@ -14,8 +14,8 @@ active[1].version = '0.5.9';
 
 test('shipped suite profile accepts the current usage and app-host release lines, prereleases included', () => {
   const at = (usage, appHost) => evaluate(profile, [{kind: 'present', version: usage, phase: 'active'}, {kind: 'present', version: appHost, phase: 'active'}], 1).components.map(row => row.status);
-  for (const usage of ['0.2.0-rc.26', '0.2.0-rc.27', '0.2.0', '0.2.5']) assert.equal(at(usage, '0.5.9')[0], 'satisfied', usage);
-  for (const usage of ['0.2.0-rc.25', '0.2.0-rc.10', '0.3.0', '0.3.0-rc.1']) assert.equal(at(usage, '0.5.9')[0], 'incompatible', usage);
+  for (const usage of ['0.2.0-rc.26', '0.2.0-rc.27', '0.2.0', '0.2.5', '0.3.0-rc.1', '0.3.0']) assert.equal(at(usage, '0.5.9')[0], 'satisfied', usage);
+  for (const usage of ['0.2.0-rc.25', '0.2.0-rc.10', '0.3.1-rc.1', '0.4.0']) assert.equal(at(usage, '0.5.9')[0], 'incompatible', usage);
   for (const appHost of ['0.5.9', '0.5.12', '0.6.0', '0.6.3']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'satisfied', appHost);
   for (const appHost of ['0.5.8', '0.7.0', '0.2.0-rc.2']) assert.equal(at('0.2.0-rc.27', appHost)[1], 'incompatible', appHost);
 });
@@ -112,7 +112,7 @@ test('startup diagnostics never override version policy or echo unrecognized err
   assert.match(failed.components[0].reason, /startup-failed/);
   assert.match(failed.components[0].nextStep, /组件日志/);
   assert.doesNotMatch(JSON.stringify(failed), /private|owner|token/);
-  const incompatible = evaluate(profile, [{...active[0], version: '0.3.0', phase: 'failed', startupFailure: {code: 'invalid-record', domain: 'hanamesh_usage_events'}}, active[1]], 1);
+  const incompatible = evaluate(profile, [{...active[0], version: '0.4.0', phase: 'failed', startupFailure: {code: 'invalid-record', domain: 'hanamesh_usage_events'}}, active[1]], 1);
   assert.equal(incompatible.components[0].status, 'incompatible');
   assert.equal(incompatible.components[0].nextStep, 'restore-pinned-component');
 });

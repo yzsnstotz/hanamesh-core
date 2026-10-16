@@ -2,111 +2,189 @@ TAP version 13
 # Subtest: DSH adapter registration and disposal contract fixture (not real DSH)
 ok 1 - DSH adapter registration and disposal contract fixture (not real DSH)
   ---
-  duration_ms: 140.494333
+  duration_ms: 138.931542
   type: 'test'
   ...
 # Subtest: first initialization publishes one complete device snapshot and restart preserves id
 ok 2 - first initialization publishes one complete device snapshot and restart preserves id
   ---
-  duration_ms: 6.032791
+  duration_ms: 6.660542
   type: 'test'
   ...
 # Subtest: sign returns a verifiable Ed25519 signature and private key never reaches public projections
 ok 3 - sign returns a verifiable Ed25519 signature and private key never reaches public projections
   ---
-  duration_ms: 3.815416
+  duration_ms: 1.927583
   type: 'test'
   ...
 # Subtest: tampered public key makes every signature path fail closed
 ok 4 - tampered public key makes every signature path fail closed
   ---
-  duration_ms: 1.988292
+  duration_ms: 1.045167
   type: 'test'
   ...
 # Subtest: corrupt device rejected
 ok 5 - corrupt device rejected
   ---
-  duration_ms: 4.26775
+  duration_ms: 7.233417
   type: 'test'
   ...
 # Subtest: damage repairs
 ok 6 - damage repairs
   ---
-  duration_ms: 1.405583
+  duration_ms: 4.461708
   type: 'test'
   ...
 # Subtest: bind prompt shows at most once
 ok 7 - bind prompt shows at most once
   ---
-  duration_ms: 4.263208
+  duration_ms: 5.492542
   type: 'test'
   ...
 # Subtest: mismatch rejected
 ok 8 - mismatch rejected
   ---
-  duration_ms: 22.552167
+  duration_ms: 17.294625
   type: 'test'
   ...
 # Subtest: no premature registered publication
 ok 9 - no premature registered publication
   ---
-  duration_ms: 28.566291
+  duration_ms: 24.238542
   type: 'test'
   ...
 # Subtest: live server forgetting a registered device recovers same key and exposes rebind notice
 ok 10 - live server forgetting a registered device recovers same key and exposes rebind notice
   ---
-  duration_ms: 22.820209
+  duration_ms: 20.555958
   type: 'test'
   ...
 # Subtest: the existing contribution timer detects server loss without address edits or a manual refresh
 ok 11 - the existing contribution timer detects server loss without address edits or a manual refresh
   ---
-  duration_ms: 25.464834
+  duration_ms: 27.064416
   type: 'test'
   ...
 # Subtest: revoked and replay errors never trigger automatic re-registration
 ok 12 - revoked and replay errors never trigger automatic re-registration
   ---
-  duration_ms: 1.550166
+  duration_ms: 1.79
   type: 'test'
   ...
 # Subtest: concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
 ok 13 - concurrent unauthorized reads share one recovery and consent withdrawal stops the second registration POST
   ---
-  duration_ms: 1.033708
+  duration_ms: 1.090625
   type: 'test'
   ...
 # Subtest: concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
 ok 14 - concurrent denied reads re-register once and unresolved authentication has a visible bounded retry
   ---
-  duration_ms: 2.915584
+  duration_ms: 2.517208
   type: 'test'
   ...
 # Subtest: withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
 ok 15 - withdrawal while the recovery verification body is pending cannot publish recovery or retry contributions
   ---
-  duration_ms: 1.076208
+  duration_ms: 0.97375
   type: 'test'
   ...
 # Subtest: temporary Identity failure after registration is retried even when contributions already succeeds
 ok 16 - temporary Identity failure after registration is retried even when contributions already succeeds
   ---
-  duration_ms: 27.3425
+  duration_ms: 28.953041
   type: 'test'
   ...
 # Subtest: withdrawal while signing an Identity recovery read stops that read
 ok 17 - withdrawal while signing an Identity recovery read stops that read
   ---
-  duration_ms: 0.635083
+  duration_ms: 0.670958
   type: 'test'
   ...
-1..17
-# tests 17
+# Subtest: no source reports current requirements and completeness without treating normal health as complete
+ok 18 - no source reports current requirements and completeness without treating normal health as complete
+  ---
+  duration_ms: 10.624333
+  type: 'test'
+  ...
+# Subtest: whole tuple search avoids individually highest incompatible versions and forbids downgrade/no-op
+ok 19 - whole tuple search avoids individually highest incompatible versions and forbids downgrade/no-op
+  ---
+  duration_ms: 0.747834
+  type: 'test'
+  ...
+# Subtest: future Core without own manifest, wrong version, source mismatch, Node and required peers cannot upgrade
+ok 20 - future Core without own manifest, wrong version, source mismatch, Node and required peers cannot upgrade
+  ---
+  duration_ms: 1.850375
+  type: 'test'
+  ...
+# Subtest: stable declaration digest binds source/current versions/target facts and missing inventory fails closed
+ok 21 - stable declaration digest binds source/current versions/target facts and missing inventory fails closed
+  ---
+  duration_ms: 1.1885
+  type: 'test'
+  ...
+# Subtest: same Core version must search past the unchanged tuple for a compatible dependency upgrade
+ok 22 - same Core version must search past the unchanged tuple for a compatible dependency upgrade
+  ---
+  duration_ms: 0.292583
+  type: 'test'
+  ...
+# Subtest: running/physical Core mismatch and ambiguous inventory cannot be complete
+ok 23 - running/physical Core mismatch and ambiguous inventory cannot be complete
+  ---
+  duration_ms: 0.582959
+  type: 'test'
+  ...
+# Subtest: optional peers distinguish absent from installed incompatible and unknown; invalid peer paths never reach local inspection
+ok 24 - optional peers distinguish absent from installed incompatible and unknown; invalid peer paths never reach local inspection
+  ---
+  duration_ms: 2.0055
+  type: 'test'
+  ...
+# Subtest: notice health does not make missing, inactive, failed or ambiguous components complete
+ok 25 - notice health does not make missing, inactive, failed or ambiguous components complete
+  ---
+  duration_ms: 0.584125
+  type: 'test'
+  ...
+# Subtest: unsupported registry inputs never echo userinfo, query or fragments into public declarations
+ok 26 - unsupported registry inputs never echo userinfo, query or fragments into public declarations
+  ---
+  duration_ms: 0.6415
+  type: 'test'
+  ...
+# Subtest: build metadata changes alone are not a semantic version upgrade
+ok 27 - build metadata changes alone are not a semantic version upgrade
+  ---
+  duration_ms: 0.274375
+  type: 'test'
+  ...
+# Subtest: future manifests with object repositories, empty ranges or unknown required roles never produce ready tuples
+ok 28 - future manifests with object repositories, empty ranges or unknown required roles never produce ready tuples
+  ---
+  duration_ms: 3.992958
+  type: 'test'
+  ...
+# Subtest: explicit malformed engines metadata is unknown rather than unconstrained
+ok 29 - explicit malformed engines metadata is unknown rather than unconstrained
+  ---
+  duration_ms: 1.479542
+  type: 'test'
+  ...
+# Subtest: all current and candidate tuple members require a supported public DSH bundle declaration
+ok 30 - all current and candidate tuple members require a supported public DSH bundle declaration
+  ---
+  duration_ms: 4.485333
+  type: 'test'
+  ...
+1..30
+# tests 30
 # suites 0
-# pass 17
+# pass 30
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 187.198333
+# duration_ms 183.540333
