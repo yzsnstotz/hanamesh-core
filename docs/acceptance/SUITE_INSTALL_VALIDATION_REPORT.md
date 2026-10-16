@@ -1,7 +1,7 @@
 # HanaMesh 三件套 · 套件集成验证报告（O3）
 
 > 本机 session · 2026-09-20 · 状态 **⚠️ PARTIAL**：阶段 1（一次安装）、阶段 2（T10 生命周期）、阶段 3（S06 授权边界，真实 O1 宿主）全过；阶段 4（首轮演示）**NOT_RUN**。🧪 只有用户能签的 ACCEPTED 之前的上限；本报告不冒充阶段 3/4。
-> 可重跑：`scripts/p1/verdaccio.sh <root> 4879` → `scripts/p1/publish.sh <root> real 4879`（+ 手动发 core 前一 rc 供升级场景）→ `scripts/o3/t10.sh <root> 4879` → `CORE_VER=<ver> node scripts/o3/s06.mjs <root> 4879`（一次性 PG + `hanamesh-server@0.2.0-rc.2`）。
+> 历史入口退休（2026-10-16）：原 S06 `scripts/o3/s06.mjs` 已删除；它直接读取服务端 Usage 表并绑定旧 Host/DSH/部署配置，不再提供重跑命令。下述版本、阶段结果与日志引用仅保留为 2026-09-20 历史事实，不代表当前套件或同意链路已验。独立的 `scripts/p1/*`、`scripts/o3/t10.sh` 未因本次退役删除；其历史结果也不替代当前验收。
 
 ## ① 环境与版本表
 
