@@ -6,7 +6,7 @@ interface SlotRegistry {
 }
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
-const CORE_VERSION = '0.3.11';
+const CORE_VERSION = '0.3.12';
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */

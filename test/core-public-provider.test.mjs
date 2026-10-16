@@ -42,7 +42,7 @@ test('actual provider exposes string protocol 1 and all callable members; shape 
   assert.equal(service.protocolVersion, '1');
   assert.ok(Object.isFrozen(service));
   for (const name of [...CORE_REQUIRED_METHODS, ...CORE_OPTIONAL_METHODS]) assert.equal(typeof service[name], 'function', name);
-  assert.deepEqual(checkCoreService(service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth']});
+  assert.deepEqual(checkCoreService(service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration']});
   assert.deepEqual(checkCoreService(null), {status: 'absent', reason: 'CORE_ABSENT'});
   assert.deepEqual(checkCoreService({...service, protocolVersion: 1}), {status: 'incompatible', reason: 'CORE_PROTOCOL_UNSUPPORTED', provided: null, supported: ['1']});
   for (const name of CORE_REQUIRED_METHODS) assert.deepEqual(checkCoreService({...service, [name]: undefined}), {status: 'incompatible', reason: 'CORE_METHOD_MISSING', missing: [name]});

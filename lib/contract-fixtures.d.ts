@@ -16,6 +16,8 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
     }>;
     readonly optionalTypes: Readonly<{
         HealthSnapshot: unknown;
+        SuiteDeclaration: unknown;
+        SuiteDeclarationRequest: unknown;
     }>;
     readonly methods: {
         readonly getConsent: {
@@ -93,6 +95,14 @@ export declare const CORE_CONTRACT_DEFINITION: Readonly<{
             readonly synchronous: true;
             readonly optional: true;
             readonly note: "Read-only advisory view; cold state is repair with CHECK_NOT_RUN. Not an authorization decision.";
+        };
+        readonly getSuiteDeclaration: {
+            readonly input: "SuiteDeclarationRequest | undefined";
+            readonly output: "Promise<SuiteDeclaration>";
+            readonly errors: readonly ["CORE_DISPOSED"];
+            readonly synchronous: false;
+            readonly optional: true;
+            readonly note: "Read-only current facts and registry-bound compatible tuples; blocked reasons are data, never installation authorization.";
         };
     };
     readonly rawSigning: {

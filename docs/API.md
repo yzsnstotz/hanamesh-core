@@ -112,3 +112,8 @@ D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发�
 配置null是明确离线，不自动推断网络/身份失败。共享身份回退仍按原产品规则；隔离测试不得依靠回退。具名预算默认/合法范围沿上文；设置中的预算span只展示对应标签和值，origin应通过正式state/diagnostics读取，身份路径在设备身份行可见。
 
 完整C-CORE九调用/事件、错误分组、原字节与请求覆盖、SessionSnapshot与退订参见CORE_CONTRACT.md。getServerOrigin无条件string|null，不增加就绪抛错；onConsentChange真实回调为(state,changedAt)两个位置参数，旧对象摘要描述事件事实，changedAt取成功持久写入。六事实签名向量只作FIXTURE，不代替当前C-USAGE规范。发布包不包含原生测试观察插件或测试输入生成器。
+
+
+## Core 0.3.12 optional Cordis suite declaration
+
+`hanameshCore.getSuiteDeclaration(request?)` is a read-only optional protocol1 port. No HTTP route is added. See [C-CORE delivery draft](SUITE_DECLARATION.md) for the DTO, registry configuration, compatibility ownership and I adaptation.

@@ -21,7 +21,7 @@ test('v1 handshake constants match the published schema and the existing seven r
   assert.equal(CORE_PROTOCOL_VERSION, '1');
   assert.deepEqual([...CORE_SUPPORTED_PROTOCOL_VERSIONS], ['1']);
   assert.deepEqual([...CORE_REQUIRED_METHODS], ['getDeviceId', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin']);
-  assert.deepEqual([...CORE_OPTIONAL_METHODS], ['getPublicKey', 'getHealth']);
+  assert.deepEqual([...CORE_OPTIONAL_METHODS], ['getPublicKey', 'getHealth', 'getSuiteDeclaration']);
   const schema = await loadCoreSchema();
   const onDisk = JSON.parse(await readFile('contract/hanamesh-core.v1.schema.json', 'utf8'));
   assert.deepEqual(schema, onDisk);
@@ -33,7 +33,7 @@ test('v1 handshake constants match the published schema and the existing seven r
 
 test('handshake gives one deterministic result for match, absent, unsupported version and each missing method', () => {
   const {service} = createCoreProviderFixture();
-  assert.deepEqual(checkCoreService(service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth']});
+  assert.deepEqual(checkCoreService(service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration']});
   assert.deepEqual(checkCoreService(undefined), {status: 'absent', reason: 'CORE_ABSENT'});
   assert.deepEqual(checkCoreService(null), {status: 'absent', reason: 'CORE_ABSENT'});
   assert.deepEqual(checkCoreService('core'), {status: 'incompatible', reason: 'CORE_NOT_OBJECT'});
@@ -41,7 +41,7 @@ test('handshake gives one deterministic result for match, absent, unsupported ve
   assert.deepEqual(checkCoreService(service, ['2']), {status: 'incompatible', reason: 'CORE_PROTOCOL_UNSUPPORTED', provided: '1', supported: ['2']});
   const {signRequest: _omit, ...withoutSignRequest} = service;
   assert.deepEqual(checkCoreService(withoutSignRequest), {status: 'incompatible', reason: 'CORE_METHOD_MISSING', missing: ['signRequest']});
-  const {getPublicKey: _a, getHealth: _b, ...requiredOnly} = service;
+  const {getPublicKey: _a, getHealth: _b, getSuiteDeclaration: _c, ...requiredOnly} = service;
   assert.deepEqual(checkCoreService(requiredOnly), {status: 'present', protocolVersion: '1', optional: []});
   const cases = coreHandshakeCases(() => createCoreProviderFixture().service);
   assert.equal(cases.length, 13);

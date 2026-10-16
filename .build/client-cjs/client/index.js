@@ -5,7 +5,7 @@ exports.collectLatestActivity = collectLatestActivity;
 exports.coreErrorText = coreErrorText;
 exports.apply = apply;
 const react_1 = require("react");
-const CORE_VERSION = '0.3.11';
+const CORE_VERSION = '0.3.12';
 const BREAKDOWN_LABELS = [
     ['install', '安装贡献'], ['open', '打开贡献'], ['use', '使用贡献'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
 ];

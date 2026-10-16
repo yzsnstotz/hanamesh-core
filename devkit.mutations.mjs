@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 const production = new Map();
-for (const file of ['dsh.mjs', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
+for (const file of ['dsh.mjs', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:"suite-bundle-admission",file:"lib/suite/service.js",mutate:code=>code.replace("const bundle = tuple.map(bundleFailure).find(Boolean);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
+ {id:"suite-same-core-upgrade",file:"lib/suite/service.js",mutate:code=>code.replace("const candidate = record.hanameshSuite;", "if (coreVersion === core.version) continue;\n                    const candidate = record.hanameshSuite;"),test:"test/suite-policy.test.mjs"},
+ {id:"suite-source-binding",file:"lib/suite/service.js",mutate:code=>code.replace("if (!this.validRecord(record, core.name, coreVersion, manifest.core.repository))", "if (false)"),test:"test/suite-policy.test.mjs"},
     {
       id: 'domain-name', file: 'lib/dsh.mjs',
       mutate: code => code.replace("name: 'hanamesh_core'", "name: 'hanamesh-core'"),

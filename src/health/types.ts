@@ -4,6 +4,7 @@ export type FailurePolicy = 'block' | 'restrict' | 'notice';
 export interface SuiteComponent {
   readonly id: string;
   readonly moduleName: string;
+  readonly repository?: string;
   readonly loaderEntryId?: string;
   readonly label: string;
   readonly versionRange: string;
@@ -25,6 +26,9 @@ export interface ComponentObservation {
   readonly version?: string;
   readonly phase?: 'active' | 'staged' | 'disabled' | 'pending' | 'loading' | 'failed' | 'unloading';
   readonly stagedVersion?: string;
+  /** Read-only public package facts for suite declarations; never copied into health storage. */
+  readonly repository?: unknown;
+  readonly metadata?: import('../suite/types.js').PackageMetadata;
   /** Transient allowlisted tokens; persisted health uses existing reason/nextStep only. */
   readonly startupFailure?: {
     readonly code: 'invalid-record' | 'version-mismatch' | 'backend-not-found' | 'malformed-medium' | 'invalid-config' | 'startup-failed' | 'diagnostic-timeout';

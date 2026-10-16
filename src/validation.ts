@@ -1,8 +1,9 @@
 import {isAbsolute} from 'node:path';
 import {CoreError} from './errors.js';
 import {INITIAL_CORE_SNAPSHOT, type PluginConfig, type StoredCoreSnapshot} from './contracts.js';
+import {registryUrl} from './suite/facts.js';
 
-export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4, contributionWindowDays: 90});
+export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4, contributionWindowDays: 90, suiteLocalTestRegistries: Object.freeze([] as string[])});
 /** C-USAGE: a raw-event window (contributions from/to, device events from/to) is at most 90 days. Contract invariant, not a setting. */
 export const USAGE_MAX_WINDOW_DAYS = 90;
 
@@ -56,6 +57,15 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
   const contributionWindowDays = input.contributionWindowDays ?? CORE_DEFAULTS.contributionWindowDays;
   if (!Number.isSafeInteger(contributionWindowDays) || contributionWindowDays < 1 || contributionWindowDays > USAGE_MAX_WINDOW_DAYS) throw new CoreError('CORE_INPUT_INVALID', 400);
   const sharedIdentityDir = input.sharedIdentityDir ?? null;
+  let suiteLocalTestRegistries = CORE_DEFAULTS.suiteLocalTestRegistries as readonly string[];
+  if (input.suiteLocalTestRegistries !== undefined) {
+    if (!Array.isArray(input.suiteLocalTestRegistries)) throw new CoreError('CORE_INPUT_INVALID', 400);
+    try {suiteLocalTestRegistries = Object.freeze(input.suiteLocalTestRegistries.map(value => {
+      const normalized = registryUrl(value, [value]);
+      if (!normalized.startsWith('http:')) throw new Error();
+      return normalized;
+    }));} catch {throw new CoreError('CORE_INPUT_INVALID', 400);}
+  }
   if (sharedIdentityDir !== null && (typeof sharedIdentityDir !== 'string' || !isAbsolute(sharedIdentityDir))) throw new CoreError('CORE_INPUT_INVALID', 400);
   return Object.freeze({
     serverOrigin: originOf(input.serverOrigin),
@@ -64,7 +74,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
     checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
-    sharedIdentityDir,
+    sharedIdentityDir, suiteLocalTestRegistries,
   });
 }
 

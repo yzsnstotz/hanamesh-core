@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -27,7 +27,11 @@
       "types": "./lib/client/index.d.ts",
       "default": "./lib/client.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./suite": {
+      "types": "./lib/suite/index.d.ts",
+      "default": "./lib/suite/index.js"
+    }
   },
   "bin": {
     "hanamesh-core-contract-suite": "./lib/contract-cli.js",
@@ -43,7 +47,8 @@
     "docs/CORE_CONTRACT.md",
     "docs/API.md",
     "docs/SECURITY.md",
-    "docs/AGENT.md"
+    "docs/AGENT.md",
+    "docs/SUITE_DECLARATION.md"
   ],
   "engines": {
     "node": ">=24.13.1 <25"
@@ -115,5 +120,28 @@
   "license": "MIT",
   "dependencies": {
     "semver": "7.7.2"
+  },
+  "hanameshSuite": {
+    "schemaVersion": 1,
+    "id": "hanamesh-suite",
+    "core": {
+      "name": "hanamesh-core",
+      "version": "0.3.12",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core"
+    },
+    "components": [
+      {
+        "id": "usage",
+        "moduleName": "hanamesh-usage",
+        "versionRange": ">=0.2.0-rc.26 <0.3.0",
+        "repository": "https://github.com/yzsnstotz/hanamesh-usage"
+      },
+      {
+        "id": "app-host",
+        "moduleName": "@hanamesh/dsh-app-host",
+        "versionRange": ">=0.5.9 <0.7.0",
+        "repository": "https://github.com/yzsnstotz/hanamesh-plugin-app-host"
+      }
+    ]
   }
 }

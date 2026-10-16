@@ -12,6 +12,7 @@
 | `getSession()` | `() => SessionSnapshot` | 设备注册观察；可能陈旧，不是授权证明 | 是（只读展示） |
 | `getServerOrigin()` | `() => string \| null` | 生效的 Server origin（0.3.4：设置页地址 ?? 配置）；null = 离线 | 是 |
 | `getHealth()` | `() => HealthSnapshot` | 组件健康快照 | 否 |
+| `getSuiteDeclaration?(request?)` | `({registry, coreVersion?}?) => Promise<SuiteDeclaration>` | Core 唯一只读套件声明与兼容三包组合；协议1可选扩展，见 [公开说明](SUITE_DECLARATION.md) | 否 |
 
 契约明确不暴露私钥、PKCS8、token、cookie、nonce、传输实例或 storage-domain 写接口。
 
@@ -21,7 +22,7 @@
 
 | 导出 | 内容 |
 |---|---|
-| `hanamesh-core/contract` | 上述类型；新增 `CORE_SERVICE_NAME`、`CORE_PROTOCOL_VERSION`、`CORE_SUPPORTED_PROTOCOL_VERSIONS`、`CORE_REQUIRED_METHODS`（7 个）、`CORE_OPTIONAL_METHODS`（`getPublicKey`、`getHealth`）与握手 `checkCoreService(value, accept?)` |
+| `hanamesh-core/contract` | 上述类型；新增 `CORE_SERVICE_NAME`、`CORE_PROTOCOL_VERSION`、`CORE_SUPPORTED_PROTOCOL_VERSIONS`、`CORE_REQUIRED_METHODS`（7 个）、`CORE_OPTIONAL_METHODS`（`getPublicKey`、`getHealth`、`getSuiteDeclaration`）与握手 `checkCoreService(value, accept?)` |
 | `hanamesh-core/contract/schema.json` | v1 数据形状（JSON Schema 2020-12）；`x-hanamesh` 列出服务名、版本、必需/可选方法、`signRequest` canonical 与握手顺序 |
 | `hanamesh-core/contract/fixtures` | 提供方 fixture `createCoreProviderFixture()`、消费方参考 fixture `createCoreConsumerFixture()`、13 项握手矩阵 `coreHandshakeCases()`；全部带 `CORE_FIXTURE_LABEL`，不是产品提供方 |
 | `hanamesh-core/contract/suite` | `runCoreProviderSuite(provider)`、`runCoreConsumerSuite(consumer)`、`validateCoreValue(def, value)` |
@@ -99,13 +100,13 @@ J1.S4 起 `CORE_NOT_READY` 有了具体触发条件：本机共享设备身份�
 
 ## D-77 完整提供方说明
 
-### 协议1现行提供方调用补充（D-77审核通过，现行实现说明）
+### 协议1提供方调用补充（D-77审核通过，117346af历史快照）
 
 依据：本模块main117346af77cab016a109f14f45155719fe873b2d的src/contract.ts、controller.ts、device.ts、errors.ts和dsh.mjs。只追加现行事实和使用说明，不删除旧条目、不升级协议、不调整签名覆盖范围。以下SOURCE提供方测试不是宿主装配证据。
 
 #### 服务实例与调用判据
 
-Cordis服务名`hanameshCore`；`protocolVersion`实际为字符串`'1'`，不是数字1。必需方法依次为getDeviceId、sign、signRequest、getConsent、onConsentChange、getSession、getServerOrigin；可选能力getPublicKey、getHealth。函数存在以`typeof value[name] === 'function'`判断，允许原型方法；getPublicKey不属于协议1必需方法，使用前须检查其能力。
+Cordis服务名`hanameshCore`；`protocolVersion`实际为字符串`'1'`，不是数字1。必需方法依次为getDeviceId、sign、signRequest、getConsent、onConsentChange、getSession、getServerOrigin；可选能力getPublicKey、getHealth；本节对应117346af历史快照。0.3.12现行可选能力为getPublicKey、getHealth、getSuiteDeclaration，详见[公开套件声明](SUITE_DECLARATION.md)。函数存在以`typeof value[name] === 'function'`判断，允许原型方法；getPublicKey不属于协议1必需方法，使用前须检查其能力。
 
 本包checkCoreService返回诊断值，不会代替服务调用或注册：null/undefined→{status:'absent',reason:'CORE_ABSENT'}；非object→{status:'incompatible',reason:'CORE_NOT_OBJECT'}；协议不在消费者支持的字符串列表（默认['1']）→CORE_PROTOCOL_UNSUPPORTED，provided为字符串或null，supported为支持列表；必需方法缺失→CORE_METHOD_MISSING并按上列顺序返回missing；完整→{status:'present',protocolVersion:'1',optional:[实际存在的可选函数名]}。这种present仅说明形状，不能证明实际Cordis注入、身份准备、同意、服务端可达或健康。getter自身抛出的访问错误不会被该诊断函数归一化。
 

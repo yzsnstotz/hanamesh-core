@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "hanamesh-suite",
+  "core": {
+    "name": "hanamesh-core",
+    "version": "0.3.12",
+    "repository": "https://github.com/yzsnstotz/hanamesh-core"
+  },
+  "components": [
+    {
+      "id": "usage",
+      "moduleName": "hanamesh-usage",
+      "versionRange": ">=0.2.0-rc.26 <0.3.0",
+      "repository": "https://github.com/yzsnstotz/hanamesh-usage"
+    },
+    {
+      "id": "app-host",
+      "moduleName": "@hanamesh/dsh-app-host",
+      "versionRange": ">=0.5.9 <0.7.0",
+      "repository": "https://github.com/yzsnstotz/hanamesh-plugin-app-host"
+    }
+  ]
+}

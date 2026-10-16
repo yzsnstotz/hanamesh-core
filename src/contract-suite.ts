@@ -42,11 +42,13 @@ function validate(schema: Schema, node: Schema, value: unknown, path: string, er
     if (typeof node.pattern === 'string' && !new RegExp(node.pattern, 'u').test(value)) errors.push(`${path}: does not match ${node.pattern}`);
   }
   if (typeof value === 'number' && typeof node.minimum === 'number' && value < node.minimum) errors.push(`${path}: below ${node.minimum}`);
+  if (Array.isArray(value) && node.items && typeof node.items === 'object') value.forEach((item, index) => validate(schema, node.items as Schema, item, `${path}[${index}]`, errors));
   if (typeOf(value) === 'object') {
     const record = value as Record<string, unknown>;
     const properties = (node.properties ?? {}) as Record<string, Schema>;
     for (const key of (node.required ?? []) as string[]) if (!(key in record)) errors.push(`${path}.${key}: required`);
     if (node.additionalProperties === false) for (const key of Object.keys(record)) if (!(key in properties)) errors.push(`${path}.${key}: not allowed`);
+    if (node.additionalProperties && typeof node.additionalProperties === 'object') for (const [key, item] of Object.entries(record)) if (!(key in properties)) validate(schema, node.additionalProperties as Schema, item, `${path}.${key}`, errors);
     for (const [key, child] of Object.entries(properties)) if (key in record) validate(schema, child, record[key], `${path}.${key}`, errors);
   }
 }
@@ -169,6 +171,11 @@ export async function runCoreProviderSuite(provider: CoreProviderUnderTest): Pro
   results.push(await row('health.schema', () => {
     if (typeof core.getHealth !== 'function') return 'optional method absent';
     schemaOk('HealthSnapshot', core.getHealth());
+    return 'ok';
+  }));
+  results.push(await row('suite.schema', async () => {
+    if (typeof core.getSuiteDeclaration !== 'function') return 'optional method absent';
+    schemaOk('SuiteDeclaration', await core.getSuiteDeclaration());
     return 'ok';
   }));
   return done('provider', provider.label, results);

@@ -11,6 +11,8 @@ export interface PluginConfig {
   readonly profileTimeoutMs?: number;
   /** Local memory budget for each upstream response, default 1 MiB. */
   readonly maxResponseBytes?: number;
+  /** Explicit loopback HTTP registries for isolated test profiles; never inferred from requests. Default []. */
+  readonly suiteLocalTestRegistries?: readonly string[];
   readonly clientPollIntervalMs?: number;
   readonly pointsRefreshMs?: number;
   readonly contributionIntervalMs?: number;

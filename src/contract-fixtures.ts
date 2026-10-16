@@ -2,6 +2,8 @@ import {readFileSync} from 'node:fs';
 import {createHash, createPublicKey, generateKeyPairSync, randomBytes, sign as edSign, verify as edVerify} from 'node:crypto';
 import {CORE_REQUIRED_METHODS, checkCoreService} from './contract.js';
 import type {ConsentState, CoreHandshake, DeviceAuthHeaders, HanaMeshCoreContract, RequestSignatureInput, SessionSnapshot} from './contract.js';
+import {SUITE_MANIFEST} from './suite/index.js';
+import {digest, frozen} from './suite/facts.js';
 
 /** Every fixture carries this label so no screen, log or report can mistake it for the product provider. */
 export const CORE_FIXTURE_LABEL = 'FIXTURE · hanamesh-core contract v1 (not the product provider)';
@@ -21,7 +23,7 @@ export const CORE_CONTRACT_DEFINITION = Object.freeze({
   service: 'hanameshCore',
   protocolVersion: '1',
   types: Object.freeze(Object.fromEntries(typeNames.map(name => [name, schema.$defs[name]]))),
-  optionalTypes: Object.freeze({HealthSnapshot: schema.$defs.HealthSnapshot}),
+  optionalTypes: Object.freeze({HealthSnapshot: schema.$defs.HealthSnapshot, SuiteDeclaration: schema.$defs.SuiteDeclaration, SuiteDeclarationRequest: schema.$defs.SuiteDeclarationRequest}),
   methods: {
     getConsent: {input: null, output: 'ConsentState', errors: ['CORE_ABSENT', 'CORE_PROTOCOL_UNSUPPORTED', 'CORE_METHOD_MISSING'], errorChannel: 'handshake', synchronous: true, note: 'Handshake diagnostics are not exceptions from this unconditional consent getter.'},
     signRequest: {input: 'RequestSignatureInput', output: 'Promise<DeviceAuthHeaders>', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_INPUT_INVALID', 'CORE_DISPOSED', 'CORE_UPSTREAM_UNAVAILABLE'], synchronous: false},
@@ -32,6 +34,7 @@ export const CORE_CONTRACT_DEFINITION = Object.freeze({
     sign: {input: 'Uint8Array', output: 'Uint8Array', errors: ['CORE_NOT_READY', 'CORE_DEVICE_CORRUPT'], errorChannel: 'exception', implementationErrors: ['CORE_DISPOSED'], synchronous: true, note: 'Signs exact supplied bytes with Ed25519, returning 64 raw bytes. No hashing, JSON encoding, framing, consent or registration gate is added.'},
     onConsentChange: {input: '(state: ConsentState, changedAt: string) => void', output: '() => void', errors: [], synchronous: true, note: 'Two positional callback arguments after successful persistence; ISO timestamp is stored consent.changedAt. No initial replay; same-value writes notify. Unsubscribe is synchronous and idempotent; listener errors are isolated.'},
     getHealth: {input: null, output: 'HealthSnapshot', errors: [], synchronous: true, optional: true, note: 'Read-only advisory view; cold state is repair with CHECK_NOT_RUN. Not an authorization decision.'},
+    getSuiteDeclaration: {input: 'SuiteDeclarationRequest | undefined', output: 'Promise<SuiteDeclaration>', errors: ['CORE_DISPOSED'], synchronous: false, optional: true, note: 'Read-only current facts and registry-bound compatible tuples; blocked reasons are data, never installation authorization.'},
   },
   rawSigning: {
     algorithm: 'Ed25519', input: 'exact Uint8Array bytes', output: '64 raw signature bytes',
@@ -206,6 +209,10 @@ export function createCoreProviderFixture(options: CoreProviderFixtureOptions = 
     getSession: () => Object.freeze({protocolVersion: '1' as const, deviceId, registration: 'unregistered' as const, principalId: null, bound: null, serverReachable: null, checkedAt: null, reason: null}),
     getServerOrigin: () => origin,
     getHealth: () => Object.freeze({revision: 0, mode: 'restricted' as const, components: Object.freeze([]), fault: 'CONTRACT_FIXTURE'}),
+    getSuiteDeclaration: async () => {
+      const facts = {schemaVersion: 1 as const, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
+      return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
+    },
   });
   return {
     label: CORE_FIXTURE_LABEL,
@@ -231,7 +238,7 @@ export function coreHandshakeCases(makeService: () => HanaMeshCoreContract = () 
   const base = (): Record<string, unknown> => ({...makeService()});
   const without = (key: string): Record<string, unknown> => { const value = base(); delete value[key]; return value; };
   const cases: CoreHandshakeCase[] = [
-    {id: 'handshake.match', value: base(), expected: {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth']}},
+    {id: 'handshake.match', value: base(), expected: {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration']}},
     {id: 'handshake.absent-undefined', value: undefined, expected: {status: 'absent', reason: 'CORE_ABSENT'}},
     {id: 'handshake.absent-null', value: null, expected: {status: 'absent', reason: 'CORE_ABSENT'}},
     {id: 'handshake.not-object', value: 'hanameshCore', expected: {status: 'incompatible', reason: 'CORE_NOT_OBJECT'}},

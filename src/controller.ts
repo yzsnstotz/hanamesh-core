@@ -8,6 +8,11 @@ import {ServerTransport} from './transport.js';
 import {openExternal as openSystemExternal} from './external.js';
 import {configOf, publicJson, serverOriginOf, snapshotOf} from './validation.js';
 import type {SharedDeviceStore} from './shared-device.js';
+import type {SuiteDeclaration, SuiteDeclarationRequest} from './suite/types.js';
+import {SUITE_MANIFEST} from './suite/index.js';
+import {SuiteDeclarationService} from './suite/service.js';
+import {RegistryMetadataReader} from './suite/registry.js';
+import {OWN_PACKAGE, OWN_PROFILE} from './suite/own.js';
 
 const COLD_HEALTH: HealthSnapshot = Object.freeze({revision: 0, mode: 'repair', components: Object.freeze([]), fault: 'CHECK_NOT_RUN'});
 interface HealthProvider {getHealth(): HealthSnapshot; recheck(): Promise<HealthSnapshot>}
@@ -100,6 +105,7 @@ export class SessionController {
   #recoveryAttemptAt: number | null = null;
   #contributionsTimer: ReturnType<typeof setInterval> | null = null;
   #health: HealthProvider | null = null;
+  #suite: {read(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration>} | null = null;
   #usageReady: (() => boolean) | null = null;
   #contributions: Contributions = Object.freeze({status: 'unavailable', reason: 'NOT_CONNECTED'});
   #contributionsCheckedAt = 0;
@@ -124,6 +130,10 @@ export class SessionController {
     if (storedWebsite !== null) {try {this.#websiteOverride = serverOriginOf(storedWebsite);} catch {this.#websiteOriginFault = 'CORE_ORIGIN_REJECTED';}}
     [this.#transport, this.#profileTransport] = this.#transportsFor(this.#serverOrigin());
     this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
+    const unobservedSuite = new SuiteDeclarationService({manifest: SUITE_MANIFEST,
+      profile: OWN_PROFILE, core: OWN_PACKAGE, nodeVersion: process.versions.node,
+      inventory: {observe: async () => []}, coreInventory: async () => ({kind: 'unreadable'}), peerVersion: async () => null,
+      registry: new RegistryMetadataReader({timeoutMs: this.#config.timeoutMs, maxResponseBytes: this.#config.maxResponseBytes, localTestRegistries: this.#config.suiteLocalTestRegistries})});
     this.service = Object.freeze({
       protocolVersion: '1' as const,
       getDeviceId: () => this.#device().deviceId,
@@ -138,7 +148,16 @@ export class SessionController {
       getSession: () => this.#session(),
       getServerOrigin: () => this.#serverOrigin(),
       getHealth: () => this.#health?.getHealth() ?? COLD_HEALTH,
+      getSuiteDeclaration: (request?: SuiteDeclarationRequest) => {
+        if (this.#disposed) return Promise.reject(new CoreError('CORE_DISPOSED', 503));
+        return (this.#suite ?? unobservedSuite).read(request);
+      },
     });
+  }
+
+  attachSuite(provider: {read(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration>}): void {
+    if (this.#suite || this.#disposed) throw new CoreError(this.#disposed ? 'CORE_DISPOSED' : 'CORE_INPUT_INVALID', 409);
+    this.#suite = provider;
   }
 
   #serverOrigin(): string | null { return this.#serverOverride ?? this.#config.serverOrigin; }

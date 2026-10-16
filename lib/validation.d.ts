@@ -12,6 +12,7 @@ export declare const CORE_DEFAULTS: Readonly<{
     activityDisplayRows: 25;
     catalogConcurrency: 4;
     contributionWindowDays: 90;
+    suiteLocalTestRegistries: readonly string[];
 }>;
 /** C-USAGE: a raw-event window (contributions from/to, device events from/to) is at most 90 days. Contract invariant, not a setting. */
 export declare const USAGE_MAX_WINDOW_DAYS = 90;

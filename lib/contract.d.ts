@@ -1,3 +1,5 @@
+import type { SuiteDeclaration, SuiteDeclarationRequest } from './suite/types.js';
+export type { SuiteDeclaration, SuiteDeclarationRequest } from './suite/types.js';
 export type ConsentState = 'granted' | 'withheld';
 export interface SessionSnapshot {
     readonly protocolVersion: '1';
@@ -32,6 +34,7 @@ export interface HanaMeshCoreContract {
     getSession(): SessionSnapshot;
     getServerOrigin(): string | null;
     getHealth(): HealthSnapshot;
+    getSuiteDeclaration?(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration>;
 }
 /** Cordis service name under which Core provides the contract. */
 export declare const CORE_SERVICE_NAME: "hanameshCore";
@@ -39,7 +42,7 @@ export declare const CORE_SERVICE_NAME: "hanameshCore";
 export declare const CORE_PROTOCOL_VERSION: "1";
 export declare const CORE_SUPPORTED_PROTOCOL_VERSIONS: readonly string[];
 export declare const CORE_REQUIRED_METHODS: readonly ["getDeviceId", "sign", "signRequest", "getConsent", "onConsentChange", "getSession", "getServerOrigin"];
-export declare const CORE_OPTIONAL_METHODS: readonly ["getPublicKey", "getHealth"];
+export declare const CORE_OPTIONAL_METHODS: readonly ["getPublicKey", "getHealth", "getSuiteDeclaration"];
 export type CoreRequiredMethod = (typeof CORE_REQUIRED_METHODS)[number];
 export type CoreOptionalMethod = (typeof CORE_OPTIONAL_METHODS)[number];
 export type CoreHandshake = {
