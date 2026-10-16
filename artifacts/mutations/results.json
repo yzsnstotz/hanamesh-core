@@ -4,27 +4,6 @@
   },
   "results": [
     {
-      "id": "suite-bundle-admission",
-      "baselineExit": 0,
-      "mutantExit": 1,
-      "detected": true,
-      "assertionFailure": true
-    },
-    {
-      "id": "suite-same-core-upgrade",
-      "baselineExit": 0,
-      "mutantExit": 1,
-      "detected": true,
-      "assertionFailure": true
-    },
-    {
-      "id": "suite-source-binding",
-      "baselineExit": 0,
-      "mutantExit": 1,
-      "detected": true,
-      "assertionFailure": true
-    },
-    {
       "id": "domain-name",
       "baselineExit": 0,
       "mutantExit": 1,

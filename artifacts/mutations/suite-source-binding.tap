@@ -1,0 +1,104 @@
+TAP version 13
+# Subtest: no source reports current requirements and completeness without treating normal health as complete
+ok 1 - no source reports current requirements and completeness without treating normal health as complete
+  ---
+  duration_ms: 9.425167
+  type: 'test'
+  ...
+# Subtest: whole tuple search avoids individually highest incompatible versions and forbids downgrade/no-op
+ok 2 - whole tuple search avoids individually highest incompatible versions and forbids downgrade/no-op
+  ---
+  duration_ms: 0.651875
+  type: 'test'
+  ...
+# Subtest: future Core without own manifest, wrong version, source mismatch, Node and required peers cannot upgrade
+not ok 3 - future Core without own manifest, wrong version, source mismatch, Node and required peers cannot upgrade
+  ---
+  duration_ms: 3.18725
+  type: 'test'
+  location: '/Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-p5db2L/test/suite-policy.test.mjs:18:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(!d.upgrades.some(x=>x.coreVersion==='1.1.0'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///Users/yzliu/.cache/hanamesh-runs/session-g3-q7-20261017/core/artifacts/devkit-mut-p5db2L/test/suite-policy.test.mjs:20:136)
+    async Test.run (node:internal/test_runner/test:1110:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:785:7)
+  ...
+# Subtest: stable declaration digest binds source/current versions/target facts and missing inventory fails closed
+ok 4 - stable declaration digest binds source/current versions/target facts and missing inventory fails closed
+  ---
+  duration_ms: 1.029709
+  type: 'test'
+  ...
+# Subtest: same Core version must search past the unchanged tuple for a compatible dependency upgrade
+ok 5 - same Core version must search past the unchanged tuple for a compatible dependency upgrade
+  ---
+  duration_ms: 0.418666
+  type: 'test'
+  ...
+# Subtest: running/physical Core mismatch and ambiguous inventory cannot be complete
+ok 6 - running/physical Core mismatch and ambiguous inventory cannot be complete
+  ---
+  duration_ms: 0.689167
+  type: 'test'
+  ...
+# Subtest: optional peers distinguish absent from installed incompatible and unknown; invalid peer paths never reach local inspection
+ok 7 - optional peers distinguish absent from installed incompatible and unknown; invalid peer paths never reach local inspection
+  ---
+  duration_ms: 2.250125
+  type: 'test'
+  ...
+# Subtest: notice health does not make missing, inactive, failed or ambiguous components complete
+ok 8 - notice health does not make missing, inactive, failed or ambiguous components complete
+  ---
+  duration_ms: 0.610625
+  type: 'test'
+  ...
+# Subtest: unsupported registry inputs never echo userinfo, query or fragments into public declarations
+ok 9 - unsupported registry inputs never echo userinfo, query or fragments into public declarations
+  ---
+  duration_ms: 0.495958
+  type: 'test'
+  ...
+# Subtest: build metadata changes alone are not a semantic version upgrade
+ok 10 - build metadata changes alone are not a semantic version upgrade
+  ---
+  duration_ms: 0.37825
+  type: 'test'
+  ...
+# Subtest: future manifests with object repositories, empty ranges or unknown required roles never produce ready tuples
+ok 11 - future manifests with object repositories, empty ranges or unknown required roles never produce ready tuples
+  ---
+  duration_ms: 4.350083
+  type: 'test'
+  ...
+# Subtest: explicit malformed engines metadata is unknown rather than unconstrained
+ok 12 - explicit malformed engines metadata is unknown rather than unconstrained
+  ---
+  duration_ms: 1.44275
+  type: 'test'
+  ...
+# Subtest: all current and candidate tuple members require a supported public DSH bundle declaration
+ok 13 - all current and candidate tuple members require a supported public DSH bundle declaration
+  ---
+  duration_ms: 4.162459
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 12
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 69.756375
