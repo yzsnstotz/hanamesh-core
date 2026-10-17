@@ -6,7 +6,7 @@ interface SlotRegistry {
 }
 interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
 
-const CORE_VERSION = '0.3.14';
+const CORE_VERSION = '0.3.15';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
@@ -28,6 +28,7 @@ type CoreState = {
   configuration?: {timeoutMs: number; checkIntervalMs: number; maxHanaRows: number; profileTimeoutMs: number; maxResponseBytes: number; clientPollIntervalMs: number; pointsRefreshMs: number; contributionIntervalMs: number; activityPageBudget: number; activityDisplayRows: number; catalogConcurrency: number; contributionWindowDays?: number; };
   registration: {status: 'unregistered' | 'registered' | 'failed'; lastError: string | null};
   consent: {state: 'withheld' | 'granted'};
+  consentPrompt?: {show: boolean; shownAt: string | null};
   session: {bound: boolean | null} | null;
   /** usage rc.3+: GitHub account name of the bound principal; null when unbound or the server predates it. */
   account: {provider: 'github'; displayName: string} | null;
@@ -540,6 +541,89 @@ function PointsBindPrompt(): ReactNode {
     bindError && createElement('p', {role: 'alert'}, bindError));
 }
 
+// One queue per loaded Core client serializes StrictMode and duplicate sidebar mounts. Web Locks, when
+// present, also serializes tabs of the same carrier origin. Without it independent windows can both show;
+// the durable marker and the original explicit-consent write barrier remain authoritative.
+let consentPromptTail: Promise<void> = Promise.resolve();
+export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): ReactNode {
+  const [view, setView] = useState<CoreState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [shown, setShown] = useState(false);
+  const dialog = useRef<HTMLDialogElement | null>(null);
+  const active = useRef(false);
+  const finish = useRef<(() => void) | null>(null);
+  const writing = useRef(false);
+  const markerWrite = useRef<Promise<void>>(Promise.resolve());
+  useEffect(() => {
+    let cancelled = false;
+    let release!: () => void;
+    const closed = new Promise<void>(resolve => { release = resolve; });
+    finish.current = release;
+    active.current = true;
+    const run = async (): Promise<void> => {
+      if (cancelled) return;
+      const next = await jsonRequest<CoreState>('/api/hanamesh/core/state');
+      if (cancelled || !next.consentPrompt?.show) return;
+      setView(next);
+      await closed;
+      await markerWrite.current;
+    };
+    const previous = consentPromptTail;
+    const task = previous.then(async () => {
+      if (cancelled) return;
+      if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+        await navigator.locks.request('hanamesh-core-first-consent', run);
+      } else await run();
+    }).catch(cause => { if (!cancelled) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
+    consentPromptTail = task;
+    return () => { cancelled = true; active.current = false; release(); if (dialog.current?.open) dialog.current.close(); };
+  }, []);
+  useEffect(() => {
+    const node = dialog.current;
+    if (!view || !node || !active.current) return;
+    let opened = false;
+    try {
+      node.showModal();
+      if (!node.open) throw new Error('not open');
+      opened = true;
+    } catch { setError('CORE_CONSENT_PROMPT_DISPLAY_FAILED'); finish.current?.(); }
+    if (!opened) return;
+    // The marker acknowledges actual native display, never merely mounting/reading/rendering.
+    markerWrite.current = jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'})
+      .then(() => { if (active.current) setShown(true); })
+      .catch(cause => { if (active.current) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
+  }, [view]);
+  const close = (): void => { if (dialog.current?.open) dialog.current.close(); finish.current?.(); };
+  const enable = async (): Promise<void> => {
+    if (writing.current || !shown) return;
+    writing.current = true; setBusy(true); setError(null);
+    try {
+      const before = await jsonRequest<CoreState>('/api/hanamesh/core/state');
+      if (!active.current) return;
+      if (before.consent.state === 'withheld') await jsonRequest('/api/hanamesh/core/consent', {method: 'POST', body: JSON.stringify({state: 'granted'})});
+      const next = await jsonRequest<CoreState>('/api/hanamesh/core/state');
+      if (next.consent.state !== 'granted') throw new Error('CORE_CONSENT_NOT_CONFIRMED');
+      if (active.current) close();
+    } catch (cause) { if (active.current) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }
+    finally { writing.current = false; if (active.current) setBusy(false); }
+  };
+  const settings = (): void => { close(); openSettings(); };
+  return createElement(Fragment, null,
+    createElement('dialog', {className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'consent', 'aria-labelledby': 'hm-core-first-consent-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); close(); }},
+      createElement('h3', {id: 'hm-core-first-consent-title'}, '开启 HanaMesh 使用记录？'),
+      createElement('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。'),
+      createElement('p', null, '只有你亲自点击开启才会记录；不选择或稍后均不记录。账号绑定另行确认，积分归属和作者收入按服务端规则处理。'),
+      createElement('p', null, view?.serverOrigin ? `记录将上报至 ${view.serverOrigin}。可先到 HanaMesh 设置修改服务端。` : '尚未配置服务端（CORE_SERVER_NOT_CONFIGURED）；请先到 HanaMesh 设置填写服务端。'),
+      view?.identity?.status === 'failed' && createElement('p', {role: 'alert'}, `本机设备身份不可用（${view.identity.reason ?? 'CORE_NOT_READY'}）；请到 HanaMesh 设置检查身份存储位置并重新读取。`),
+      createElement('div', {className: 'hm-core-actions'},
+        createElement('button', {type: 'button', disabled: busy || !shown, onClick: () => { void enable(); }}, '开启'),
+        createElement('button', {type: 'button', disabled: busy, onClick: close}, '稍后'),
+        createElement('button', {type: 'button', disabled: busy, onClick: settings}, '打开设置')),
+      error && createElement('p', {role: 'alert'}, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`)),
+    error && !dialog.current?.open && createElement('p', {role: 'alert'}, `HanaMesh 首次提示：${error}。`, createElement('button', {type: 'button', onClick: settings}, '打开设置')));
+}
+
 function FooterAction({wide}: {wide: boolean}): ReactNode {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const entry = useRef<HTMLButtonElement | null>(null);
@@ -547,6 +631,7 @@ function FooterAction({wide}: {wide: boolean}): ReactNode {
   return createElement(Fragment, null,
     createElement('button', {type: 'button', className: 'hm-core-footer', 'data-wide': String(wide), title: 'HanaMesh', 'aria-label': '打开 HanaMesh 设置', ref: entry, onClick: () => setSettingsOpen(true)}, wide ? 'HanaMesh' : 'H'),
     settingsOpen && createElement(HanaMeshSettingsPage, {onClose: closeSettings, restoreFocus: () => entry.current?.focus()}),
+    createElement(FirstConsentPrompt, {openSettings: () => setSettingsOpen(true)}),
     createElement(PointsBindPrompt));
 }
 

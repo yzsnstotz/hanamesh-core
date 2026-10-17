@@ -5,6 +5,7 @@ import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
   consent: '/api/hanamesh/core/consent',
+  consentPromptShown: '/api/hanamesh/core/consent/prompt-shown',
   server: '/api/hanamesh/core/server',
   website: '/api/hanamesh/core/website',
   register: '/api/hanamesh/core/device/register',
@@ -61,6 +62,7 @@ export function createRouteHandler(controller: SessionController, admission: {re
       if (url.pathname === ROUTES.healthRecheck) return response(await controller.recheckHealth());
       if (url.pathname === ROUTES.refresh) return response(await controller.refresh());
       if (url.pathname === ROUTES.bindLink) return response(await controller.bindLink());
+      if (url.pathname === ROUTES.consentPromptShown) return response(await controller.markConsentPromptShown());
       if (url.pathname === ROUTES.pointsPromptShown) return response(await controller.markPointsPromptShown());
       const contentType = request.headers.get('content-type')?.split(';', 1)[0]?.trim();
       if (contentType !== 'application/json') throw new CoreError('CORE_INPUT_INVALID', 415);

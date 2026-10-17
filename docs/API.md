@@ -5,6 +5,7 @@
 | 方法 | 路径 | 返回 / 语义 |
 |---|---|---|
 | `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥。0.3.4 起另有 `serverOrigin`（**生效**地址）、`serverOriginSource: 'setting'|'config'`、`configuredServerOrigin`（插件配置的出厂默认）、`serverOriginFault`（已存地址不再合法时为 `CORE_ORIGIN_REJECTED`，此时出厂默认生效，否则 `null`）；`contributions` 为 `{status:'ready', windowDays, availability:'available'|'unavailable'|null, actions}` 或 `{status:'unavailable', reason}`（`reason` 含 `CONSENT_WITHHELD`）|
+| `POST` | `consent/prompt-shown` | 0.3.15。无 body，同源写准入与其它 POST 相同；仅在原生 dialog 的 showModal 成功且 open=true 后调用。将可选字段 `usageConsentPromptShownAt` 持久化，返回 `{shownAt:ISO}`；并发调用共用首次写入，已有值原样返回。只记实际显示，不授权、不注册、不上报。 |
 | `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播。0.3.4 起：改为 `granted` 时，未注册则立即注册并启动贡献刷新，已注册则只启动贡献刷新；改为 `withheld` 时停止贡献刷新但**不注销**（Usage 需要已注册的设备去发服务端删除）|
 | `POST` | `server` | 0.3.4。请求恰好一个键 `{serverOrigin:'<origin>'}` 设置、`{serverOrigin:null}` 清除（回到插件配置的出厂默认）。约定同 `consent`：同源 POST、`content-type: application/json`、≤4096 字节；形状不对 400 `CORE_INPUT_INVALID`，415/413 同为 `CORE_INPUT_INVALID`；地址校验与配置 `serverOrigin` 相同（HTTPS，或 loopback HTTP `127.0.0.1`/`localhost`/`[::1]`，可带端口；不能带路径、query、fragment、账号密码），不合法 400 `CORE_ORIGIN_REJECTED`。设置持久化在 `hanamesh_core` 快照的可选字段 `serverOriginOverride`（旧快照无此字段仍可加载）。生效地址 = 设置 ?? 配置，立即生效：重建服务端传输，`getServerOrigin()` 返回新地址（Usage 每次上传都读它）。生效地址改变时：注册重置为 `unregistered`（注册属于某个服务端），清空贡献/分/名称缓存与 `bound`/`account`，停止贡献刷新，已授权则立即向新服务端注册；仍在飞往旧服务端的请求结果一律不记录。返回新的 `state` |
 | `POST` | `device/register` | 手动重试挑战→注册；失败仍保留本地设备能力。0.3.4 起数据授权未开启 → 409 `CORE_CONSENT_REQUIRED`（不计入 `attempts`、不发任何请求）；激活时也只有已授权才自动注册 |
@@ -117,3 +118,11 @@ D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发�
 ## Core 0.3.12 optional Cordis suite declaration
 
 `hanameshCore.getSuiteDeclaration(request?)` is a read-only optional protocol1 port. No HTTP route is added. See [C-CORE delivery draft](SUITE_DECLARATION.md) for the DTO, registry configuration, compatibility ownership and I adaptation.
+
+## 首次使用记录提示（0.3.15）
+
+`state.consentPrompt: ConsentPrompt` = `{show:boolean, shownAt:ISO|null}`；仅当 consent=withheld、changedAt=null 且从未显示时 show=true。旧快照无 marker 仍可加载，granted 或 changedAt 非 null 的明确拒绝/撤回均不提示。marker 存在时重启/同 profile 重装不再提示；稍后和 ESC 只关闭。显示失败不写 marker，持久化失败返回 503 `CORE_STORAGE_UNAVAILABLE`，显示错误和设置入口，不隐藏重试。只有本人点击「开启」才使用原 `POST consent`、通知/注册屏障并重新读取确认；未答复不记录，设置随时可关。
+
+客户端模块内 queue 串行 StrictMode/多挂载，实际打开才 stamp，并等待写入结束再释放；Web Locks 可用时同时串行同 origin 的多页。无 Web Locks 时独立窗口首次同时打开可能各显示一次；两者均必须本人明确开启，不改变 consent 默认值。首次提示披露目标服务端，未配置时给 `CORE_SERVER_NOT_CONFIGURED` 和设置入口。绑定另行确认，积分与作者收入按服务端规则处理。
+
+文案：「开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。」同意仍沿用现有范围，不为未上报元数据新增采集器。

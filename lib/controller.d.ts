@@ -1,5 +1,5 @@
 import type { CoreStore, PluginConfig } from './contracts.js';
-import type { HanaMeshCoreContract, HealthSnapshot } from './contract.js';
+import type { HanaMeshCoreContract, HealthSnapshot, ConsentPrompt } from './contract.js';
 import type { SharedDeviceStore } from './shared-device.js';
 import type { SuiteDeclaration, SuiteDeclarationRequest } from './suite/types.js';
 interface HealthProvider {
@@ -125,6 +125,12 @@ export declare class SessionController {
     points(): Promise<unknown>;
     /** Idempotent: the first call stamps the marker, later calls (restart, reinstall of the same profile) return it unchanged. */
     markPointsPromptShown(): Promise<{
+        shownAt: string;
+    }>;
+    /** An explicit older refusal/withdrawal has changedAt, whereas a fresh withheld snapshot has null. */
+    consentPrompt(): ConsentPrompt;
+    /** Called only after the native dialog opens. Serialized inside the existing storage publication barrier. */
+    markConsentPromptShown(): Promise<{
         shownAt: string;
     }>;
     state(): unknown;

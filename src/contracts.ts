@@ -48,6 +48,8 @@ export interface StoredCoreSnapshot {
   readonly serverObservation: {readonly reachable: boolean | null; readonly checkedAt: string | null};
   /** T2: ISO timestamp of the one-time "bind to keep your pending points" prompt. Optional so rc.30 snapshots stay loadable. */
   readonly pointsBindPromptShownAt?: string | null;
+  /** First usage consent dialog was actually displayed. Optional for pre-0.3.15 snapshots. */
+  readonly usageConsentPromptShownAt?: string | null;
   /** J1.S4: this client's own identity that lost to an existing shared identity. Kept (not deleted) so it stays
    *  recoverable; optional so pre-J1.S4 snapshots stay loadable. */
   readonly replacedDevices?: ReadonlyArray<NonNullable<StoredCoreSnapshot['device']> & {readonly replacedAt: string}>;

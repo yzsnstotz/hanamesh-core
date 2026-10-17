@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
-import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput} from './contract.js';
+import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput, ConsentPrompt} from './contract.js';
 import {createDevice, requestNonce, signWithDevice, type StoredDevice} from './device.js';
 import {CoreError, safeError, upstreamError, upstreamJson, upstreamFacts} from './errors.js';
 import {registerDevice} from './registration.js';
@@ -90,6 +90,7 @@ export class SessionController {
   /** Bumped on every effective server change: results of requests to the previous server are never committed. */
   #serverGeneration = 0;
   #consentGeneration = 0;
+  #consentPromptWrite: Promise<{shownAt: string}> | null = null;
   readonly #shared: SharedDeviceStore | null;
   #identity: Identity;
   #state: StoredCoreSnapshot;
@@ -693,6 +694,25 @@ export class SessionController {
     return {shownAt};
   }
 
+  /** An explicit older refusal/withdrawal has changedAt, whereas a fresh withheld snapshot has null. */
+  consentPrompt(): ConsentPrompt {
+    const shownAt = this.#state.usageConsentPromptShownAt ?? null;
+    return {show: this.#state.consent.state === 'withheld' && this.#state.consent.changedAt === null && shownAt === null, shownAt};
+  }
+
+  /** Called only after the native dialog opens. Serialized inside the existing storage publication barrier. */
+  markConsentPromptShown(): Promise<{shownAt: string}> {
+    const shownAt = this.#state.usageConsentPromptShownAt;
+    if (shownAt != null) return Promise.resolve({shownAt});
+    if (this.#consentPromptWrite) return this.#consentPromptWrite;
+    this.#consentPromptWrite = this.#publish(current => ({...current, revision: current.revision + 1,
+      usageConsentPromptShownAt: new Date().toISOString()}))
+      .then(() => ({shownAt: this.#state.usageConsentPromptShownAt!}))
+      .catch(error => { throw error instanceof CoreError ? error : new CoreError('CORE_STORAGE_UNAVAILABLE', 503); })
+      .finally(() => { this.#consentPromptWrite = null; });
+    return this.#consentPromptWrite;
+  }
+
   /** Effective server plus where it came from, so the settings page can show both the address and the default. */
   #serverFacts() {
     return {serverOrigin: this.#serverOrigin(), serverOriginSource: this.#serverOverride === null ? 'config' as const : 'setting' as const,
@@ -713,7 +733,7 @@ export class SessionController {
     const components = health.components.map(component => component && typeof component === 'object' && (component as {id?: unknown}).id === 'usage'
       ? {...component, serviceReady: this.#usageReady?.() ?? false}
       : component);
-    return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registrationRecovery: this.#registrationRecovery, registration: this.#state.registration, consent: this.#state.consent,
+    return publicJson({deviceId: device?.deviceId ?? null, publicKey: device?.publicKey ?? null, identity: this.#identity, registrationFailure: this.#registrationFailure, registrationRecovery: this.#registrationRecovery, registration: this.#state.registration, consent: this.#state.consent, consentPrompt: this.consentPrompt(),
       session: device ? this.#session() : null, account: this.#account, ...this.#serverFacts(), ...this.#websiteFacts(),
       configuration: this.#config, health: {mode: health.mode, fault: health.fault ?? null}, components, contributions: this.#contributionsView()});
   }

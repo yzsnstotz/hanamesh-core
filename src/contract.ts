@@ -2,6 +2,11 @@ import type {SuiteDeclaration, SuiteDeclarationRequest} from './suite/types.js';
 export type {SuiteDeclaration, SuiteDeclarationRequest} from './suite/types.js';
 export type ConsentState = 'granted' | 'withheld';
 
+export interface ConsentPrompt {
+  readonly show: boolean;
+  readonly shownAt: string | null;
+}
+
 export interface SessionSnapshot {
   readonly protocolVersion: '1';
   readonly deviceId: string;

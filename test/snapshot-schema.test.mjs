@@ -22,3 +22,15 @@ test('website override is optional for old storage and rejects malformed new sto
  for(const websiteOriginOverride of[null,'http://127.0.0.1:48606'])assert.equal(schema.safeParse({...legacy,websiteOriginOverride}).success,true);
  assert.equal(schema.safeParse({...legacy,websiteOriginOverride:42}).success,false);
 });
+
+test('first-consent display marker preserves old snapshots and round-trips without touching consent',()=>{
+ const schema=coreSnapshotSchema(z),legacy=structuredClone(INITIAL_CORE_SNAPSHOT);
+ delete legacy.usageConsentPromptShownAt;
+ assert.equal(schema.safeParse(legacy).success,true);
+ for(const usageConsentPromptShownAt of [null,'2026-10-17T00:00:00.000Z']){
+  const parsed=schema.parse({...legacy,usageConsentPromptShownAt});
+  assert.deepEqual(parsed.consent,legacy.consent);
+  assert.equal(parsed.usageConsentPromptShownAt,usageConsentPromptShownAt);
+ }
+ assert.equal(schema.safeParse({...legacy,usageConsentPromptShownAt:true}).success,false);
+});

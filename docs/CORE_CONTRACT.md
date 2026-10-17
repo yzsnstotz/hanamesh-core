@@ -74,7 +74,7 @@
 `src/contract-fixtures.ts` 为真源，重建后的 `lib/contract-fixtures.js`（包导出 `hanamesh-core/contract/fixtures`）向本包的开发消费者提供（正式 API 由提供方合约文档追加）：
 
 - `CORE_CONTRACT_DEFINITION`：合约 id、服务名、wire 协议、全部九个现行调用的输入/输出、同步异步、错误适用条件、签名 canonical。`types` 引用现有 v1 JSON Schema 的字段定义，包含 SessionSnapshot 全部八个字段；没有第二份协议字段副本。
-- 类型重导出：`ConsentState`、`RequestSignatureInput`、`DeviceAuthHeaders`、`SessionSnapshot`、`HanaMeshCoreContract`、`CoreHandshake`。
+- 类型重导出：`ConsentState`、`ConsentPrompt`、`RequestSignatureInput`、`DeviceAuthHeaders`、`SessionSnapshot`、`HanaMeshCoreContract`、`CoreHandshake`。
 - `createCoreContractExamples()`：带 fixture 标签的同意状态、设备 id、公钥、会话、origin、原始请求字节及可验签四头；握手错误返回值与 `{code,status}` 运行错误样例。每次生成独立 Ed25519 公钥/签名，不输出私钥。请求 body 是 `Uint8Array | null`，消费方应保留或重建原始字节；JSON 序列化对象不替代签名输入。
 - `createCoreProviderFixture()`：最小内存模拟提供方，可切换同意、订阅/取消、签名及读取会话；`createCoreConsumerFixture()` 与现有 13 项握手矩阵可检查消费方。
 
@@ -191,3 +191,7 @@ test/core-public-provider.test.mjs使用真实SessionController.service及隔离
 `CORE_DETERMINISTIC_FIXTURE_VECTORS`（`hanamesh-core/contract/fixtures`）提供固定公开测试公钥、设备 id、原始 UTF-8 文本及签名和 POST/GET/DELETE 请求样例。请求头使用固定 timestamp/nonce，仅演示 canonical 字节，不是当前产品 signRequest 响应，也不允许将固定 nonce 用于业务发送。`bodyUtf8: null` 表示 null，空字符串表示空字节；用 TextEncoder 生成实际字节。向量不含私钥，不为 C-USAGE 制定业务编码。现有 createCoreContractExamples()/createCoreProviderFixture() 默认仍生成独立密钥。
 
 `CORE_CONTRACT_DEFINITION.types` 的原七项保留，新增可选 getHealth 的 schema 在 `optionalTypes.HealthSnapshot` 引用同一冻结 schema；公开类型 HealthSnapshot 也由 fixtures 重导出。不改变 schema 文件/协议或老调用。
+
+## DSH 首次使用记录提示（0.3.15）
+
+公开本机 `GET /api/hanamesh/core/state` 增补 `consentPrompt: ConsentPrompt`（类型经 `hanamesh-core/contract` 导出，schema `$defs.ConsentPrompt`）；同源 `POST /api/hanamesh/core/consent/prompt-shown` 无正文，幂等返回 `{shownAt:ISO}`。可选 storage 字段 `usageConsentPromptShownAt` 保留旧快照兼容。首次仅默认 withheld/changedAt=null/无 marker 提示；明确拒绝或撤回以及原 granted 不提示。客户端实际显示后记录；稍后、ESC、卸载不授权，只有本人开启调用原同意写屏障。详情及多窗口范围见 `API.md`。

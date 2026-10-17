@@ -31,6 +31,7 @@ export function coreSnapshotSchema(z) {
   const serverObservation = z.object({reachable: z.boolean().nullable(), checkedAt: z.string().nullable()}).strict();
   // T2 marker: optional so a profile upgraded from rc.30 keeps loading its stored snapshot (DELIVERY_RULES §1.6 incident 20).
   const pointsBindPromptShownAt = z.string().nullable().optional();
+  const usageConsentPromptShownAt = z.string().nullable().optional();
   const deviceFields = {deviceId: z.string(), publicKey: z.string(), privateKeyPkcs8: z.string(), createdAt: z.string()};
   // J1.S4: `device` mirrors the machine-wide shared identity; `replacedDevices` keeps this client's own identities that
   // lost to it. Optional so pre-J1.S4 snapshots keep loading.
@@ -39,7 +40,7 @@ export function coreSnapshotSchema(z) {
   // 0.3.4: server address set in Core's settings page; null/absent = plugin config `serverOrigin`.
   const serverOriginOverride = z.string().nullable().optional();
   const websiteOriginOverride = z.string().nullable().optional();
-  return z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, replacedDevices, serverOriginOverride, websiteOriginOverride}).strict();
+  return z.object({schemaVersion: z.literal(1), revision: z.number().int().nonnegative(), device, registration, consent, serverObservation, pointsBindPromptShownAt, usageConsentPromptShownAt, replacedDevices, serverOriginOverride, websiteOriginOverride}).strict();
 }
 
 /** @param {import('@deepseek-ai/cordis').Context} ctx @param {import('./contracts.js').PluginConfig} config */

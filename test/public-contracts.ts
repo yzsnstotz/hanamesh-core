@@ -20,3 +20,7 @@ void [definitionId, notReady, examplesPromise, request, headers, session];
 import {SUITE_MANIFEST, type SuiteDeclaration} from "hanamesh-core/suite";
 const declaration: Promise<SuiteDeclaration> | undefined = core.getSuiteDeclaration?.({registry:"https://registry.npmjs.org/"});
 void [SUITE_MANIFEST, declaration];
+
+import type {ConsentPrompt} from '../lib/contract.js';
+const prompt: ConsentPrompt = {show: true, shownAt: null};
+void prompt;

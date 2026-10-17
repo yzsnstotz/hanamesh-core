@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 interface SlotRegistry {
     inject(name: string, run: () => (() => void)): () => void;
     register(spec: {
@@ -40,6 +41,9 @@ export declare function collectLatestActivity(fetchPage: (query: {
     activityDisplayRows: number;
 }): Promise<ActivityView>;
 export declare function coreErrorText(code: string | null, upstreamStatus?: number): string;
+export declare function FirstConsentPrompt({ openSettings }: {
+    openSettings: () => void;
+}): ReactNode;
 export declare const name = "hanamesh-core-client";
 export declare const inject: string[];
 export declare function apply(ctx: ClientContext): void;
