@@ -4,6 +4,7 @@ export interface RegistryReaderOptions {
     readonly maxResponseBytes?: number;
     /** Explicitly owned test registries only. Production DSH never supplies this option. */
     readonly localTestRegistries?: readonly string[];
+    readonly packageRegistries?: readonly string[];
 }
 export declare class RegistryMetadataReader {
     readonly options: RegistryReaderOptions;

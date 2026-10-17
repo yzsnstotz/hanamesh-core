@@ -8,7 +8,7 @@ const source = {version: '__CORE_VERSION__'};
 const packed = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
 assert.equal(packed.name, 'hanamesh-core');
 assert.equal(packed.version, source.version);
-assert.deepEqual(packed.dependencies, {semver: '7.7.2'});
+assert.deepEqual(packed.dependencies, {semver: '7.7.2', tar: '7.5.22'});
 assert.equal(packed.dsh.bundle.patch, './profile/cordis.patch.yml');
 assert.ok(packed.exports['./contract']);
 assert.ok(packed.exports['./client']);
@@ -49,3 +49,6 @@ assert.doesNotMatch(packedLib, /from ['"]hanamesh-usage|from ['"]@hanamesh\/dsh-
 console.log(JSON.stringify({event:'check_package_ok',version:packed.version,dependencies:Object.keys(packed.dependencies ?? {}).length}));
 
 const {SUITE_MANIFEST}=await import("hanamesh-core/suite");assert.deepEqual(SUITE_MANIFEST,packed.hanameshSuite);
+
+const {createSuitePackageSource} = await import('hanamesh-core/suite/source');
+assert.equal(typeof createSuitePackageSource, 'function');

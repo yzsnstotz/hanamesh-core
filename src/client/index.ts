@@ -1,12 +1,55 @@
-import {createElement, Fragment, useEffect, useRef, useState, type ReactNode, type SyntheticEvent} from 'react';
+import {createElement, Fragment, useEffect, useRef, useState, version as reactVersion, type ReactNode, type SyntheticEvent} from 'react';
+/** Structural subset of Connection's public client contract; optional for older supported peers. */
+interface PeerConnection {
+  generation?: {getSnapshot(): {id: number} | undefined; subscribe(listener: () => void): () => void};
+}
 
 interface SlotRegistry {
   inject(name: string, run: () => (() => void)): () => void;
   register(spec: {name: string; id: string; order: number; label: string}, component: unknown): () => void;
 }
-interface ClientContext {slots: SlotRegistry; effect(run: () => (() => void), label?: string): unknown}
+interface ClientContext {slots: SlotRegistry; connection?: PeerConnection; effect(run: () => (() => void), label?: string): unknown}
 
-const CORE_VERSION = '0.3.15';
+/** Current external React observation only. No storage, timers, retries or backend dependency inference. */
+export function startClientPeerLease(connection: PeerConnection | undefined, page: Pick<Window, 'addEventListener' | 'removeEventListener'>, doFetch: typeof fetch | undefined = globalThis.fetch): () => void {
+  const generation = connection?.generation;
+  if (typeof generation?.getSnapshot !== 'function' || typeof generation.subscribe !== 'function' || typeof doFetch !== 'function') return () => {};
+  const pageId = crypto.randomUUID();
+  let current: number | undefined, active: AbortController | undefined, hidden = false, disposed = false;
+  const withdraw = (): void => {active?.abort(); active = undefined;};
+  const observe = (): void => {
+    if (disposed || hidden) return;
+    const next = generation.getSnapshot()?.id;
+    if (next === current) return;
+    withdraw(); current = next;
+    if (!next) return;
+    const invocation = new AbortController(); active = invocation;
+    const payload = {protocol: 1, pageId, activationId: crypto.randomUUID(), generation: next, reactVersion};
+    const failed = (code: string): void => {
+      if (disposed || invocation.signal.aborted) return;
+      invocation.abort();
+      console.error('HanaMesh Core client peer observation:', code);
+    };
+    try {void doFetch('/api/hanamesh/core/client-peer-lease', {method: 'POST', credentials: 'same-origin', headers: {'content-type': 'application/json'}, body: JSON.stringify(payload), signal: invocation.signal}).then(async response => {
+      if (invocation.signal.aborted || disposed) return;
+      let code = 'CORE_SUITE_CLIENT_PEER_ENDED';
+      if (!response.ok) {
+        try {const value = await response.json() as {error?: {code?: unknown}}; code = typeof value.error?.code === 'string' && /^[A-Z][A-Z0-9_]{0,79}$/.test(value.error.code) ? value.error.code : 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID';}
+        catch {code = 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID';}
+      }
+      failed(code);
+    }, () => failed('CORE_SUITE_CLIENT_PEER_TRANSPORT_FAILED'));}
+    catch {failed('CORE_SUITE_CLIENT_PEER_TRANSPORT_FAILED');}
+  };
+  const hide = (): void => {hidden = true; current = undefined; withdraw();};
+  const show = (): void => {if (!hidden) return; hidden = false; observe();};
+  const unsubscribe = generation.subscribe(observe);
+  page.addEventListener('pagehide', hide); page.addEventListener('pageshow', show);
+  observe();
+  return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
+}
+
+const CORE_VERSION = '0.3.16';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
@@ -636,8 +679,9 @@ function FooterAction({wide}: {wide: boolean}): ReactNode {
 }
 
 export const name = 'hanamesh-core-client';
-export const inject = ['slots'];
+export const inject = ['slots', 'connection'];
 export function apply(ctx: ClientContext): void {
+  ctx.effect(() => startClientPeerLease(ctx.connection, window), 'hanamesh-core:client-peer-lease');
   ctx.effect(() => {
     const style = document.createElement('style'); style.dataset['hanameshCore'] = 'client'; style.textContent = styleText; document.head.append(style);
     const section = ctx.slots.inject('settings.section', () => ctx.slots.register({name: 'settings.section', id: 'hanamesh', order: 80, label: 'HanaMesh'}, HanaMeshSection));

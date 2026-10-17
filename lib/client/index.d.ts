@@ -1,4 +1,13 @@
 import { type ReactNode } from 'react';
+/** Structural subset of Connection's public client contract; optional for older supported peers. */
+interface PeerConnection {
+    generation?: {
+        getSnapshot(): {
+            id: number;
+        } | undefined;
+        subscribe(listener: () => void): () => void;
+    };
+}
 interface SlotRegistry {
     inject(name: string, run: () => (() => void)): () => void;
     register(spec: {
@@ -10,8 +19,11 @@ interface SlotRegistry {
 }
 interface ClientContext {
     slots: SlotRegistry;
+    connection?: PeerConnection;
     effect(run: () => (() => void), label?: string): unknown;
 }
+/** Current external React observation only. No storage, timers, retries or backend dependency inference. */
+export declare function startClientPeerLease(connection: PeerConnection | undefined, page: Pick<Window, 'addEventListener' | 'removeEventListener'>, doFetch?: typeof fetch | undefined): () => void;
 type ActivityItem = {
     hanaRef: string;
     action: 'install' | 'open' | 'use' | 'uninstall';

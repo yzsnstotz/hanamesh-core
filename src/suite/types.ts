@@ -55,6 +55,7 @@ export interface SuiteDeclaration {
   /** External peers visible to the current Core/Loader resolution context, not a future installation tree. */
   readonly peerFacts: Readonly<Record<string, string | null | 'unknown'>>;
   readonly metadataDigests: Readonly<Record<string, string>>;
+  readonly clientPeerFacts?: import('./client-peers.js').ClientPeerFacts;
 }
 export interface SuiteServiceOptions {
   readonly profile: SuiteProfile;
@@ -65,4 +66,5 @@ export interface SuiteServiceOptions {
   readonly registry: {normalize?(registry: string): string; read(registry: string, name: string): Promise<RegistryMetadata>};
   readonly nodeVersion: string;
   readonly peerVersion: (name: string) => Promise<string | null | {readonly status: 'unknown'}>;
+  readonly clientPeerFacts?: () => import('./client-peers.js').ClientPeerFacts;
 }

@@ -8,6 +8,7 @@ export interface RegistryReaderOptions {
   readonly maxResponseBytes?: number;
   /** Explicitly owned test registries only. Production DSH never supplies this option. */
   readonly localTestRegistries?: readonly string[];
+  readonly packageRegistries?: readonly string[];
 }
 export class RegistryMetadataReader {
   readonly timeoutMs: number;
@@ -16,8 +17,11 @@ export class RegistryMetadataReader {
     this.timeoutMs = options.timeoutMs ?? CORE_DEFAULTS.timeoutMs;
     this.maxResponseBytes = options.maxResponseBytes ?? CORE_DEFAULTS.maxResponseBytes;
     if (!Number.isSafeInteger(this.timeoutMs) || this.timeoutMs <= 0 || !Number.isSafeInteger(this.maxResponseBytes) || this.maxResponseBytes <= 0) throw new CoreError('CORE_INPUT_INVALID', 400);
+    if (options.packageRegistries !== undefined && (!Array.isArray(options.packageRegistries) || options.packageRegistries.some(value => {
+      try {return registryUrl(value, [value]) !== value || new URL(value).protocol !== 'http:' || new URL(value).hostname !== '127.0.0.1';} catch {return true;}
+    }))) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
-  normalize(registry: string): string {return registryUrl(registry, this.options.localTestRegistries);}
+  normalize(registry: string): string {return registryUrl(registry, [...(this.options.localTestRegistries ?? []), ...(this.options.packageRegistries ?? [])]);}
   async read(registry: string, name: string): Promise<RegistryMetadata> {
     const base = new URL(this.normalize(registry));
     if (!isPackageName(name)) throw new CoreError('CORE_SUITE_SOURCE_UNSUPPORTED', 400);

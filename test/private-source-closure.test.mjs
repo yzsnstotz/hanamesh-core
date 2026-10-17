@@ -13,7 +13,7 @@ test('Core private source closure uses published ranges and keeps developer tool
   await assert.rejects(access('vendor/hanamesh-ui-kit-0.1.0-rc.3.tgz'));
   assert.equal(JSON.parse(await readFile('deps/LOCKS.json','utf8')).uiKit, undefined);
   // HM-4: semver is a normal runtime dependency; the vendored copy and the old host-api snapshot are archived.
-  assert.deepEqual(root.dependencies, {semver: '7.7.2'});
+  assert.deepEqual(root.dependencies, {semver: '7.7.2', tar: '7.5.22'});
   // Tests own their fixtures: no contract package in any dependency section, and no separate contract-check install root.
   for (const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) assert.equal(root[section]?.['@hanamesh/api-contracts'], undefined, section);
   assert.doesNotMatch(await readFile('pnpm-lock.yaml','utf8'), /api-contracts/);

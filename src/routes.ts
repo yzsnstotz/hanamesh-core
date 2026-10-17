@@ -1,6 +1,7 @@
 import {SessionController} from './controller.js';
 import {CoreError, safeError, upstreamFacts} from './errors.js';
 import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
+import type {ClientPeerLeases} from './suite/client-peers.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
@@ -18,6 +19,7 @@ export const ROUTES = Object.freeze({
   openExternal: '/api/hanamesh/core/open-external',
   bindLink: '/api/hanamesh/core/bind-link',
   diagnostics: '/api/hanamesh/core/diagnostics',
+  clientPeerLease: '/api/hanamesh/core/client-peer-lease',
 });
 const ROUTE_PATHS = new Set<string>(Object.values(ROUTES));
 
@@ -38,7 +40,7 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'hold'>): (request: Request) => Promise<Response> {
   return async request => {
     try {
       const rejection = admission?.requestRejection(request);
@@ -72,6 +74,12 @@ export function createRouteHandler(controller: SessionController, admission: {re
       if (Buffer.byteLength(body, 'utf8') > 4096) throw new CoreError('CORE_INPUT_INVALID', 413);
       let parsed: unknown;
       try { parsed = JSON.parse(body); } catch { throw new CoreError('CORE_INPUT_INVALID', 400); }
+      if (url.pathname === ROUTES.clientPeerLease) {
+        if (!clientPeers) throw new CoreError('CORE_SUITE_CLIENT_PEER_CAPABILITY_UNAVAILABLE', 503);
+        const result = await clientPeers.hold(parsed, request.signal);
+        if (request.signal.aborted) return new Response(null, {status: 204});
+        return response({error: result.error}, result.error.code === 'CORE_SUITE_CLIENT_PEER_INVALID' ? 400 : 409);
+      }
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length !== 1) throw new CoreError('CORE_INPUT_INVALID', 400);
       if (url.pathname === ROUTES.openExternal) {
         const target = (parsed as {url?: unknown}).url;

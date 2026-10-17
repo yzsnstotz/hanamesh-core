@@ -368,6 +368,9 @@
             "type": "string",
             "pattern": "^[a-f0-9]{64}$"
           }
+        },
+        "clientPeerFacts": {
+          "$ref": "#/$defs/ClientPeerFacts"
         }
       }
     },
@@ -601,6 +604,44 @@
             "null"
           ],
           "format": "date-time"
+        }
+      }
+    },
+    "ClientPeerFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "status",
+        "reason",
+        "reactVersion",
+        "contextId"
+      ],
+      "properties": {
+        "source": {
+          "const": "core-client-lease"
+        },
+        "status": {
+          "enum": [
+            "known",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reactVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contextId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     }

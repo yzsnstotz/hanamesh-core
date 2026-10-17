@@ -22,6 +22,7 @@ export class SuiteDeclarationService {
   constructor(readonly options: SuiteServiceOptions) {}
   async read(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration> {
     const {profile, core, manifest, inventory, nodeVersion} = this.options;
+    const clientAtStart = this.options.clientPeerFacts?.();
     const blocked: SuiteBlocked[] = [], upgrades: SuiteUpgrade[] = [];
     const peerFacts: Record<string, string | null> = {}, metadataDigests: Record<string, string> = {};
     let observations: readonly ComponentObservation[];
@@ -40,7 +41,7 @@ export class SuiteDeclarationService {
     // External peer facts are read from the current Core/Loader resolution context once per declaration.
     const peer = async (name: string): Promise<string | null> => {
       if (!Object.hasOwn(peerFacts, name)) {
-        try {const version = await this.options.peerVersion(name); peerFacts[name] = version === null ? null : typeof version === 'string' && semver.valid(version) ? version : 'unknown';} catch {peerFacts[name] = 'unknown';}
+        try {const version = name === 'react' && clientAtStart ? clientAtStart.reactVersion ?? {status: 'unknown'} : await this.options.peerVersion(name); peerFacts[name] = version === null ? null : typeof version === 'string' && semver.valid(version) ? version : 'unknown';} catch {peerFacts[name] = 'unknown';}
       }
       return peerFacts[name] ?? null;
     };
@@ -120,7 +121,13 @@ export class SuiteDeclarationService {
         }
       } catch (error) {blocked.push({code: error instanceof CoreError ? error.code : 'CORE_SUITE_METADATA_INVALID'});}
     }
-    const facts = {schemaVersion: 1 as const, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests};
+    const clientPeerFacts = this.options.clientPeerFacts?.();
+    if (clientPeerFacts && (clientPeerFacts.status !== 'known' || clientPeerFacts.contextId !== clientAtStart?.contextId)) {
+      completeness = 'unknown'; upgrades.length = 0;
+      peerFacts['react'] = 'unknown';
+      blocked.push({code: clientPeerFacts.contextId !== clientAtStart?.contextId ? 'CORE_SUITE_CLIENT_PEER_CHANGED' : clientPeerFacts.reason!});
+    }
+    const facts = {schemaVersion: 1 as const, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {

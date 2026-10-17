@@ -67,6 +67,12 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     }));} catch {throw new CoreError('CORE_INPUT_INVALID', 400);}
   }
   if (sharedIdentityDir !== null && (typeof sharedIdentityDir !== 'string' || !isAbsolute(sharedIdentityDir))) throw new CoreError('CORE_INPUT_INVALID', 400);
+  const suitePackageRegistries = input.suitePackageRegistries ?? [];
+  if (!Array.isArray(suitePackageRegistries)) throw new CoreError('CORE_INPUT_INVALID', 400);
+  for (const value of suitePackageRegistries) {
+    try {if (registryUrl(value, [value]) !== value || new URL(value).protocol !== 'http:' || new URL(value).hostname !== '127.0.0.1') throw new Error();}
+    catch {throw new CoreError('CORE_INPUT_INVALID', 400);}
+  }
   return Object.freeze({
     serverOrigin: originOf(input.serverOrigin),
     websiteOrigin: originOf(input.websiteOrigin),
@@ -74,7 +80,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
     checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
-    sharedIdentityDir, suiteLocalTestRegistries,
+    sharedIdentityDir, suiteLocalTestRegistries, suitePackageRegistries: Object.freeze([...suitePackageRegistries]),
   });
 }
 

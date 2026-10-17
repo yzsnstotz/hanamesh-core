@@ -11,7 +11,7 @@ test('Core admits official rc.2 and compatible 0.2.x prereleases without admitti
   assert.equal(pkg.name, 'hanamesh-core');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
-  assert.deepEqual(pkg.dependencies, {semver: '7.7.2'}); // D-3 / HM-4: semver is the only runtime dependency
+  assert.deepEqual(pkg.dependencies, {semver: '7.7.2', tar: '7.5.22'}); // D-3 / HM-4: semver plus the pinned normal-archive parser are runtime inputs
   assert.equal(pkg.dsh.bundle.patch, './profile/cordis.patch.yml');
   for (const [name, version] of Object.entries(pkg.peerDependencies)) {
     if (name.startsWith('@deepseek-ai/dsh-')) {

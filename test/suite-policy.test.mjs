@@ -50,3 +50,17 @@ test('future manifests with object repositories, empty ranges or unknown require
 test("explicit malformed engines metadata is unknown rather than unconstrained",async()=>{for(const engines of [null,[],"node>=24",{node:24},{node:""},{node:"not-a-range"}]){const data=structuredClone(catalog);data.core["1.1.0"].engines=engines;const declaration=await service({data}).read({registry:"https://registry.invalid/"});assert.ok(!declaration.upgrades.some(row=>row.coreVersion==="1.1.0"));assert.ok(declaration.blocked.some(row=>row.coreVersion==="1.1.0"&&row.code==="CORE_SUITE_METADATA_INVALID"));}});
 
 test("all current and candidate tuple members require a supported public DSH bundle declaration",async()=>{for(const name of ["core","usage","apps"]){for(const dsh of [undefined,null,[],{},{bundle:null},{bundle:"unknown"},{bundle:{patch:"../private.yml"}},{bundle:{patch:"https://other.invalid/bundle.yml"}},{bundle:{patch:24}}]){const data=structuredClone(catalog);for(const record of Object.values(data[name]))record.dsh=dsh;const declaration=await service({data}).read({registry:"https://registry.invalid/"});assert.deepEqual(declaration.upgrades,[],name);assert.ok(declaration.blocked.some(row=>/^CORE_SUITE_BUNDLE_(MISSING|INVALID)$/.test(row.code)),JSON.stringify(declaration.blocked));}}const observations=profile.components.map(row=>({kind:"present",phase:"active",version:"1.0.0",repository:repo(row.moduleName),metadata:{...record(row.moduleName,"1.0.0"),dsh:undefined}}));const current=await service({observations}).read();assert.equal(current.completeness,"incomplete");assert.ok(current.blocked.some(row=>row.code==="CORE_SUITE_BUNDLE_MISSING"));});
+
+test('client lease changes during inventory or metadata reads revoke stale completeness and tuple',async()=>{
+ for(const phase of ['inventory','registry']){
+  const s=service();let context='a'.repeat(64);
+  s.options.clientPeerFacts=()=>({source:'core-client-lease',status:'known',reason:null,reactVersion:'18.3.1',contextId:context});
+  if(phase==='inventory'){const observe=s.options.inventory.observe;s.options.inventory.observe=async(...args)=>{context='b'.repeat(64);return observe(...args);};}
+  else{const read=s.options.registry.read;s.options.registry.read=async(...args)=>{context='b'.repeat(64);return read(...args);};}
+  const d=await s.read({registry:'https://registry.invalid/'});assert.equal(d.completeness,'unknown','a declaration cannot outlive its renderer observation');assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.code==='CORE_SUITE_CLIENT_PEER_CHANGED'));assert.equal(d.clientPeerFacts.contextId,'b'.repeat(64));
+ }
+});
+
+test('withdrawn or replaced renderer lease never leaves an obsolete known React value in the final DTO',async()=>{
+ for(const status of ['known','unknown']){const s=service();s.options.core.peerDependencies={react:'^18.3.1'};let changed=false;s.options.clientPeerFacts=()=>({source:'core-client-lease',status:changed?status:'known',reason:changed&&status==='unknown'?'CORE_SUITE_CLIENT_PEER_NOT_CONNECTED':null,reactVersion:changed&&status==='unknown'?null:'18.3.1',contextId:(changed?'b':'a').repeat(64)});const read=s.options.registry.read;s.options.registry.read=async(...args)=>{changed=true;return read(...args);};const d=await s.read({registry:'https://registry.invalid/'});assert.equal(d.peerFacts.react,'unknown');assert.equal(d.completeness,'unknown');assert.deepEqual(d.upgrades,[]);delete s.options.core.peerDependencies;}
+});

@@ -13,6 +13,8 @@ export interface PluginConfig {
     readonly maxResponseBytes?: number;
     /** Explicit loopback HTTP registries for isolated test profiles; never inferred from requests. Default []. */
     readonly suiteLocalTestRegistries?: readonly string[];
+    /** Exact loopback URLs owned by a normal verified suite package source; never enabled by a request. */
+    readonly suitePackageRegistries?: readonly string[];
     readonly clientPollIntervalMs?: number;
     readonly pointsRefreshMs?: number;
     readonly contributionIntervalMs?: number;
