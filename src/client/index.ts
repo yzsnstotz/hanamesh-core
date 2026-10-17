@@ -37,8 +37,20 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
         try {const value = await response.json() as {error?: {code?: unknown}}; code = typeof value.error?.code === 'string' && /^[A-Z][A-Z0-9_]{0,79}$/.test(value.error.code) ? value.error.code : 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID';}
         catch {code = 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID';}
       }
-      failed(code);
-    }, () => failed('CORE_SUITE_CLIENT_PEER_TRANSPORT_FAILED'));}
+      if (!response.ok) {failed(code); return;}
+      if (response.headers.get('content-type') !== 'application/octet-stream' || !response.body) {failed('CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); return;}
+      const reader = response.body.getReader(), frame = new TextEncoder().encode('hanamesh-core-client-peer-lease/1\n');
+      let offset = 0;
+      try {
+        for (;;) {
+          const chunk = await reader.read();
+          if (chunk.done) {failed(offset === frame.length ? code : 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); break;}
+          for (const byte of chunk.value) {
+            if (offset >= frame.length || byte !== frame[offset++]) {failed('CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); await reader.cancel(); return;}
+          }
+        }
+      } finally {reader.releaseLock();}
+    }).catch(() => failed('CORE_SUITE_CLIENT_PEER_TRANSPORT_FAILED'));}
     catch {failed('CORE_SUITE_CLIENT_PEER_TRANSPORT_FAILED');}
   };
   const hide = (): void => {hidden = true; current = undefined; withdraw();};
@@ -49,7 +61,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.16';
+const CORE_VERSION = '0.3.17';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};

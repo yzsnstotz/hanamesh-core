@@ -40,7 +40,7 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'hold'>): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>): (request: Request) => Promise<Response> {
   return async request => {
     try {
       const rejection = admission?.requestRejection(request);
@@ -76,9 +76,22 @@ export function createRouteHandler(controller: SessionController, admission: {re
       try { parsed = JSON.parse(body); } catch { throw new CoreError('CORE_INPUT_INVALID', 400); }
       if (url.pathname === ROUTES.clientPeerLease) {
         if (!clientPeers) throw new CoreError('CORE_SUITE_CLIENT_PEER_CAPABILITY_UNAVAILABLE', 503);
-        const result = await clientPeers.hold(parsed, request.signal);
-        if (request.signal.aborted) return new Response(null, {status: 204});
-        return response({error: result.error}, result.error.code === 'CORE_SUITE_CLIENT_PEER_INVALID' ? 400 : 409);
+        const lease = clientPeers.open(parsed, request.signal);
+        if (!lease.ok) {
+          if (request.signal.aborted) return new Response(null, {status: 204});
+          return response({error: lease.error}, lease.error.code === 'CORE_SUITE_CLIENT_PEER_INVALID' ? 400 : 409);
+        }
+        let cancelled = false;
+        try {
+        const body = new ReadableStream<Uint8Array>({
+          start(stream) {
+            stream.enqueue(new TextEncoder().encode('hanamesh-core-client-peer-lease/1\n'));
+            void lease.closed.then(() => {if (!cancelled) stream.close();});
+          },
+          cancel() {cancelled = true; lease.close();},
+        });
+        return new Response(body, {headers: {'content-type': 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'}});
+        } catch (error) {lease.close(); throw error;}
       }
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length !== 1) throw new CoreError('CORE_INPUT_INVALID', 400);
       if (url.pathname === ROUTES.openExternal) {

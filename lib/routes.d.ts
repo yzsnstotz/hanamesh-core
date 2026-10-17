@@ -20,5 +20,5 @@ export declare const ROUTES: Readonly<{
 }>;
 export declare function createRouteHandler(controller: SessionController, admission?: {
     requestRejection(request: Request): 401 | 403 | undefined;
-} | null, clientPeers?: Pick<ClientPeerLeases, 'hold'>): (request: Request) => Promise<Response>;
+} | null, clientPeers?: Pick<ClientPeerLeases, 'open'>): (request: Request) => Promise<Response>;
 export declare function requireSameCarrierOrigin(request: Request): void;

@@ -6,6 +6,11 @@ export interface ClientPeerFacts {
     /** Opaque, process-local observation token; not a Host epoch or execution authorization. */
     readonly contextId: string;
 }
+type Lease = {
+    ok: true;
+    closed: Promise<void>;
+    close: () => void;
+};
 type Result = {
     ok: false;
     error: {
@@ -23,6 +28,7 @@ export declare class ClientPeerLeases {
     private readonly active;
     constructor(capable: boolean);
     snapshot(): ClientPeerFacts;
+    open(payload: unknown, signal: AbortSignal): Result | Lease;
     hold(payload: unknown, signal: AbortSignal): Promise<Result>;
     close(): void;
 }
