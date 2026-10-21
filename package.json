@@ -1,6 +1,6 @@
 {
   "name": "hanamesh-core",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -131,7 +131,7 @@
     "id": "hanamesh-suite",
     "core": {
       "name": "hanamesh-core",
-      "version": "0.3.17",
+      "version": "0.3.18",
       "repository": "https://github.com/yzsnstotz/hanamesh-core"
     },
     "components": [
