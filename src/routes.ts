@@ -1,3 +1,4 @@
+import type {ManagedSuitePackageSource} from './suite/source.js';
 import {SessionController} from './controller.js';
 import {CoreError, safeError, upstreamFacts} from './errors.js';
 import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
@@ -5,6 +6,7 @@ import type {ClientPeerLeases} from './suite/client-peers.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
+  suiteSource: '/api/hanamesh/core/suite-source',
   consent: '/api/hanamesh/core/consent',
   consentPromptShown: '/api/hanamesh/core/consent/prompt-shown',
   server: '/api/hanamesh/core/server',
@@ -40,7 +42,7 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?:ManagedSuitePackageSource): (request: Request) => Promise<Response> {
   return async request => {
     try {
       const rejection = admission?.requestRejection(request);
@@ -48,6 +50,7 @@ export function createRouteHandler(controller: SessionController, admission: {re
       const url = new URL(request.url);
       if (url.hash || (url.search && url.pathname !== ROUTES.activity)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
       if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
+      if(url.pathname===ROUTES.suiteSource&&request.method==='GET'){if(!suiteSource)throw new CoreError('CORE_SUITE_SOURCE_CAPABILITY_UNAVAILABLE',503);return response({...suiteSource.service.getState(),configuration:suiteSource.getConfiguration()});}
       if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health || url.pathname === ROUTES.points || url.pathname === ROUTES.activity) {
         if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
         if (url.pathname === ROUTES.state) return response(controller.state());
@@ -74,6 +77,7 @@ export function createRouteHandler(controller: SessionController, admission: {re
       if (Buffer.byteLength(body, 'utf8') > 4096) throw new CoreError('CORE_INPUT_INVALID', 413);
       let parsed: unknown;
       try { parsed = JSON.parse(body); } catch { throw new CoreError('CORE_INPUT_INVALID', 400); }
+      if(url.pathname===ROUTES.suiteSource){if(!suiteSource)throw new CoreError('CORE_SUITE_SOURCE_CAPABILITY_UNAVAILABLE',503);return response(await suiteSource.configure(parsed));}
       if (url.pathname === ROUTES.clientPeerLease) {
         if (!clientPeers) throw new CoreError('CORE_SUITE_CLIENT_PEER_CAPABILITY_UNAVAILABLE', 503);
         const lease = clientPeers.open(parsed, request.signal);

@@ -1,14 +1,27 @@
 // Test-only process ownership. Never run a package manager selected by an unverified ambient PATH.
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 import {access,realpath,mkdir,writeFile} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join,dirname,delimiter,isAbsolute} from 'node:path';
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function groupAlive(pid){try{process.kill(-pid,0);return true;}catch(error){if(error.code==='ESRCH')return false;throw error;}}
+// macOS returns EPERM for a killed group whose only remaining entries are zombies.
+// Verify exact owned membership; never reinterpret a live/foreign/unknown permission denial.
+function groupMembers(){return execFileSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8'}).trim().split('\n').map(line=>{const [pid,pgid,uid,state]=line.trim().split(/\s+/u);return {pid:Number(pid),pgid:Number(pgid),uid:Number(uid),state};});}
+export function processGroupAlive(pid,{probe=(target,signal)=>process.kill(target,signal),members=groupMembers,uid=process.getuid()}={}){
+ try{probe(-pid,0);return true;}catch(error){
+  if(error.code==='ESRCH')return false;
+  if(error.code==='EPERM'){
+   const owned=members().filter(member=>member.pgid===pid);
+   if(owned.length>0&&owned.every(member=>member.uid===uid&&member.state?.startsWith('Z')))return false;
+  }
+  throw error;
+ }
+}
+const groupAlive=processGroupAlive;
 async function terminateGroup(pid,graceMs){
  if(process.platform==='win32')throw Error('POSIX_PROCESS_GROUP_REQUIRED');
  for(const signal of['SIGTERM','SIGKILL']){
-  try{process.kill(-pid,signal);}catch(error){if(error.code==='ESRCH')return;throw error;}
+  try{process.kill(-pid,signal);}catch(error){if(error.code==='ESRCH')return;if(error.code==='EPERM'&&!groupAlive(pid))return;throw error;}
   const until=Date.now()+graceMs;while(groupAlive(pid)&&Date.now()<until)await pause(10);
   if(!groupAlive(pid))return;
  }

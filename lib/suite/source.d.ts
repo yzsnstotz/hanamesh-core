@@ -18,3 +18,5 @@ export interface SuitePackageSource {
 }
 /** Read-only, explicitly owned loopback npm source backed by normal SRI-verified package archives. */
 export declare function createSuitePackageSource(options: SuitePackageSourceOptions): Promise<SuitePackageSource>;
+export { createManagedSuitePackageSource, suiteSourceOptions, suiteSourceSnapshot } from './source-lifecycle.js';
+export type { ManagedSuitePackageSource, SuiteSourceSelection, SuiteSourceSnapshot, SuiteSourceStore, SuiteSourceState, HanaMeshSuiteSourceService } from './source-lifecycle.js';

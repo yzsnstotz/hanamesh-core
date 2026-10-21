@@ -3,8 +3,15 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 const production = new Map();
-for (const file of ['dsh.mjs', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
+for (const file of ['dsh.mjs', 'activation.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'activation-abort-does-not-wake',file:'lib/activation.js',mutate:code=>code.replace('await Promise.race([activation, aborted]);','await activation;'),test:'test/activation-gate.test.mjs'},
+ {id:'activation-completion-not-published',file:'lib/dsh.mjs',mutate:code=>code.replace('activation.ready(handler);','activation.fail();'),test:'test/suite-source-adapter.test.mjs'},
+ {id:'source-owned-service-missing',file:'lib/dsh.mjs',mutate:code=>code.replace("disposers.push(ctx.provide('hanameshSuiteSource',suiteSource.service));","void 0;"),test:'test/suite-source-adapter.test.mjs'},
+ {id:'source-disposed-registry-retained',file:'lib/suite/source-lifecycle.js',mutate:code=>code.replace("this.#source = null; this.#status = 'disposed';","this.#status = 'disposed';"),test:'test/suite-source-lifecycle.test.mjs'},
+ {id:'source-save-before-validated-open',file:'lib/suite/source-lifecycle.js',mutate:code=>code.replace('candidate = await this.#open(options);','await this.store.publish({schemaVersion:1,selection}); candidate = await this.#open(options);'),test:'test/suite-source-lifecycle.test.mjs'},
+ {id:'source-origin-guard-removed',file:'lib/routes.js',mutate:code=>code.replace("if (!admission || request.headers.has('origin'))\n                requireSameCarrierOrigin(request);","void 0;"),test:'test/suite-source-routes.test.mjs'},
+
  {id: 'renderer-context-not-rechecked', file: 'lib/suite/service.js', mutate: code => code.replaceAll('clientPeerFacts.contextId !== clientAtStart?.contextId', 'false'), test: 'test/suite-policy.test.mjs'},
  {id: 'renderer-conflict-ignored', file: 'lib/suite/client-peers.js', mutate: code => code.replace('versions.size > 1', 'versions.size > 999'), test: 'test/suite-client-peers.test.mjs'},
  {id: 'archive-integrity-ignored', file: 'lib/suite/source.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},

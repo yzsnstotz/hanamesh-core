@@ -253,6 +253,31 @@ function LocalUsageDialog({onClose, restoreFocus}: {onClose: () => void; restore
     createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', height: 'calc(100dvh - 88px)', border: 0}}));
 }
 
+type SuiteSourceView={protocolVersion:'1';status:'disabled'|'ready'|'failed'|'disposed';selection:string;registry:string|null;archiveCount:number;lastError:string|null;configuration:{configured:unknown;selection:{mode:string;options?:unknown}}};
+function SuiteSourceSettings(_props:{'data-suite-source-section':boolean}):ReactNode {
+ const [value,setValue]=useState<SuiteSourceView|null>(null),[draft,setDraft]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState<string|null>(null);
+ const active=useRef(true);
+ const load=async(edit=false):Promise<void>=>{const next=await jsonRequest<SuiteSourceView>('/api/hanamesh/core/suite-source');if(!active.current)return;setValue(next);if(edit){const options=next.configuration.selection.mode==='custom'?next.configuration.selection.options:next.configuration.configured;setDraft(options===null||options===undefined?'':JSON.stringify(options,null,2))}};
+ useEffect(()=>{active.current=true;void load(true).catch(cause=>{if(active.current)setError(cause instanceof Error?cause.message:'CORE_INTERNAL_ERROR')});return()=>{active.current=false}},[]);
+ const save=async(mode:'configured'|'disabled'|'custom'):Promise<void>=>{
+  if(busy)return;let selection:unknown={mode};if(mode==='custom'){try{selection={mode,options:JSON.parse(draft)}}catch{setError('CORE_SUITE_SOURCE_CONFIG_INVALID');return}}
+  setBusy(true);setError(null);
+  try{await jsonRequest('/api/hanamesh/core/suite-source',{method:'POST',body:JSON.stringify(selection)});await load()}
+  catch(cause){const code=cause instanceof Error?cause.message:'CORE_INTERNAL_ERROR';if(active.current)setError(code);try{await load()}catch(readback){if(active.current)setError(code+'；读取状态失败：'+(readback instanceof Error?readback.message:'CORE_INTERNAL_ERROR'))}}
+  finally{if(active.current)setBusy(false)}
+ };
+ return createElement('section',{'data-hanamesh-suite-source':value?.status??'loading',className:'hm-core-copy'},
+  createElement('h3',null,'本机套件来源'),
+  createElement('p',null,value?.status==='ready'?`运行中：${value.registry} · ${value.archiveCount} 份已核验归档`:value?.status==='disabled'?(value.selection==='disabled'?'已明确停用':'未配置本机来源'):value?.status==='failed'?'来源未启动':value?.status==='disposed'?'来源已释放':'读取中…'),
+  value&&createElement('small',{className:'hm-core-muted'},`当前选择：${value.selection==='custom'?'已保存的自定义来源':value.selection==='disabled'?'停用':'插件配置'}。Core 只在本插件加载后提供来源，不预装自己，不改客户端或其他插件的来源设置。`),
+  (error||value?.lastError)&&createElement('p',{role:'alert',className:'hm-core-error'},`来源操作未完成：${error??value?.lastError}。请核对归档与配置；不会自动重试。`),
+  createElement('button',{type:'button',disabled:busy,onClick:()=>{setError(null);void load().catch(cause=>setError(cause instanceof Error?cause.message:'CORE_INTERNAL_ERROR'))}},'读取来源状态'),
+  createElement('details',null,createElement('summary',null,'本机来源高级设置'),
+   createElement('p',{className:'hm-core-muted'},'指定已交付的正常 Core、Usage、App Host 归档绝对路径与 SHA512 完整性；监听端口、上游元数据来源与所有资源预算必须明确配置。未填写不会猜地址或自动补包。'),
+   createElement('textarea',{'aria-label':'本机来源配置',value:draft,rows:12,disabled:busy,onChange:(event:{currentTarget:{value:string}})=>setDraft(event.currentTarget.value),style:{width:'100%',boxSizing:'border-box'}}),
+   createElement('div',{className:'hm-core-actions'},createElement('button',{type:'button',disabled:busy||!draft.trim(),onClick:()=>void save('custom')},'保存本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('disabled')},'停用本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('configured')},'使用插件配置'))));
+}
+
 function HanaMeshSection(): ReactNode {
   const [state, setState] = useState<CoreState | null>(null);
   const [points, setPoints] = useState<PointsState | null>(null);
@@ -427,6 +452,7 @@ function HanaMeshSection(): ReactNode {
       createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, SUITE_INSTALL_COMMAND),
       createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: copySuiteCommand}, '复制安装/修复命令'), suiteCopyStatus && createElement('span', {role: 'status'}, suiteCopyStatus))),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
+    createElement(SuiteSourceSettings,{'data-suite-source-section':true}),
     createElement(Row, {label: '设备身份'}, identityRow),
     state.registrationFailure && createElement('p', {role: 'alert', className: 'hm-core-error'}, `注册失败：${coreErrorText(state.registrationFailure.code, state.registrationFailure.upstreamStatus)}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`),
     state.registrationRecovery && createElement('p', {role: 'status', 'data-hanamesh-registration-recovery': state.registrationRecovery.state}, state.registrationRecovery.message,

@@ -1,7 +1,9 @@
+import type { ManagedSuitePackageSource } from './suite/source.js';
 import { SessionController } from './controller.js';
 import type { ClientPeerLeases } from './suite/client-peers.js';
 export declare const ROUTES: Readonly<{
     state: "/api/hanamesh/core/state";
+    suiteSource: "/api/hanamesh/core/suite-source";
     consent: "/api/hanamesh/core/consent";
     consentPromptShown: "/api/hanamesh/core/consent/prompt-shown";
     server: "/api/hanamesh/core/server";
@@ -20,5 +22,5 @@ export declare const ROUTES: Readonly<{
 }>;
 export declare function createRouteHandler(controller: SessionController, admission?: {
     requestRejection(request: Request): 401 | 403 | undefined;
-} | null, clientPeers?: Pick<ClientPeerLeases, 'open'>): (request: Request) => Promise<Response>;
+} | null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?: ManagedSuitePackageSource): (request: Request) => Promise<Response>;
 export declare function requireSameCarrierOrigin(request: Request): void;

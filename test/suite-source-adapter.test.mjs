@@ -1,0 +1,2 @@
+import test from'node:test';import assert from'node:assert/strict';import{spawnSync}from'node:child_process';
+test('Core ordinary source plugin binding (fixture host, real plugin lifecycle)',()=>{const env={...process.env};delete env.NODE_TEST_CONTEXT;const r=spawnSync(process.execPath,['--experimental-loader','./test/fixtures/host-loader.mjs','--test','--test-reporter=tap','test/fixtures/suite-source-managed-check.test.mjs'],{encoding:'utf8',env});assert.equal(r.status,0,r.stdout+r.stderr)});

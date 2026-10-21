@@ -1,4 +1,7 @@
+import type {SuitePackageSourceOptions} from './suite/source.js';
 export interface PluginConfig {
+  /** Ordinary plugin-owned verified archive source. Null/absent is disabled; all enabled budgets are explicit. */
+  readonly suitePackageSource?: SuitePackageSourceOptions|null;
   readonly serverOrigin: string | null;
   readonly websiteOrigin: string | null;
   readonly allowSystemBrowser?: boolean;

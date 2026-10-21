@@ -127,3 +127,7 @@ D7 原生 Desktop 会先校验 `dsh-app://app` 来源，再去掉 Origin 转发�
 客户端模块内 queue 串行 StrictMode/多挂载，实际打开才 stamp，并等待写入结束再释放；Web Locks 可用时同时串行同 origin 的多页。无 Web Locks 时独立窗口首次同时打开可能各显示一次；两者均必须本人明确开启，不改变 consent 默认值。首次提示披露目标服务端，未配置时给 `CORE_SERVER_NOT_CONFIGURED` 和设置入口。绑定另行确认，积分与作者收入按服务端规则处理。
 
 文案：「开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。」同意仍沿用现有范围，不为未上报元数据新增采集器。
+
+## B17 local source lifecycle (candidate)
+
+`hanamesh-core/suite/source` additionally exports createManagedSuitePackageSource, suiteSourceOptions/suiteSourceSnapshot validators and their read-only types. The manager takes explicit configured options/null and its owned source store, exposes service.getState, getConfiguration, configure and close. Ordinary Core apply owns the actual domain and read-only Cordis discovery service `hanameshSuiteSource`; consumers should use that service, not create another lifecycle owner. See SUITE_DECLARATION.md for options, selection/error semantics and own admitted source settings route. The existing v1 Core required methods/consent/signing/identity/authorities and health defaults are unchanged.

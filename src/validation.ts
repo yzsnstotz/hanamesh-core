@@ -80,6 +80,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
     checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
+    suitePackageSource: input.suitePackageSource===undefined?null:structuredClone(input.suitePackageSource),
     sharedIdentityDir, suiteLocalTestRegistries, suitePackageRegistries: Object.freeze([...suitePackageRegistries]),
   });
 }

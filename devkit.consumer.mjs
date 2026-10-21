@@ -52,3 +52,5 @@ const {SUITE_MANIFEST}=await import("hanamesh-core/suite");assert.deepEqual(SUIT
 
 const {createSuitePackageSource} = await import('hanamesh-core/suite/source');
 assert.equal(typeof createSuitePackageSource, 'function');
+
+const sourceAPI=await import('hanamesh-core/suite/source');assert.equal(typeof sourceAPI.createManagedSuitePackageSource,'function');

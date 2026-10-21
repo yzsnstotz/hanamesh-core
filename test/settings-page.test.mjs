@@ -506,3 +506,14 @@ test('main settings show the actual version for installed, inactive and failed c
   assert.doesNotMatch(text,/未读组件：版本 0\.9\.9/,'a required range cannot pretend to be the installed version');
   const pkg=JSON.parse(await readFile('package.json','utf8'));assert.ok(text.includes(`HanaMesh Core：版本 ${pkg.version}`));
 });
+
+test('Core own page discovers the real source state and offers explicit preserve/disable/custom controls',async t=>{
+ const state={protocolVersion:'1',status:'disabled',selection:'configured',registry:null,archiveCount:0,lastError:null,configuration:{configured:null,selection:{mode:'configured'}}};const calls=[];
+ const fixture=await consentSection((path,init)=>{if(path!=='/api/hanamesh/core/suite-source')return undefined;calls.push({path,init:init??{}});return Response.json(state)});t.after(async()=>{fixture.cleanup();await fixture.controller.dispose()});
+ const element=elements(fixture.section.render()).find(e=>typeof e.type==='function'&&e.props['data-suite-source-section']===true);assert.ok(element,'Core-owned settings must render its source section');
+ // Mount the actual shipped component against its own declared source API.
+ const page=fixture.f.mount(element.type);page.render();const cleanup=page.effects().map(run=>run());await settle();t.after(()=>cleanup.forEach(f=>f?.()));
+ assert.match(textIn(page.render()),/本机套件来源/);assert.match(textIn(page.render()),/未配置/);const controls=elements(page.render());assert(controls.some(e=>e.type==='textarea'&&e.props['aria-label']==='本机来源配置'));assert(controls.some(e=>e.type==='button'&&e.children.includes('停用本机来源')));assert(controls.some(e=>e.type==='button'&&e.children.includes('使用插件配置')));assert.equal(calls[0].path,'/api/hanamesh/core/suite-source');assert.equal(calls.filter(c=>c.init.method==='POST').length,0,'opening page is read-only');
+ const input=controls.find(e=>e.type==='textarea');input.props.onChange({currentTarget:{value:'not JSON'}});elements(page.render()).find(e=>e.type==='button'&&e.children.includes('保存本机来源')).props.onClick();await settle();assert.equal(calls.filter(c=>c.init.method==='POST').length,0);assert.match(textIn(page.render()),/CORE_SUITE_SOURCE_CONFIG_INVALID/);
+ elements(page.render()).find(e=>e.type==='button'&&e.children.includes('停用本机来源')).props.onClick();await settle();assert.deepEqual(JSON.parse(calls.find(c=>c.init.method==='POST').init.body),{mode:'disabled'});
+});

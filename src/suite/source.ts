@@ -164,3 +164,6 @@ export async function createSuitePackageSource(options: SuitePackageSourceOption
     for (const socket of sockets) socket.destroy();
   })};
 }
+
+export {createManagedSuitePackageSource,suiteSourceOptions,suiteSourceSnapshot} from './source-lifecycle.js';
+export type {ManagedSuitePackageSource,SuiteSourceSelection,SuiteSourceSnapshot,SuiteSourceStore,SuiteSourceState,HanaMeshSuiteSourceService} from './source-lifecycle.js';
