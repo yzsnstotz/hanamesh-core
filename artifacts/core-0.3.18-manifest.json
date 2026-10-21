@@ -1,0 +1,11 @@
+{
+  "version": "0.3.18",
+  "sourceCommit": "33344f0e8b3ecbb28725e6f421f330234b07d765",
+  "sha256": "d99350ceab9e4bd3afc412fb42330736cf1206b2413170ed4a679cbab6eb5f3d",
+  "bytes": 138357,
+  "archiveFiles": 82,
+  "allPackedSourceBytesEqual": true,
+  "allExportEntriesPresent": true,
+  "tarball": "hanamesh-core-0.3.18.tgz",
+  "scope": "Normal target build and package; approved provider boundaries retained. Consumer/PG evidence is local, identity fixtures and skipped backend tests remain explicitly bounded; no owner/production acceptance."
+}
