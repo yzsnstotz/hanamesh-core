@@ -1,3 +1,4 @@
+import {createBindLink} from './bind-link.js';
 import {createHash} from 'node:crypto';
 import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
 import type {HanaMeshCoreContract, HealthSnapshot, RequestSignatureInput, ConsentPrompt} from './contract.js';
@@ -431,7 +432,7 @@ export class SessionController {
     return openSystemExternal(url, this.#websiteOrigin(), this.#config.allowSystemBrowser);
   }
 
-  /** Website bind landing (O2 `/me/bind?deviceId&nonce&signature`): a server `bind` challenge nonce signed by this device. */
+  /** Website bind landing (O2 `/me/bind` with the original challenge and advisory expiry metadata): a server `bind` challenge nonce signed by this device. */
   async bindLink(): Promise<{url: string; expiresAt: string}> {
     const device = this.#device();
     const websiteReason=this.#websiteBinding().reason;
@@ -443,14 +444,8 @@ export class SessionController {
     if (!response.ok) throw await upstreamError(response);
     let challenge: {nonce?: unknown; expiresAt?: unknown};
     try { challenge = await upstreamJson(response) as {nonce?: unknown; expiresAt?: unknown}; } catch (error) { throw safeError(error); }
-    if (typeof challenge.nonce !== 'string' || !challenge.nonce || typeof challenge.expiresAt !== 'string') throw new CoreError('CORE_UPSTREAM_RESPONSE_INVALID', 502);
-    const signature = Buffer.from(signWithDevice(device, Buffer.from(challenge.nonce, 'utf8'))).toString('base64url');
     if(serverGeneration!==this.#serverGeneration||websiteGeneration!==this.#websiteGeneration)throw new CoreError('CORE_CONFIGURATION_CHANGED',409);
-    const url = new URL('/me/bind', website);
-    url.searchParams.set('deviceId', device.deviceId);
-    url.searchParams.set('nonce', challenge.nonce);
-    url.searchParams.set('signature', signature);
-    return Object.freeze({url: url.href, expiresAt: challenge.expiresAt});
+    return createBindLink(website, device, challenge);
   }
 
   /** A Usage denial alone is not proof that the server forgot the device. Verify with Identity first.

@@ -61,7 +61,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.18';
+const CORE_VERSION = '0.3.19';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};

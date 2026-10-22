@@ -1,3 +1,4 @@
+import {createBindLink} from './bind-link.js';
 /** C-CORE portable process boundary. No Cordis/DSH or other plugin imports. */
 import {createHash, randomUUID} from 'node:crypto';
 import {mkdir, open, readFile, rename, rm} from 'node:fs/promises';
@@ -76,11 +77,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
       const response=await transport.request('/v1/identity/devices/challenge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({purpose:'bind'})});
       if(!response.ok)throw await upstreamError(response);
       const challenge=await upstreamJson(response) as {nonce?:unknown;expiresAt?:unknown};
-      if(typeof challenge.nonce!=='string' || typeof challenge.expiresAt!=='string')fail('CORE_UPSTREAM_RESPONSE_INVALID');
-      const url=new URL('/me/bind',website as string);
-      url.searchParams.set('deviceId',device.deviceId);url.searchParams.set('nonce',challenge.nonce as string);
-      url.searchParams.set('signature',Buffer.from(signWithDevice(device,Buffer.from(challenge.nonce as string))).toString('base64url'));
-      return {url:url.href,expiresAt:challenge.expiresAt};
+      return createBindLink(website as string, device, challenge);
     }
     if (input.operation === 'signRequest') {
       if (typeof input.method !== 'string' || typeof input.path !== 'string' || !input.path.startsWith('/') || input.path.includes('|') || (input.body !== null && typeof input.body !== 'string')) fail('CORE_INPUT_INVALID');
