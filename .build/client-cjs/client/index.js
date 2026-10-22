@@ -604,8 +604,10 @@ function PointsBindPrompt() {
     const [pending, setPending] = (0, react_1.useState)(null);
     const [binding, setBinding] = (0, react_1.useState)(undefined);
     const [bindError, setBindError] = (0, react_1.useState)(null);
+    const active = (0, react_1.useRef)(false);
     (0, react_1.useEffect)(() => {
         let cancelled = false;
+        active.current = true;
         let timer = 0;
         let pointsRefreshMs = 60_000;
         const poll = async () => {
@@ -622,9 +624,6 @@ function PointsBindPrompt() {
                 if (!next.prompt.show)
                     return;
                 window.clearInterval(timer);
-                await jsonRequest('/api/hanamesh/core/points/prompt-shown', { method: 'POST' }).catch(() => undefined);
-                if (cancelled)
-                    return;
                 const settings = await jsonRequest('/api/hanamesh/core/state');
                 if (cancelled)
                     return;
@@ -635,12 +634,18 @@ function PointsBindPrompt() {
         };
         void poll();
         timer = window.setInterval(() => void poll(), pointsRefreshMs);
-        return () => { cancelled = true; window.clearInterval(timer); };
+        return () => { cancelled = true; active.current = false; window.clearInterval(timer); };
     }, []);
     if (pending === null)
         return null;
     const close = () => { setPending(null); };
-    return (0, react_1.createElement)(CoreModal, { className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close }, (0, react_1.createElement)('div', { 'data-hanamesh-core-prompt': 'bind' }, (0, react_1.createElement)('h3', null, '绑定后这些分才归入你的账号'), (0, react_1.createElement)('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: !binding?.ready, onClick: () => { void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'))); } }, '去网站绑定'), (0, react_1.createElement)('button', { type: 'button', onClick: close }, '以后再说')), !binding?.ready && (0, react_1.createElement)('p', { role: 'alert' }, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'), bindError && (0, react_1.createElement)('p', { role: 'alert' }, bindError)));
+    const displayed = () => {
+        void jsonRequest('/api/hanamesh/core/points/prompt-shown', { method: 'POST' }).catch(() => {
+            if (active.current)
+                setBindError('提示记录未能保存，下次可能再次提示。请在 HanaMesh 设置中检查本机状态。');
+        });
+    };
+    return (0, react_1.createElement)(CoreModal, { className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close, onDisplayed: displayed }, (0, react_1.createElement)('div', { 'data-hanamesh-core-prompt': 'bind' }, (0, react_1.createElement)('h3', null, '绑定后这些分才归入你的账号'), (0, react_1.createElement)('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: !binding?.ready, onClick: () => { void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'))); } }, '去网站绑定'), (0, react_1.createElement)('button', { type: 'button', onClick: close }, '以后再说')), !binding?.ready && (0, react_1.createElement)('p', { role: 'alert' }, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'), bindError && (0, react_1.createElement)('p', { role: 'alert' }, bindError)));
 }
 // One queue per loaded Core client serializes StrictMode and duplicate sidebar mounts. Web Locks, when
 // present, also serializes tabs of the same carrier origin. Without it independent windows can both show;

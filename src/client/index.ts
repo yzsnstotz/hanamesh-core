@@ -621,8 +621,10 @@ function PointsBindPrompt(): ReactNode {
   const [pending, setPending] = useState<number | null>(null);
   const [binding, setBinding] = useState<CoreState['websiteBinding']>(undefined);
   const [bindError, setBindError] = useState<string | null>(null);
+  const active = useRef(false);
   useEffect(() => {
     let cancelled = false;
+    active.current = true;
     let timer = 0;
     let pointsRefreshMs = 60_000;
     const poll = async (): Promise<void> => {
@@ -637,8 +639,6 @@ function PointsBindPrompt(): ReactNode {
         }
         if (!next.prompt.show) return;
         window.clearInterval(timer);
-        await jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => undefined);
-        if (cancelled) return;
         const settings = await jsonRequest<CoreState>('/api/hanamesh/core/state');
         if (cancelled) return;
         setBinding(settings.websiteBinding ?? {ready: !!settings.websiteOrigin, reason: null, message: null});
@@ -647,11 +647,16 @@ function PointsBindPrompt(): ReactNode {
     };
     void poll();
     timer = window.setInterval(() => void poll(), pointsRefreshMs);
-    return () => { cancelled = true; window.clearInterval(timer); };
+    return () => { cancelled = true; active.current = false; window.clearInterval(timer); };
   }, []);
   if (pending === null) return null;
   const close = (): void => { setPending(null); };
-  return createElement(CoreModal, {className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close},
+  const displayed = (): void => {
+    void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => {
+      if (active.current) setBindError('提示记录未能保存，下次可能再次提示。请在 HanaMesh 设置中检查本机状态。');
+    });
+  };
+  return createElement(CoreModal, {className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close, onDisplayed: displayed},
     createElement('div', {'data-hanamesh-core-prompt': 'bind'},
     createElement('h3', null, '绑定后这些分才归入你的账号'),
     createElement('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`),

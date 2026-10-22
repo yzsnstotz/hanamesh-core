@@ -1,9 +1,9 @@
 {
   "version": "0.3.20",
-  "sha256": "3c9deab02dc9ac4a6913344a73dcd0289d440b48bb69f5db944c062203572cd3",
-  "bytes": 141211,
+  "sha256": "1a51ed245d2c9a5ad6f15ffdeea5cade03aa7139b4772576529d74fb4bc4d016",
+  "bytes": 141396,
   "entries": 84,
   "sourceBase": "720c192876c6a6ffef9b1a8e24d2863c55da6f12",
-  "changes": "Use public DSH Modal stack for all Core panels; defer first consent until host foreground yields; unchanged consent protocol",
-  "verification": "335 tests;41 contract;25 mutations;normal pack strict artifactConsumer;final browser/officialDSH report in G37"
+  "changes": "Public DSH Modal stack for all Core panels; both consent/points shown markers wait for foreground; test helper validates Darwin empty process groups after native EPERM",
+  "verification": "339 tests;41 contract;26 mutations;normal pack strict artifactConsumer;final normal package and officialDSH3 UI evidence in G37"
 }

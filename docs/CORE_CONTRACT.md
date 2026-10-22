@@ -204,3 +204,5 @@ These URL values are editable, unsigned display hints. They are not a fresh chal
 ### 0.3.20 · Core 面板的宿主模态所有权
 
 设置、本机使用记录、首次同意与积分提示统一使用 DSH 公开 ui-primitives Modal，Core 提供 open/onClose/title/headless/className/内容，不进入浏览器原生 top layer。宿主拥有 body portal、层级、Escape/Tab、焦点恢复；宿主 onboarding 晚于 Core 出现时应处于前景并可正常点击，关闭后 Core 保持，子面板关闭只释放子层。Core 不读取/修改宿主 root/inert 或其它 dialog，不改客户端。新增明确宿主 peer/client inject ui-primitives；其版本范围与现有0.2.x宿主范围一致。后台层通过公开 isBehindModal 与 portal 变更事件等待宿主释放前景，无定时器/重试；可见提示标记仅在 portal 连接并处于前景后提交，覆盖入场与提交之间宿主再获前景的竞争。业务API、身份、签名、默认关闭与本人授权写屏障不变。
+
+积分绑定提示同样仅在Core Modal实际入场且位于前景后记录原points/prompt-shown标记；宿主等待中卸载不记为已显示。标记写失败保留提示并说明检查设置，不自动重试/绑定。
