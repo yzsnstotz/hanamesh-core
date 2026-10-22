@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 
 test('client distribution declares native slots and avoids forbidden layout/link fallbacks', async () => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
-  assert.deepEqual(pkg.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar']);
+  assert.deepEqual(pkg.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar', '@deepseek-ai/dsh-client-ui-primitives']);
   assert.ok(pkg.exports['./client']);
   const source = await readFile('src/client/index.ts', 'utf8');
   assert.match(source, /settings\.section/);

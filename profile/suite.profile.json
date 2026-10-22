@@ -1,28 +1,28 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
-  "version": "0.3.19",
-  "label": "HanaMesh 套件",
+  "version": "0.3.20",
+  "label": "HanaMesh \u5957\u4ef6",
   "runningTaskPolicy": "preserve-and-pause",
   "components": [
     {
       "id": "usage",
       "moduleName": "hanamesh-usage",
       "loaderEntryId": "hanamesh-usage",
-      "label": "使用记录",
+      "label": "\u4f7f\u7528\u8bb0\u5f55",
       "versionRange": ">=0.2.0-rc.26 <0.3.0 || >=0.3.0-rc.1 <0.4.0",
       "onFailure": "notice",
-      "impact": "不采集、不上报使用记录；设备身份与同意开关不受影响",
+      "impact": "\u4e0d\u91c7\u96c6\u3001\u4e0d\u4e0a\u62a5\u4f7f\u7528\u8bb0\u5f55\uff1b\u8bbe\u5907\u8eab\u4efd\u4e0e\u540c\u610f\u5f00\u5173\u4e0d\u53d7\u5f71\u54cd",
       "repository": "https://github.com/yzsnstotz/hanamesh-usage"
     },
     {
       "id": "app-host",
       "moduleName": "@hanamesh/dsh-app-host",
       "loaderEntryId": "hanamesh-app-host",
-      "label": "应用容器",
+      "label": "\u5e94\u7528\u5bb9\u5668",
       "versionRange": ">=0.5.9 <0.7.0",
       "onFailure": "notice",
-      "impact": "无法打开 HanaMesh 应用；设备身份与同意开关不受影响",
+      "impact": "\u65e0\u6cd5\u6253\u5f00 HanaMesh \u5e94\u7528\uff1b\u8bbe\u5907\u8eab\u4efd\u4e0e\u540c\u610f\u5f00\u5173\u4e0d\u53d7\u5f71\u54cd",
       "repository": "https://github.com/yzsnstotz/hanamesh-plugin-app-host"
     }
   ]

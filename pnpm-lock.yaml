@@ -21,6 +21,12 @@ importers:
       '@deepseek-ai/dsh-client-connection':
         specifier: 0.2.1-alpha.2
         version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)(@deepseek-ai/dsh-scope@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1))
+      '@deepseek-ai/dsh-client-store':
+        specifier: 0.2.1-alpha.2
+        version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.2.1-alpha.2
+        version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: 0.2.1-alpha.2
         version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
@@ -39,9 +45,15 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: 0.2.1-alpha.2
         version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
+      '@deepseek-ai/dsh-util-code-language':
+        specifier: 0.2.1-alpha.2
+        version: 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
       '@hanamesh/devkit':
         specifier: git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit
         version: git+https://github.com/yzsnstotz/hanamesh-server-shared.git#e6ccf710369a77c5fbf9ce4810b182727e4f2aa8&path:/packages/devkit
+      '@types/mdast':
+        specifier: 4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: 24.13.4
         version: 24.13.4
@@ -89,6 +101,16 @@ packages:
       '@deepseek-ai/cordis': ~4.0.5-alpha.1
       '@deepseek-ai/dsh-scope': 0.2.1-alpha.2
 
+  '@deepseek-ai/dsh-client-store@0.2.1-alpha.2':
+    resolution: {integrity: sha512-MB4Wi/SOhPIy9cubSe8IHcxp1pDH+Bph1DVkJnyUsrj4cXWLaD8/o0oxVoLTn3bfBihRXBkNFwK4H+OSh5HTzg==}
+    peerDependencies:
+      '@deepseek-ai/cordis': ~4.0.5-alpha.1
+
+  '@deepseek-ai/dsh-client-ui-primitives@0.2.1-alpha.2':
+    resolution: {integrity: sha512-QwLpYqKxuDiszRLVC4da5LNirRW3XJmmxXrhPyjNS8hIoMRw5E1Nf58kjql35uCFvq2rbMyQYIkICtKgpU6Rzg==}
+    peerDependencies:
+      '@deepseek-ai/cordis': ~4.0.5-alpha.1
+
   '@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2':
     resolution: {integrity: sha512-kVNTzpbNwQsxc7V8BO5+Ycs+ZQQxg+0KQV1IDrocec1v4OvdAkfS47G15q0on5tBe8mpynFNXSroLr0zgED0UQ==}
     peerDependencies:
@@ -125,6 +147,11 @@ packages:
     peerDependencies:
       '@deepseek-ai/cordis': ~4.0.5-alpha.1
 
+  '@deepseek-ai/dsh-util-code-language@0.2.1-alpha.2':
+    resolution: {integrity: sha512-gA+opeNBlsmTFbt6ZdGSY8uuho7FbiJnVVpaylu55lRkt3CqPOpcFhMEdHwxPbJS6Np1r9C7iTl6dvt0RdcWlQ==}
+    peerDependencies:
+      '@deepseek-ai/cordis': ~4.0.5-alpha.1
+
   '@deepseek-ai/schemastery@3.18.5-alpha.1':
     resolution: {integrity: sha512-HojoBv1wMQn6N8nDgTgWbc/f4EFAlg/ZsIYN2AChnEDoFOmcWd3+MDzhozNffmywywzV7pcouHRR4x37YZfcjA==}
 
@@ -141,6 +168,9 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
+  '@types/mdast@4.0.4':
+    resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
+
   '@types/node@24.13.4':
     resolution: {integrity: sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw==}
 
@@ -152,6 +182,9 @@ packages:
 
   '@types/semver@7.7.1':
     resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
+
+  '@types/unist@3.0.3':
+    resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
@@ -224,6 +257,14 @@ snapshots:
       '@deepseek-ai/schemastery': 3.18.5-alpha.1
       zod: 4.5.4
 
+  '@deepseek-ai/dsh-client-store@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)':
+    dependencies:
+      '@deepseek-ai/cordis': 4.0.5-alpha.1
+
+  '@deepseek-ai/dsh-client-ui-primitives@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)':
+    dependencies:
+      '@deepseek-ai/cordis': 4.0.5-alpha.1
+
   '@deepseek-ai/dsh-client-ui-settings@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)':
     dependencies:
       '@deepseek-ai/cordis': 4.0.5-alpha.1
@@ -258,6 +299,10 @@ snapshots:
       '@deepseek-ai/cordis': 4.0.5-alpha.1
       '@deepseek-ai/dsh-brand': 0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)
 
+  '@deepseek-ai/dsh-util-code-language@0.2.1-alpha.2(@deepseek-ai/cordis@4.0.5-alpha.1)':
+    dependencies:
+      '@deepseek-ai/cordis': 4.0.5-alpha.1
+
   '@deepseek-ai/schemastery@3.18.5-alpha.1':
     dependencies:
       '@deepseek-ai/cosmokit': 1.8.6-alpha.1
@@ -271,6 +316,10 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
+  '@types/mdast@4.0.4':
+    dependencies:
+      '@types/unist': 3.0.3
+
   '@types/node@24.13.4':
     dependencies:
       undici-types: 7.18.2
@@ -283,6 +332,8 @@ snapshots:
       csstype: 3.2.3
 
   '@types/semver@7.7.1': {}
+
+  '@types/unist@3.0.3': {}
 
   chownr@3.0.0: {}
 

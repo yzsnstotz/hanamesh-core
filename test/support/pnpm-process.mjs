@@ -4,14 +4,18 @@ import {access,realpath,mkdir,writeFile} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join,dirname,delimiter,isAbsolute} from 'node:path';
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-// macOS returns EPERM for a killed group whose only remaining entries are zombies.
+// macOS can return EPERM for a killed empty group or zombie-only group.
 // Verify exact owned membership; never reinterpret a live/foreign/unknown permission denial.
 function groupMembers(){return execFileSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8'}).trim().split('\n').map(line=>{const [pid,pgid,uid,state]=line.trim().split(/\s+/u);return {pid:Number(pid),pgid:Number(pgid),uid:Number(uid),state};});}
-export function processGroupAlive(pid,{probe=(target,signal)=>process.kill(target,signal),members=groupMembers,uid=process.getuid()}={}){
+export function processGroupAlive(pid,{probe=(target,signal)=>process.kill(target,signal),members=groupMembers,uid=process.getuid(),platform=process.platform}={}){
  try{probe(-pid,0);return true;}catch(error){
   if(error.code==='ESRCH')return false;
   if(error.code==='EPERM'){
-   const owned=members().filter(member=>member.pgid===pid);
+   const snapshot=members();
+   if(!Array.isArray(snapshot)||snapshot.length===0||!snapshot.every(member=>[member.pid,member.pgid,member.uid].every(value=>Number.isSafeInteger(value)&&value>=0)&&typeof member.state==='string'&&member.state.length>0))throw error;
+   const owned=snapshot.filter(member=>member.pgid===pid);
+   if(members===groupMembers)process.stderr.write(JSON.stringify({event:'owned-group-native-eperm',pid,platform,inventoryCount:snapshot.length,members:owned})+'\n');
+   if(platform==='darwin'&&owned.length===0)return false;
    if(owned.length>0&&owned.every(member=>member.uid===uid&&member.state?.startsWith('Z')))return false;
   }
   throw error;

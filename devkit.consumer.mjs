@@ -12,7 +12,7 @@ assert.deepEqual(packed.dependencies, {semver: '7.7.2', tar: '7.5.22'});
 assert.equal(packed.dsh.bundle.patch, './profile/cordis.patch.yml');
 assert.ok(packed.exports['./contract']);
 assert.ok(packed.exports['./client']);
-assert.deepEqual(packed.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar']);
+assert.deepEqual(packed.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar', '@deepseek-ai/dsh-client-ui-primitives']);
 await access(join(packageRoot, 'profile/cordis.patch.yml'));
 await access(join(packageRoot, 'profile/suite.profile.json'));
 await access(join(packageRoot, 'profile.schema.json'));

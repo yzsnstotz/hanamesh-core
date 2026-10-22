@@ -5,6 +5,7 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'points-prompt-stamps-before-display',file:'lib/client.js',mutate:code=>code.replace('setPending(next.pendingTotal);',"setPending(next.pendingTotal); void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'});"),test:'test/points-prompt-display.test.mjs'},
  {id:'bind-expiry-not-forwarded',file:'lib/bind-link.js',mutate:code=>code.replace("url.searchParams.set('expiresAt', expiresAt);",'void 0;'),test:'test/bind-expiry.test.mjs'},
  {id:'bind-clock-domain-missing',file:'lib/bind-link.js',mutate:code=>code.replace("url.searchParams.set('expiryClock', 'identity-server');",'void 0;'),test:'test/bind-expiry.test.mjs'},
  {id:'activation-abort-does-not-wake',file:'lib/activation.js',mutate:code=>code.replace('await Promise.race([activation, aborted]);','await activation;'),test:'test/activation-gate.test.mjs'},
@@ -18,7 +19,7 @@ export const cases = [
  {id: 'renderer-conflict-ignored', file: 'lib/suite/client-peers.js', mutate: code => code.replace('versions.size > 1', 'versions.size > 999'), test: 'test/suite-client-peers.test.mjs'},
  {id: 'archive-integrity-ignored', file: 'lib/suite/source.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},
  {id: 'consent-prompt-ignores-refusal', file: 'lib/controller.js', mutate: code => code.replace("this.#state.consent.changedAt === null && shownAt === null", "shownAt === null"), test: 'test/first-consent.test.mjs'},
- {id: 'consent-prompt-stamps-before-display', file: 'lib/client.js', mutate: code => code.replace("node.showModal();\n            if (!node.open)", "void jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'}); node.showModal();\n            if (!node.open)"), test: 'test/first-consent-client.test.mjs'},
+ {id: 'consent-prompt-stamps-before-display', file: 'lib/client.js', mutate: code => code.replace("setView(next);", "setView(next); void jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'});"), test: 'test/first-consent-client.test.mjs'},
  {id:"suite-bundle-admission",file:"lib/suite/service.js",mutate:code=>code.replace("const bundle = tuple.map(bundleFailure).find(Boolean);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
  {id:"suite-same-core-upgrade",file:"lib/suite/service.js",mutate:code=>code.replace("const candidate = record.hanameshSuite;", "if (coreVersion === core.version) continue;\n                    const candidate = record.hanameshSuite;"),test:"test/suite-policy.test.mjs"},
  {id:"suite-source-binding",file:"lib/suite/service.js",mutate:code=>code.replace("if (!this.validRecord(record, core.name, coreVersion, manifest.core.repository))", "if (false)"),test:"test/suite-policy.test.mjs"},
