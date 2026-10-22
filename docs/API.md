@@ -6,7 +6,7 @@
 |---|---|---|
 | `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥。0.3.4 起另有 `serverOrigin`（**生效**地址）、`serverOriginSource: 'setting'|'config'`、`configuredServerOrigin`（插件配置的出厂默认）、`serverOriginFault`（已存地址不再合法时为 `CORE_ORIGIN_REJECTED`，此时出厂默认生效，否则 `null`）；`contributions` 为 `{status:'ready', windowDays, availability:'available'|'unavailable'|null, actions}` 或 `{status:'unavailable', reason}`（`reason` 含 `CONSENT_WITHHELD`）|
 | `POST` | `client-peer-lease` | 0.3.17。自有客户端当前页面的 React 观察：精确五字段、Connection 准入/同载体 Origin/JSON4096；立即返回200 application/octet-stream与固定首帧，持有响应体至取消/关闭；request signal、body.cancel或Core释放均撤租，不记录使用或修改同意。无效观察400、不活动409、缺能力503；详见 [套件声明](SUITE_DECLARATION.md)。不占 Gateway RPC interceptor。 |
-| `POST` | `consent/prompt-shown` | 0.3.15。无 body，同源写准入与其它 POST 相同；仅在原生 dialog 的 showModal 成功且 open=true 后调用。将可选字段 `usageConsentPromptShownAt` 持久化，返回 `{shownAt:ISO}`；并发调用共用首次写入，已有值原样返回。只记实际显示，不授权、不注册、不上报。 |
+| `POST` | `consent/prompt-shown` | 0.3.15。无 body，同源写准入与其它 POST 相同；仅在 DSH Modal 获准显示、内容 portal 实际连接且其拥有前景后调用。将可选字段 `usageConsentPromptShownAt` 持久化，返回 `{shownAt:ISO}`；并发调用共用首次写入，已有值原样返回。只记实际显示，不授权、不注册、不上报。 |
 | `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播。0.3.4 起：改为 `granted` 时，未注册则立即注册并启动贡献刷新，已注册则只启动贡献刷新；改为 `withheld` 时停止贡献刷新但**不注销**（Usage 需要已注册的设备去发服务端删除）|
 | `POST` | `server` | 0.3.4。请求恰好一个键 `{serverOrigin:'<origin>'}` 设置、`{serverOrigin:null}` 清除（回到插件配置的出厂默认）。约定同 `consent`：同源 POST、`content-type: application/json`、≤4096 字节；形状不对 400 `CORE_INPUT_INVALID`，415/413 同为 `CORE_INPUT_INVALID`；地址校验与配置 `serverOrigin` 相同（HTTPS，或 loopback HTTP `127.0.0.1`/`localhost`/`[::1]`，可带端口；不能带路径、query、fragment、账号密码），不合法 400 `CORE_ORIGIN_REJECTED`。设置持久化在 `hanamesh_core` 快照的可选字段 `serverOriginOverride`（旧快照无此字段仍可加载）。生效地址 = 设置 ?? 配置，立即生效：重建服务端传输，`getServerOrigin()` 返回新地址（Usage 每次上传都读它）。生效地址改变时：注册重置为 `unregistered`（注册属于某个服务端），清空贡献/分/名称缓存与 `bound`/`account`，停止贡献刷新，已授权则立即向新服务端注册；仍在飞往旧服务端的请求结果一律不记录。返回新的 `state` |
 | `POST` | `device/register` | 手动重试挑战→注册；失败仍保留本地设备能力。0.3.4 起数据授权未开启 → 409 `CORE_CONSENT_REQUIRED`（不计入 `attempts`、不发任何请求）；激活时也只有已授权才自动注册 |
@@ -54,11 +54,11 @@
 
 ## 客户端席位
 
-浏览器 bundle 只注册原生 `settings.section` 与 `sidebar.footer.action` 两个席位，不使用 webserver index 注入，也不画 fixed 覆盖层。固定 D7 DSH `0.2.1-alpha.2` 上，侧栏按钮打开 Core 自有的原生 `<dialog>` 设置页；同一 HanaMesh 段仍注册在官方 `settings.section`，关闭时释放页面并恢复焦点。绑定返回通过窗口 focus/visibility 刷新，不依赖深链。
+浏览器 bundle 只注册原生 `settings.section` 与 `sidebar.footer.action` 两个席位，不使用 webserver index 注入或自有 fixed 覆盖层。0.3.20 起，侧栏设置、本机使用记录子面板、首次同意及积分提示统一使用公开 `@deepseek-ai/dsh-client-ui-primitives` 的 `Modal`（显式 client inject 与宿主 peer）；Core 只提供完整内容和本地 onClose，body portal、模态层级、Escape/Tab 与焦点返回均归 DSH。不能在这些入口调用浏览器 showModal：浏览器 top layer 会逃逸宿主 root inert，覆盖后来出现的 API key onboarding。Core 不查询/修改宿主 DOM、inert、z-index 或 pointer-events，也不主动关闭宿主 dialog。同一 HanaMesh 段仍注册在官方 settings.section；绑定返回仍通过 focus/visibility 刷新。后台 Core 模态在 DSH 的公开 isBehindModal 判定允许前通过 portal 插入/移除事件等待，不用计时器/重试；已打开后由 DSH 管理后来的宿主前景。首次同意只有内容 portal 实际连接且处于前景才记提示标记，本人点击才授权；已有 API/存储字段与写屏障不变。
 
 客户端每 10 秒读取 `state`，同一轮再读 `points`。同意开关、注册重试、健康重查都在成功后重新读取；失败显示错误码并保留服务端真值。贡献与分的 unavailable 都不显示为 0。
 
-rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载），每 60 秒读一次 `points`；`prompt.show` 为真时先 `POST points/prompt-shown` 落标记、再用原生 `<dialog>` 的 top layer 弹出（不使用 fixed 覆盖层）。绑定按钮走既有 `bind-link` + `open-external`。「账号」行的「邮箱绑定」只打开 `websiteOrigin + /me`，邮箱表单与验证在网站侧（T8/T9）。
+rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载），每 60 秒读一次 `points`；`prompt.show` 为真时先 `POST points/prompt-shown` 落标记、再用上述 DSH Modal 弹出（不使用自有 fixed/top-layer 覆盖层）。绑定按钮走既有 `bind-link` + `open-external`。「账号」行的「邮箱绑定」只打开 `websiteOrigin + /me`，邮箱表单与验证在网站侧（T8/T9）。
 
 ## 主要错误码
 

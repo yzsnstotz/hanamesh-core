@@ -7,6 +7,64 @@ exports.coreErrorText = coreErrorText;
 exports.FirstConsentPrompt = FirstConsentPrompt;
 exports.apply = apply;
 const react_1 = require("react");
+/** The declared client inject is already supplied by DSH's ModuleLoader. Resolve
+ * its public UI face only while rendering UI, so importing portable client helpers
+ * in Node never executes a browser CSS module or imports a second host runtime. */
+function hostPrimitives() {
+    return require('@deepseek-ai/dsh-client-ui-primitives');
+}
+/** Admit a background Core layer only when DSH's public modal stack permits it.
+ * Observe portal mutations, not clocks: no host selectors, inert writes, retries
+ * or custom z-index. After admission DSH itself owns every later overlay. */
+function CoreModal({ title, onClose, className, children, onDisplayed, onDisplayError }) {
+    const anchor = (0, react_1.useRef)(null);
+    const content = (0, react_1.useRef)(null);
+    const [admitted, setAdmitted] = (0, react_1.useState)(false);
+    const displayed = (0, react_1.useRef)(false);
+    const { Modal, isBehindModal } = hostPrimitives();
+    (0, react_1.useEffect)(() => {
+        const node = anchor.current;
+        if (!node)
+            return;
+        let active = true;
+        const admit = () => {
+            if (!active || isBehindModal(node))
+                return;
+            observer.disconnect();
+            setAdmitted(true);
+        };
+        const observer = new MutationObserver(admit);
+        observer.observe(node.ownerDocument.body, { childList: true, subtree: true });
+        admit();
+        return () => { active = false; observer.disconnect(); };
+    }, []);
+    (0, react_1.useEffect)(() => {
+        if (!admitted || displayed.current || (!onDisplayed && !onDisplayError))
+            return;
+        let active = true;
+        const acknowledge = () => {
+            if (!active || displayed.current)
+                return;
+            const node = content.current;
+            if (!node?.isConnected) {
+                displayed.current = true;
+                observer.disconnect();
+                onDisplayError?.();
+                return;
+            }
+            if (isBehindModal(node))
+                return;
+            displayed.current = true;
+            observer.disconnect();
+            onDisplayed?.();
+        };
+        const observer = new MutationObserver(acknowledge);
+        observer.observe(anchor.current.ownerDocument.body, { childList: true, subtree: true });
+        acknowledge();
+        return () => { active = false; observer.disconnect(); };
+    }, [admitted, onDisplayed, onDisplayError]);
+    return (0, react_1.createElement)(react_1.Fragment, null, (0, react_1.createElement)('span', { hidden: true, ref: anchor, 'data-hanamesh-core-modal-anchor': title }), (0, react_1.createElement)(Modal, { open: admitted, onClose, title, headless: true, className }, (0, react_1.createElement)('div', { ref: content, className: 'hm-core-modal-content' }, children)));
+}
 /** Current external React observation only. No storage, timers, retries or backend dependency inference. */
 function startClientPeerLease(connection, page, doFetch = globalThis.fetch) {
     const generation = connection?.generation;
@@ -92,7 +150,7 @@ function startClientPeerLease(connection, page, doFetch = globalThis.fetch) {
     observe();
     return () => { disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show); };
 }
-const CORE_VERSION = '0.3.17';
+const CORE_VERSION = '0.3.20';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 const BREAKDOWN_LABELS = [
     ['install', '安装贡献'], ['open', '打开贡献'], ['use', '使用贡献'], ['claimBonus', 'Creator 认领奖励'], ['creatorMirror', 'Creator 镜像奖励'], ['launchInitiator', '发起奖励'],
@@ -159,10 +217,10 @@ const IDENTITY_SOURCES = {
 const short = (id) => `${id.slice(0, 8)}…`;
 const styleText = `
 .hm-core-section{display:flex;flex-direction:column;gap:0;color:var(--dsw-alias-label-primary,CanvasText);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-page{box-sizing:border-box;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;padding:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-page::backdrop{background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.45))}
+.hm-core-settings-page{box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:100%;margin:0;border:0;padding:0;overflow:hidden;gap:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
+.hm-core-settings-content,.hm-core-settings-page>.hm-core-modal-content{display:flex;flex-direction:column;min-height:0;height:100%}
 .hm-core-settings-header{display:flex;align-items:center;gap:16px;position:sticky;top:0;padding:16px 24px;background:inherit;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8);z-index:1}
-.hm-core-settings-header h1{flex:1;font-size:22px;margin:0}.hm-core-settings-body{max-width:880px;padding:24px;margin:0 auto}
+.hm-core-settings-header h1{flex:1;font-size:22px;margin:0}.hm-core-settings-body{box-sizing:border-box;min-height:0;overflow:auto;flex:1;width:100%;max-width:880px;padding:24px;margin:0 auto}
 .hm-core-settings-header button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 .hm-core-section h2{font-size:20px;margin:0 0 8px}.hm-core-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8)}
 .hm-core-row>strong{font-weight:600}.hm-core-copy{display:flex;flex-direction:column;gap:8px;min-width:0}.hm-core-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -178,7 +236,7 @@ const styleText = `
 /* Canvas/CanvasText are the fallbacks on purpose: they are a matched system pair, so a missing DSH token can never
    produce light-on-light in the host's dark theme (rc.31 first real-UI run did exactly that with a #fff fallback). */
 .hm-core-prompt{color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas)}
-.hm-core-prompt::backdrop{background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.45))}.hm-core-prompt h3{margin:0 0 8px;font-size:16px}
+.hm-core-prompt h3{margin:0 0 8px;font-size:16px}
 .hm-core-prompt p{margin:0 0 14px}
 .hm-core-prompt button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 `;
@@ -225,17 +283,56 @@ function Row({ label, children }) {
     return (0, react_1.createElement)('div', { className: 'hm-core-row' }, (0, react_1.createElement)('strong', null, label), (0, react_1.createElement)('div', { className: 'hm-core-copy' }, children));
 }
 /** Public same-origin Usage view; opening it never navigates the host settings. */
-function LocalUsageDialog({ onClose, restoreFocus }) {
-    const dialog = (0, react_1.useRef)(null);
-    (0, react_1.useEffect)(() => {
-        const node = dialog.current;
-        if (!node)
+function LocalUsageDialog({ onClose }) {
+    return (0, react_1.createElement)(CoreModal, { onClose, title: '本机使用记录', className: 'hm-core-settings-page' }, (0, react_1.createElement)('div', { className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'local-usage' }, (0, react_1.createElement)('header', { className: 'hm-core-settings-header' }, (0, react_1.createElement)('h1', { id: 'hm-core-local-usage-title' }, '本机使用记录'), (0, react_1.createElement)('button', { type: 'button', onClick: onClose }, '返回 HanaMesh 设置')), (0, react_1.createElement)('iframe', { src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: { width: '100%', flex: 1, minHeight: 0, border: 0 } })));
+}
+function SuiteSourceSettings(_props) {
+    const [value, setValue] = (0, react_1.useState)(null), [draft, setDraft] = (0, react_1.useState)(''), [busy, setBusy] = (0, react_1.useState)(false), [error, setError] = (0, react_1.useState)(null);
+    const active = (0, react_1.useRef)(true);
+    const load = async (edit = false) => { const next = await jsonRequest('/api/hanamesh/core/suite-source'); if (!active.current)
+        return; setValue(next); if (edit) {
+        const options = next.configuration.selection.mode === 'custom' ? next.configuration.selection.options : next.configuration.configured;
+        setDraft(options === null || options === undefined ? '' : JSON.stringify(options, null, 2));
+    } };
+    (0, react_1.useEffect)(() => { active.current = true; void load(true).catch(cause => { if (active.current)
+        setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); }); return () => { active.current = false; }; }, []);
+    const save = async (mode) => {
+        if (busy)
             return;
-        node.showModal();
-        return () => { if (node.open)
-            node.close(); restoreFocus(); };
-    }, []);
-    return (0, react_1.createElement)('dialog', { ref: dialog, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'local-usage', 'aria-labelledby': 'hm-core-local-usage-title', onCancel: (event) => { event.preventDefault(); onClose(); } }, (0, react_1.createElement)('header', { className: 'hm-core-settings-header' }, (0, react_1.createElement)('h1', { id: 'hm-core-local-usage-title' }, '本机使用记录'), (0, react_1.createElement)('button', { type: 'button', onClick: onClose }, '返回 HanaMesh 设置')), (0, react_1.createElement)('iframe', { src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: { width: '100%', height: 'calc(100dvh - 88px)', border: 0 } }));
+        let selection = { mode };
+        if (mode === 'custom') {
+            try {
+                selection = { mode, options: JSON.parse(draft) };
+            }
+            catch {
+                setError('CORE_SUITE_SOURCE_CONFIG_INVALID');
+                return;
+            }
+        }
+        setBusy(true);
+        setError(null);
+        try {
+            await jsonRequest('/api/hanamesh/core/suite-source', { method: 'POST', body: JSON.stringify(selection) });
+            await load();
+        }
+        catch (cause) {
+            const code = cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR';
+            if (active.current)
+                setError(code);
+            try {
+                await load();
+            }
+            catch (readback) {
+                if (active.current)
+                    setError(code + '；读取状态失败：' + (readback instanceof Error ? readback.message : 'CORE_INTERNAL_ERROR'));
+            }
+        }
+        finally {
+            if (active.current)
+                setBusy(false);
+        }
+    };
+    return (0, react_1.createElement)('section', { 'data-hanamesh-suite-source': value?.status ?? 'loading', className: 'hm-core-copy' }, (0, react_1.createElement)('h3', null, '本机套件来源'), (0, react_1.createElement)('p', null, value?.status === 'ready' ? `运行中：${value.registry} · ${value.archiveCount} 份已核验归档` : value?.status === 'disabled' ? (value.selection === 'disabled' ? '已明确停用' : '未配置本机来源') : value?.status === 'failed' ? '来源未启动' : value?.status === 'disposed' ? '来源已释放' : '读取中…'), value && (0, react_1.createElement)('small', { className: 'hm-core-muted' }, `当前选择：${value.selection === 'custom' ? '已保存的自定义来源' : value.selection === 'disabled' ? '停用' : '插件配置'}。Core 只在本插件加载后提供来源，不预装自己，不改客户端或其他插件的来源设置。`), (error || value?.lastError) && (0, react_1.createElement)('p', { role: 'alert', className: 'hm-core-error' }, `来源操作未完成：${error ?? value?.lastError}。请核对归档与配置；不会自动重试。`), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: () => { setError(null); void load().catch(cause => setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')); } }, '读取来源状态'), (0, react_1.createElement)('details', null, (0, react_1.createElement)('summary', null, '本机来源高级设置'), (0, react_1.createElement)('p', { className: 'hm-core-muted' }, '指定已交付的正常 Core、Usage、App Host 归档绝对路径与 SHA512 完整性；监听端口、上游元数据来源与所有资源预算必须明确配置。未填写不会猜地址或自动补包。'), (0, react_1.createElement)('textarea', { 'aria-label': '本机来源配置', value: draft, rows: 12, disabled: busy, onChange: (event) => setDraft(event.currentTarget.value), style: { width: '100%', boxSizing: 'border-box' } }), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: busy || !draft.trim(), onClick: () => void save('custom') }, '保存本机来源'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: () => void save('disabled') }, '停用本机来源'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: () => void save('configured') }, '使用插件配置'))));
 }
 function HanaMeshSection() {
     const [state, setState] = (0, react_1.useState)(null);
@@ -462,7 +559,7 @@ function HanaMeshSection() {
             setSuiteCopyStatus('复制失败，请手动选择并复制上方命令。');
         }
     };
-    return (0, react_1.createElement)('section', { className: 'hm-core-section', 'data-hanamesh-core': 'ready' }, (0, react_1.createElement)('h2', null, 'HanaMesh'), (0, react_1.createElement)('p', { className: 'hm-core-muted', 'data-hanamesh-core-hint': 'suite-components' }, 'HanaMesh 套件由 Core、使用记录（Usage）和应用容器（App Host）组成。'), (missingComponents.length > 0 || inactiveComponents.length > 0) && (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-hint': 'suite-repair' }, missingComponents.length > 0 && (0, react_1.createElement)('p', { className: 'hm-core-error' }, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`), inactiveComponents.length > 0 && (0, react_1.createElement)('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`), (0, react_1.createElement)('p', { className: 'hm-core-muted' }, '下方官方命令仅适用于 macOS / Linux 终端；Windows 安全命令暂未提供。此命令仅用于手动安装/修复，不是兼容升级计划。请手动安装/修复并启用套件；此页面不会自动执行。'), (0, react_1.createElement)('code', { style: { overflowWrap: 'anywhere', userSelect: 'text' } }, SUITE_INSTALL_COMMAND), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', onClick: copySuiteCommand }, '复制安装/修复命令'), suiteCopyStatus && (0, react_1.createElement)('span', { role: 'status' }, suiteCopyStatus))), error && (0, react_1.createElement)('p', { className: 'hm-core-error', role: 'alert' }, `读取或保存失败：${actionError(error)}`, (0, react_1.createElement)('button', { type: 'button', onClick: () => void load() }, '重新读取')), (0, react_1.createElement)(Row, { label: '设备身份' }, identityRow), state.registrationFailure && (0, react_1.createElement)('p', { role: 'alert', className: 'hm-core-error' }, `注册失败：${coreErrorText(state.registrationFailure.code, state.registrationFailure.upstreamStatus)}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`), state.registrationRecovery && (0, react_1.createElement)('p', { role: 'status', 'data-hanamesh-registration-recovery': state.registrationRecovery.state }, state.registrationRecovery.message, state.registrationRecovery.nextAttemptAt && (0, react_1.createElement)('span', null, ' 下次自动核对：', (0, react_1.createElement)('time', { dateTime: state.registrationRecovery.nextAttemptAt }, new Date(state.registrationRecovery.nextAttemptAt).toLocaleString()))), (0, react_1.createElement)(Row, { label: '服务端' }, (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-server': serverFromSetting ? 'setting' : 'config' }, (0, react_1.createElement)('span', null, `当前：${state.serverOrigin ?? '未设置（不连接服务端）'}（${serverFromSetting ? '你设置的' : '出厂默认'}）`), serverFromSetting && (0, react_1.createElement)('small', { className: 'hm-core-muted' }, `出厂默认：${state.configuredServerOrigin ?? '未设置'}`), state.serverOriginFault && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, `已保存的服务端地址无效（${state.serverOriginFault}），当前使用出厂默认；请重新保存或恢复默认。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('input', { type: 'text', 'aria-label': '服务端地址', placeholder: 'https://api.example.com', value: serverDraft, disabled: serverBusy, onChange: (event) => setServerDraft(event.currentTarget.value) }), (0, react_1.createElement)('button', { type: 'button', disabled: serverBusy || serverDraft.trim() === '', onClick: () => void saveServer(serverDraft.trim()) }, '保存'), (0, react_1.createElement)('button', { type: 'button', disabled: serverBusy || !serverFromSetting, onClick: () => void saveServer(null) }, '恢复默认')), serverError && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, SERVER_ERRORS[serverError] ?? `保存失败：${serverError}`), (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '立即生效。注册属于某个服务端：更换后本设备在新服务端重新注册（需已打开数据授权），贡献、分与使用记录改读新服务端。'))), (0, react_1.createElement)(Row, { label: '网站' }, (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-website': state.websiteOriginSource ?? 'config' }, (0, react_1.createElement)('span', null, `当前：${state.websiteOrigin ?? '未设置'}（${state.websiteOriginSource === 'setting' ? '你设置的' : '出厂默认'}）`), state.websiteOriginSource === 'setting' && (0, react_1.createElement)('small', { className: 'hm-core-muted' }, `出厂默认：${state.configuredWebsiteOrigin ?? '未设置'}`), state.websiteOriginFault && (0, react_1.createElement)('span', { role: 'alert', className: 'hm-core-error' }, `已保存的网站地址无效（${state.websiteOriginFault}），请重新保存或恢复默认。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('input', { type: 'text', 'aria-label': '网站地址', placeholder: 'https://market.example.com', value: websiteDraft, disabled: websiteBusy, onChange: (event) => setWebsiteDraft(event.currentTarget.value) }), (0, react_1.createElement)('button', { type: 'button', disabled: websiteBusy || websiteDraft.trim() === '', onClick: () => saveWebsite(websiteDraft.trim()) }, '保存'), (0, react_1.createElement)('button', { type: 'button', disabled: websiteBusy || state.websiteOriginSource !== 'setting', onClick: () => saveWebsite(null) }, '恢复默认')), websiteError && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, SERVER_ERRORS[websiteError] ?? `保存失败：${websiteError}`), !websiteReady && (0, react_1.createElement)('p', { role: 'alert', className: 'hm-core-error' }, state.websiteBinding?.message ?? '请先设置对应的网站地址。'), (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '立即生效。更换服务端后，须同时保存对应网站；本机服务端只能使用本机网站。'))), state.configuration && (0, react_1.createElement)(Row, { label: '运行配置' }, (0, react_1.createElement)('span', { 'data-hanamesh-core-configuration': 'visible' }, `请求时限 ${state.configuration.timeoutMs}ms；健康检查 ${state.configuration.checkIntervalMs}ms；名称请求时限 ${state.configuration.profileTimeoutMs}ms；Hana 行预算 ${state.configuration.maxHanaRows}；响应字节预算 ${state.configuration.maxResponseBytes}；界面轮询 ${state.configuration.clientPollIntervalMs ?? 10000}ms；积分刷新 ${state.configuration.pointsRefreshMs ?? 60000}ms；贡献刷新 ${state.configuration.contributionIntervalMs ?? 60000}ms；活动每次 ${state.configuration.activityPageBudget ?? 5} 页、显示 ${state.configuration.activityDisplayRows ?? 25} 行；名称并发 ${state.configuration.catalogConcurrency ?? 4}；贡献窗口 ${windowDays} 天。可在插件配置中修改。`)), (0, react_1.createElement)(Row, { label: '数据授权' }, (0, react_1.createElement)('label', { className: 'hm-core-switch' }, (0, react_1.createElement)('input', { type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld') }), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'), (0, react_1.createElement)('span', { role: 'status' }, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`), 
+    return (0, react_1.createElement)('section', { className: 'hm-core-section', 'data-hanamesh-core': 'ready' }, (0, react_1.createElement)('h2', null, 'HanaMesh'), (0, react_1.createElement)('p', { className: 'hm-core-muted', 'data-hanamesh-core-hint': 'suite-components' }, 'HanaMesh 套件由 Core、使用记录（Usage）和应用容器（App Host）组成。'), (missingComponents.length > 0 || inactiveComponents.length > 0) && (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-hint': 'suite-repair' }, missingComponents.length > 0 && (0, react_1.createElement)('p', { className: 'hm-core-error' }, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`), inactiveComponents.length > 0 && (0, react_1.createElement)('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`), (0, react_1.createElement)('p', { className: 'hm-core-muted' }, '下方官方命令仅适用于 macOS / Linux 终端；Windows 安全命令暂未提供。此命令仅用于手动安装/修复，不是兼容升级计划。请手动安装/修复并启用套件；此页面不会自动执行。'), (0, react_1.createElement)('code', { style: { overflowWrap: 'anywhere', userSelect: 'text' } }, SUITE_INSTALL_COMMAND), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', onClick: copySuiteCommand }, '复制安装/修复命令'), suiteCopyStatus && (0, react_1.createElement)('span', { role: 'status' }, suiteCopyStatus))), error && (0, react_1.createElement)('p', { className: 'hm-core-error', role: 'alert' }, `读取或保存失败：${actionError(error)}`, (0, react_1.createElement)('button', { type: 'button', onClick: () => void load() }, '重新读取')), (0, react_1.createElement)(SuiteSourceSettings, { 'data-suite-source-section': true }), (0, react_1.createElement)(Row, { label: '设备身份' }, identityRow), state.registrationFailure && (0, react_1.createElement)('p', { role: 'alert', className: 'hm-core-error' }, `注册失败：${coreErrorText(state.registrationFailure.code, state.registrationFailure.upstreamStatus)}${state.registrationFailure.persistence ? `；状态保存失败：${state.registrationFailure.persistence}` : ''}。请使用重试注册。`), state.registrationRecovery && (0, react_1.createElement)('p', { role: 'status', 'data-hanamesh-registration-recovery': state.registrationRecovery.state }, state.registrationRecovery.message, state.registrationRecovery.nextAttemptAt && (0, react_1.createElement)('span', null, ' 下次自动核对：', (0, react_1.createElement)('time', { dateTime: state.registrationRecovery.nextAttemptAt }, new Date(state.registrationRecovery.nextAttemptAt).toLocaleString()))), (0, react_1.createElement)(Row, { label: '服务端' }, (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-server': serverFromSetting ? 'setting' : 'config' }, (0, react_1.createElement)('span', null, `当前：${state.serverOrigin ?? '未设置（不连接服务端）'}（${serverFromSetting ? '你设置的' : '出厂默认'}）`), serverFromSetting && (0, react_1.createElement)('small', { className: 'hm-core-muted' }, `出厂默认：${state.configuredServerOrigin ?? '未设置'}`), state.serverOriginFault && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, `已保存的服务端地址无效（${state.serverOriginFault}），当前使用出厂默认；请重新保存或恢复默认。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('input', { type: 'text', 'aria-label': '服务端地址', placeholder: 'https://api.example.com', value: serverDraft, disabled: serverBusy, onChange: (event) => setServerDraft(event.currentTarget.value) }), (0, react_1.createElement)('button', { type: 'button', disabled: serverBusy || serverDraft.trim() === '', onClick: () => void saveServer(serverDraft.trim()) }, '保存'), (0, react_1.createElement)('button', { type: 'button', disabled: serverBusy || !serverFromSetting, onClick: () => void saveServer(null) }, '恢复默认')), serverError && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, SERVER_ERRORS[serverError] ?? `保存失败：${serverError}`), (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '立即生效。注册属于某个服务端：更换后本设备在新服务端重新注册（需已打开数据授权），贡献、分与使用记录改读新服务端。'))), (0, react_1.createElement)(Row, { label: '网站' }, (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-website': state.websiteOriginSource ?? 'config' }, (0, react_1.createElement)('span', null, `当前：${state.websiteOrigin ?? '未设置'}（${state.websiteOriginSource === 'setting' ? '你设置的' : '出厂默认'}）`), state.websiteOriginSource === 'setting' && (0, react_1.createElement)('small', { className: 'hm-core-muted' }, `出厂默认：${state.configuredWebsiteOrigin ?? '未设置'}`), state.websiteOriginFault && (0, react_1.createElement)('span', { role: 'alert', className: 'hm-core-error' }, `已保存的网站地址无效（${state.websiteOriginFault}），请重新保存或恢复默认。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('input', { type: 'text', 'aria-label': '网站地址', placeholder: 'https://market.example.com', value: websiteDraft, disabled: websiteBusy, onChange: (event) => setWebsiteDraft(event.currentTarget.value) }), (0, react_1.createElement)('button', { type: 'button', disabled: websiteBusy || websiteDraft.trim() === '', onClick: () => saveWebsite(websiteDraft.trim()) }, '保存'), (0, react_1.createElement)('button', { type: 'button', disabled: websiteBusy || state.websiteOriginSource !== 'setting', onClick: () => saveWebsite(null) }, '恢复默认')), websiteError && (0, react_1.createElement)('span', { className: 'hm-core-error', role: 'alert' }, SERVER_ERRORS[websiteError] ?? `保存失败：${websiteError}`), !websiteReady && (0, react_1.createElement)('p', { role: 'alert', className: 'hm-core-error' }, state.websiteBinding?.message ?? '请先设置对应的网站地址。'), (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '立即生效。更换服务端后，须同时保存对应网站；本机服务端只能使用本机网站。'))), state.configuration && (0, react_1.createElement)(Row, { label: '运行配置' }, (0, react_1.createElement)('span', { 'data-hanamesh-core-configuration': 'visible' }, `请求时限 ${state.configuration.timeoutMs}ms；健康检查 ${state.configuration.checkIntervalMs}ms；名称请求时限 ${state.configuration.profileTimeoutMs}ms；Hana 行预算 ${state.configuration.maxHanaRows}；响应字节预算 ${state.configuration.maxResponseBytes}；界面轮询 ${state.configuration.clientPollIntervalMs ?? 10000}ms；积分刷新 ${state.configuration.pointsRefreshMs ?? 60000}ms；贡献刷新 ${state.configuration.contributionIntervalMs ?? 60000}ms；活动每次 ${state.configuration.activityPageBudget ?? 5} 页、显示 ${state.configuration.activityDisplayRows ?? 25} 行；名称并发 ${state.configuration.catalogConcurrency ?? 4}；贡献窗口 ${windowDays} 天。可在插件配置中修改。`)), (0, react_1.createElement)(Row, { label: '数据授权' }, (0, react_1.createElement)('label', { className: 'hm-core-switch' }, (0, react_1.createElement)('input', { type: 'checkbox', checked: state.consent.state === 'granted', disabled: consentBusy, onChange: event => void saveConsent(event.currentTarget.checked ? 'granted' : 'withheld') }), '允许 HanaMesh 记录并上报本设备的使用事件（安装/打开/使用/卸载；不含内容与对话）'), (0, react_1.createElement)('span', { role: 'status' }, consentBusy ? '正在保存并读取授权状态…' : `${consentError ? '上次读取' : '当前'}：${state.consent.state === 'granted' ? '已开启' : '已关闭'}`), 
     // Turning consent on sends data at once (registration, then usage records): say where, before the switch is used.
     (0, react_1.createElement)('small', { className: 'hm-core-muted', 'data-hanamesh-core-consent-destination': state.serverOrigin ?? 'none' }, state.serverOrigin === null
         ? '没有设置服务端：开启后只在本机记录，不发送。'
@@ -494,28 +591,19 @@ function HanaMeshSection() {
                 : activity.items.length === 0 ? (0, react_1.createElement)('span', { className: 'hm-core-muted' }, '本设备在此窗口没有可读的原始事件')
                     : (0, react_1.createElement)(react_1.Fragment, null, (0, react_1.createElement)('small', { className: 'hm-core-muted' }, '最新事件（新到旧）'), ...[...activity.items].reverse().map((item, index) => (0, react_1.createElement)('div', { key: `${item.occurredAt}:${item.hanaRef}:${item.action}:${index}`, className: 'hm-core-event' }, (0, react_1.createElement)('span', null, `${ACTION_LABELS[item.action]} · ${item.hanaRef}`), (0, react_1.createElement)('time', { dateTime: item.occurredAt }, new Date(item.occurredAt).toLocaleString('zh-CN'))))), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: activityBusy, onClick: () => void loadActivity() }, '刷新事件'), activity?.status === 'ready' && activity.nextAfter && (0, react_1.createElement)('button', { type: 'button', disabled: activityBusy, onClick: () => void loadActivity(true) }, '继续读取到最新')))), (0, react_1.createElement)(Row, { label: '本设备贡献累计' }, (0, react_1.createElement)('div', { className: 'hm-core-copy', 'data-hanamesh-core-contributions': state.contributions.status === 'ready' ? (state.contributions.availability ?? 'unknown') : 'unavailable' }, (0, react_1.createElement)('span', null, contributions), contributionsNote && (0, react_1.createElement)('small', { className: state.contributions.status === 'ready' && state.contributions.availability === 'unavailable' ? 'hm-core-error' : 'hm-core-muted' }, contributionsNote))), (0, react_1.createElement)(Row, { label: '组件与版本' }, (0, react_1.createElement)('div', { className: 'hm-core-components' }, (0, react_1.createElement)('span', { 'data-hanamesh-component': 'core' }, `HanaMesh Core：版本 ${CORE_VERSION}`), state.health.fault && (0, react_1.createElement)('span', { className: 'hm-core-error' }, `检查未完成（${state.health.fault}）`), ...state.components.map(row => (0, react_1.createElement)('span', { key: row.id, 'data-hanamesh-component': row.id }, `${row.label}：版本 ${row.version ?? '未知'} · ${componentText(row)}`)), (0, react_1.createElement)('button', { type: 'button', onClick: () => void post('/api/hanamesh/core/health/recheck') }, '重新检查'))), (0, react_1.createElement)(Row, { label: '关于' }, (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('span', null, `hanamesh-core ${CORE_VERSION} · 支持 DSH 0.2.x`), (0, react_1.createElement)('button', { type: 'button', disabled: !websiteReady, onClick: () => visit('/') }, '去网站'))));
 }
-/** A complete Core-owned page in the browser top layer. Its only navigation
- * is FooterAction's local state; no host menu, settings service or DOM lookup. */
-function HanaMeshSettingsPage({ onClose, restoreFocus }) {
-    const page = (0, react_1.useRef)(null);
-    (0, react_1.useEffect)(() => {
-        const node = page.current;
-        if (!node)
-            return;
-        node.showModal();
-        return () => { if (node.open)
-            node.close(); restoreFocus(); };
-    }, []);
-    return (0, react_1.createElement)('dialog', { ref: page, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'settings', 'aria-labelledby': 'hm-core-settings-title', onCancel: (event) => { event.preventDefault(); onClose(); } }, (0, react_1.createElement)('header', { className: 'hm-core-settings-header' }, (0, react_1.createElement)('button', { type: 'button', onClick: onClose }, '返回'), (0, react_1.createElement)('h1', { id: 'hm-core-settings-title' }, 'HanaMesh 设置'), (0, react_1.createElement)('button', { type: 'button', onClick: onClose, 'aria-label': '关闭 HanaMesh 设置' }, '关闭')), (0, react_1.createElement)('div', { className: 'hm-core-settings-body' }, (0, react_1.createElement)(HanaMeshSection)));
+/** Core owns its settings content; the public DSH Modal owns its body portal,
+ * stacking, Escape/Tab and focus restoration. A native showModal() here would
+ * escape the shell root's inert state and cover a later host onboarding modal. */
+function HanaMeshSettingsPage({ onClose }) {
+    return (0, react_1.createElement)(CoreModal, { onClose, title: 'HanaMesh 设置', className: 'hm-core-settings-page' }, (0, react_1.createElement)('div', { className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'settings' }, (0, react_1.createElement)('header', { className: 'hm-core-settings-header' }, (0, react_1.createElement)('button', { type: 'button', onClick: onClose }, '返回'), (0, react_1.createElement)('h1', { id: 'hm-core-settings-title' }, 'HanaMesh 设置'), (0, react_1.createElement)('button', { type: 'button', onClick: onClose, 'aria-label': '关闭 HanaMesh 设置' }, '关闭')), (0, react_1.createElement)('div', { className: 'hm-core-settings-body' }, (0, react_1.createElement)(HanaMeshSection))));
 }
 /** T2 one-time bind nudge. The host decides `prompt.show` (pending 分 > 0, device not bound, marker never stamped);
  *  the moment it is displayed we stamp the storage-domain marker, so a restart or reinstall never shows it again.
- *  Rendered as a native `<dialog>` in the browser top layer, so no layout hack covers the host chrome permanently. */
+ *  Its surface uses the same admitted DSH Modal as every Core panel. */
 function PointsBindPrompt() {
     const [pending, setPending] = (0, react_1.useState)(null);
     const [binding, setBinding] = (0, react_1.useState)(undefined);
     const [bindError, setBindError] = (0, react_1.useState)(null);
-    const dialog = (0, react_1.useRef)(null);
     (0, react_1.useEffect)(() => {
         let cancelled = false;
         let timer = 0;
@@ -549,19 +637,10 @@ function PointsBindPrompt() {
         timer = window.setInterval(() => void poll(), pointsRefreshMs);
         return () => { cancelled = true; window.clearInterval(timer); };
     }, []);
-    (0, react_1.useEffect)(() => {
-        const node = dialog.current;
-        if (pending === null || !node || node.open)
-            return;
-        if (typeof node.showModal === 'function')
-            node.showModal();
-        else
-            node.setAttribute('open', '');
-    }, [pending]);
     if (pending === null)
         return null;
-    const close = () => { dialog.current?.close?.(); setPending(null); };
-    return (0, react_1.createElement)('dialog', { className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'bind', onCancel: close }, (0, react_1.createElement)('h3', null, '绑定后这些分才归入你的账号'), (0, react_1.createElement)('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: !binding?.ready, onClick: () => { void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'))); } }, '去网站绑定'), (0, react_1.createElement)('button', { type: 'button', onClick: close }, '以后再说')), !binding?.ready && (0, react_1.createElement)('p', { role: 'alert' }, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'), bindError && (0, react_1.createElement)('p', { role: 'alert' }, bindError));
+    const close = () => { setPending(null); };
+    return (0, react_1.createElement)(CoreModal, { className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close }, (0, react_1.createElement)('div', { 'data-hanamesh-core-prompt': 'bind' }, (0, react_1.createElement)('h3', null, '绑定后这些分才归入你的账号'), (0, react_1.createElement)('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: !binding?.ready, onClick: () => { void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'))); } }, '去网站绑定'), (0, react_1.createElement)('button', { type: 'button', onClick: close }, '以后再说')), !binding?.ready && (0, react_1.createElement)('p', { role: 'alert' }, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'), bindError && (0, react_1.createElement)('p', { role: 'alert' }, bindError)));
 }
 // One queue per loaded Core client serializes StrictMode and duplicate sidebar mounts. Web Locks, when
 // present, also serializes tabs of the same carrier origin. Without it independent windows can both show;
@@ -572,7 +651,6 @@ function FirstConsentPrompt({ openSettings }) {
     const [error, setError] = (0, react_1.useState)(null);
     const [busy, setBusy] = (0, react_1.useState)(false);
     const [shown, setShown] = (0, react_1.useState)(false);
-    const dialog = (0, react_1.useRef)(null);
     const active = (0, react_1.useRef)(false);
     const finish = (0, react_1.useRef)(null);
     const writing = (0, react_1.useRef)(false);
@@ -605,35 +683,17 @@ function FirstConsentPrompt({ openSettings }) {
         }).catch(cause => { if (!cancelled)
             setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
         consentPromptTail = task;
-        return () => { cancelled = true; active.current = false; release(); if (dialog.current?.open)
-            dialog.current.close(); };
+        return () => { cancelled = true; active.current = false; release(); };
     }, []);
-    (0, react_1.useEffect)(() => {
-        const node = dialog.current;
-        if (!view || !node || !active.current)
-            return;
-        let opened = false;
-        try {
-            node.showModal();
-            if (!node.open)
-                throw new Error('not open');
-            opened = true;
-        }
-        catch {
-            setError('CORE_CONSENT_PROMPT_DISPLAY_FAILED');
-            finish.current?.();
-        }
-        if (!opened)
-            return;
-        // The marker acknowledges actual native display, never merely mounting/reading/rendering.
+    const displayed = () => {
         markerWrite.current = jsonRequest('/api/hanamesh/core/consent/prompt-shown', { method: 'POST' })
             .then(() => { if (active.current)
             setShown(true); })
             .catch(cause => { if (active.current)
             setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
-    }, [view]);
-    const close = () => { if (dialog.current?.open)
-        dialog.current.close(); finish.current?.(); };
+    };
+    const displayFailed = () => { setError('CORE_CONSENT_PROMPT_DISPLAY_FAILED'); setView(null); finish.current?.(); };
+    const close = () => { setView(null); finish.current?.(); };
     const enable = async () => {
         if (writing.current || !shown)
             return;
@@ -663,7 +723,7 @@ function FirstConsentPrompt({ openSettings }) {
         }
     };
     const settings = () => { close(); openSettings(); };
-    return (0, react_1.createElement)(react_1.Fragment, null, (0, react_1.createElement)('dialog', { className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'consent', 'aria-labelledby': 'hm-core-first-consent-title', onCancel: (event) => { event.preventDefault(); close(); } }, (0, react_1.createElement)('h3', { id: 'hm-core-first-consent-title' }, '开启 HanaMesh 使用记录？'), (0, react_1.createElement)('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。'), (0, react_1.createElement)('p', null, '只有你亲自点击开启才会记录；不选择或稍后均不记录。账号绑定另行确认，积分归属和作者收入按服务端规则处理。'), (0, react_1.createElement)('p', null, view?.serverOrigin ? `记录将上报至 ${view.serverOrigin}。可先到 HanaMesh 设置修改服务端。` : '尚未配置服务端（CORE_SERVER_NOT_CONFIGURED）；请先到 HanaMesh 设置填写服务端。'), view?.identity?.status === 'failed' && (0, react_1.createElement)('p', { role: 'alert' }, `本机设备身份不可用（${view.identity.reason ?? 'CORE_NOT_READY'}）；请到 HanaMesh 设置检查身份存储位置并重新读取。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: busy || !shown, onClick: () => { void enable(); } }, '开启'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: close }, '稍后'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: settings }, '打开设置')), error && (0, react_1.createElement)('p', { role: 'alert' }, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`)), error && !dialog.current?.open && (0, react_1.createElement)('p', { role: 'alert' }, `HanaMesh 首次提示：${error}。`, (0, react_1.createElement)('button', { type: 'button', onClick: settings }, '打开设置')));
+    return (0, react_1.createElement)(react_1.Fragment, null, view && (0, react_1.createElement)(CoreModal, { className: 'hm-core-prompt', title: '开启 HanaMesh 使用记录？', onClose: close, onDisplayed: displayed, onDisplayError: displayFailed }, (0, react_1.createElement)('div', { 'data-hanamesh-core-prompt': 'consent' }, (0, react_1.createElement)('h3', { id: 'hm-core-first-consent-title' }, '开启 HanaMesh 使用记录？'), (0, react_1.createElement)('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。'), (0, react_1.createElement)('p', null, '只有你亲自点击开启才会记录；不选择或稍后均不记录。账号绑定另行确认，积分归属和作者收入按服务端规则处理。'), (0, react_1.createElement)('p', null, view?.serverOrigin ? `记录将上报至 ${view.serverOrigin}。可先到 HanaMesh 设置修改服务端。` : '尚未配置服务端（CORE_SERVER_NOT_CONFIGURED）；请先到 HanaMesh 设置填写服务端。'), view?.identity?.status === 'failed' && (0, react_1.createElement)('p', { role: 'alert' }, `本机设备身份不可用（${view.identity.reason ?? 'CORE_NOT_READY'}）；请到 HanaMesh 设置检查身份存储位置并重新读取。`), (0, react_1.createElement)('div', { className: 'hm-core-actions' }, (0, react_1.createElement)('button', { type: 'button', disabled: busy || !shown, onClick: () => { void enable(); } }, '开启'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: close }, '稍后'), (0, react_1.createElement)('button', { type: 'button', disabled: busy, onClick: settings }, '打开设置')), error && (0, react_1.createElement)('p', { role: 'alert' }, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`))), error && !view && (0, react_1.createElement)('p', { role: 'alert' }, `HanaMesh 首次提示：${error}。`, (0, react_1.createElement)('button', { type: 'button', onClick: settings }, '打开设置')));
 }
 function FooterAction({ wide }) {
     const [settingsOpen, setSettingsOpen] = (0, react_1.useState)(false);

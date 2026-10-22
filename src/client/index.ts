@@ -1,4 +1,60 @@
-import {createElement, Fragment, useEffect, useRef, useState, version as reactVersion, type ReactNode, type SyntheticEvent} from 'react';
+import {createElement, Fragment, useEffect, useRef, useState, version as reactVersion, type ReactNode} from 'react';
+import type {Modal as DSHModal, isBehindModal as DSHIsBehindModal} from '@deepseek-ai/dsh-client-ui-primitives';
+
+/** The declared client inject is already supplied by DSH's ModuleLoader. Resolve
+ * its public UI face only while rendering UI, so importing portable client helpers
+ * in Node never executes a browser CSS module or imports a second host runtime. */
+function hostPrimitives(): {Modal: typeof DSHModal; isBehindModal: typeof DSHIsBehindModal} {
+  return require('@deepseek-ai/dsh-client-ui-primitives') as {Modal: typeof DSHModal; isBehindModal: typeof DSHIsBehindModal};
+}
+
+interface CoreModalProps {title: string; onClose: () => void; className: string; children?: ReactNode; onDisplayed?: () => void; onDisplayError?: () => void}
+/** Admit a background Core layer only when DSH's public modal stack permits it.
+ * Observe portal mutations, not clocks: no host selectors, inert writes, retries
+ * or custom z-index. After admission DSH itself owns every later overlay. */
+function CoreModal({title, onClose, className, children, onDisplayed, onDisplayError}: CoreModalProps): ReactNode {
+  const anchor = useRef<HTMLSpanElement | null>(null);
+  const content = useRef<HTMLDivElement | null>(null);
+  const [admitted, setAdmitted] = useState(false);
+  const displayed = useRef(false);
+  const {Modal, isBehindModal} = hostPrimitives();
+  useEffect(() => {
+    const node = anchor.current;
+    if (!node) return;
+    let active = true;
+    const admit = (): void => {
+      if (!active || isBehindModal(node)) return;
+      observer.disconnect();
+      setAdmitted(true);
+    };
+    const observer = new MutationObserver(admit);
+    observer.observe(node.ownerDocument.body, {childList: true, subtree: true});
+    admit();
+    return () => { active = false; observer.disconnect(); };
+  }, []);
+  useEffect(() => {
+    if (!admitted || displayed.current || (!onDisplayed && !onDisplayError)) return;
+    let active = true;
+    const acknowledge = (): void => {
+      if (!active || displayed.current) return;
+      const node = content.current;
+      if (!node?.isConnected) { displayed.current = true; observer.disconnect(); onDisplayError?.(); return; }
+      if (isBehindModal(node)) return;
+      displayed.current = true;
+      observer.disconnect();
+      onDisplayed?.();
+    };
+    const observer = new MutationObserver(acknowledge);
+    observer.observe(anchor.current!.ownerDocument.body, {childList: true, subtree: true});
+    acknowledge();
+    return () => { active = false; observer.disconnect(); };
+  }, [admitted, onDisplayed, onDisplayError]);
+  return createElement(Fragment, null,
+    createElement('span', {hidden: true, ref: anchor, 'data-hanamesh-core-modal-anchor': title}),
+    createElement(Modal, {open: admitted, onClose, title, headless: true, className},
+      createElement('div', {ref: content, className: 'hm-core-modal-content'}, children)));
+}
+
 /** Structural subset of Connection's public client contract; optional for older supported peers. */
 interface PeerConnection {
   generation?: {getSnapshot(): {id: number} | undefined; subscribe(listener: () => void): () => void};
@@ -61,7 +117,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.19';
+const CORE_VERSION = '0.3.20';
 const SUITE_INSTALL_COMMAND = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
@@ -180,10 +236,10 @@ const short = (id: string): string => `${id.slice(0, 8)}…`;
 
 const styleText = `
 .hm-core-section{display:flex;flex-direction:column;gap:0;color:var(--dsw-alias-label-primary,CanvasText);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-page{box-sizing:border-box;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;padding:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-page::backdrop{background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.45))}
+.hm-core-settings-page{box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:100%;margin:0;border:0;padding:0;overflow:hidden;gap:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
+.hm-core-settings-content,.hm-core-settings-page>.hm-core-modal-content{display:flex;flex-direction:column;min-height:0;height:100%}
 .hm-core-settings-header{display:flex;align-items:center;gap:16px;position:sticky;top:0;padding:16px 24px;background:inherit;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8);z-index:1}
-.hm-core-settings-header h1{flex:1;font-size:22px;margin:0}.hm-core-settings-body{max-width:880px;padding:24px;margin:0 auto}
+.hm-core-settings-header h1{flex:1;font-size:22px;margin:0}.hm-core-settings-body{box-sizing:border-box;min-height:0;overflow:auto;flex:1;width:100%;max-width:880px;padding:24px;margin:0 auto}
 .hm-core-settings-header button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 .hm-core-section h2{font-size:20px;margin:0 0 8px}.hm-core-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8)}
 .hm-core-row>strong{font-weight:600}.hm-core-copy{display:flex;flex-direction:column;gap:8px;min-width:0}.hm-core-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -199,7 +255,7 @@ const styleText = `
 /* Canvas/CanvasText are the fallbacks on purpose: they are a matched system pair, so a missing DSH token can never
    produce light-on-light in the host's dark theme (rc.31 first real-UI run did exactly that with a #fff fallback). */
 .hm-core-prompt{color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas)}
-.hm-core-prompt::backdrop{background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.45))}.hm-core-prompt h3{margin:0 0 8px;font-size:16px}
+.hm-core-prompt h3{margin:0 0 8px;font-size:16px}
 .hm-core-prompt p{margin:0 0 14px}
 .hm-core-prompt button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 `;
@@ -238,19 +294,13 @@ function Row({label, children}: {label: string; children?: ReactNode}): ReactNod
 }
 
 /** Public same-origin Usage view; opening it never navigates the host settings. */
-function LocalUsageDialog({onClose, restoreFocus}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
-  const dialog = useRef<HTMLDialogElement | null>(null);
-  useEffect(() => {
-    const node = dialog.current;
-    if (!node) return;
-    node.showModal();
-    return () => { if (node.open) node.close(); restoreFocus(); };
-  }, []);
-  return createElement('dialog', {ref: dialog, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'local-usage', 'aria-labelledby': 'hm-core-local-usage-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); onClose(); }},
-    createElement('header', {className: 'hm-core-settings-header'},
-      createElement('h1', {id: 'hm-core-local-usage-title'}, '本机使用记录'),
-      createElement('button', {type: 'button', onClick: onClose}, '返回 HanaMesh 设置')),
-    createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', height: 'calc(100dvh - 88px)', border: 0}}));
+function LocalUsageDialog({onClose}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
+  return createElement(CoreModal, {onClose, title: '本机使用记录', className: 'hm-core-settings-page'},
+    createElement('div', {className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'local-usage'},
+      createElement('header', {className: 'hm-core-settings-header'},
+        createElement('h1', {id: 'hm-core-local-usage-title'}, '本机使用记录'),
+        createElement('button', {type: 'button', onClick: onClose}, '返回 HanaMesh 设置')),
+      createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', flex: 1, minHeight: 0, border: 0}})));
 }
 
 type SuiteSourceView={protocolVersion:'1';status:'disabled'|'ready'|'failed'|'disposed';selection:string;registry:string|null;archiveCount:number;lastError:string|null;configuration:{configured:unknown;selection:{mode:string;options?:unknown}}};
@@ -551,32 +601,26 @@ function HanaMeshSection(): ReactNode {
   );
 }
 
-/** A complete Core-owned page in the browser top layer. Its only navigation
- * is FooterAction's local state; no host menu, settings service or DOM lookup. */
-function HanaMeshSettingsPage({onClose, restoreFocus}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
-  const page = useRef<HTMLDialogElement | null>(null);
-  useEffect(() => {
-    const node = page.current;
-    if (!node) return;
-    node.showModal();
-    return () => { if (node.open) node.close(); restoreFocus(); };
-  }, []);
-  return createElement('dialog', {ref: page, className: 'hm-core-settings-page', 'data-hanamesh-core-page': 'settings', 'aria-labelledby': 'hm-core-settings-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); onClose(); }},
-    createElement('header', {className: 'hm-core-settings-header'},
-      createElement('button', {type: 'button', onClick: onClose}, '返回'),
-      createElement('h1', {id: 'hm-core-settings-title'}, 'HanaMesh 设置'),
-      createElement('button', {type: 'button', onClick: onClose, 'aria-label': '关闭 HanaMesh 设置'}, '关闭')),
-    createElement('div', {className: 'hm-core-settings-body'}, createElement(HanaMeshSection)));
+/** Core owns its settings content; the public DSH Modal owns its body portal,
+ * stacking, Escape/Tab and focus restoration. A native showModal() here would
+ * escape the shell root's inert state and cover a later host onboarding modal. */
+function HanaMeshSettingsPage({onClose}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
+  return createElement(CoreModal, {onClose, title: 'HanaMesh 设置', className: 'hm-core-settings-page'},
+    createElement('div', {className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'settings'},
+      createElement('header', {className: 'hm-core-settings-header'},
+        createElement('button', {type: 'button', onClick: onClose}, '返回'),
+        createElement('h1', {id: 'hm-core-settings-title'}, 'HanaMesh 设置'),
+        createElement('button', {type: 'button', onClick: onClose, 'aria-label': '关闭 HanaMesh 设置'}, '关闭')),
+      createElement('div', {className: 'hm-core-settings-body'}, createElement(HanaMeshSection))));
 }
 
 /** T2 one-time bind nudge. The host decides `prompt.show` (pending 分 > 0, device not bound, marker never stamped);
  *  the moment it is displayed we stamp the storage-domain marker, so a restart or reinstall never shows it again.
- *  Rendered as a native `<dialog>` in the browser top layer, so no layout hack covers the host chrome permanently. */
+ *  Its surface uses the same admitted DSH Modal as every Core panel. */
 function PointsBindPrompt(): ReactNode {
   const [pending, setPending] = useState<number | null>(null);
   const [binding, setBinding] = useState<CoreState['websiteBinding']>(undefined);
   const [bindError, setBindError] = useState<string | null>(null);
-  const dialog = useRef<HTMLDialogElement | null>(null);
   useEffect(() => {
     let cancelled = false;
     let timer = 0;
@@ -605,21 +649,17 @@ function PointsBindPrompt(): ReactNode {
     timer = window.setInterval(() => void poll(), pointsRefreshMs);
     return () => { cancelled = true; window.clearInterval(timer); };
   }, []);
-  useEffect(() => {
-    const node = dialog.current;
-    if (pending === null || !node || node.open) return;
-    if (typeof node.showModal === 'function') node.showModal(); else node.setAttribute('open', '');
-  }, [pending]);
   if (pending === null) return null;
-  const close = (): void => { dialog.current?.close?.(); setPending(null); };
-  return createElement('dialog', {className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'bind', onCancel: close},
+  const close = (): void => { setPending(null); };
+  return createElement(CoreModal, {className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close},
+    createElement('div', {'data-hanamesh-core-prompt': 'bind'},
     createElement('h3', null, '绑定后这些分才归入你的账号'),
     createElement('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`),
     createElement('div', {className: 'hm-core-actions'},
       createElement('button', {type: 'button', disabled: !binding?.ready, onClick: () => {void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')));}}, '去网站绑定'),
       createElement('button', {type: 'button', onClick: close}, '以后再说')),
     !binding?.ready && createElement('p', {role: 'alert'}, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'),
-    bindError && createElement('p', {role: 'alert'}, bindError));
+    bindError && createElement('p', {role: 'alert'}, bindError)));
 }
 
 // One queue per loaded Core client serializes StrictMode and duplicate sidebar mounts. Web Locks, when
@@ -631,7 +671,6 @@ export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [shown, setShown] = useState(false);
-  const dialog = useRef<HTMLDialogElement | null>(null);
   const active = useRef(false);
   const finish = useRef<(() => void) | null>(null);
   const writing = useRef(false);
@@ -658,24 +697,15 @@ export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): 
       } else await run();
     }).catch(cause => { if (!cancelled) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
     consentPromptTail = task;
-    return () => { cancelled = true; active.current = false; release(); if (dialog.current?.open) dialog.current.close(); };
+    return () => { cancelled = true; active.current = false; release(); };
   }, []);
-  useEffect(() => {
-    const node = dialog.current;
-    if (!view || !node || !active.current) return;
-    let opened = false;
-    try {
-      node.showModal();
-      if (!node.open) throw new Error('not open');
-      opened = true;
-    } catch { setError('CORE_CONSENT_PROMPT_DISPLAY_FAILED'); finish.current?.(); }
-    if (!opened) return;
-    // The marker acknowledges actual native display, never merely mounting/reading/rendering.
+  const displayed = (): void => {
     markerWrite.current = jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'})
       .then(() => { if (active.current) setShown(true); })
       .catch(cause => { if (active.current) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'); });
-  }, [view]);
-  const close = (): void => { if (dialog.current?.open) dialog.current.close(); finish.current?.(); };
+  };
+  const displayFailed = (): void => { setError('CORE_CONSENT_PROMPT_DISPLAY_FAILED'); setView(null); finish.current?.(); };
+  const close = (): void => { setView(null); finish.current?.(); };
   const enable = async (): Promise<void> => {
     if (writing.current || !shown) return;
     writing.current = true; setBusy(true); setError(null);
@@ -691,7 +721,8 @@ export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): 
   };
   const settings = (): void => { close(); openSettings(); };
   return createElement(Fragment, null,
-    createElement('dialog', {className: 'hm-core-prompt', ref: dialog, 'data-hanamesh-core-prompt': 'consent', 'aria-labelledby': 'hm-core-first-consent-title', onCancel: (event: SyntheticEvent<HTMLDialogElement>) => { event.preventDefault(); close(); }},
+    view && createElement(CoreModal, {className: 'hm-core-prompt', title: '开启 HanaMesh 使用记录？', onClose: close, onDisplayed: displayed, onDisplayError: displayFailed},
+      createElement('div', {'data-hanamesh-core-prompt': 'consent'},
       createElement('h3', {id: 'hm-core-first-consent-title'}, '开启 HanaMesh 使用记录？'),
       createElement('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。'),
       createElement('p', null, '只有你亲自点击开启才会记录；不选择或稍后均不记录。账号绑定另行确认，积分归属和作者收入按服务端规则处理。'),
@@ -701,8 +732,8 @@ export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): 
         createElement('button', {type: 'button', disabled: busy || !shown, onClick: () => { void enable(); }}, '开启'),
         createElement('button', {type: 'button', disabled: busy, onClick: close}, '稍后'),
         createElement('button', {type: 'button', disabled: busy, onClick: settings}, '打开设置')),
-      error && createElement('p', {role: 'alert'}, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`)),
-    error && !dialog.current?.open && createElement('p', {role: 'alert'}, `HanaMesh 首次提示：${error}。`, createElement('button', {type: 'button', onClick: settings}, '打开设置')));
+      error && createElement('p', {role: 'alert'}, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`))),
+    error && !view && createElement('p', {role: 'alert'}, `HanaMesh 首次提示：${error}。`, createElement('button', {type: 'button', onClick: settings}, '打开设置')));
 }
 
 function FooterAction({wide}: {wide: boolean}): ReactNode {

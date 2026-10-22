@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
+const DSHModal = function DSHModal() {};
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -25,7 +26,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
   };
   const mount = (component, props = {}) => { const owner = {state: [], cursor: 0, effects: []}; return {render() { current = owner; owner.cursor = 0; owner.effects = []; return component(props); }, effects: () => owner.effects}; };
   const sandbox = {
-    exports: {}, require: name => { assert.equal(name, 'react'); return React; }, URLSearchParams,
+    exports: {}, require: name => { if (name === '@deepseek-ai/dsh-client-ui-primitives') return {Modal: DSHModal}; assert.equal(name, 'react'); return React; }, URLSearchParams,
     document: {visibilityState: 'visible', addEventListener() {}, removeEventListener() {}, createElement: () => ({dataset: {}, remove() {}}), head: {append() {}},
       querySelector() { assert.fail('must not inspect host navigation'); }, querySelectorAll() { assert.fail('must not inspect host navigation'); }},
     window: {addEventListener() {}, removeEventListener() {}, setInterval: run => { timers.push(run); return timers.length; }, clearInterval() {}, open() { assert.fail('local records stay in Core UI'); }},
@@ -59,16 +60,14 @@ test('main HanaMesh section shows real local Usage counts and opens its own reco
   const dialogElement = elements(f.section.render()).find(e => typeof e.type === 'function' && e.props.onClose && e.props.restoreFocus);
   assert.ok(dialogElement, 'view entry must open a Core-owned dialog');
   const dialog = f.mount(dialogElement.type, dialogElement.props);
-  const tree = dialog.render(); assert.equal(tree.type, 'dialog');
+  const tree = dialog.render(); const surface = elements(f.mount(tree.type, tree.props).render()).find(e => e.type === DSHModal); assert.equal(surface.type, DSHModal); assert.equal(surface.props.open, false); assert.equal(tree.props.title, '本机使用记录');
   const iframe = elements(tree).find(e => e.type === 'iframe');
   assert.equal(iframe.props.src, '/api/hanamesh/usage/panel/view');
   assert.equal(iframe.props.title, '本机使用记录详情');
-  let opened = 0, closed = 0;
-  tree.props.ref.current = {open: true, showModal() { opened++; }, close() { closed++; }};
-  const cleanups = dialog.effects().map(run => run()); assert.equal(opened, 1);
+  assert.equal(dialog.effects().length, 0, 'DSH owns modal layering and focus; Core adds no native showModal lifecycle');
   elements(tree).find(e => e.type === 'button' && e.children.includes('返回 HanaMesh 设置')).props.onClick();
   assert.equal(elements(f.section.render()).filter(e => typeof e.type === 'function' && e.props.onClose && e.props.restoreFocus).length, 0);
-  cleanups.forEach(run => run?.()); assert.equal(closed, 1); assert.equal(restored, 1);
+  assert.equal(restored, 0, 'Core delegates return focus to the DSH Modal stack');
   assert.ok(f.requests.some(r => r.path === '/api/hanamesh/usage/panel'));
   assert.ok(f.requests.every(r => r.method === 'GET'), 'viewing local records cannot write consent or upload');
 });

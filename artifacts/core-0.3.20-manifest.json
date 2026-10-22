@@ -1,0 +1,9 @@
+{
+  "version": "0.3.20",
+  "sha256": "3c9deab02dc9ac4a6913344a73dcd0289d440b48bb69f5db944c062203572cd3",
+  "bytes": 141211,
+  "entries": 84,
+  "sourceBase": "720c192876c6a6ffef9b1a8e24d2863c55da6f12",
+  "changes": "Use public DSH Modal stack for all Core panels; defer first consent until host foreground yields; unchanged consent protocol",
+  "verification": "335 tests;41 contract;25 mutations;normal pack strict artifactConsumer;final browser/officialDSH report in G37"
+}

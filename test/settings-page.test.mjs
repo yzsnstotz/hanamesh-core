@@ -9,6 +9,7 @@ import {memoryStore} from './fixtures/core-store.mjs';
 
 // Exercise the shipped callback and registered components. This is a hook/slot
 // fixture; real focus, top-layer layout and HTTP data are checked in the host UI.
+const DSHModal = function DSHModal() {};
 async function clientFixture(fetcher) {
   const slots = new Map();
   const timers = [];
@@ -44,7 +45,7 @@ async function clientFixture(fetcher) {
       querySelector() { hostQueries++; return null; },
       querySelectorAll() { hostQueries++; return []; },
     },
-    window: {__ModuleLoader__: {load: spec => { plugin = spec.factory(() => React); }}, open() {},
+    window: {__ModuleLoader__: {load: spec => { plugin = spec.factory(name => name === '@deepseek-ai/dsh-client-ui-primitives' ? {Modal: DSHModal} : React); }}, open() {},
       addEventListener: windowEvents.addEventListener.bind(windowEvents),
       removeEventListener: windowEvents.removeEventListener.bind(windowEvents),
       setTimeout() {}, setInterval(run) { timers.push(run); return timers.length; }, clearInterval(id) { clearedTimers.push(id); }},
@@ -65,41 +66,32 @@ async function clientFixture(fetcher) {
 }
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 
-test('HanaMesh footer opens complete Core-owned settings without querying host navigation', async () => {
+test('HanaMesh footer opens complete Core-owned settings through DSH Modal without querying host navigation', async () => {
   const f = await clientFixture();
   const footer = f.mount(f.slots.get('sidebar.footer.action'), {wide: true});
   const trigger = elements(footer.render()).find(e => e.props['aria-label'] === '打开 HanaMesh 设置');
-  let focuses = 0;
-  if (trigger.props.ref) trigger.props.ref.current = {focus() { focuses++; }};
-  trigger.props.onClick();
-  assert.equal(f.hostQueries(), 0, 'entry must not inspect/click Account or host settings DOM');
   for (const action of ['返回', '关闭']) {
+    trigger.props.onClick();
     const pageElement = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
-    assert.ok(pageElement, 'entry mounts its own complete settings page');
     const page = f.mount(pageElement.type, pageElement.props);
     const tree = page.render();
-    assert.equal(tree.type, 'dialog');
-    assert.equal(tree.props['data-hanamesh-core-page'], 'settings');
+    const surface = elements(f.mount(tree.type, tree.props).render()).find(e => e.type === DSHModal);
+    assert.ok(surface);
+    assert.equal(surface.props.open, false, 'admission happens after host foreground yields');
+    assert.equal(tree.props.title, 'HanaMesh 设置');
+    assert.equal(surface.props.headless, true);
+    assert.ok(elements(tree).some(e => e.props['data-hanamesh-core-page'] === 'settings'));
     assert.ok(elements(tree).some(e => e.type === 'h1' && e.children.includes('HanaMesh 设置')));
-    assert.ok(elements(tree).some(e => e.type === f.slots.get('settings.section')), 'reuse full real business component');
-    let opens = 0; let closes = 0;
-    tree.props.ref.current = {open: false, showModal() { this.open = true; opens++; }, close() { closes++; }};
-    const cleanups = page.effects().map(run => run());
-    assert.equal(opens, 1);
+    assert.ok(elements(tree).some(e => e.type === f.slots.get('settings.section')), 'reuse full business component');
+    assert.equal(page.effects().length, 0, 'Core installs no competing native top-layer/focus lifecycle');
     elements(tree).find(e => e.type === 'button' && e.children.includes(action)).props.onClick();
-    assert.equal(focuses, action === '返回' ? 0 : 1, 'focus restoration waits for modal cleanup');
     assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0);
-    cleanups.forEach(cleanup => cleanup?.());
-    assert.equal(closes, 1);
-    trigger.props.onClick();
   }
+  trigger.props.onClick();
   const reopened = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
-  const escapePage = f.mount(reopened.type, reopened.props).render();
-  let prevented = false;
-  escapePage.props.onCancel({preventDefault() { prevented = true; }});
-  assert.equal(prevented, true);
-  assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0);
-  assert.equal(focuses, 2);
+  f.mount(reopened.type, reopened.props).render().props.onClose();
+  assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0, 'DSH Escape/backdrop callback closes only Core state');
+  assert.equal(f.hostQueries(), 0, 'Core must not inspect/click host navigation or change inert');
 });
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -167,7 +159,7 @@ test('suite repair rows from older providers remain renderable without reason', 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.19');
+  assert.equal(pkg.version, '0.3.20');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
@@ -516,4 +508,28 @@ test('Core own page discovers the real source state and offers explicit preserve
  assert.match(textIn(page.render()),/本机套件来源/);assert.match(textIn(page.render()),/未配置/);const controls=elements(page.render());assert(controls.some(e=>e.type==='textarea'&&e.props['aria-label']==='本机来源配置'));assert(controls.some(e=>e.type==='button'&&e.children.includes('停用本机来源')));assert(controls.some(e=>e.type==='button'&&e.children.includes('使用插件配置')));assert.equal(calls[0].path,'/api/hanamesh/core/suite-source');assert.equal(calls.filter(c=>c.init.method==='POST').length,0,'opening page is read-only');
  const input=controls.find(e=>e.type==='textarea');input.props.onChange({currentTarget:{value:'not JSON'}});elements(page.render()).find(e=>e.type==='button'&&e.children.includes('保存本机来源')).props.onClick();await settle();assert.equal(calls.filter(c=>c.init.method==='POST').length,0);assert.match(textIn(page.render()),/CORE_SUITE_SOURCE_CONFIG_INVALID/);
  elements(page.render()).find(e=>e.type==='button'&&e.children.includes('停用本机来源')).props.onClick();await settle();assert.deepEqual(JSON.parse(calls.find(c=>c.init.method==='POST').init.body),{mode:'disabled'});
+});
+
+
+test('Core settings and a host onboarding dialog share the DSH modal mechanism instead of competing with browser top layer', async () => {
+  const f = await clientFixture();
+  const footer = f.mount(f.slots.get('sidebar.footer.action'), {wide: true});
+  elements(footer.render()).find(e => e.props['aria-label'] === '打开 HanaMesh 设置').props.onClick();
+  const pageElement = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
+  const page = f.mount(pageElement.type, pageElement.props);
+  const core = page.render();
+  const host = {type: DSHModal, props: {open: true, title: 'Add an API key to get started'}};
+  const surface = elements(f.mount(core.type, core.props).render()).find(e => e.type === DSHModal);
+  assert.equal(surface.type, host.type, 'both dialogs use the DSH modal stack, with Core admission deferring to an existing host foreground');
+  assert.equal(surface.props.open, false);
+  assert.equal(core.props.title, 'HanaMesh 设置');
+  assert.equal(surface.props.headless, true, 'Core retains its complete settings content inside host-owned modal chrome');
+  assert.equal(f.hostQueries(), 0, 'Core must not inspect, dismiss or mutate the host dialog/inert state');
+  let closed = 0;
+  // DSH owns Escape, backdrop and focus. Its public onClose delegates only the local Core close.
+  pageElement.props.onClose = () => { closed++; };
+  const other = f.mount(pageElement.type, pageElement.props).render();
+  other.props.onClose();
+  assert.equal(closed, 1);
+  assert.equal(host.props.open, true, 'closing Core does not dismiss the host dialog');
 });
