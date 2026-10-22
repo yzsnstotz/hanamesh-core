@@ -195,3 +195,8 @@ test/core-public-provider.test.mjs使用真实SessionController.service及隔离
 ## DSH 首次使用记录提示（0.3.15）
 
 公开本机 `GET /api/hanamesh/core/state` 增补 `consentPrompt: ConsentPrompt`（类型经 `hanamesh-core/contract` 导出，schema `$defs.ConsentPrompt`）；同源 `POST /api/hanamesh/core/consent/prompt-shown` 无正文，幂等返回 `{shownAt:ISO}`。可选 storage 字段 `usageConsentPromptShownAt` 保留旧快照兼容。首次仅默认 withheld/changedAt=null/无 marker 提示；明确拒绝或撤回以及原 granted 不提示。客户端实际显示后记录；稍后、ESC、卸载不授权，只有本人开启调用原同意写屏障。详情及多窗口范围见 `API.md`。
+
+
+Binding deadline handoff (0.3.19): both controller bind-link and portable agent bindLink return the same `{url,expiresAt}` shape and add `expiresAt=<the original Identity challenge response>` plus `expiryClock=identity-server` to `/me/bind`. The deadline must be canonical UTC millisecond ISO; invalid/missing data is CORE_UPSTREAM_RESPONSE_INVALID/502, with no local TTL or replacement challenge. Identity nonce signature and three-field bind submission remain unchanged.
+
+These URL values are editable, unsigned display hints. They are not a fresh challenge-status check, serverNow or a grant to enable Confirm; they cannot extend Identity's stored deadline or single-use acceptance. The clock domain is Identity's authoritative server storage (currently PostgreSQL now), not Core/browser/chain time. No exact countdown or used/revoked status is supplied; Identity must define a trustworthy status/time contract before a website can claim that verification. OAuth must preserve the same original query, never silently refresh or submit it. The website sends only deviceId/nonce/signature to Identity, never these metadata fields.

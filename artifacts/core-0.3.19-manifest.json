@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "name": "hanamesh-core",
+  "version": "0.3.19",
+  "sourceCommit": "b828d83972f7e9882ddbbd512b91cdfde0833474",
+  "package": {
+    "file": "hanamesh-core-0.3.19.tgz",
+    "sha256": "1d0f961d667215ad9b11e39a34b6a109691f5f2fae727e4890fefd6cc7d1dc02",
+    "bytes": 140037,
+    "entries": 84
+  },
+  "toolchain": {
+    "node": "24.13.1",
+    "pnpm": "10.33.0",
+    "typescript": "5.9.3"
+  },
+  "gates": {
+    "strictFrozenInstall": "PASS",
+    "targetBuild": "PASS",
+    "full": {
+      "tests": 327,
+      "pass": 327,
+      "fail": 0,
+      "skipped": 0
+    },
+    "check": "PASS",
+    "contract": {
+      "checks": 41,
+      "fail": 0
+    },
+    "mutation": {
+      "cases": 25,
+      "detected": 25
+    },
+    "verifyPackStrictExternalConsumer": "PASS",
+    "normalTarCLI": "PASS",
+    "boundaryViolations": 0
+  },
+  "content": {
+    "byteIdenticalFiles": 83,
+    "manifest": "normal pnpm removes packageManager only; all other JSON fields exactly match"
+  },
+  "urlFields": {
+    "expiresAt": "exact original challenge value",
+    "expiryClock": "identity-server"
+  },
+  "authority": "URL fields are editable unsigned display hints; Identity stored expiry and single consumption remain authoritative",
+  "notSupplied": [
+    "serverNow",
+    "challenge status proof",
+    "authoritative countdown",
+    "Identity named expiry/used/not-found errors",
+    "Web integration"
+  ],
+  "firstFailures": {
+    "redTests": "original URL missing expiry, malformed expiry accepted",
+    "build": "profile/version mismatch fixed",
+    "strictInstall": "isolated HOME lacked Git auth helper; corrected opaque normal gh helper, unchanged lock/strict peers",
+    "firstFull": "323 pass / 4 fail; release version constant, fixed exact Core version",
+    "rawByteParity": "FAIL package.json; normal pnpm packageManager removal itemized, original assertion not called PASS"
+  },
+  "platforms": {
+    "macOS_arm64": "ENGINEERING_PASS",
+    "macOS_x64": "NOT_RUN",
+    "Windows_x64": "NOT_RUN",
+    "Linux_x64": "NOT_RUN"
+  },
+  "productAcceptance": "NOT_RUN",
+  "installed22467": false
+}
