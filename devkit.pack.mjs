@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 const source = JSON.parse(await readFile('package.json', 'utf8'));
-const tarball = resolve(process.argv[2] ?? `artifacts/hanamesh-core-${source.version}.tgz`);
+const tarball = resolve(process.argv[2] ?? `artifacts/release-platform/hanamesh-core-${source.version}.tgz`);
 export const packConfig = {
   root: process.cwd(), tarball,
   temporaryRoot: resolve(process.env.HM_CORE_RUN ?? tmpdir()),

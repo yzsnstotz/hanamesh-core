@@ -47,3 +47,26 @@ The package consumer checks JavaScript and strict TypeScript without devkit inst
 Agent0.3.6 signs explicit consent generations and requires a transactional v2 withdrawal barrier; see docs/AGENT.md. A matching committed server tombstone closes delayed old grants/uploads. No-device is distinguished from a completed remote deletion.
 
 Binding links carry the original Identity expiry and clock domain as unsigned display metadata; they never change server expiry or authorize confirmation. See docs/API.md and docs/SECURITY.md.
+
+## 不可关闭的平台依赖发布门（0.1.9）
+
+`DSH_PNPM_PLATFORM_CLOSURE`，`disableable=false`。编排提供的触发背景是：DSH bundled pnpm 11.7.0 在处理不适用平台的 optional 子包时可能安装完成却不退出，宿主因此一直等待。这里检查发布包的完整安装闭包，不宣称修复 pnpm 自身。不能关闭：关闭后可能发布用户无法完成安装的插件；Mac、Windows、Linux 使用同一规则，不按检查机平台过滤。没有 skip/allow/ignore、环境开关、白名单或仅警告模式。遇到违规应更改依赖分包方式或移除依赖，不能以改客户端、omit-optional、超时或重试替代。
+
+正常工具为仅开发依赖的 `@hanamesh/release-platform-gate@0.1.9`，固定本仓 `vendor/hanamesh-release-platform-gate-0.1.9.tgz`（33790B，SHA256 `c72010c96a5f22e36d65f6c1fd850e583dead7e843644eba1657b4416d9cbd0d`），由 pnpm 正常冻结锁校验。工具代码只在该已审开发包中，不复制扫描器、不从邻仓导入，不进入插件运行 dependency、peer、bundle 或产品载荷。
+
+冻结安装继续用 Node 24.13.1 / pnpm 10.33.0，`pnpm install --strict-peer-dependencies --frozen-lockfile`。原构建/测试/检查仍须全部执行，再使用 **npm** 正常发布入口：
+
+```sh
+npm run release:check
+# 仅在另获发布授权后：npm run release:publish
+```
+
+`release:check` 执行正常 npm pack（保留生命周期），检查实际 tar 与 `pnpm-lock.yaml`，输出 JSON、tar/锁 SHA256，并保存 `artifacts/release-platform/receipt.json`；失败退出 1，触发包/字段/原因及不可关闭理由可见。未来 `release:publish` 只发布最后再次核 SHA 的同一受检 tar，不重新打包目录。`prepublishOnly` 正常守卫以 `SOURCE_PUBLISH_FORBIDDEN` 拒绝目录发布（不通过真正 npm publish 验证）。不能直接取旧 tar 绕过本次检查。CI 的 `release-check` 固定执行原门和发布门，仅只读检查，无发布凭据/权限；本接线不授权 npm 发布。人为删除脚本、禁用 npm 生命周期或另行直接调用 registry 不属于本门授权的发布路径。
+
+检查普通 dependencies、optionalDependencies、必需/已解析 peer（包括冻结锁独有的 peer）、实际 bundle/vendor、每个包自身的锁，absent optional peer 逐项列出。平台 os/cpu/libc 字段或平台 optional 目标以 `PLATFORM_FIELD` / `PLATFORM_OPTIONAL` 拒绝；身份/范围/冻结漂移、强 SRI 错配分别具名拒绝。有限支持 [dependency-shapes-v1 合同](https://github.com/yzsnstotz/hanamesh-docs/blob/dad7fc34d52c784ac99cdd7a8a31fcaa0a618d36/tools/release-platform-gate/DEPENDENCY_SHAPES.md)：registry、实际 bundle 的 git、实际归档内 file/link/workspace、受约束 HTTPS tarball、bundle/vendor；npm lock v2/v3、pnpm lock v9。合同外协议、锁版本、未知 resolver 字段、patch/catalog/injected/overrides 等形态以 `UNSUPPORTED_DEPENDENCY_SHAPE` 拒绝，包含 shape/why/action/contract。处理方式是改成合同内可证明的供给，或先扩合同并独审，不能猜测或静默放行。
+
+本次为发布检查接线，产品版本/公开运行合同保持原正式基线；新 tar 与旧正式 tar 的摘要分别记录，不能混用。工具独审通过不等于本仓接线独审、真实 DSH/owner 安装或 Windows/Linux 真机通过；这些按实际证据另记。没有执行 npm 发布。
+
+原 `verify:pack` 先正常打包并过发布门，再对同一受检 tar 做严格外部消费者验证；`npm run pack` 同样走受检入口。历史 `scripts/p1/publish.sh` 已退役并转正常目录发布守卫，不再发布旧 tar 或其他仓的包。
+
+Core 既有 devkit Git 源为私有仓，公开仓的 GitHub Actions `GITHUB_TOKEN` 不拥有该邻仓读取权。新增 CI 在缺少维护者配置的只读 `HANAMESH_DEVKIT_READ_TOKEN` 时具名 `DEVKIT_SOURCE_ACCESS_REQUIRED` 失败；通过标准 gh credential helper 消费环境变量，不将值放进 URL/argv 或输出。本次未创建/读取/配置秘密，不声称远端 Actions 已验证；本机通过既有正常 Git 认证冻结安装。

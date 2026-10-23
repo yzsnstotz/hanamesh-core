@@ -1,3 +1,6 @@
 node_modules/
 *.tmp
 .DS_Store
+
+# Generated normal release-check artifact/receipt; frozen delivery is retained in Docs.
+/artifacts/release-platform/

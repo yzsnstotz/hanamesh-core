@@ -69,9 +69,12 @@
     "preflight": "node scripts/preflight.mjs",
     "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts",
     "check:toolchain": "hanamesh-devkit check-toolchain",
-    "verify:pack": "node scripts/check-package.mjs",
-    "pack": "npm pack --pack-destination artifacts",
-    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight"
+    "verify:pack": "npm run release:check && node scripts/check-package.mjs",
+    "pack": "npm run release:check",
+    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight",
+    "release:check": "hanamesh-release check --lockfile pnpm-lock.yaml",
+    "release:publish": "hanamesh-release publish --lockfile pnpm-lock.yaml",
+    "prepublishOnly": "hanamesh-release source-guard"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0",
@@ -105,7 +108,8 @@
     "@types/semver": "7.7.1",
     "react": "18.3.1",
     "typescript": "5.9.3",
-    "zod": "4.5.4"
+    "zod": "4.5.4",
+    "@hanamesh/release-platform-gate": "file:vendor/hanamesh-release-platform-gate-0.1.9.tgz"
   },
   "dsh": {
     "bundle": {

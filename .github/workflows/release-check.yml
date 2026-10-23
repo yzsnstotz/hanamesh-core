@@ -1,0 +1,41 @@
+name: release-check
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.HANAMESH_DEVKIT_READ_TOKEN }}
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: credential.https://github.com.helper
+      GIT_CONFIG_VALUE_0: '!gh auth git-credential'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.13.1
+      - name: Require read-only private devkit source access
+        run: test -n "${GH_TOKEN:-}" || { echo 'DEVKIT_SOURCE_ACCESS_REQUIRED - configure HANAMESH_DEVKIT_READ_TOKEN for the existing private devkit Git source'; exit 1; }
+      - run: pnpm install --frozen-lockfile --strict-peer-dependencies
+      - run: npm run build
+      - run: npm test
+      - run: npm run test:mutations
+      - run: npm run test:contract
+      - run: npm run check
+      - run: npm run pack
+      - run: npm run verify:pack
+      - run: npm run release:check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-platform-receipt
+          path: artifacts/release-platform/
