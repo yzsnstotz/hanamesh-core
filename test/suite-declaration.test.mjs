@@ -5,7 +5,7 @@ test('published suite declaration is an optional protocol1 capability with one g
  const pkg=JSON.parse(await readFile('package.json','utf8'));
  assert.ok(pkg.exports['./suite'],'PUBLIC_SUITE_EXPORT_MISSING');
  assert.ok(pkg.hanameshSuite,'PUBLIC_SUITE_METADATA_MISSING');
- const {SUITE_MANIFEST}=await import('hanamesh-core/suite');
+ const {SUITE_MANIFEST}=await import('@hanamesh/core/suite');
  assert.deepEqual(SUITE_MANIFEST,pkg.hanameshSuite);
  const {CORE_OPTIONAL_METHODS,CORE_REQUIRED_METHODS}=await import('../lib/contract.js');
  assert.ok(CORE_OPTIONAL_METHODS.includes('getSuiteDeclaration'),'OPTIONAL_SUITE_METHOD_MISSING');

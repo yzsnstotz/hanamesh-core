@@ -3,10 +3,10 @@ import {readFile, access, realpath} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
-const packageRoot = resolve('node_modules/hanamesh-core');
+const packageRoot = resolve('node_modules/@hanamesh/core');
 const source = {version: '__CORE_VERSION__'};
 const packed = JSON.parse(await readFile(join(packageRoot, 'package.json'), 'utf8'));
-assert.equal(packed.name, 'hanamesh-core');
+assert.equal(packed.name, '@hanamesh/core');
 assert.equal(packed.version, source.version);
 assert.deepEqual(packed.dependencies, {semver: '7.7.2', tar: '7.5.22'});
 assert.equal(packed.dsh.bundle.patch, './profile/cordis.patch.yml');
@@ -19,9 +19,9 @@ await access(join(packageRoot, 'profile.schema.json'));
 await access(join(packageRoot, 'lib/client.js'));
 assert.equal(JSON.parse(await readFile(createRequire(join(await realpath(packageRoot), 'package.json')).resolve('semver/package.json'), 'utf8')).version, '7.7.2');
 await assert.rejects(access(resolve('node_modules/@hanamesh/devkit')));
-const adapter = await import('hanamesh-core');
+const adapter = await import('@hanamesh/core');
 assert.equal(adapter.name, (await import(pathToFileURL(join(packageRoot, 'lib/dsh.mjs')).href)).name);
-const contract = await import('hanamesh-core/contract');
+const contract = await import('@hanamesh/core/contract');
 assert.ok(contract);
 assert.equal(adapter.name, 'hanamesh-core');
 assert.deepEqual(adapter.inject, ['connection', 'storageDomain', 'loader']);
@@ -32,9 +32,9 @@ let value = structuredClone(INITIAL_CORE_SNAPSHOT);
 const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, {read: () => value, publish: async next => { value = next; }, close: async () => undefined});
 assert.deepEqual(Object.keys(controller.service).sort(), ['protocolVersion', 'getDeviceId', 'getPublicKey', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin', 'getHealth', 'getSuiteDeclaration'].sort());
 assert.deepEqual(contract.checkCoreService(controller.service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration']});
-const {runCoreProviderSuite, runCoreConsumerSuite} = await import('hanamesh-core/contract/suite');
-const {createCoreProviderFixture, createCoreConsumerFixture} = await import('hanamesh-core/contract/fixtures');
-const {default: schema} = await import('hanamesh-core/contract/schema.json', {with: {type: 'json'}});
+const {runCoreProviderSuite, runCoreConsumerSuite} = await import('@hanamesh/core/contract/suite');
+const {createCoreProviderFixture, createCoreConsumerFixture} = await import('@hanamesh/core/contract/fixtures');
+const {default: schema} = await import('@hanamesh/core/contract/schema.json', {with: {type: 'json'}});
 assert.equal(schema['x-hanamesh'].protocolVersion, '1');
 for (const result of [
   await runCoreProviderSuite({label: 'packed SessionController.service', service: controller.service, setConsent: state => controller.setConsent(state)}),
@@ -44,13 +44,13 @@ for (const result of [
 await access(join(packageRoot, 'lib/contract-cli.js'));
 await controller.dispose();
 const packedLib = await readFile(join(packageRoot, 'lib/dsh.mjs'), 'utf8');
-assert.doesNotMatch(packedLib, /from ['"]hanamesh-usage|from ['"]@hanamesh\/dsh-app-host|import\(['"]hanamesh-usage/);
+assert.doesNotMatch(packedLib, /(?:from ['"]|import\(['"])(?:hanamesh-usage|@hanamesh\/(?:usage|dsh-app-host))/);
 
 console.log(JSON.stringify({event:'check_package_ok',version:packed.version,dependencies:Object.keys(packed.dependencies ?? {}).length}));
 
-const {SUITE_MANIFEST}=await import("hanamesh-core/suite");assert.deepEqual(SUITE_MANIFEST,packed.hanameshSuite);
+const {SUITE_MANIFEST}=await import("@hanamesh/core/suite");assert.deepEqual(SUITE_MANIFEST,packed.hanameshSuite);
 
-const {createSuitePackageSource} = await import('hanamesh-core/suite/source');
+const {createSuitePackageSource} = await import('@hanamesh/core/suite/source');
 assert.equal(typeof createSuitePackageSource, 'function');
 
-const sourceAPI=await import('hanamesh-core/suite/source');assert.equal(typeof sourceAPI.createManagedSuitePackageSource,'function');
+const sourceAPI=await import('@hanamesh/core/suite/source');assert.equal(typeof sourceAPI.createManagedSuitePackageSource,'function');

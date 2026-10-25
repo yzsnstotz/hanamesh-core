@@ -18,7 +18,7 @@ export async function apply(ctx) {
   const core = ctx.get('hanameshCore');
   assert.ok(core, 'Real hanameshCore injection is missing');
   const require = createRequire(import.meta.url);
-  const packagePath = await realpath(require.resolve('hanamesh-core/package.json'));
+  const packagePath = await realpath(require.resolve('@hanamesh/core/package.json'));
   const manifest = JSON.parse(await readFile(packagePath, 'utf8'));
   const providerRequire = createRequire(packagePath);
   const resolvedPeers = {};

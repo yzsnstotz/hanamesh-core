@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = "env -u GIT_CONFIG_PARAMETERS -u GIT_ASKPASS -u SSH_ASKPASS GIT_CONFIG_NOSYSTEM=1 GIT_TERMINAL_PROMPT=0 GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential' dsh plugin --profile desktop add --save-exact 'github:yzsnstotz/hanamesh-core#main' 'github:yzsnstotz/hanamesh-usage#main' 'github:yzsnstotz/hanamesh-plugin-app-host#main'";
+const command = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.21' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.13'";
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));

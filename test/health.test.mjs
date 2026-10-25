@@ -54,10 +54,10 @@ test('suite health expectations do not require installing optional components', 
 test('real DSH include-prefixed ids and package root or subpath names match suite components', async () => {
   for (const appHostName of ['@hanamesh/dsh-app-host', '@hanamesh/dsh-app-host/dsh']) {
     const entries = [
-      {id: 'include:hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber: {state: 2}},
+      {id: 'include:hanamesh-usage', options: {name: '@hanamesh/usage'}, fiber: {state: 2}},
       {id: 'include:hanamesh-app-host', options: {name: appHostName}, fiber: {state: 2}},
     ];
-    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === 'hanamesh-usage' ? '0.2.0-rc.27' : '0.5.9'}));
+    const source = new LoaderObservationSource({entries: () => entries}, import.meta.url, async moduleName => ({kind: 'present', version: moduleName === '@hanamesh/usage' ? '0.2.0-rc.27' : '0.5.9'}));
     const observations = await source.observe(profile.components);
     assert.deepEqual(observations.map(row => [row.kind, row.phase]), [['present', 'active'], ['present', 'active']], appHostName);
   }
@@ -82,8 +82,8 @@ test('package integrity accepts the loader subpath when the package root is not 
 test('failed startup diagnostic persists safe reason and action in the existing health shape, then recovers', async () => {
   const secret = '/private/owner/token-DO-NOT-EXPOSE';
   const fiber = {state: 3, async await() { throw Object.assign(new Error(`domain 'hanamesh_usage_events': stored global does not match its schema ${secret}`), {name: 'DomainError', code: 'invalid-record', stack: secret, detail: {key: secret}, cause: new Error(secret)}); }};
-  const source = new LoaderObservationSource({entries: () => [{id: 'hanamesh-usage', options: {name: 'hanamesh-usage'}, fiber}, {id: 'hanamesh-app-host', options: {name: '@hanamesh/dsh-app-host'}, fiber: {state: 2}}]}, import.meta.url,
-    async name => ({kind: 'present', version: name === 'hanamesh-usage' ? '0.2.0-rc.27' : '0.5.9'}));
+  const source = new LoaderObservationSource({entries: () => [{id: 'hanamesh-usage', options: {name: '@hanamesh/usage'}, fiber}, {id: 'hanamesh-app-host', options: {name: '@hanamesh/dsh-app-host'}, fiber: {state: 2}}]}, import.meta.url,
+    async name => ({kind: 'present', version: name === '@hanamesh/usage' ? '0.2.0-rc.27' : '0.5.9'}));
   const writes = [];
   const service = new HealthService(profile, source, {publish: async value => writes.push(value)});
   const failed = await service.recheck();

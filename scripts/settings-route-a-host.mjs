@@ -25,13 +25,13 @@ for (const entry of await readdir(modules, {withFileTypes: true})) {
   if (excluded(entry.name)) continue;
   await symlink(join(modules, entry.name), join(profileModules, entry.name));
 }
-const core = join(profileModules, 'hanamesh-core');
-await mkdir(core);
+const core = join(profileModules, '@hanamesh/core');
+await mkdir(core, {recursive: true});
 execFileSync('tar', ['-xzf', tarball, '--strip-components=1', '-C', core]);
 const pkg = JSON.parse(await readFile(join(core, 'package.json'), 'utf8'));
 await writeFile(join(profile, 'package.json'), JSON.stringify({private: true, type: 'module',
-  dependencies: {'@deepseek-ai/dsh-base': '0.2.0-rc.2', '@deepseek-ai/dsh-web-app': '0.2.0-rc.2', 'hanamesh-core': 'file:' + tarball},
-  dsh: {profile: {bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'hanamesh-core']}}}, null, 2));
+  dependencies: {'@deepseek-ai/dsh-base': '0.2.0-rc.2', '@deepseek-ai/dsh-web-app': '0.2.0-rc.2', '@hanamesh/core': 'file:' + tarball},
+  dsh: {profile: {bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@hanamesh/core']}}}, null, 2));
 await writeFile(join(profile, 'cordis.patch.yml'), '- id: hanamesh-core\n  config:\n    serverOrigin: null\n    websiteOrigin: null\n    allowSystemBrowser: false\n');
 // Credential/environment isolation: no inherited keys, auth files or models.
 const env = {HOME: join(root, 'home'), DSH_HOME: join(root, 'dsh-home'), TMPDIR: join(root, 'tmp'),

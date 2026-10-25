@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "label": "HanaMesh \u5957\u4ef6",
   "runningTaskPolicy": "preserve-and-pause",
   "components": [
     {
       "id": "usage",
-      "moduleName": "hanamesh-usage",
+      "moduleName": "@hanamesh/usage",
       "loaderEntryId": "hanamesh-usage",
       "label": "\u4f7f\u7528\u8bb0\u5f55",
       "versionRange": ">=0.2.0-rc.26 <0.3.0 || >=0.3.0-rc.1 <0.4.0",

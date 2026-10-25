@@ -8,7 +8,7 @@ const readJson = async path => JSON.parse(await readFile(path, 'utf8'));
 
 test('Core admits official rc.2 and compatible 0.2.x prereleases without admitting 0.3', async () => {
   const pkg = await readJson('package.json');
-  assert.equal(pkg.name, 'hanamesh-core');
+  assert.equal(pkg.name, '@hanamesh/core');
   assert.equal(pkg.private, undefined);
   assert.equal(pkg.license, 'MIT');
   assert.deepEqual(pkg.dependencies, {semver: '7.7.2', tar: '7.5.22'}); // D-3 / HM-4: semver plus the pinned normal-archive parser are runtime inputs
@@ -35,6 +35,7 @@ test('real-host boot uses a clean allowlisted environment', async () => {
 
 test('Core patch inserts only Core so separately installed components can coexist', async () => {
   const patch = await readFile('profile/cordis.patch.yml', 'utf8');
+  assert.match(patch, /^\s+name: @hanamesh\/core$/m);
   assert.equal((patch.match(/^- insert:/gm) ?? []).length, 1);
   assert.deepEqual([...patch.matchAll(/^\s+- id: (hanamesh-[a-z-]+)$/gm)].map(match => match[1]), [
     'hanamesh-core',
