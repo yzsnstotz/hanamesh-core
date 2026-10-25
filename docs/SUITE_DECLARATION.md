@@ -4,7 +4,7 @@ Core 0.3.17 implements I-SUITE-COMPAT-BOUNDARY as an optional protocol `'1'` ext
 
 ## Public port and facts
 
-`hanamesh-core/suite` exports read-only `SUITE_MANIFEST` and DTO types. Each Core version's full npm metadata carries the same `hanameshSuite` field. Build generates both from that release's own profile and package metadata; `verify:inputs` rejects drift. Component identities/repositories/ranges come from the owned profile; Core's name/version/repository/Node/peers come from its package metadata. There is no second maintained range list.
+`@hanamesh/core/suite` exports read-only `SUITE_MANIFEST` and DTO types. Each Core version's full npm metadata carries the same `hanameshSuite` field. Build generates both from that release's own profile and package metadata; `verify:inputs` rejects drift. Component identities/repositories/ranges come from the owned profile; Core's name/version/repository/Node/peers come from its package metadata. There is no second maintained range list.
 
 Consumers check the optional Cordis method on `hanameshCore`. They do not import Core runtime implementations or read its profile:
 
@@ -49,7 +49,7 @@ This is an authenticated current Core client observation, not cryptographic rend
 
 ### Normal archive source before npm publication
 
-`hanamesh-core/suite/source` exports `createSuitePackageSource(options): Promise<{registry:string,close():Promise<void>}>` and its TypeScript options. The caller supplies `archives:[{path,integrity}]` with exact SHA512 SRI, `port` (0 allocates an owned random port), HTTPS `peerRegistry`, and required positive integer `maxArchiveBytes`, `maxExpandedBytes`, `maxEntries`, `maxManifestBytes`, `maxResponseBytes`, `timeoutMs`. There are no hidden budgets or production-address defaults. `timeoutMs` must fit a JavaScript timer. This is a Node composition facility, not a new required Cordis method.
+`@hanamesh/core/suite/source` exports `createSuitePackageSource(options): Promise<{registry:string,close():Promise<void>}>` and its TypeScript options. The caller supplies `archives:[{path,integrity}]` with exact SHA512 SRI, `port` (0 allocates an owned random port), HTTPS `peerRegistry`, and required positive integer `maxArchiveBytes`, `maxExpandedBytes`, `maxEntries`, `maxManifestBytes`, `maxResponseBytes`, `timeoutMs`. There are no hidden budgets or production-address defaults. `timeoutMs` must fit a JavaScript timer. This is a Node composition facility, not a new required Cordis method.
 
 Before listening, the source snapshots verified compressed bytes, enforces bounded decompression/entry count/manifest size, and parses tar with `tar@7.5.22` (BlueOak-1.0.0), without extracting or executing any package. It requires exactly one regular `package/package.json`; links, duplicate/malformed manifests, truncated archives, SRI mismatches, wrong canonical identities/repositories, duplicate name/version or missing suite members are named errors. The source accepts full normal package metadata and never invents bundle declarations or suite manifests. Its only three own package identities come from `SUITE_MANIFEST`; all candidate selection stays in `getSuiteDeclaration`.
 

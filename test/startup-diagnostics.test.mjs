@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 // The observer has no runtime dependency on DSH; exercise its public Fiber boundary.
 const {LoaderObservationSource} = await import(process.env.HM_CORE_TEST_SOURCE ? '../src/health/loader.ts' : '../lib/health/loader.js');
 
-const requirement = {id: 'usage', moduleName: 'hanamesh-usage', label: '使用记录', versionRange: '>=0.2.0-rc.26 <0.3.0-0', onFailure: 'notice', impact: 'usage'};
+const requirement = {id: 'usage', moduleName: '@hanamesh/usage', label: '使用记录', versionRange: '>=0.2.0-rc.26 <0.3.0-0', onFailure: 'notice', impact: 'usage'};
 const secret = '/private/owner/token-DO-NOT-EXPOSE';
 function source(fiber, timeout = 25) {
-  return new LoaderObservationSource({entries: () => [{id: 'usage', options: {name: 'hanamesh-usage'}, fiber}]}, import.meta.url,
+  return new LoaderObservationSource({entries: () => [{id: 'usage', options: {name: '@hanamesh/usage'}, fiber}]}, import.meta.url,
     async () => ({kind: 'present', version: '0.2.0-rc.27'}), timeout);
 }
 function failure(code = 'invalid-record', name = 'DomainError', message = `domain 'hanamesh_usage_events': stored global does not match its schema ${secret}`) {

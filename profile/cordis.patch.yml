@@ -1,6 +1,6 @@
 - insert:
     - id: hanamesh-core
-      name: hanamesh-core
+      name: '@hanamesh/core'
       config:
         # rc.15: 出厂即指向生产环境；隔离测试/自建服务在 profile 的 cordis.patch.yml 里用 `- id: hanamesh-core` 覆盖。
         serverOrigin: https://api.hanamesh.com

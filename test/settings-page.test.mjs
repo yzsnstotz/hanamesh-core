@@ -159,7 +159,7 @@ test('suite repair rows from older providers remain renderable without reason', 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.20');
+  assert.equal(pkg.version, '0.3.21');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });

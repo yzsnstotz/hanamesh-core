@@ -2,14 +2,14 @@
   "schemaVersion": 1,
   "id": "hanamesh-suite",
   "core": {
-    "name": "hanamesh-core",
-    "version": "0.3.20",
+    "name": "@hanamesh/core",
+    "version": "0.3.21",
     "repository": "https://github.com/yzsnstotz/hanamesh-core"
   },
   "components": [
     {
       "id": "usage",
-      "moduleName": "hanamesh-usage",
+      "moduleName": "@hanamesh/usage",
       "versionRange": ">=0.2.0-rc.26 <0.3.0 || >=0.3.0-rc.1 <0.4.0",
       "repository": "https://github.com/yzsnstotz/hanamesh-usage"
     },

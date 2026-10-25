@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {apply} from '../../lib/dsh.mjs';
-import {SUITE_MANIFEST} from 'hanamesh-core/suite';
+import {SUITE_MANIFEST} from '@hanamesh/core/suite';
 
 test('actual apply exposes a read-only getter that reads an explicitly configured loopback registry', async t => {
  const root = await mkdtemp(join(tmpdir(), 'core-suite-adapter-'));
@@ -28,7 +28,7 @@ test('actual apply exposes a read-only getter that reads an explicitly configure
  const registry=`http://127.0.0.1:${server.address().port}/`;
  let writes=0,service,dispose,leaseHandler,throwOnDispose=false,disposed=false;
  const baseUrl=pathToFileURL(join(root,'consumer.mjs')).href;
- const entries=[{id:'hanamesh-core',options:{name:'hanamesh-core'},fiber:{state:2}},...SUITE_MANIFEST.components.map((row,i)=>({id:i===0?'hanamesh-usage':'hanamesh-app-host',options:{name:row.moduleName},fiber:{state:2},parent:{tree:{ctx:{baseUrl}}}}))];
+ const entries=[{id:'hanamesh-core',options:{name:'@hanamesh/core'},fiber:{state:2}},...SUITE_MANIFEST.components.map((row,i)=>({id:i===0?'hanamesh-usage':'hanamesh-app-host',options:{name:row.moduleName},fiber:{state:2},parent:{tree:{ctx:{baseUrl}}}}))];
  const ctx={loader:{entries:()=>entries},storageDomain:{open:async spec=>{let value=structuredClone(spec.global.initial);return {global:{get:()=>value,set:async next=>{value=next;writes++;}},close:async()=>{}};}},connection:{rpc:{intercept:()=>{throw Error('GATEWAY_ALREADY_OWNS_INTERCEPTOR');}},fetch:{register:route=>{if(route.path==='/api/hanamesh/core/client-peer-lease')leaseHandler=route.fetch;return async()=>{if(throwOnDispose)throw Error('FIXTURE_UNREGISTER_FAILED');};}},requestRejection:()=>undefined},provide:(name,value)=>{if(name==='hanameshCore')service=value;return()=>{};},on:()=>()=>{},effect:fn=>{dispose=fn();}};
  await apply(ctx,{serverOrigin:null,websiteOrigin:null,sharedIdentityDir:join(root,'identity-root'),suiteLocalTestRegistries:[registry]});
  t.after(()=>disposed?undefined:dispose());

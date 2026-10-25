@@ -14,8 +14,8 @@ import {memoryStore} from './fixtures/core-store.mjs';
 const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
 // Fixed current product seed parameters; package/loader fixtures, not a product install.
 const seeds = [
-  ['hanamesh-core', profile.version, 'hanamesh-core'],
-  ['hanamesh-usage', '0.2.0-rc.27', 'hanamesh-usage'],
+  ['@hanamesh/core', profile.version, 'hanamesh-core'],
+  ['@hanamesh/usage', '0.2.0-rc.27', 'hanamesh-usage'],
   ['@hanamesh/dsh-app-host', '0.5.9', 'hanamesh-app-host'],
   ['@hanamesh/app-vibe-trading', '0.2.0-rc.1', 'hanamesh-vibe'],
   ['dsh-codex-subscription', '2.5.2', 'dsh-codex-subscription'],
