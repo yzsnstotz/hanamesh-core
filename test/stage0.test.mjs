@@ -1,3 +1,4 @@
+import {load} from 'js-yaml';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, access, readdir} from 'node:fs/promises';
@@ -35,7 +36,7 @@ test('real-host boot uses a clean allowlisted environment', async () => {
 
 test('Core patch inserts only Core so separately installed components can coexist', async () => {
   const patch = await readFile('profile/cordis.patch.yml', 'utf8');
-  assert.match(patch, /^\s+name: @hanamesh\/core$/m);
+  assert.equal(load(patch)[0].insert[0].name, '@hanamesh/core');
   assert.equal((patch.match(/^- insert:/gm) ?? []).length, 1);
   assert.deepEqual([...patch.matchAll(/^\s+- id: (hanamesh-[a-z-]+)$/gm)].map(match => match[1]), [
     'hanamesh-core',

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {load} from 'js-yaml';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -13,6 +14,10 @@ export const packConfig = {
     assert.equal(read('lib/dsh.mjs').toString(), await readFile('src/dsh.mjs', 'utf8'));
     const packed = JSON.parse(read('package.json'));
     assert.equal(packed.version, source.version);
+    const patch = load(read(packed.dsh.bundle.patch.replace(/^\.\//, '')).toString());
+    assert.equal(patch[0].insert.length, 1);
+    assert.equal(patch[0].insert[0].id, 'hanamesh-core');
+    assert.equal(patch[0].insert[0].name, packed.name);
     assert.deepEqual(packed.hanameshSuite, JSON.parse(read('profile/suite.manifest.json')));
     assert.deepEqual(packed.hanameshSuite, source.hanameshSuite);
     assert.deepEqual(packed.dependencies, {semver: '7.7.2', tar: '7.5.22'});
