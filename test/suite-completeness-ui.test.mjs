@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.22' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'";
+const command = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.23' '@hanamesh/usage@0.3.0-rc.7' '@hanamesh/dsh-app-host@0.6.15'";
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -62,12 +62,12 @@ test('missing required suite components have an exact manual repair command and 
   assert.ok(f.requests.every(r => r.method === 'GET'), 'hint and copy cannot mutate settings, health, or install plugins');
 });
 
-test('repairing missing Usage preserves the approved AppHost 0.6.14 instead of reinstalling the old decoder', async () => {
+test('repairing missing Usage preserves the approved AppHost 0.6.15 instead of reinstalling the old decoder', async () => {
   const copied = [];
-  const f = await fixture([component('usage', 'missing'), component('app-host', 'satisfied', {version: '0.6.14'})], {writeText: async value => copied.push(value)});
+  const f = await fixture([component('usage', 'missing'), component('app-host', 'satisfied', {version: '0.6.15'})], {writeText: async value => copied.push(value)});
   const tree = f.render();
   assert.match(textIn(tree), /套件不完整，缺 使用记录（Usage）/);
-  assert.match(textIn(tree), /应用容器（App Host）：版本 0\.6\.14 · 已安装/);
+  assert.match(textIn(tree), /应用容器（App Host）：版本 0\.6\.15 · 已安装/);
   assert.equal(textIn(elements(tree).find(e => e.type === 'code')), command);
   const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
   await copy.props.onClick();
