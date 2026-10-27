@@ -1,5 +1,7 @@
+import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
 import assert from 'node:assert/strict';
-import {readFile, access, realpath} from 'node:fs/promises';
+import {readFile, access, realpath, mkdtemp, readdir, rm} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
@@ -54,3 +56,11 @@ const {createSuitePackageSource} = await import('@hanamesh/core/suite/source');
 assert.equal(typeof createSuitePackageSource, 'function');
 
 const sourceAPI=await import('@hanamesh/core/suite/source');assert.equal(typeof sourceAPI.createManagedSuitePackageSource,'function');
+
+// Consume the shipped portable binary rather than importing a sibling source entry.
+const agentHome=await mkdtemp(join(tmpdir(),'core-packed-agent-'));
+try{
+ const request=(input,exit=0)=>{const run=spawnSync(process.execPath,[join(packageRoot,'lib/agent-cli.js')],{input:JSON.stringify({config:{sharedHome:agentHome,serverOrigin:null,websiteOrigin:null},input}),encoding:'utf8'});assert.equal(run.status,exit,run.stderr);return JSON.parse(run.stdout);};
+ const state=request({operation:'state'});assert.equal(state.result.agentProtocolVersion,2);assert.equal(state.result.consent.state,'withheld');assert.deepEqual(await readdir(agentHome),[]);
+ assert.equal(request({operation:'consent',state:'granted'},1).error.code,'CORE_AGENT_WEB_CONSENT_REQUIRED');
+}finally{await rm(agentHome,{recursive:true,force:true});}

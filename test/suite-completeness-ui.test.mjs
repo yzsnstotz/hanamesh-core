@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.24' '@hanamesh/usage@0.3.0-rc.7' '@hanamesh/dsh-app-host@0.6.16'";
+const command = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.25' '@hanamesh/usage@0.3.0-rc.7' '@hanamesh/dsh-app-host@0.6.16'";
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
