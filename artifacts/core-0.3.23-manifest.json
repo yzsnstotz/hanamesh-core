@@ -1,0 +1,9 @@
+{
+  "version": "0.3.23",
+  "sha256": "df2c0c35128cea29769f93ed819438a74273b74a2a3bc44aad1af51a4b6e6328",
+  "bytes": 141137,
+  "entries": 84,
+  "sourceBase": "1bff1e041599e45e8ca627a194c2254ac86d8c0c",
+  "changes": "Manual suite repair command: Core0.3.23 / Usage0.3.0-rc.7 / AppHost0.6.15 per ruling. No dependency or compatibility-range change.",
+  "verification": "340 tests;26 mutations;2 crash;41 contract;local check;normal pack and strict JS/TS artifact consumer;actual normal client7P, baseline0.3.22 client3P4F."
+}

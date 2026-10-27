@@ -117,8 +117,8 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.22';
-const SUITE_INSTALL_COMMAND = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.22' '@hanamesh/usage@0.3.0-rc.6' '@hanamesh/dsh-app-host@0.6.14'";
+const CORE_VERSION = '0.3.23';
+const SUITE_INSTALL_COMMAND = "dsh plugin --profile desktop add --save-exact '@hanamesh/core@0.3.23' '@hanamesh/usage@0.3.0-rc.7' '@hanamesh/dsh-app-host@0.6.15'";
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */
