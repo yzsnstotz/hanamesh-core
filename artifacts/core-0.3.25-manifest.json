@@ -1,0 +1,27 @@
+{
+  "version": "0.3.25",
+  "sourceCommit": "60cd35acf5b124129762ab97508ef6dc16b20012",
+  "sha256": "391a839eda529f443e1329335a03ca67376ba28e0b3df2b1989fd5428d23e5d5",
+  "bytes": 143307,
+  "filesEqualToCommittedSource": 84,
+  "unitTests": {
+    "pass": 350,
+    "fail": 0,
+    "skip": 0
+  },
+  "targeted": {
+    "redFail": 10,
+    "greenPass": 30
+  },
+  "mutations": {
+    "detected": 28,
+    "total": 28
+  },
+  "contractChecks": {
+    "provider": 14,
+    "fixtureProvider": 14,
+    "fixtureConsumer": 13
+  },
+  "check": "PASS; dsh --version ENOENT diagnostic, no real DSH acceptance",
+  "consumer": "PASS normal tarball CLI v2, JS/TS consumer; existing tar locale warnings retained"
+}
