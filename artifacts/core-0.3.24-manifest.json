@@ -1,0 +1,10 @@
+{
+  "version": "0.3.24",
+  "sha256": "e69346e16ceed3d590645ff1c09af72b4d2d8133bde067bc6d6972e02e37da28",
+  "sha512": "sha512-yl64YY9PkkpMWAvpvCNVyJsij1l5n+nkID+lOZ1Tpmlf0oZFcscclsSIjIHC1+QHBkYjfWXZ4KyY5RbZnG0iJg==",
+  "bytes": 141137,
+  "entries": 84,
+  "sourceBase": "ccd69e588930c19bd45d28982e52875c36472b1c",
+  "changes": "Only manual repair AppHost recommendation0.6.15->0.6.16 and Core own version0.3.23->0.3.24. Usage0.3.0-rc.7, all dependencies/compatibility unchanged.",
+  "verification": "340 tests;26 mutations;2 crash;41 contract;local check;normal pack and strict JS/TS artifact consumer;normal client7P tracked separately."
+}

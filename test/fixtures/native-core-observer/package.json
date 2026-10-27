@@ -6,6 +6,6 @@
   "main": "./observer.mjs",
   "files": ["observer.mjs", "call-examples.mjs", "profile/cordis.patch.yml"],
   "engines": {"node": ">=24.13.1 <25"},
-  "peerDependencies": {"@deepseek-ai/cordis": "4.0.5-alpha.1", "@hanamesh/core": "0.3.23"},
+  "peerDependencies": {"@deepseek-ai/cordis": "4.0.5-alpha.1", "@hanamesh/core": "0.3.24"},
   "dsh": {"bundle": {"patch": "./profile/cordis.patch.yml"}}
 }
