@@ -44,6 +44,12 @@ function snapshot(value:unknown,prepared:Prepared):Record<string,unknown>{
 }
 const CONSENT_ID=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const fail = (code:string):never => {throw new Error(code);};
+/** Identity binding signs raw nonce bytes. Agent event canonical bytes are always a JSON object. */
+function agentBindLink(website:string,device:Parameters<typeof createBindLink>[1],challenge:unknown):ReturnType<typeof createBindLink>{
+  const nonce=(challenge as {nonce?:unknown}|null)?.nonce;
+  if(typeof nonce==='string'&&nonce.trimStart().startsWith('{'))fail('CORE_UPSTREAM_RESPONSE_INVALID');
+  return createBindLink(website,device,challenge);
+}
 function headersFor(device:Parameters<typeof signWithDevice>[0],method:string,path:string,body:string|null) {
   const timestamp=Date.now().toString(),nonce=requestNonce();
   const bytes=Buffer.from(`${method.toUpperCase()}|${path.replace(/[?#].*$/u,'')}|${timestamp}|${nonce}|${createHash('sha256').update(body ?? '').digest('hex')}`);
@@ -141,7 +147,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
         const facts=snapshot(await upstreamJson(await transport.request(path,{method:'POST',headers:{...headersFor(device,'POST',path,body),'content-type':'application/json'},body})),prepared!);
         if(facts.state==='withdrawn'){await close();fail('CONSENT_WITHHELD');}
         const challenge=await upstreamJson(await transport.request('/v1/identity/devices/challenge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({purpose:'bind'})}));
-        const result=createBindLink(website!,device,challenge),url=new URL(result.url);
+        const result=agentBindLink(website!,device,challenge),url=new URL(result.url);
         url.searchParams.set('flow','agent');url.searchParams.set('consentId',prepared!.consentId);url.searchParams.set('noticeVersion',NOTICE);
         const current=await readConsent();if(current.changedAt!==null&&current.state==='withheld')fail('CONSENT_WITHHELD');
         return {url:url.href,expiresAt:result.expiresAt,consentId:prepared!.consentId,deviceId:device.deviceId};
@@ -191,7 +197,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
       const response=await transport.request('/v1/identity/devices/challenge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({purpose:'bind'})});
       if(!response.ok)throw await upstreamError(response);
       const challenge=await upstreamJson(response) as {nonce?:unknown;expiresAt?:unknown};
-      return createBindLink(website as string, device, challenge);
+      return agentBindLink(website as string, device, challenge);
     }
     if (input.operation === 'signRequest') {
       if (typeof input.method !== 'string' || typeof input.path !== 'string' || !input.path.startsWith('/') || input.path.includes('|') || (input.body !== null && typeof input.body !== 'string')) fail('CORE_INPUT_INVALID');

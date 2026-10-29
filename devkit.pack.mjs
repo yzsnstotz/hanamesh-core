@@ -19,8 +19,8 @@ try{
  await writeFile(${JSON.stringify(originTapPath)},(check.stdout??'')+(check.stderr??''));
  assert.equal(check.status,0,(check.stdout??'')+(check.stderr??''));
  const counts={};for(const key of ['tests','pass','fail','skipped','cancelled']){const values=[...(check.stdout??'').matchAll(new RegExp('^# '+key+' ([0-9]+)$','gm'))];assert.equal(values.length,1);counts[key]=Number(values[0][1]);}
- assert.deepEqual(counts,{tests:9,pass:9,fail:0,skipped:0,cancelled:0});
- console.log('NORMAL_CORE_ORIGIN_NINE_PASS_NO_SKIP');
+ assert.deepEqual(counts,{tests:10,pass:10,fail:0,skipped:0,cancelled:0});
+ console.log('NORMAL_CORE_ORIGIN_TEN_PASS_NO_SKIP');
 }finally{await rm(originUnitRoot,{recursive:true,force:true});}
 `;
 

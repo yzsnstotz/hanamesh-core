@@ -5,6 +5,7 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'agent-origins.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'origin-bind-nonce-oracle-restored',file:'lib/agent.js',mutate:code=>code.replace("if (typeof nonce === 'string' && nonce.trimStart().startsWith('{'))",'if (false)'),test:'test/agent-origins.test.mjs'},
  {id:'origin-denial-not-enforced',file:'lib/agent-origins.js',mutate:code=>code.replace('if (origin.admitted === 0)','if (false)'),test:'test/agent-origins.test.mjs'},
  {id:'origin-ledger-back-in-agent-home',file:'lib/agent-origins.js',mutate:code=>code.replace("join(sharedHome, 'identity')","join(sharedHome, 'agent/usage')"),test:'test/agent-origins.test.mjs'},
  {id:'origin-generic-sign-restored',file:'lib/agent.js',mutate:code=>code.replace("if (input.operation === 'sign')\n        fail('CORE_INPUT_INVALID');", "if(input.operation==='sign'){const d=await fileSharedDeviceStore(config.sharedHome).read();if(!d)throw Error('CORE_DEVICE_REQUIRED');return {signature:Buffer.from(signWithDevice(d,Buffer.from(String(input.bytes),'base64'))).toString('base64url')};}"),test:'test/agent-origins.test.mjs'},
