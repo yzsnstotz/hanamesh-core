@@ -1,0 +1,23 @@
+{
+  "version": "0.3.26",
+  "sha256": "3f5f8ccedcd2d875a4c334b288e0ff8ebf455747928105e4ae2fdb07409d80f8",
+  "bytes": 148114,
+  "members": 86,
+  "actualStrictBuildSource": "f9185858eadc929f8c3810220adbfe5c20cd5fb8",
+  "generatedFreezeAndTestsSource": "4b859d7239c4936ae1c1a3066809f5e16e639324",
+  "sourceFull": {
+    "tests": 360,
+    "pass": 360,
+    "fail": 0,
+    "skip": 0
+  },
+  "originTests": 10,
+  "actualNormalOriginTests": 10,
+  "actualNormalJsTsConsumer": "PASS",
+  "mutationCases": 33,
+  "all66TapsVerified": true,
+  "candidateStatus": "HOLD_PENDING_CLIENT_COMBINED_AND_R2",
+  "newPackForArchive": false,
+  "server112WireHostUnchanged": true,
+  "P2": "OPEN"
+}
