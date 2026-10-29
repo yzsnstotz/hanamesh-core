@@ -66,7 +66,7 @@ test('prepared origins are pinned and mixed local/public origins fail before any
  await agentCall(f.config,{operation:'prepareOnboarding'});const n=f.seen.length;await assert.rejects(agentCall({...f.config,websiteOrigin:'http://127.0.0.1:54322'},{operation:'syncOnboarding'}),/CORE_AGENT_ONBOARDING_UNCONFIRMED/);assert.equal(f.seen.length,n);
 });
 test('old terminal grant remains granted without fabricated website audit',async t=>{
- const f=await fixture(t);await mkdir(join(f.root,'agent'));const old={state:'granted',changedAt:'2026-10-01T00:00:00.000Z',consentId:randomUUID()};await writeFile(join(f.root,'agent/consent.json'),JSON.stringify(old));
+ const f=await fixture(t);const {fileSharedDeviceStore}=await import('../lib/shared-device.js'),{createDevice}=await import('../lib/device.js');await fileSharedDeviceStore(f.root).claim(createDevice());await mkdir(join(f.root,'agent'));const old={state:'granted',changedAt:'2026-10-01T00:00:00.000Z',consentId:randomUUID()};await writeFile(join(f.root,'agent/consent.json'),JSON.stringify(old));
  const s=await agentCall(f.config,{operation:'state'});assert.equal(s.consent.state,'granted');assert.equal(s.consent.authorization,'legacy-terminal');assert.equal(s.consent.agreedAt,null);assert.equal((await agentCall(f.config,{operation:'consent',state:'granted'})).consent.consentId,old.consentId);assert.equal(f.seen.length,0);
 });
 

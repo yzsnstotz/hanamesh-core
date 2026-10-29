@@ -89,10 +89,12 @@ test('legacy login UI and identity names are absent from active source surfaces'
 test('consistency declaration is renamed to core', async () => {
   const consistency = await readJson('consistency.json');
   assert.equal(consistency.module, 'hanamesh-core');
-  assert.equal(consistency.groups.length, 2);
+  assert.equal(consistency.groups.length, 3);
   assert.equal(consistency.boundaries.length, 1);
   assert.match(consistency.groups[0].medium, /^storage-domain:hanamesh_core$/);
   assert.match(consistency.groups[1].medium, /^storage-domain:hanamesh_core_health$/);
+  assert.equal(consistency.groups[2].medium,'identity/agent-origins.sqlite');
+  assert.deepEqual(consistency.groups[2].facts,['HMAC(factId)','immutable admitted','consumed_digest','HMAC(hanaRef) install digest']);
 });
 
 test('settings about text matches package and describes support instead of a guessed running host', async () => {
