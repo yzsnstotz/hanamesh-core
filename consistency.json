@@ -4,21 +4,47 @@
   "groups": [
     {
       "name": "设备密钥、注册观察与同意状态完整镜像",
-      "facts": ["device", "registration", "consent", "serverObservation"],
+      "facts": [
+        "device",
+        "registration",
+        "consent",
+        "serverObservation"
+      ],
       "medium": "storage-domain:hanamesh_core",
       "why": "single 布局；每次转移以一次 global.set 发布完整镜像。"
     },
     {
       "name": "组件健康完整快照",
-      "facts": ["snapshot.profile.digest", "snapshot.revision", "snapshot.components", "snapshot.mode", "snapshot.newProtectedOperations", "snapshot.runningTaskPolicy"],
+      "facts": [
+        "snapshot.profile.digest",
+        "snapshot.revision",
+        "snapshot.components",
+        "snapshot.mode",
+        "snapshot.newProtectedOperations",
+        "snapshot.runningTaskPolicy"
+      ],
       "medium": "storage-domain:hanamesh_core_health",
       "why": "每次检查以一次 global.set 发布完整快照；内存与 UI 仅是可重算的诊断投影。"
+    },
+    {
+      "name": "Core设备生命周期调用判定与消费摘要",
+      "facts": [
+        "HMAC(factId)",
+        "immutable admitted",
+        "consumed_digest",
+        "HMAC(hanaRef) install digest"
+      ],
+      "medium": "identity/agent-origins.sqlite",
+      "why": "单sqlite事务定案/消费并签名；不随Agent载荷或consent撤回清理，随设备身份删除。"
     }
   ],
   "boundaries": [
     {
       "name": "远端设备注册与本地注册观察",
-      "sides": ["remote:srv_identity_device", "storage-domain:hanamesh_core"],
+      "sides": [
+        "remote:srv_identity_device",
+        "storage-domain:hanamesh_core"
+      ],
       "safeDirection": "remote:srv_identity_device",
       "why": "只在远端返回 201 或幂等 200 后写 registered；崩溃时允许远端已注册而本地仍未注册。"
     }

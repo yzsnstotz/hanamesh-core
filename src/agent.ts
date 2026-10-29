@@ -1,3 +1,5 @@
+import {readFileSync,rmSync} from 'node:fs';
+import {AgentOriginLedger,checkedAgentEvent} from './agent-origins.js';
 import {createBindLink} from './bind-link.js';
 /** C-CORE portable process boundary. No Cordis/DSH or other plugin imports. */
 import {createHash, randomUUID} from 'node:crypto';
@@ -52,10 +54,20 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
   if(config.timeoutMs!==undefined&&(!Number.isSafeInteger(config.timeoutMs)||config.timeoutMs<10||config.timeoutMs>60000))fail('CORE_INPUT_INVALID');
   const origin = config.serverOrigin === null ? null : serverOriginOf(config.serverOrigin);
   const website = config.websiteOrigin === null ? null : serverOriginOf(config.websiteOrigin);
+  if(input.operation==='sign')fail('CORE_INPUT_INVALID');
+  const store=fileSharedDeviceStore(config.sharedHome);const existing=await store.read();
   const dir = join(config.sharedHome,'agent');
   const consentFile = join(dir,'consent.json');
   const preparedFile=join(dir,'onboarding.json'), grantFile=join(dir,'onboarding-grant.json');
   const readConsent=async(checkOrigins=true):Promise<Consent>=>{
+    if(!existing){
+      const stopped=await optionalJson(consentFile) as {state?:unknown;deviceId?:unknown;changedAt?:unknown;consentId?:unknown}|undefined;
+      if(stopped?.state==='withheld'&&stopped.deviceId===null){
+        if(!iso(stopped.changedAt)||typeof stopped.consentId!=='string'||!CONSENT_ID.test(stopped.consentId))fail('CORE_CONSENT_CORRUPT');
+        return {state:'withheld',changedAt:stopped.changedAt as string,consentId:stopped.consentId as string,authorization:null,agreedAt:null};
+      }
+      return {state:'withheld',changedAt:null,consentId:null,authorization:null,agreedAt:null};
+    }
     const value=await optionalJson(consentFile) as Partial<Consent>|undefined;
     let result:Consent={state:'withheld',changedAt:null,consentId:null,authorization:null,agreedAt:null};
     if(value!==undefined){
@@ -84,7 +96,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
   const close=async():Promise<Consent>=>{
     const current=await readConsent(false);
     const stopped:Consent={state:'withheld',changedAt:new Date().toISOString(),consentId:current.consentId??randomUUID()};
-    await mkdir(dir,{recursive:true,mode:0o700});await publish(consentFile,stopped);return await readConsent(false);
+    await mkdir(dir,{recursive:true,mode:0o700});await publish(consentFile,{...stopped,deviceId:existing?.deviceId??null});return await readConsent(false);
   };
   if(input.operation==='consent'){
     if(Object.keys(input).sort().join('|')!=='operation|state'||!['granted','withheld'].includes(String(input.state)))fail('CORE_INPUT_INVALID');
@@ -93,18 +105,34 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
     if(!consent.consentId){consent={...consent,consentId:randomUUID()};await publish(consentFile,consent);}
     return {consent};
   }
-  const store = fileSharedDeviceStore(config.sharedHome);
-  const existing = await store.read();
-  if (input.operation === 'state') return {agentProtocolVersion:2,deviceId:existing?.deviceId ?? null,publicKey:existing?.publicKey ?? null,consent,serverOrigin:origin,websiteOrigin:website};
+  if (input.operation === 'state') {if(existing)AgentOriginLedger.validateExisting(config.sharedHome,existing.deviceId);return {agentProtocolVersion:2,agentOriginProtocolVersion:1,deviceId:existing?.deviceId ?? null,publicKey:existing?.publicKey ?? null,consent,serverOrigin:origin,websiteOrigin:website};}
+  if(input.operation==='originObserve'){
+    if(Object.keys(input).sort().join('|')!=='admitted|factId|operation'||typeof input.factId!=='string'||!/^[a-f0-9]{64}$/.test(input.factId)||typeof input.admitted!=='boolean')fail('CORE_INPUT_INVALID');
+    if(!existing)fail('CORE_DEVICE_REQUIRED');const ledger=new AgentOriginLedger(config.sharedHome,existing!.deviceId);try{return ledger.observe(input.factId as string,input.admitted as boolean);}finally{ledger.close();}
+  }
   if(input.operation==='prepareOnboarding'||input.operation==='syncOnboarding'){
     if(Object.keys(input).join('|')!=='operation')fail('CORE_INPUT_INVALID');
     pair(origin,website);
     if(consent.state==='withheld'&&consent.changedAt!==null)fail('CONSENT_WITHHELD');
     const transport=new ServerTransport(origin,config.timeoutMs??10000);
     try{
-      let prepared=await readPrepared();
+      let prepared=existing?await readPrepared():null;
       if(input.operation==='prepareOnboarding'){
         const device=existing??await store.claim(createDevice());
+        if(!existing){
+          const ledger=new AgentOriginLedger(config.sharedHome,device.deviceId);
+          try{ledger.withIdentityTransaction(()=>{
+            const read=(path:string):Record<string,unknown>|null=>{try{return JSON.parse(readFileSync(path,'utf8')) as Record<string,unknown>;}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return null;throw e;}};
+            const prior=read(preparedFile);
+            if(!prior||prior.deviceId!==device.deviceId){
+              // Re-read while holding the identity lock: another fresh prepare may already have published this device.
+              const stopped=read(consentFile);
+              if(!stopped||stopped.state!=='withheld'||(stopped.deviceId!==null&&stopped.deviceId!==device.deviceId))rmSync(consentFile,{force:true});
+              rmSync(grantFile,{force:true});if(prior)rmSync(preparedFile,{force:true});
+            }
+          });}finally{ledger.close();}
+          prepared=await readPrepared();
+        }
         await mkdir(dir,{recursive:true,mode:0o700});
         if(!prepared){await publish(preparedFile,{deviceId:device.deviceId,consentId:randomUUID(),serverOrigin:origin,websiteOrigin:website},true);prepared=await readPrepared();}
         if(!prepared||prepared.deviceId!==device.deviceId)fail('CORE_AGENT_ONBOARDING_UNCONFIRMED');
@@ -145,10 +173,13 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
     }finally{transport.dispose();}
   }
   if (consent.state !== 'granted') fail('CONSENT_WITHHELD');
-  const device = existing ?? await store.claim(createDevice());
-  if (input.operation === 'sign') {
-    if (typeof input.bytes !== 'string' || Buffer.from(input.bytes,'base64').toString('base64') !== input.bytes) fail('CORE_INPUT_INVALID');
-    return {signature:Buffer.from(signWithDevice(device,Buffer.from(input.bytes as string,'base64'))).toString('base64url')};
+  if(!existing)fail('CORE_DEVICE_REQUIRED');
+  const device=existing!;
+  if(input.operation==='signAgentEvent'){
+    if(Object.keys(input).sort().join('|')!=='event|factId|operation'||typeof input.factId!=='string'||!consent.consentId)fail('CORE_INPUT_INVALID');
+    const event=checkedAgentEvent(input.event,input.factId as string,device.deviceId,consent.consentId!);
+    const ledger=new AgentOriginLedger(config.sharedHome,device.deviceId);
+    try{return ledger.sign(input.factId as string,event.hanaRef,event.action,event.bytes,()=>Buffer.from(signWithDevice(device,event.bytes)).toString('base64url'));}finally{ledger.close();}
   }
   const transport = new ServerTransport(origin,config.timeoutMs ?? 10000);
   try {

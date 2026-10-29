@@ -4,11 +4,31 @@ import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 const source = JSON.parse(await readFile('package.json', 'utf8'));
+const originTestSource=await readFile('test/agent-origins.test.mjs','utf8');
+const originFixtureSource=await readFile('test/fixtures/agent-legacy.mjs','utf8');
+const originTapPath=resolve(process.env.HM_CORE_RUN ?? 'artifacts','normal-agent-origins.tap');
+const normalOriginProbe=`
+const originUnitRoot=await mkdtemp(join(tmpdir(),'hm-normal-core-origin-tests-'));
+try{
+ const {mkdir,writeFile}=await import('node:fs/promises');
+ await mkdir(join(originUnitRoot,'fixtures'));
+ const prefix="'"+pathToFileURL(join(packageRoot,'lib')).href+'/';
+ await writeFile(join(originUnitRoot,'test.mjs'),${JSON.stringify(originTestSource)}.replaceAll("'../lib/",prefix));
+ await writeFile(join(originUnitRoot,'fixtures/agent-legacy.mjs'),${JSON.stringify(originFixtureSource)}.replaceAll("'../../lib/",prefix));
+ const check=spawnSync(process.execPath,['--test','--test-reporter=tap',join(originUnitRoot,'test.mjs')],{encoding:'utf8',env:{PATH:process.env.PATH,HOME:originUnitRoot,TMPDIR:originUnitRoot,LANG:'C',LC_ALL:'C',CI:'1'}});
+ await writeFile(${JSON.stringify(originTapPath)},(check.stdout??'')+(check.stderr??''));
+ assert.equal(check.status,0,(check.stdout??'')+(check.stderr??''));
+ const counts={};for(const key of ['tests','pass','fail','skipped','cancelled']){const values=[...(check.stdout??'').matchAll(new RegExp('^# '+key+' ([0-9]+)$','gm'))];assert.equal(values.length,1);counts[key]=Number(values[0][1]);}
+ assert.deepEqual(counts,{tests:9,pass:9,fail:0,skipped:0,cancelled:0});
+ console.log('NORMAL_CORE_ORIGIN_NINE_PASS_NO_SKIP');
+}finally{await rm(originUnitRoot,{recursive:true,force:true});}
+`;
+
 const tarball = resolve(process.argv[2] ?? `artifacts/hanamesh-core-${source.version}.tgz`);
 export const packConfig = {
   root: process.cwd(), tarball,
   temporaryRoot: resolve(process.env.HM_CORE_RUN ?? tmpdir()),
-  required: ['lib/activation.js','lib/activation.d.ts','lib/suite/source-lifecycle.js','lib/suite/source-lifecycle.d.ts','lib/suite/source.js', 'lib/suite/source.d.ts', 'lib/suite/client-peers.js', 'lib/suite/index.js', 'lib/suite/index.d.ts', 'profile/suite.manifest.json', 'lib/agent-cli.js', 'lib/agent.js', 'docs/AGENT.md', 'profile/cordis.patch.yml', 'profile/suite.profile.json', 'profile.schema.json', 'lib/client.js', 'contract/hanamesh-core.v1.schema.json', 'lib/contract-suite.js', 'lib/contract-fixtures.js', 'lib/contract-cli.js'],
+  required: ['lib/agent-origins.js','lib/agent-origins.d.ts','lib/activation.js','lib/activation.d.ts','lib/suite/source-lifecycle.js','lib/suite/source-lifecycle.d.ts','lib/suite/source.js', 'lib/suite/source.d.ts', 'lib/suite/client-peers.js', 'lib/suite/index.js', 'lib/suite/index.d.ts', 'profile/suite.manifest.json', 'lib/agent-cli.js', 'lib/agent.js', 'docs/AGENT.md', 'profile/cordis.patch.yml', 'profile/suite.profile.json', 'profile.schema.json', 'lib/client.js', 'contract/hanamesh-core.v1.schema.json', 'lib/contract-suite.js', 'lib/contract-fixtures.js', 'lib/contract-cli.js'],
   forbidden: /(?:node_modules|test|artifacts|vendor)\/|devkit/u,
   validate: async ({read}) => {
     assert.equal(read('lib/dsh.mjs').toString(), await readFile('src/dsh.mjs', 'utf8'));
@@ -30,7 +50,7 @@ export const packConfig = {
   consumer: {
     // The consumer stands in for the DSH host: it supplies the published peers and the host packages' own peers.
     packageJson: {private: true, type: 'module', dependencies: {'@hanamesh/core': 'file:' + tarball, ...Object.fromEntries(Object.keys(source.peerDependencies).map(name=>[name,source.devDependencies[name]])), '@types/node': '24.13.4'}},
-    javascript: (await readFile(new URL('./devkit.consumer.mjs', import.meta.url), 'utf8')).replace("'__CORE_VERSION__'", JSON.stringify(source.version)),
+    javascript: (await readFile(new URL('./devkit.consumer.mjs', import.meta.url), 'utf8')).replace("'__CORE_VERSION__'", JSON.stringify(source.version))+normalOriginProbe,
     typescript: "import {createManagedSuitePackageSource,type HanaMeshSuiteSourceService,type SuiteSourceState,createSuitePackageSource, type SuitePackageSourceOptions} from '@hanamesh/core/suite/source';\nvoid [createSuitePackageSource,createManagedSuitePackageSource];\ndeclare const source:HanaMeshSuiteSourceService;\nconst sourceState:SuiteSourceState=source.getState();\nvoid sourceState;\ndeclare const options: SuitePackageSourceOptions;\nvoid options;\nimport {SUITE_MANIFEST, type SuiteDeclaration} from '@hanamesh/core/suite';\nvoid SUITE_MANIFEST;\nimport {name, apply} from '@hanamesh/core';\nconst pluginName: 'hanamesh-core' = name;\nvoid [pluginName, apply];\nimport type {HanaMeshCoreContract, ConsentPrompt} from '@hanamesh/core/contract';\nconst prompt: ConsentPrompt = {show:true,shownAt:null};\nvoid prompt;\ndeclare const core: HanaMeshCoreContract;\nconst deviceId: string = core.getDeviceId();\nconst consent: 'granted' | 'withheld' = core.getConsent();\nconst signature: Uint8Array = core.sign(new Uint8Array());\nconst declaration: Promise<SuiteDeclaration> | undefined = core.getSuiteDeclaration?.();\nvoid [deviceId, consent, signature, declaration];\nimport {checkCoreService, type CoreHandshake} from '@hanamesh/core/contract';\nimport {runCoreProviderSuite, type CoreSuiteResult} from '@hanamesh/core/contract/suite';\nimport {createCoreProviderFixture} from '@hanamesh/core/contract/fixtures';\nconst handshake: CoreHandshake = checkCoreService(core);\nconst pending: Promise<CoreSuiteResult> = runCoreProviderSuite(createCoreProviderFixture());\nvoid [handshake, pending];\n",
   },
 };

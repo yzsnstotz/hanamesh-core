@@ -44,14 +44,14 @@ test('prepare registers label-free and signs only fixed onboarding; original non
  const url=new URL(a.url);assert.equal(url.pathname,'/me/bind');assert.equal(url.searchParams.get('flow'),'agent');assert.equal(url.searchParams.get('consentId'),a.consentId);assert.equal(url.searchParams.get('noticeVersion'),'hm-agent-usage-v1');assert.equal(url.searchParams.get('expiresAt'),a.expiresAt);
  const key=JSON.parse(await readFile(join(f.root,'identity/device.json'),'utf8'));const pk=createPublicKey({format:'der',type:'spki',key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),Buffer.from(key.publicKey,'base64url')])});assert.ok(verify(null,Buffer.from('fixture-nonce'),pk,Buffer.from(url.searchParams.get('signature'),'base64url')));
  const post=f.seen.find(x=>x.path.endsWith('/onboarding'));assert.deepEqual(post.body,{noticeVersion:'hm-agent-usage-v1',includeBackfill:true});assert.equal(post.headers['x-hm-device-id'],a.deviceId);
- await assert.rejects(agentCall(f.config,{operation:'sign',bytes:'aGk='}),/CONSENT_WITHHELD/);await assert.rejects(agentCall(f.config,{operation:'signRequest',method:'POST',path:'/elsewhere',body:'{}'}),/CONSENT_WITHHELD/);
+ await assert.rejects(agentCall(f.config,{operation:'sign',bytes:'aGk='}),/CORE_INPUT_INVALID/);await assert.rejects(agentCall(f.config,{operation:'signRequest',method:'POST',path:'/elsewhere',body:'{}'}),/CONSENT_WITHHELD/);
 });
 test('only exact committed website snapshot grants; pending and forged input cannot',async t=>{
  const f=await fixture(t);await agentCall(f.config,{operation:'prepareOnboarding'});await agentCall(f.config,{operation:'syncOnboarding'});assert.equal((await agentCall(f.config,{operation:'state'})).consent.state,'withheld');
  await assert.rejects(agentCall(f.config,{operation:'syncOnboarding',agreed:true}),/CORE_INPUT_INVALID/);
  f.setMode('active');f.setExtra(true);await assert.rejects(agentCall(f.config,{operation:'syncOnboarding'}),/CORE_AGENT_ONBOARDING_UNCONFIRMED/);f.setExtra(false);
  await agentCall(f.config,{operation:'syncOnboarding'});const s=await agentCall(f.config,{operation:'state'});assert.equal(s.consent.state,'granted');assert.equal(s.consent.authorization,'website');assert.equal(s.consent.agreedAt,'2026-10-28T10:00:00.000Z');
- assert.ok((await agentCall(f.config,{operation:'sign',bytes:'aGk='})).signature);
+ assert.ok((await agentCall(f.config,{operation:'signRequest',method:'POST',path:'/v2/usage/events',body:'[]'}))['x-hm-signature']);
 });
 test('local close retains prepared generation for DELETE and never reopens on late website result',async t=>{
  const f=await fixture(t);const a=await agentCall(f.config,{operation:'prepareOnboarding'});await agentCall(f.config,{operation:'consent',state:'withheld'});assert.equal((await agentCall(f.config,{operation:'state'})).consent.consentId,a.consentId);
@@ -78,7 +78,7 @@ test('active facts require genuine matching audit and binding fields, never lega
 });
 test('concurrent prepares claim one generation; server withdrawal closes without resurrection',async t=>{
  const f=await fixture(t);const [a,b]=await Promise.all([agentCall(f.config,{operation:'prepareOnboarding'}),agentCall(f.config,{operation:'prepareOnboarding'})]);assert.equal(a.consentId,b.consentId);assert.equal(a.deviceId,b.deviceId);
- f.setMode('withdrawn');await assert.rejects(agentCall(f.config,{operation:'syncOnboarding'}),/CONSENT_WITHHELD/);await assert.rejects(agentCall(f.config,{operation:'sign',bytes:'aGk='}),/CONSENT_WITHHELD/);
+ f.setMode('withdrawn');await assert.rejects(agentCall(f.config,{operation:'syncOnboarding'}),/CONSENT_WITHHELD/);await assert.rejects(agentCall(f.config,{operation:'sign',bytes:'aGk='}),/CORE_INPUT_INVALID/);
 });
 
 test('changing the configured origin cannot block local close or send a tombstone to another backend',async t=>{

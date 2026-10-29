@@ -3,7 +3,7 @@
   "id": "hanamesh-suite",
   "core": {
     "name": "@hanamesh/core",
-    "version": "0.3.25",
+    "version": "0.3.26",
     "repository": "https://github.com/yzsnstotz/hanamesh-core"
   },
   "components": [

@@ -3,8 +3,12 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 const production = new Map();
-for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
+for (const file of ['agent.js', 'agent-origins.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'origin-denial-not-enforced',file:'lib/agent-origins.js',mutate:code=>code.replace('if (origin.admitted === 0)','if (false)'),test:'test/agent-origins.test.mjs'},
+ {id:'origin-ledger-back-in-agent-home',file:'lib/agent-origins.js',mutate:code=>code.replace("join(sharedHome, 'identity')","join(sharedHome, 'agent/usage')"),test:'test/agent-origins.test.mjs'},
+ {id:'origin-generic-sign-restored',file:'lib/agent.js',mutate:code=>code.replace("if (input.operation === 'sign')\n        fail('CORE_INPUT_INVALID');", "if(input.operation==='sign'){const d=await fileSharedDeviceStore(config.sharedHome).read();if(!d)throw Error('CORE_DEVICE_REQUIRED');return {signature:Buffer.from(signWithDevice(d,Buffer.from(String(input.bytes),'base64'))).toString('base64url')};}"),test:'test/agent-origins.test.mjs'},
+ {id:'origin-first-decision-updatable',file:'lib/agent-origins.js',mutate:code=>code.replace('return { admitted: row.admitted === 1, first: false };',"this.db.prepare('UPDATE origins SET admitted=? WHERE key=?').run(admitted?1:0,key);return {admitted,first:false};"),test:'test/agent-origins.test.mjs'},
  {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("if (consent.state !== 'granted')\n            fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","if (false) fail('CORE_AGENT_WEB_CONSENT_REQUIRED');"),test:'test/agent-onboarding.test.mjs'},
  {id:'agent-local-close-dominates-website',file:'lib/agent.js',mutate:code=>code.replace("if (value.state === 'withheld')\n                return result;","if (false) return result;"),test:'test/agent-onboarding.test.mjs'},
  {id:'points-prompt-stamps-before-display',file:'lib/client.js',mutate:code=>code.replace('setPending(next.pendingTotal);',"setPending(next.pendingTotal); void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'});"),test:'test/points-prompt-display.test.mjs'},

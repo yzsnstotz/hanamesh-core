@@ -19,13 +19,11 @@ test('agent defaults off, shares the existing device, preserves legacy consent f
   await fileSharedDeviceStore(root).claim(createDevice());
   const before = await agentCall(config,{operation:'state'});
   assert.equal(before.consent.state,'withheld');
-  await assert.rejects(agentCall(config,{operation:'sign',bytes:'aGVsbG8='}), /CONSENT_WITHHELD/);
+  await assert.rejects(agentCall(config,{operation:'sign',bytes:'aGVsbG8='}), /CORE_INPUT_INVALID/);
   await seedLegacyGrant(root);
   const state = await agentCall(config,{operation:'state'});
   assert.equal(state.deviceId,before.deviceId);
-  const {signature} = await agentCall(config,{operation:'sign',bytes:Buffer.from('hello').toString('base64')});
-  const publicKey = createPublicKey({format:'der',type:'spki',key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),Buffer.from(state.publicKey,'base64url')])});
-  assert.ok(verify(null,Buffer.from('hello'),publicKey,Buffer.from(signature,'base64url')));
+  await assert.rejects(agentCall(config,{operation:'sign',bytes:Buffer.from('hello').toString('base64')}),/CORE_INPUT_INVALID/);
   assert.equal((await import('../lib/shared-device.js')).fileSharedDeviceStore(root).location, join(root,'identity/device.json'));
   assert.equal(JSON.parse(await readFile(join(root,'identity/device.json'),'utf8')).deviceId,state.deviceId);
   assert.doesNotMatch(JSON.stringify(state),/privateKey|Pkcs8/);
@@ -59,7 +57,7 @@ test('agent opt-out signs only its fixed generation DELETE and requires a matchi
  const server=createServer((req,res)=>{seen={path:req.url,method:req.method,device:req.headers['x-hm-device-id']};res.setHeader('content-type','application/json');res.end(JSON.stringify({deletedEvents:1,consentId:req.url.split('/').at(-1),state:'withdrawn',barrier:answer}));});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
  const {agentCall}=await import('../lib/agent.js'),config={sharedHome:root,serverOrigin:`http://127.0.0.1:${server.address().port}`,websiteOrigin:null};
- await seedLegacyGrant(root);const grant=await agentCall(config,{operation:'consent',state:'granted'});await agentCall(config,{operation:'sign',bytes:'aGk='});const state=await agentCall(config,{operation:'state'});
+ await seedLegacyGrant(root);const grant=await agentCall(config,{operation:'consent',state:'granted'});await agentCall(config,{operation:'signRequest',method:'POST',path:'/v2/usage/events',body:'[]'});const state=await agentCall(config,{operation:'state'});
  await agentCall(config,{operation:'consent',state:'withheld'});const result=await agentCall(config,{operation:'withdraw'});
  assert.equal(result.barrier,'committed');assert.equal(result.consentId,grant.consent.consentId);assert.equal(seen.path,`/v2/usage/me/devices/${state.deviceId}/consents/${grant.consent.consentId}`);assert.equal(seen.method,'DELETE');
  answer='pending-host-commit';await assert.rejects(agentCall(config,{operation:'withdraw'}),/CORE_WITHDRAWAL_UNCONFIRMED/);

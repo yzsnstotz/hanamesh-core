@@ -1,4 +1,16 @@
-# Agent process API · capability version 2 (Core 0.3.25)
+# Agent process API · capability 2 + origin capability 1 (Core 0.3.26)
+
+`state` adds `agentOriginProtocolVersion:1`; Cordis/DSH method tables remain unchanged.
+
+`originObserve {factId:hex64,admitted:boolean}` requires an existing device, not consent. It returns `{admitted,first}` from the device-lifetime ledger; subsequent input cannot replace the first decision. The caller must compute admission at the first eligible Pre hook, including false for disabled, unverified or unattributable calls.
+
+`signAgentEvent {factId,event}` requires consent and an admitted origin. `event` is exactly the existing nine unsigned Agent fields; Core checks device/event identities, deterministic nonce and current consent generation, then signs the canonical nine-field JSON. The same digest may re-sign; changed digest yields CORE_ORIGIN_CONSUMED. Unknown/denied facts yield CORE_ORIGIN_UNKNOWN/CORE_ORIGIN_DENIED. Install consumption is per device/Hana and also requires an admitted fact. Digest consumption and signing occur in one SQLite transaction. Generic `agentCall {operation:'sign'}` always returns CORE_INPUT_INVALID. `signRequest` remains HTTP authentication.
+
+Ledger: `<sharedHome>/identity/agent-origins.sqlite`, mode0600 within identity0700, HMAC fingerprints only. Metadata binds deviceId/schema and holds a random private HMAC key; origin rows contain HMAC(factId), immutable admitted and optional signing digest; install rows contain HMAC(hanaRef) and digest. No original session/call, plugin, event payload or occurrence time is retained. There is no delete/expiry API. Agent payload clear/prune/withdraw and Core consent withdrawal preserve it. Missing ledger is an upgrade/genesis; wrong-device/corrupt ledger fails closed with CORE_ORIGIN_LEDGER_INVALID, including state.
+
+Agent state/cache loss and plugin reinstall preserve this ledger. Partial identity-directory tampering is outside the D-plan boundary, equivalent to key-store compromise. Whole identity-directory deletion creates a new device lifecycle; old consent cannot authorize signing while no device exists and website onboarding is required again.
+
+Website onboarding and request authentication (capability 2):
 
 One stdin JSON `{config,input}` produces one `{result}` or `{error:{code}}` line. The portable process loads no Cordis/DSH. `config` supplies absolute sharedHome, nullable exact serverOrigin/websiteOrigin, optional timeoutMs (default10000, 10–60000). Origins require HTTPS or loopback HTTP; the caller's normal package supplies the production pair. Core has no implicit production fallback.
 
@@ -10,6 +22,6 @@ One stdin JSON `{config,input}` produces one `{result}` or `{error:{code}}` line
 
 `consent(withheld)` closes immediately, retains the prepared/current UUID (allocating a tombstone-only one if absent), and blocks preparation/late results. A website grant is stored separately and never overwrites the local close record, including responses already in flight. `withdraw` first closes and signs only fixed DELETE for that generation; it accepts exactly matching `{deletedEvents,consentId,state:'withdrawn',barrier:'committed'}`. No device returns no-device without creating one. Failures remain pending/unknown for callers to expose; no automatic reopen or arbitrary signing after close.
 
-Existing `sign` (standard-base64 bytes), `signRequest` (method/path/UTF8 body|null), `register`, and `bindLink` remain granted-only. Private key material never leaves Core. Generic request signatures retain exact method/path/timestamp/nonce/body hash. Identity binding signature is exactly utf8(nonce); expiresAt/expiryClock are editable display hints, not authorization or replacement deadlines. The website must preserve the original proof through login and verify server facts.
+`signRequest` (method/path/UTF8 body|null), `register`, and `bindLink` remain granted-only. Private key material never leaves Core. Generic request signatures retain exact method/path/timestamp/nonce/body hash. Identity binding signature is exactly utf8(nonce); expiresAt/expiryClock are editable display hints, not authorization or replacement deadlines. The website must preserve the original proof through login and verify server facts.
 
 The files under sharedHome/agent are Core-private process state, not adapter-readable APIs. The existing shared identity is sharedHome/identity/device.json. This API proves neither host Trust, attribution, scoring nor owner acceptance. DSH flows/modal and contract v1 are unchanged; real non-macOS-arm64 host paths remain NOT_RUN.
