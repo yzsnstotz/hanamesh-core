@@ -70,8 +70,9 @@
     "check:contracts": "tsc --noEmit --strict --skipLibCheck false --target ES2022 --module NodeNext --moduleResolution NodeNext test/public-contracts.ts",
     "check:toolchain": "hanamesh-devkit check-toolchain",
     "verify:pack": "node scripts/check-package.mjs",
-    "pack": "npm pack --pack-destination artifacts",
-    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight"
+    "pack": "npm pack --pack-destination \"${HM_CORE_RUN:?set external Core run directory}\"",
+    "check": "pnpm check:toolchain && pnpm verify:inputs && pnpm check:contracts && pnpm preflight",
+    "prepack": "node scripts/build.mjs --target"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.4 <4.1.0-0 || >=4.0.5-alpha.1 <4.1.0-0",

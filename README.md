@@ -32,7 +32,7 @@ Server 注册 POST 的 Origin 为 serverOrigin；Server 的可信 Origin 须包�
 
 `@hanamesh/devkit` is installed from `git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit`. It is used by development scripts only and is not a runtime dependency or public peer. pnpm 10.33.0 supports this Git subpackage selector; npm Git source installation does not. Use Node 24.13.1 and `pnpm install --strict-peer-dependencies --frozen-lockfile`; preflight runs the installed public supply suite against the resolved package, exports, CLI and lock. Normal npm tarball consumption is checked separately.
 
-Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `pnpm run pack`, then `pnpm verify:pack`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
+Run `pnpm build`, `pnpm test`, `pnpm test:mutations`, `pnpm test:crash`, `pnpm check`, `HM_CORE_RUN=<external-docs-evidence-or-relay-directory> pnpm run pack`, then `pnpm verify:pack <that-directory/core-tarball.tgz>`. Core keeps its six mutation cases, DSH/PostgreSQL inventory probes, public package assertions and input digests in this repository. The devkit supplies toolchain checking, preflight, isolated mutation execution and package verification. `HM_CORE_RUN` optionally places temporary consumers and mutation evidence in the card run directory; the default is `artifacts/`.
 
 The package consumer checks JavaScript and strict TypeScript without devkit installed. The root type entry also needs the public DSH type prerequisite `@deepseek-ai/dsh-typert-protocol@0.2.1-alpha.2`, already used by the local host type gate.
 
@@ -47,3 +47,5 @@ The package consumer checks JavaScript and strict TypeScript without devkit inst
 Agent capability2 (0.3.25) prepares fixed website onboarding without granting upload, verifies committed website consent, preserves old terminal grants, and requires a transactional v2 withdrawal barrier; see docs/AGENT.md. A matching committed server tombstone closes delayed old grants/uploads. No-device is distinguished from a completed remote deletion.
 
 Binding links carry the original Identity expiry and clock domain as unsigned display metadata; they never change server expiry or authorize confirmation. See docs/API.md and docs/SECURITY.md.
+
+`lib/` and `.build/` are generated locally and excluded from Git. `npm pack` runs the strict build through `prepack`; normal archives retain their public generated files.

@@ -15,7 +15,7 @@ export const packConfig = {
     const packed = JSON.parse(read('package.json'));
     assert.equal(packed.version, source.version);
     // R1-COMBO-02 was in the shipped client; validate the actual normal tgz as well as source-level UI tests.
-    const repairCommand = `dsh plugin --profile desktop add --save-exact '@hanamesh/core@${packed.version}' '@hanamesh/usage@0.3.0-rc.7' '@hanamesh/dsh-app-host@0.6.16'`;
+    const repairCommand = "dsh plugin --profile desktop add --save-exact '@hanamesh/core' '@hanamesh/usage' '@hanamesh/dsh-app-host'";
     assert.ok(read('lib/client.js').toString().includes(JSON.stringify(repairCommand)), 'PACKED_SUITE_REPAIR_COMMAND_MISMATCH');
     const patch = load(read(packed.dsh.bundle.patch.replace(/^\.\//, '')).toString());
     assert.equal(patch[0].insert.length, 1);
