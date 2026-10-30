@@ -5,8 +5,8 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
- {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("if (consent.state !== 'granted')\n            fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","if (false) fail('CORE_AGENT_WEB_CONSENT_REQUIRED');"),test:'test/agent-onboarding.test.mjs'},
- {id:'agent-local-close-dominates-website',file:'lib/agent.js',mutate:code=>code.replace("if (value.state === 'withheld')\n                return result;","if (false) return result;"),test:'test/agent-onboarding.test.mjs'},
+ {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","void 0;"),test:'test/agent-onboarding.test.mjs'},
+ {id:'agent-local-close-dominates-website',file:'lib/agent.js',mutate:code=>code.replace(/(\/\/ Explicit local close[^\n]*\n)\s*return result;/,"$1"),test:'test/agent-onboarding.test.mjs'},
  {id:'points-prompt-stamps-before-display',file:'lib/client.js',mutate:code=>code.replace('setPending(next.pendingTotal);',"setPending(next.pendingTotal); void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'});"),test:'test/points-prompt-display.test.mjs'},
  {id:'bind-expiry-not-forwarded',file:'lib/bind-link.js',mutate:code=>code.replace("url.searchParams.set('expiresAt', expiresAt);",'void 0;'),test:'test/bind-expiry.test.mjs'},
  {id:'bind-clock-domain-missing',file:'lib/bind-link.js',mutate:code=>code.replace("url.searchParams.set('expiryClock', 'identity-server');",'void 0;'),test:'test/bind-expiry.test.mjs'},

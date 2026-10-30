@@ -65,9 +65,10 @@ test('prepared origins are pinned and mixed local/public origins fail before any
  const f=await fixture(t);await assert.rejects(agentCall({...f.config,websiteOrigin:'https://market.fixture.invalid'},{operation:'prepareOnboarding'}),/CORE_WEBSITE_CONFIGURATION_REQUIRED/);assert.deepEqual(await readdir(f.root),[]);assert.equal(f.seen.length,0);
  await agentCall(f.config,{operation:'prepareOnboarding'});const n=f.seen.length;await assert.rejects(agentCall({...f.config,websiteOrigin:'http://127.0.0.1:54322'},{operation:'syncOnboarding'}),/CORE_AGENT_ONBOARDING_UNCONFIRMED/);assert.equal(f.seen.length,n);
 });
-test('old terminal grant remains granted without fabricated website audit',async t=>{
- const f=await fixture(t);await mkdir(join(f.root,'agent'));const old={state:'granted',changedAt:'2026-10-01T00:00:00.000Z',consentId:randomUUID()};await writeFile(join(f.root,'agent/consent.json'),JSON.stringify(old));
- const s=await agentCall(f.config,{operation:'state'});assert.equal(s.consent.state,'granted');assert.equal(s.consent.authorization,'legacy-terminal');assert.equal(s.consent.agreedAt,null);assert.equal((await agentCall(f.config,{operation:'consent',state:'granted'})).consent.consentId,old.consentId);assert.equal(f.seen.length,0);
+test('old terminal grant cannot authorize state, terminal grant or either signature port',async t=>{
+ const f=await fixture(t);await mkdir(join(f.root,'agent'));const old={state:'granted',changedAt:'2026-10-01T00:00:00.000Z',consentId:randomUUID()};const path=join(f.root,'agent/consent.json'),bytes=JSON.stringify(old);await writeFile(path,bytes);
+ for(const input of [{operation:'state'},{operation:'consent',state:'granted'},{operation:'sign',bytes:'aGk='},{operation:'signRequest',method:'POST',path:'/v2/usage/events',body:'[]'}])await assert.rejects(agentCall(f.config,input),/CORE_CONSENT_CORRUPT/);
+ assert.equal(await readFile(path,'utf8'),bytes);assert.deepEqual(await readdir(join(f.root,'agent')),['consent.json']);assert.equal(f.seen.length,0);
 });
 
 test('active facts require genuine matching audit and binding fields, never legacy or display hints',async t=>{

@@ -11,7 +11,7 @@ import {upstreamError, upstreamJson} from './errors.js';
 import {registerDevice} from './registration.js';
 
 export interface AgentCoreConfig {sharedHome:string; serverOrigin:string|null; websiteOrigin:string|null; timeoutMs?:number}
-type Consent = {state:'granted'|'withheld'; changedAt:string|null;consentId:string|null; authorization?:'website'|'legacy-terminal'|null;agreedAt?:string|null};
+type Consent = {state:'granted'|'withheld'; changedAt:string|null;consentId:string|null; authorization?:'website'|null;agreedAt?:string|null};
 type Prepared = {deviceId:string;consentId:string;serverOrigin:string;websiteOrigin:string};
 const NOTICE='hm-agent-usage-v1';
 const ISO=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -59,10 +59,10 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
     const value=await optionalJson(consentFile) as Partial<Consent>|undefined;
     let result:Consent={state:'withheld',changedAt:null,consentId:null,authorization:null,agreedAt:null};
     if(value!==undefined){
-      if(!value||!['granted','withheld'].includes(String(value.state))||typeof value.changedAt!=='string'||!Number.isFinite(Date.parse(value.changedAt))||(value.consentId!==undefined&&value.consentId!==null&&(typeof value.consentId!=='string'||!CONSENT_ID.test(value.consentId))))fail('CORE_CONSENT_CORRUPT');
-      result={state:value.state!,changedAt:value.changedAt!,consentId:value.consentId??null,authorization:value.state==='granted'?'legacy-terminal':null,agreedAt:null};
+      if(!value||value.state!=='withheld'||typeof value.changedAt!=='string'||!Number.isFinite(Date.parse(value.changedAt))||(value.consentId!==undefined&&value.consentId!==null&&(typeof value.consentId!=='string'||!CONSENT_ID.test(value.consentId))))fail('CORE_CONSENT_CORRUPT');
+      result={state:'withheld',changedAt:value.changedAt!,consentId:value.consentId??null,authorization:null,agreedAt:null};
       // Explicit local close wins over any concurrent or late website response. A website grant never overwrites this file.
-      if(value.state==='withheld')return result;
+      return result;
     }
     const prepared=await readPrepared(checkOrigins);
     const grant=await optionalJson(grantFile);
@@ -89,9 +89,7 @@ export async function agentCall(config:AgentCoreConfig, input:Record<string,unkn
   if(input.operation==='consent'){
     if(Object.keys(input).sort().join('|')!=='operation|state'||!['granted','withheld'].includes(String(input.state)))fail('CORE_INPUT_INVALID');
     if(input.state==='withheld')return {consent:await close()};
-    if(consent.state!=='granted')fail('CORE_AGENT_WEB_CONSENT_REQUIRED');
-    if(!consent.consentId){consent={...consent,consentId:randomUUID()};await publish(consentFile,consent);}
-    return {consent};
+    fail('CORE_AGENT_WEB_CONSENT_REQUIRED');
   }
   const store = fileSharedDeviceStore(config.sharedHome);
   const existing = await store.read();
