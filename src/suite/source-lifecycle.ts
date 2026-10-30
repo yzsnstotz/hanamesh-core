@@ -1,7 +1,7 @@
 import {isAbsolute} from 'node:path';
 import {CoreError} from '../errors.js';
 import {registryUrl} from './facts.js';
-import {createSuitePackageSource, type SuitePackageSource, type SuitePackageSourceOptions} from './source.js';
+import {createSuitePackageSource, type SuitePackageSource, type SuitePackageSourceOptions} from './source-package.js';
 
 export type SuiteSourceSelection = {readonly mode:'configured'}|{readonly mode:'disabled'}|{readonly mode:'custom';readonly options:SuitePackageSourceOptions};
 export interface SuiteSourceSnapshot {readonly schemaVersion:1;readonly selection:SuiteSourceSelection}

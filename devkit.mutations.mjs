@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 const production = new Map();
-for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
+for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
  {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","void 0;"),test:'test/agent-onboarding.test.mjs'},
  {id:'agent-local-close-dominates-website',file:'lib/agent.js',mutate:code=>code.replace(/(\/\/ Explicit local close[^\n]*\n)\s*return result;/,"$1"),test:'test/agent-onboarding.test.mjs'},
@@ -19,7 +19,7 @@ export const cases = [
 
  {id: 'renderer-context-not-rechecked', file: 'lib/suite/service.js', mutate: code => code.replaceAll('clientPeerFacts.contextId !== clientAtStart?.contextId', 'false'), test: 'test/suite-policy.test.mjs'},
  {id: 'renderer-conflict-ignored', file: 'lib/suite/client-peers.js', mutate: code => code.replace('versions.size > 1', 'versions.size > 999'), test: 'test/suite-client-peers.test.mjs'},
- {id: 'archive-integrity-ignored', file: 'lib/suite/source.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},
+ {id: 'archive-integrity-ignored', file: 'lib/suite/source-package.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},
  {id: 'consent-prompt-ignores-refusal', file: 'lib/controller.js', mutate: code => code.replace("this.#state.consent.changedAt === null && shownAt === null", "shownAt === null"), test: 'test/first-consent.test.mjs'},
  {id: 'consent-prompt-stamps-before-display', file: 'lib/client.js', mutate: code => code.replace("setView(next);", "setView(next); void jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'});"), test: 'test/first-consent-client.test.mjs'},
  {id:"suite-bundle-admission",file:"lib/suite/service.js",mutate:code=>code.replace("const bundle = tuple.map(bundleFailure).find(Boolean);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
