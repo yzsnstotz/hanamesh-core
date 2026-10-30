@@ -1,3 +1,4 @@
+import {SUITE_INSTALL_COMMAND} from '../lib/suite/index.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -25,7 +26,7 @@ async function fixture(components, clipboard) {
     useEffect(run) { effects.push(run); },
   };
   const sandbox = {
-    exports: {}, require: name => { assert.equal(name, 'react'); return React; }, URLSearchParams, navigator: {clipboard},
+    exports: {}, require: name => { if (name === '../suite/install-command.js') return {SUITE_INSTALL_COMMAND}; assert.equal(name, 'react'); return React; }, URLSearchParams, navigator: {clipboard},
     document: {visibilityState: 'visible', addEventListener() {}, removeEventListener() {}, createElement: () => ({dataset: {}, remove() {}}), head: {append() {}}},
     window: {addEventListener() {}, removeEventListener() {}, setInterval: () => 1, clearInterval() {}, open() { assert.fail('suite hint must never open or run anything'); }},
     fetch: async (path, init) => {

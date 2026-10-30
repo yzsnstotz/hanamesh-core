@@ -1,3 +1,4 @@
+import {SUITE_INSTALL_COMMAND} from '../lib/suite/index.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -26,7 +27,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
   };
   const mount = (component, props = {}) => { const owner = {state: [], cursor: 0, effects: []}; return {render() { current = owner; owner.cursor = 0; owner.effects = []; return component(props); }, effects: () => owner.effects}; };
   const sandbox = {
-    exports: {}, require: name => { if (name === '@deepseek-ai/dsh-client-ui-primitives') return {Modal: DSHModal}; assert.equal(name, 'react'); return React; }, URLSearchParams,
+    exports: {}, require: name => { if (name === '../suite/install-command.js') return {SUITE_INSTALL_COMMAND}; if (name === '@deepseek-ai/dsh-client-ui-primitives') return {Modal: DSHModal}; assert.equal(name, 'react'); return React; }, URLSearchParams,
     document: {visibilityState: 'visible', addEventListener() {}, removeEventListener() {}, createElement: () => ({dataset: {}, remove() {}}), head: {append() {}},
       querySelector() { assert.fail('must not inspect host navigation'); }, querySelectorAll() { assert.fail('must not inspect host navigation'); }},
     window: {addEventListener() {}, removeEventListener() {}, setInterval: run => { timers.push(run); return timers.length; }, clearInterval() {}, open() { assert.fail('local records stay in Core UI'); }},
