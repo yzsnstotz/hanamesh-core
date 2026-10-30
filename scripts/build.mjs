@@ -18,7 +18,12 @@ await cp('src/dsh.mjs', 'lib/dsh.mjs');
 await rm('.build/client-cjs', {recursive: true, force: true});
 const clientResult = spawnSync(compiler, ['-p', 'tsconfig.client.json'], {stdio: 'inherit'});
 if (clientResult.status !== 0) process.exit(clientResult.status ?? 1);
-const clientCode = await readFile('.build/client-cjs/client/index.js', 'utf8');
+let clientCode = await readFile('.build/client-cjs/client/index.js', 'utf8');
+// Materialize the provider-owned command into the existing single-file browser bundle.
+const commandImport = 'const install_command_js_1 = require("../suite/install-command.js");';
+if (!clientCode.includes(commandImport)) throw new Error('CLIENT_SUITE_COMMAND_IMPORT_MISSING');
+const {SUITE_INSTALL_COMMAND} = await import('../lib/suite/install-command.js');
+clientCode = clientCode.replace(commandImport, `const install_command_js_1 = ${JSON.stringify({SUITE_INSTALL_COMMAND})};`);
 const packageInfo = JSON.parse(await readFile('package.json', 'utf8'));
 const clientBundle = `/* Generated from strictly checked HanaMesh core client source. React is host-supplied. */\nwindow.__ModuleLoader__.load({id:${JSON.stringify(packageInfo.name)},factory:function(require){'use strict';const module={exports:{}};const exports=module.exports;(function(module,exports,require){\n${clientCode}\n})(module,exports,require);return module.exports;}});\n`;
 await mkdir('lib/client', {recursive: true});

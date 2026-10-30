@@ -302,7 +302,8 @@
         "upgrades",
         "blocked",
         "peerFacts",
-        "metadataDigests"
+        "metadataDigests",
+        "installCommand"
       ],
       "properties": {
         "schemaVersion": {
@@ -371,6 +372,10 @@
         },
         "clientPeerFacts": {
           "$ref": "#/$defs/ClientPeerFacts"
+        },
+        "installCommand": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

@@ -1,3 +1,4 @@
+import {SUITE_INSTALL_COMMAND} from './suite/install-command.js';
 import {readFileSync} from 'node:fs';
 import {createHash, createPublicKey, generateKeyPairSync, randomBytes, sign as edSign, verify as edVerify} from 'node:crypto';
 import {CORE_REQUIRED_METHODS, checkCoreService} from './contract.js';
@@ -182,10 +183,10 @@ export interface CoreProviderFixtureOptions {
 
 /** In-memory provider of protocol v1 for consumers to test against. Not a product provider: no storage, no server. */
 export function createCoreProviderFixture(options: CoreProviderFixtureOptions = {}): CoreProviderUnderTest {
-  const deviceId = options.deviceId ?? 'device_CONTRACT_FIXTURE';
-  const origin = options.serverOrigin === undefined || options.serverOrigin === null ? null : new URL(options.serverOrigin).origin;
+    const origin = options.serverOrigin === undefined || options.serverOrigin === null ? null : new URL(options.serverOrigin).origin;
   const {privateKey, publicKey} = generateKeyPairSync('ed25519');
   const rawPublic = b64(publicKey.export({format: 'der', type: 'spki'}).subarray(-32));
+  const deviceId = options.deviceId ?? b64(createHash('sha256').update(Buffer.from(rawPublic, 'base64url')).digest());
   const listeners = new Set<(state: ConsentState, changedAt: string) => void>();
   let consent: ConsentState = options.initialConsent ?? 'withheld';
   const sign = (bytes: Uint8Array): Uint8Array => new Uint8Array(edSign(null, Buffer.from(bytes), privateKey));
@@ -210,7 +211,7 @@ export function createCoreProviderFixture(options: CoreProviderFixtureOptions = 
     getServerOrigin: () => origin,
     getHealth: () => Object.freeze({revision: 0, mode: 'restricted' as const, components: Object.freeze([]), fault: 'CONTRACT_FIXTURE'}),
     getSuiteDeclaration: async () => {
-      const facts = {schemaVersion: 1 as const, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
+      const facts = {schemaVersion: 1 as const, installCommand: SUITE_INSTALL_COMMAND, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
       return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
     },
   });

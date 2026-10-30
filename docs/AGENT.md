@@ -1,4 +1,4 @@
-# Agent process API · capability version 2 (Core 0.3.27)
+# Agent process API · capability version 2 (Core 0.3.28)
 
 One stdin JSON `{config,input}` produces one `{result}` or `{error:{code}}` line. The portable process loads no Cordis/DSH. `config` supplies absolute sharedHome, nullable exact serverOrigin/websiteOrigin, optional timeoutMs (default10000, 10–60000). Origins require HTTPS or loopback HTTP; the caller's normal package supplies the production pair. Core has no implicit production fallback.
 

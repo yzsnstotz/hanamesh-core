@@ -1,3 +1,4 @@
+import {SUITE_INSTALL_COMMAND} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
 import type {ComponentObservation} from '../health/types.js';
@@ -127,7 +128,7 @@ export class SuiteDeclarationService {
       peerFacts['react'] = 'unknown';
       blocked.push({code: clientPeerFacts.contextId !== clientAtStart?.contextId ? 'CORE_SUITE_CLIENT_PEER_CHANGED' : clientPeerFacts.reason!});
     }
-    const facts = {schemaVersion: 1 as const, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
+    const facts = {schemaVersion: 1 as const, installCommand: SUITE_INSTALL_COMMAND, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {

@@ -1,3 +1,4 @@
+import {SUITE_INSTALL_COMMAND} from '../suite/install-command.js';
 import {createElement, Fragment, useEffect, useRef, useState, version as reactVersion, type ReactNode} from 'react';
 import type {Modal as DSHModal, isBehindModal as DSHIsBehindModal} from '@deepseek-ai/dsh-client-ui-primitives';
 
@@ -117,8 +118,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.27';
-const SUITE_INSTALL_COMMAND = "dsh plugin --profile desktop add --save-exact '@hanamesh/core' '@hanamesh/usage' '@hanamesh/dsh-app-host'";
+const CORE_VERSION = '0.3.28';
 
 type ComponentRow = {id: string; label: string; status: string; version: string | null; requiredRange: string; reason?: string; nextStep: string | null; serviceReady?: boolean};
 /** J1.S4 machine-wide identity shared by DSH and HanaMesh desktop; see controller `Identity`. */

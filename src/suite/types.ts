@@ -41,6 +41,7 @@ export interface SuiteInstalled {
   readonly runningVersion?: string;
 }
 export interface SuiteDeclaration {
+  readonly installCommand: string;
   readonly schemaVersion: 1;
   readonly checkedAt: string;
   /** SHA256 of all returned facts except checkedAt; this is a comparison token, not execution authorization. */
