@@ -27,7 +27,7 @@ test('Core private source closure uses published ranges and keeps developer tool
   assert.match(await readFile('src/health/evaluate.ts','utf8'), /^import semver from 'semver';$/m);
   for(const section of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
     for(const [name,spec] of Object.entries(root[section] ?? {})) {
-      if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^git\+https:\/\/github\.com\/yzsnstotz\/.+\.git#semver:\^/u,`package.json:${section}:${name}`);
+      if(name.startsWith('@hanamesh/') || name.startsWith('hanamesh-')) assert.match(spec,/^\^\d+\.\d+\.\d+/u,`package.json:${section}:${name}`);
     }
   }
 });
