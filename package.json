@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/core",
-  "version": "0.3.28",
+  "version": "0.3.29",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -99,7 +99,7 @@
     "@deepseek-ai/dsh-storage-domain": "0.2.1-alpha.2",
     "@deepseek-ai/dsh-typert-protocol": "0.2.1-alpha.2",
     "@deepseek-ai/dsh-util-code-language": "0.2.1-alpha.2",
-    "@hanamesh/devkit": "git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit",
+    "@hanamesh/devkit": "^0.2.4",
     "@types/mdast": "4.0.4",
     "@types/node": "24.13.4",
     "@types/react": "18.3.12",
@@ -139,7 +139,7 @@
     "id": "hanamesh-suite",
     "core": {
       "name": "@hanamesh/core",
-      "version": "0.3.28",
+      "version": "0.3.29",
       "repository": "https://github.com/yzsnstotz/hanamesh-core"
     },
     "components": [

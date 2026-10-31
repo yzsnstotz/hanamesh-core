@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, access} from 'node:fs/promises';
 
-const devkitSource = 'git+https://github.com/yzsnstotz/hanamesh-server-shared.git#semver:^0.2.0&path:/packages/devkit';
+const devkitSource = '^0.2.4';
 test('Core private source closure uses published ranges and keeps developer tooling out of public runtime peers', async () => {
   const root = JSON.parse(await readFile('package.json','utf8'));
   assert.equal(root.devDependencies['@hanamesh/devkit'], devkitSource);
