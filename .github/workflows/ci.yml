@@ -7,13 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.0
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
+      - name: Install pinned pnpm beside the pinned Node
+        run: |
+          ci_node_prefix=$(node --input-type=module -e "import {dirname} from 'node:path'; console.log(dirname(dirname(process.execPath)))")
+          npm install --global --prefix "$ci_node_prefix" pnpm@10.33.0
       - run: pnpm install --frozen-lockfile
       - run: npm ci --prefix scripts/ci
       - run: python3 scripts/ci/test_gates.py
