@@ -4,7 +4,7 @@
     {
       "name": "@hanamesh/core",
       "version": "0.3.30",
-      "sha256": "e95080083d9b100514b35a1858a86f623aa3922a6906e0290d4201d2bfe50716"
+      "sha256": "b8266012e33b13c0cb3d612a37605e2ae6205fbf79650eb30cc0b6000841e15d"
     },
     {
       "name": "@hanamesh/usage",
@@ -14,7 +14,7 @@
     {
       "name": "@hanamesh/dsh-app-host",
       "version": "0.6.20",
-      "sha256": "bb3194f585ec75e85034f7371819f523de6641f77884ddb394cd5bb8728113b2"
+      "sha256": "21b54226c5fcee0d45abda0b9513e50809e403e6d8a7b59723b909c76be37f11"
     }
   ],
   "entryIds": [
