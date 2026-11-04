@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "sources": [
     {
       "name": "@hanamesh/core",
@@ -13,8 +13,8 @@
     },
     {
       "name": "@hanamesh/dsh-app-host",
-      "version": "0.6.20",
-      "sha256": "1bcad2fda9342a4b8fa4bd7d192e50bb5a152cd518be783fef0944765b686728"
+      "version": "0.6.21",
+      "sha256": "dd7f472342998075b4745896544a5563cb256c0ae7f24e38899fed6af06cdbbd"
     }
   ],
   "entryIds": [
