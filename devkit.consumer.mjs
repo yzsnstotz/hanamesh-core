@@ -26,7 +26,7 @@ assert.equal(adapter.name, (await import(pathToFileURL(join(packageRoot, 'lib/ds
 const contract = await import('@hanamesh/core/contract');
 assert.ok(contract);
 assert.equal(adapter.name, 'hanamesh-core');
-assert.deepEqual(adapter.inject, ['connection', 'storageDomain', 'loader']);
+assert.deepEqual(adapter.inject, ['connection', 'storageDomain', 'loader', 'pluginPackages']);
 assert.equal(packed.exports['./transport'], undefined);
 const {SessionController} = await import(pathToFileURL(join(packageRoot, 'lib/controller.js')).href);
 const {INITIAL_CORE_SNAPSHOT} = await import(pathToFileURL(join(packageRoot, 'lib/contracts.js')).href);
