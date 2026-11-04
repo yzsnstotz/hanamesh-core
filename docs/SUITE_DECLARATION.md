@@ -89,3 +89,9 @@ On ordinary activation Core registers its own routes before asynchronous storage
 ## Manual installation command
 
 `installCommand` is nullable. An explicit registry read uses the bundle's validated `dist-tags.latest` exact version to format `dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@<version>`. This is a manual repair command, independent of compatible upgrade selection. A no-request read stays offline and returns null; missing/unavailable published version never creates an unversioned fallback. The Core settings copy action GETs the authenticated local `/api/hanamesh/core/suite-declaration` route, which calls the same service with the fixed public npm registry. It returns the full SuiteDeclaration, does not install or mutate settings, and preserves existing route admission. Publication is followed immediately by exact-version native acceptance.
+
+### Host peer resolution
+
+External peer metadata uses the active Loader ESM resolver (`loader.internal.resolveSync`, v1/v2), following DSH app-boot `resolvePluginResource`. It reads the selected public package manifest without executing modules; import-only packages resolve through their public entry and matching package ancestor. A profile does not need physical copies of host-supplied peers. React still comes only from the live client lease. Unobservable runtime metadata remains unknown.
+
+An offline `getSuiteDeclaration()` intentionally reports `registry:null`, no upgrade candidates, and `CORE_SUITE_SOURCE_MISSING`. This means no upgrade registry was requested; it does not invalidate already verified installed repository identities or change otherwise complete local inventory. Upgrade preview must still supply its actual execution registry.

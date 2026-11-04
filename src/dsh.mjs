@@ -5,7 +5,7 @@ import {homedir} from 'node:os';
 import {SessionController} from './controller.js';
 import {createRouteHandler, ROUTES} from './routes.js';
 import {HealthService} from './health/service.js';
-import {LoaderObservationSource, inspectPackage} from './health/loader.js';
+import {LoaderObservationSource} from './health/loader.js';
 import {SuiteDeclarationService} from './suite/service.js';
 import {RegistryMetadataReader} from './suite/registry.js';
 import {suiteInspector, packageMetadata} from './suite/local.js';
@@ -120,12 +120,15 @@ export async function apply(ctx, config) {
       coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
       peerVersion: async name => {
         if (name === 'react') return clientPeers.snapshot().reactVersion ?? {status: 'unknown'};
-        const observed = (await suiteInventory.observe([{id: name, moduleName: name, label: name, versionRange: '*', onFailure: 'notice', impact: 'peer'}]))[0];
-        if (observed?.kind === 'ambiguous' || observed?.kind === 'unreadable') return {status: 'unknown'};
-        if (observed?.kind === 'present') return observed.version ?? null;
-        const local = await inspectPackage(name, import.meta.url);
-        if (local.kind === 'missing') return null;
-        const metadata = await packageMetadata(name, import.meta.url, name, config.maxResponseBytes);
+        // Match DSH app-boot's resource reader: host peers may be import-only or
+        // supplied by the active profile resolver, outside this package's CJS tree.
+        const internal = /** @type {any} */ (ctx).loader.internal;
+        if (!internal) return {status: 'unknown'};
+        const metadata = await packageMetadata(name, import.meta.url, name, config.maxResponseBytes, (specifier, parentURL) => (
+          internal.version === 'v2'
+            ? internal.resolveSync(parentURL, {specifier, attributes: {}})
+            : internal.resolveSync(specifier, parentURL, {})
+        ).url);
         return metadata?.version ?? {status: 'unknown'};
       },
     }));

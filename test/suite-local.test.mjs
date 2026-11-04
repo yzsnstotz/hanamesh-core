@@ -69,3 +69,22 @@ test('public getter without a registry performs zero network or persistence writ
     assert.ok(Object.isFrozen(first.manifest));
   } finally {globalThis.fetch = fetch;}
 });
+
+test('peer metadata uses the active ESM resolver, including import-only host packages, without executing them', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'core-host-peer-'));
+  t.after(() => rm(root, {recursive: true, force: true}));
+  const name = '@deepseek-ai/host-peer';
+  await writeFile(join(root, 'package.json'), JSON.stringify({name, version: '0.2.1-rc.3', exports: {'.': {import: './index.mjs'}}}));
+  await writeFile(join(root, 'index.mjs'), 'throw Error("HOST_PEER_MUST_NOT_EXECUTE");');
+  const base = pathToFileURL(join(root, 'profile', 'core.mjs')).href;
+  const calls = [];
+  const resolve = (specifier, parentURL) => {
+    calls.push([specifier, parentURL]);
+    if (specifier.endsWith('/package.json')) throw Object.assign(Error('private manifest export'), {code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'});
+    assert.equal(specifier, name);
+    return pathToFileURL(join(root, 'index.mjs')).href;
+  };
+  assert.equal(await packageMetadata(name, base), null, 'ordinary Node resolution cannot see this host peer');
+  assert.equal((await packageMetadata(name, base, name, undefined, resolve))?.version, '0.2.1-rc.3');
+  assert.deepEqual(calls, [[`${name}/package.json`, base], [name, base]]);
+});
