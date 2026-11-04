@@ -4,6 +4,7 @@ import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import yaml from 'js-yaml';
+import {createSuiteInstallRelease} from '../../lib/suite/install-command.js';
 
 export const components=[['core','@hanamesh/core'],['usage','@hanamesh/usage'],['appHost','@hanamesh/dsh-app-host']];
 const exactVersion=/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
@@ -58,7 +59,7 @@ export function mergeBundles(version,sources){
  }
  const peers=Object.fromEntries(Object.entries(peerDependencies).sort(([a],[b])=>a.localeCompare(b))),peerDependenciesMeta=Object.fromEntries([...optional].filter(([,value])=>value).map(([name])=>[name,{optional:true}]));
  if(!Object.keys(peers).length)throw Error('SOURCE_PEERS_MISSING');
- return {manifest:{name:'@hanamesh/hanamesh',version,description:'HanaMesh Core, Usage and AppHost for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
+ return {manifest:{name:'@hanamesh/hanamesh',version,hanameshSuiteInstall:createSuiteInstallRelease(version),description:'HanaMesh Core, Usage and AppHost for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
 }
 export async function buildHanaMesh(input,fetchPackage){
  if(!record(input)||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');

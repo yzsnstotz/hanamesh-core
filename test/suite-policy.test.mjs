@@ -84,3 +84,14 @@ test('DSH prerelease runtime remains complete without opting other peers into pr
  const other=await service({currentBundle:{...installedBundle,peerDependencies:{external:range}},peerVersion:async()=>runtime}).read();
  assert.equal(other.completeness,'incomplete','other peer ranges keep standard SemVer prerelease behavior');
 });
+
+test('Core emits the selected exact upgrade definition for the actual profile and verified registry',async()=>{
+ const d=await service().read({registry,profile:'work'});
+ assert.equal(d.upgrades.length,1);
+ const {createSuiteInstallRelease}=await import('../lib/suite/index.js');
+ assert.deepEqual(d.upgrades[0].installation,createSuiteInstallRelease('1.1.0',{profile:'work',registry}));
+ const declared=await service().read({profile:'desktop'});
+ assert.equal(declared.registry,'https://registry.npmjs.org/');
+ assert.equal((await service().read()).registry,null,'passive facts stay offline');
+ const bad=await service().read({registry,profile:'../owner'});assert.deepEqual(bad.upgrades,[]);
+});

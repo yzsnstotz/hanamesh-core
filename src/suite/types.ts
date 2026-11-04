@@ -7,7 +7,7 @@ export interface SuiteManifest {
   readonly core: {readonly name: string; readonly version: string; readonly repository: string};
   readonly components: readonly {readonly id: string; readonly moduleName: string; readonly versionRange: string; readonly repository: string}[];
 }
-export interface SuiteInstallRelease {readonly name:string;readonly version:string;readonly command:string}
+export interface SuiteInstallRelease {readonly name:string;readonly version:string;readonly command:string;readonly args:readonly string[]}
 export interface PackageMetadata {
   readonly name: string;
   readonly version: string;
@@ -25,10 +25,11 @@ export interface RegistryMetadata {
   readonly name: string;
   readonly versions: Readonly<Record<string, PackageMetadata>>;
 }
-export interface SuiteDeclarationRequest {readonly registry: string; readonly bundleVersion?: string}
+export interface SuiteDeclarationRequest {readonly registry?: string; readonly bundleVersion?: string; readonly profile?: string}
 export interface SuiteBlocked {readonly code: string; readonly bundleVersion?: string; readonly moduleName?: string}
 export interface SuiteTarget {readonly id: string; readonly moduleName: string; readonly version: string; readonly repository: string; readonly metadataDigest: string}
 export interface SuiteUpgrade {
+  readonly installation: SuiteInstallRelease;
   readonly bundle: SuiteTarget;
   readonly registry: string;
   readonly targets: readonly SuiteTarget[];

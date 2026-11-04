@@ -1,4 +1,4 @@
-import {formatSuiteInstallCommand} from './install-command.js';
+import {formatSuiteInstallCommand, createSuiteInstallRelease, suiteInstallArgs} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
 import type {ComponentObservation} from '../health/types.js';
@@ -19,6 +19,7 @@ function bundleFailure(record: PackageMetadata): string | null {
   if (typeof bundle.patch !== 'string' || !/^\.\/[A-Za-z0-9._/-]+$/.test(bundle.patch) || bundle.patch.slice(2).split('/').some(part => !part || part === '.' || part === '..')) return 'CORE_SUITE_BUNDLE_INVALID';
   return null;
 }
+export const DEFAULT_SUITE_REGISTRY = 'https://registry.npmjs.org/';
 export class SuiteDeclarationService {
   constructor(readonly options: SuiteServiceOptions) {}
   async read(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration> {
@@ -98,9 +99,11 @@ export class SuiteDeclarationService {
     if (request === undefined) blocked.push({code: 'CORE_SUITE_SOURCE_MISSING'});
     else {
       try {
-        if (!request || typeof request !== 'object' || Array.isArray(request) || Object.keys(request).some(key => !['registry', 'bundleVersion'].includes(key))) throw new CoreError('CORE_SUITE_REQUEST_INVALID', 400);
-        if (typeof request.registry !== 'string') throw new CoreError('CORE_SUITE_SOURCE_UNSUPPORTED', 400);
-        registry = this.options.registry.normalize ? this.options.registry.normalize(request.registry) : registryUrl(request.registry);
+        if (!request || typeof request !== 'object' || Array.isArray(request) || Object.keys(request).some(key => !['registry', 'bundleVersion', 'profile'].includes(key))) throw new CoreError('CORE_SUITE_REQUEST_INVALID', 400);
+        const installOptions = request.profile === undefined ? {} : {profile: request.profile};
+        suiteInstallArgs('0.0.0', installOptions);
+        if (request.registry !== undefined && typeof request.registry !== 'string') throw new CoreError('CORE_SUITE_SOURCE_UNSUPPORTED', 400);
+        registry = this.options.registry.normalize ? this.options.registry.normalize(request.registry ?? DEFAULT_SUITE_REGISTRY) : registryUrl(request.registry ?? DEFAULT_SUITE_REGISTRY);
         if (request.bundleVersion !== undefined && !semver.valid(request.bundleVersion)) throw new CoreError('CORE_SUITE_CANDIDATE_INVALID', 400);
         const names = [manifest.bundle.name, core.name, ...manifest.components.map(row => row.moduleName)];
         const catalogs = new Map<string, Readonly<Record<string, PackageMetadata>>>();
@@ -141,7 +144,7 @@ export class SuiteDeclarationService {
           const reason = await compatible([bundle, ...tuple]);
           if (reason) {reject(reason); continue;}
           if (completeness !== 'complete') {reject('CORE_SUITE_CURRENT_INCOMPLETE'); continue;}
-          upgrades.push({registry, bundle: {id: 'bundle', moduleName: bundle.name, version, repository: manifest.bundle.repository, metadataDigest: digest(bundle)}, targets: tuple.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: installed[i]!.repository, metadataDigest: digest(row)}))});
+          upgrades.push({registry, installation: createSuiteInstallRelease(version, {...installOptions, registry}), bundle: {id: 'bundle', moduleName: bundle.name, version, repository: manifest.bundle.repository, metadataDigest: digest(bundle)}, targets: tuple.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: installed[i]!.repository, metadataDigest: digest(row)}))});
         }
       } catch (error) {blocked.push({code: error instanceof CoreError ? error.code : 'CORE_SUITE_METADATA_INVALID'});}
     }
