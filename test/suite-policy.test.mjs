@@ -63,3 +63,12 @@ test('manual repair command reads the published bundle latest exact version, ind
  s.options.registry.read=async(...args)=>{const row=await read(...args);delete row.latestVersion;return row;};
  assert.equal((await s.read({registry})).installCommand,null);
 });
+
+
+test('candidate source remains checked when published latest is a different valid bundle',async()=>{
+ const data=structuredClone(catalog);data.bundle['1.1.0'].repository=repo('foreign');
+ const s=service({data});const read=s.options.registry.read;
+ s.options.registry.read=async(...args)=>{const row=await read(...args);return {...row,...(row.name==='bundle'?{latestVersion:'1.0.0'}:{})}};
+ const d=await s.read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.bundleVersion==='1.1.0'&&row.code==='CORE_SUITE_SOURCE_MISMATCH'));
+ assert.equal(d.installCommand,'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@1.0.0');
+});

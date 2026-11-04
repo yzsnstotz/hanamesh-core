@@ -64,7 +64,7 @@ test('missing required suite components have an exact manual repair command and 
   assert.ok(f.requests.every(r => r.method === 'GET'), 'hint and copy cannot mutate settings, health, or install plugins');
 });
 
-test('repairing missing Usage preserves the approved AppHost 0.6.16 instead of reinstalling the old decoder', async () => {
+test('manual repair offers the exact bundle while retaining the observed AppHost version display', async () => {
   const copied = [];
   const f = await fixture([component('usage', 'missing'), component('app-host', 'satisfied', {version: '0.6.16'})], {writeText: async value => copied.push(value)});
   const tree = f.render();
