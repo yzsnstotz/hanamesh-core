@@ -1,4 +1,3 @@
-import {SUITE_INSTALL_COMMAND} from './suite/install-command.js';
 import {readFileSync} from 'node:fs';
 import {createHash, createPublicKey, generateKeyPairSync, randomBytes, sign as edSign, verify as edVerify} from 'node:crypto';
 import {CORE_REQUIRED_METHODS, checkCoreService} from './contract.js';
@@ -211,7 +210,7 @@ export function createCoreProviderFixture(options: CoreProviderFixtureOptions = 
     getServerOrigin: () => origin,
     getHealth: () => Object.freeze({revision: 0, mode: 'restricted' as const, components: Object.freeze([]), fault: 'CONTRACT_FIXTURE'}),
     getSuiteDeclaration: async () => {
-      const facts = {schemaVersion: 1 as const, bundleVersion: null, installCommand: SUITE_INSTALL_COMMAND, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
+      const facts = {schemaVersion: 1 as const, bundleVersion: null, installCommand: null, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
       return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
     },
   });

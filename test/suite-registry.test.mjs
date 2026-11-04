@@ -36,3 +36,11 @@ test('metadata timeout is named and does not become an empty upgrade list',async
  const url=await server(t,(_req,_res)=>{});
  await assert.rejects(new RegistryMetadataReader({timeoutMs:20,localTestRegistries:[url]}).read(url,'core'),error=>error.code==='CORE_SUITE_METADATA_TIMEOUT');
 });
+
+
+test('registry latest tag must name an existing exact release of the same package',async t=>{
+ let latest='2.4.6';const versions={'2.4.6':{name:'@hanamesh/hanamesh',version:'2.4.6'}};
+ const url=await server(t,(_req,res)=>res.end(JSON.stringify({name:'@hanamesh/hanamesh','dist-tags':{latest},versions})));
+ const reader=new RegistryMetadataReader({localTestRegistries:[url]});assert.equal((await reader.read(url,'@hanamesh/hanamesh')).latestVersion,'2.4.6');
+ for(const invalid of ['latest','^2.4.6','2.4.7']){latest=invalid;await assert.rejects(reader.read(url,'@hanamesh/hanamesh'),e=>e.code==='CORE_SUITE_METADATA_INVALID');}
+});

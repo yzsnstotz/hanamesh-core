@@ -5,6 +5,7 @@
 | 方法 | 路径 | 返回 / 语义 |
 |---|---|---|
 | `GET` | `state` | 设备 id、公钥（本机共享身份不可用时两者为 `null`、`session` 为 `null`）、`identity`（见下文「本机共享设备身份」）、注册观察、同意状态、会话观察、`account`（rc.26 起：已绑定且 usage ≥rc.3 时为 `{provider:'github', displayName}`，否则 `null`）、两个组件健康投影、贡献累计或明确 unavailable；不含私钥。0.3.4 起另有 `serverOrigin`（**生效**地址）、`serverOriginSource: 'setting'|'config'`、`configuredServerOrigin`（插件配置的出厂默认）、`serverOriginFault`（已存地址不再合法时为 `CORE_ORIGIN_REJECTED`，此时出厂默认生效，否则 `null`）；`contributions` 为 `{status:'ready', windowDays, availability:'available'|'unavailable'|null, actions}` 或 `{status:'unavailable', reason}`（`reason` 含 `CONSENT_WITHHELD`）|
+| `GET` | `suite-declaration` | 同一 Connection 准入下，使用固定公开 npm registry 读取完整 SuiteDeclaration；installCommand 是当前发布总包的精确版本命令或 null。只读，不执行安装。 |
 | `POST` | `client-peer-lease` | 0.3.17。自有客户端当前页面的 React 观察：精确五字段、Connection 准入/同载体 Origin/JSON4096；立即返回200 application/octet-stream与固定首帧，持有响应体至取消/关闭；request signal、body.cancel或Core释放均撤租，不记录使用或修改同意。无效观察400、不活动409、缺能力503；详见 [套件声明](SUITE_DECLARATION.md)。不占 Gateway RPC interceptor。 |
 | `POST` | `consent/prompt-shown` | 0.3.15。无 body，同源写准入与其它 POST 相同；仅在 DSH Modal 获准显示、内容 portal 实际连接且其拥有前景后调用。将可选字段 `usageConsentPromptShownAt` 持久化，返回 `{shownAt:ISO}`；并发调用共用首次写入，已有值原样返回。只记实际显示，不授权、不注册、不上报。 |
 | `POST` | `consent` | 请求 `{state:'granted'|'withheld'}`；完整镜像发布成功后广播。0.3.4 起：改为 `granted` 时，未注册则立即注册并启动贡献刷新，已注册则只启动贡献刷新；改为 `withheld` 时停止贡献刷新但**不注销**（Usage 需要已注册的设备去发服务端删除）|

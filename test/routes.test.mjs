@@ -58,3 +58,15 @@ test('native authenticated Connection admission supports stripped Origin without
   assert.equal((await handle(request({...sameOriginHeaders,'x-fixture-admitted':'yes',origin:'https://evil.example'}))).status,403);
  }finally{await c.dispose();}
 });
+
+
+test('manual suite declaration route uses the fixed public registry and preserves admission',async()=>{
+ const controller=await SessionController.create({serverOrigin:null,websiteOrigin:null},memoryStore(INITIAL_CORE_SNAPSHOT).store);
+ const declaration={installCommand:'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@2.4.6'};const calls=[];
+ controller.attachSuite({read:async request=>{calls.push(request);return declaration;}});
+ const handle=createRouteHandler(controller,{requestRejection:req=>req.headers.get('x-fixture-admitted')==='yes'?undefined:401});
+ const request=method=>new Request(`${origin}${ROUTES.suiteDeclaration}`,{method,headers:{'x-fixture-admitted':'yes'}});
+ assert.equal((await handle(new Request(`${origin}${ROUTES.suiteDeclaration}`))).status,401);assert.equal(calls.length,0);
+ const result=await handle(request('GET'));assert.deepEqual(await result.json(),declaration);assert.equal(result.headers.get('cache-control'),'no-store');
+ assert.deepEqual(calls,[{registry:'https://registry.npmjs.org/'}]);assert.equal((await handle(request('POST'))).status,405);assert.equal(calls.length,1);await controller.dispose();
+});

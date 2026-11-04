@@ -208,3 +208,6 @@ These URL values are editable, unsigned display hints. They are not a fresh chal
 积分绑定提示同样仅在Core Modal实际入场且位于前景后记录原points/prompt-shown标记；宿主等待中卸载不记为已显示。标记写失败保留提示并说明检查设置，不自动重试/绑定。
 
 Portable Agent process capability2 (Core0.3.25): state declares agentProtocolVersion:2; prepareOnboarding/syncOnboarding use only fixed device-generation endpoints and verified website audits. New model/terminal booleans cannot grant. Existing old grants remain legacy-terminal; explicit local close dominates late responses. Cordis service protocolVersion remains1, DSH consent unchanged. Exact inputs, state shape, origins and error codes: [AGENT.md](AGENT.md).
+
+
+手动补齐：`SuiteDeclaration.installCommand: string | null` 从公开总包发布元数据的精确版本生成，读取失败或无发布版本时为空，禁止无版本命令。设置页点击复制时读取已鉴权的只读 `GET /api/hanamesh/core/suite-declaration`（固定公开 npm，返回完整声明）；升级仍执行声明中所选兼容总包的精确版本。

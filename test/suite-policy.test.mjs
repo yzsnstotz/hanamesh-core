@@ -12,10 +12,10 @@ const installedBundle=bundle('1.0.0',{core:'1.0.0',usage:'1.0.0',apps:'1.0.0'});
 const catalog={bundle:{'1.0.0':installedBundle,'1.1.0':bundle('1.1.0',{core:'1.1.0',usage:'1.1.0',apps:'1.1.0'})},core:{'1.0.0':{...record('core','1.0.0'),hanameshSuite:manifest('1.0.0')},'1.1.0':{...record('core','1.1.0'),hanameshSuite:manifest('1.1.0')}},usage:{'1.0.0':record('usage','1.0.0'),'1.1.0':record('usage','1.1.0')},apps:{'1.0.0':record('apps','1.0.0'),'1.1.0':record('apps','1.1.0')}};
 const observed=name=>({kind:'present',phase:'active',version:'1.0.0',repository:repo(name),metadata:catalog[name]['1.0.0']});
 function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null}={}){
- return new SuiteDeclarationService({profile,core:catalog.core['1.0.0'],manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{}})}});
+ return new SuiteDeclarationService({profile,core:catalog.core['1.0.0'],manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{},...(name==='bundle'?{...(data.bundle['1.1.0']?{latestVersion:'1.1.0'}:{})}:{})})}});
 }
 test('current facts require the installed bundle and all active physical members, without network',async()=>{
- const s=service();s.options.registry.read=()=>assert.fail('no source means no network');const d=await s.read();assert.equal(d.completeness,'complete');assert.equal(d.bundleVersion,'1.0.0');assert.deepEqual(d.upgrades,[]);assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.match(d.installCommand,/@hanamesh\/hanamesh/);
+ const s=service();s.options.registry.read=()=>assert.fail('no source means no network');const d=await s.read();assert.equal(d.completeness,'complete');assert.equal(d.bundleVersion,'1.0.0');assert.deepEqual(d.upgrades,[]);assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.equal(d.installCommand,null);
  for(const currentBundle of [null,{...installedBundle,dependencies:{...installedBundle.dependencies,usage:'1.1.0'}}])assert.notEqual((await service({currentBundle}).read()).completeness,'complete');
  for(const phase of ['disabled','failed','pending'])assert.equal((await service({observations:[{...observed('usage'),phase},observed('apps')]}).read()).completeness,'incomplete');
 });
@@ -54,4 +54,12 @@ test('declaration schema and digest bind bundle version and metadata without lea
 test('malformed future manifests and engine declarations never produce ready bundle upgrades',async()=>{
  for(const mutate of [m=>m.core.repository={url:repo('core')},m=>m.components[0].repository={url:repo('usage')},m=>m.components[0].versionRange='',m=>m.components.push({...m.components[0],id:'foreign',moduleName:'foreign'}),m=>m.components[0]=null,m=>m.bundle.name='foreign']){const data=structuredClone(catalog);mutate(data.core['1.1.0'].hanameshSuite);assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
  for(const engines of [null,[],'node>=24',{node:24},{node:''},{node:'not-a-range'}]){const data=structuredClone(catalog);data.core['1.1.0'].engines=engines;assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
+});
+
+test('manual repair command reads the published bundle latest exact version, independently of installed or candidate versions',async()=>{
+ const s=service();const read=s.options.registry.read;
+ s.options.registry.read=async(...args)=>{const row=await read(...args);return {...row,...(row.name==='bundle'?{latestVersion:'1.0.0'}:{})}};
+ assert.equal((await s.read({registry})).installCommand,'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@1.0.0');
+ s.options.registry.read=async(...args)=>{const row=await read(...args);delete row.latestVersion;return row;};
+ assert.equal((await s.read({registry})).installCommand,null);
 });

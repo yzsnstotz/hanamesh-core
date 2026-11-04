@@ -7,6 +7,7 @@ import type {ClientPeerLeases} from './suite/client-peers.js';
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
   suiteSource: '/api/hanamesh/core/suite-source',
+  suiteDeclaration: '/api/hanamesh/core/suite-declaration',
   consent: '/api/hanamesh/core/consent',
   consentPromptShown: '/api/hanamesh/core/consent/prompt-shown',
   server: '/api/hanamesh/core/server',
@@ -50,6 +51,10 @@ export function createRouteHandler(controller: SessionController, admission: {re
       const url = new URL(request.url);
       if (url.hash || (url.search && url.pathname !== ROUTES.activity)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
       if (!ROUTE_PATHS.has(url.pathname)) return response({error: {code: 'CORE_NOT_FOUND'}}, 404);
+      if (url.pathname === ROUTES.suiteDeclaration) {
+        if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);
+        return response(await controller.service.getSuiteDeclaration!({registry: 'https://registry.npmjs.org/'}));
+      }
       if(url.pathname===ROUTES.suiteSource&&request.method==='GET'){if(!suiteSource)throw new CoreError('CORE_SUITE_SOURCE_CAPABILITY_UNAVAILABLE',503);return response({...suiteSource.service.getState(),configuration:suiteSource.getConfiguration()});}
       if (url.pathname === ROUTES.state || url.pathname === ROUTES.diagnostics || url.pathname === ROUTES.health || url.pathname === ROUTES.points || url.pathname === ROUTES.activity) {
         if (request.method !== 'GET') return response({error: {code: 'CORE_METHOD_NOT_ALLOWED'}}, 405);

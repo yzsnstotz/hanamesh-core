@@ -22,6 +22,7 @@ export interface RegistryMetadata {
   readonly registry: string;
   readonly name: string;
   readonly versions: Readonly<Record<string, PackageMetadata>>;
+  readonly latestVersion?: string;
 }
 export interface SuiteDeclarationRequest {readonly registry: string; readonly bundleVersion?: string}
 export interface SuiteBlocked {readonly code: string; readonly bundleVersion?: string; readonly moduleName?: string}
@@ -43,7 +44,7 @@ export interface SuiteInstalled {
 }
 export interface SuiteDeclaration {
   readonly bundleVersion: string | null;
-  readonly installCommand: string;
+  readonly installCommand: string | null;
   readonly schemaVersion: 1;
   readonly checkedAt: string;
   /** SHA256 of all returned facts except checkedAt; this is a comparison token, not execution authorization. */

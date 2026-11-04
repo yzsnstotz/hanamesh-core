@@ -5,4 +5,4 @@ import type {SuiteManifest} from './types.js';
 export const SUITE_MANIFEST: SuiteManifest = frozen(JSON.parse(readFileSync(new URL('../../profile/suite.manifest.json', import.meta.url), 'utf8')) as SuiteManifest);
 export type {SuiteManifest, SuiteDeclaration, SuiteDeclarationRequest, SuiteInstalled, SuiteUpgrade, SuiteTarget, SuiteBlocked} from './types.js';
 
-export {SUITE_INSTALL_COMMAND} from './install-command.js';
+export {formatSuiteInstallCommand} from './install-command.js';

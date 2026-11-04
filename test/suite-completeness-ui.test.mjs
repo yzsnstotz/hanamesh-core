@@ -1,17 +1,16 @@
-import {SUITE_INSTALL_COMMAND} from '../lib/suite/index.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh';
+const command = 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.0';
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
 const component = (id, status, extra = {}) => ({id, label: id === 'usage' ? '使用记录（Usage）' : '应用容器（App Host）', status, version: null, requiredRange: '>=0.1.0 <1.0.0', reason: null, nextStep: null, ...extra});
 
-async function fixture(components, clipboard) {
+async function fixture(components, clipboard, release = command) {
   const state = {
     deviceId: 'fixture-device', identity: {status: 'local-only', source: null, location: null, replacedDeviceIds: []},
     consent: {state: 'withheld'}, registration: {status: 'unregistered', lastError: null}, session: {bound: false}, account: null,
@@ -26,11 +25,12 @@ async function fixture(components, clipboard) {
     useEffect(run) { effects.push(run); },
   };
   const sandbox = {
-    exports: {}, require: name => { if (name === '../suite/install-command.js') return {SUITE_INSTALL_COMMAND}; assert.equal(name, 'react'); return React; }, URLSearchParams, navigator: {clipboard},
+    exports: {}, require: name => { assert.equal(name, 'react'); return React; }, URLSearchParams, navigator: {clipboard},
     document: {visibilityState: 'visible', addEventListener() {}, removeEventListener() {}, createElement: () => ({dataset: {}, remove() {}}), head: {append() {}}},
     window: {addEventListener() {}, removeEventListener() {}, setInterval: () => 1, clearInterval() {}, open() { assert.fail('suite hint must never open or run anything'); }},
     fetch: async (path, init) => {
       requests.push({path, method: init?.method ?? 'GET'});
+      if (path === '/api/hanamesh/core/suite-declaration') return Response.json({installCommand: release});
       if (path === '/api/hanamesh/core/state') return Response.json(state);
       if (path === '/api/hanamesh/core/points') return Response.json({status: 'unavailable', reason: 'CONSENT_WITHHELD', totalPoints: 0, pendingTotal: 0, hanas: [], prompt: {show: false, shownAt: null}});
       if (path === '/api/hanamesh/core/activity') return Response.json({status: 'unavailable', reason: 'CONSENT_WITHHELD', items: [], nextAfter: null, window: null});
@@ -54,11 +54,12 @@ test('missing required suite components have an exact manual repair command and 
   assert.match(text, /官方命令.*启用套件/);
   assert.match(text, /仅用于手动安装\/修复，不是兼容升级计划/);
   assert.doesNotMatch(text, /可分别安装|optional|品牌/);
-  assert.equal(textIn(elements(tree).find(e => e.type === 'code')), command);
+  assert.equal(elements(tree).find(e => e.type === 'code'), undefined);
   assert.deepEqual(copied, [], 'rendering never copies or executes the command');
   const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
   assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
   assert.deepEqual(copied, [command]);
+  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
   assert.match(textIn(f.render()), /已复制安装\/修复命令/);
   assert.ok(f.requests.every(r => r.method === 'GET'), 'hint and copy cannot mutate settings, health, or install plugins');
 });
@@ -69,10 +70,11 @@ test('repairing missing Usage preserves the approved AppHost 0.6.16 instead of r
   const tree = f.render();
   assert.match(textIn(tree), /套件不完整，缺 使用记录（Usage）/);
   assert.match(textIn(tree), /应用容器（App Host）：版本 0\.6\.16 · 已安装/);
-  assert.equal(textIn(elements(tree).find(e => e.type === 'code')), command);
+  assert.equal(elements(tree).find(e => e.type === 'code'), undefined);
   const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
   await copy.props.onClick();
   assert.deepEqual(copied, [command]);
+  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
   assert.ok(f.requests.every(r => r.method === 'GET'), 'repair remains manual and cannot install or mutate settings');
 });
 
@@ -91,6 +93,7 @@ test('disabled-only suite offers enable guidance without claiming a missing pack
   const text = textIn(f.render());
   assert.match(text, /已安装但未启用：使用记录（Usage）/);
   assert.doesNotMatch(text, /套件不完整，缺/);
+  await elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令')).props.onClick();
   assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
 });
 
@@ -116,6 +119,14 @@ test('clipboard denial or absence preserves the selectable command and offers ma
     const copy = elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
     assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
     assert.match(textIn(f.render()), /复制失败，请手动选择并复制上方命令/);
-    assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
+    await elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令')).props.onClick();
+  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
   }
+});
+
+test('unpublished bundle never exposes or copies an unversioned repair command', async () => {
+ const copied=[];const f=await fixture([component('usage','missing')],{writeText:async value=>copied.push(value)},null);
+ await elements(f.render()).find(e=>e.type==='button'&&e.children.includes('复制安装/修复命令')).props.onClick();
+ assert.equal(elements(f.render()).find(e=>e.type==='code'),undefined);assert.deepEqual(copied,[]);
+ assert.match(textIn(f.render()),/暂时无法读取总包的已发布版本/);
 });

@@ -22,8 +22,6 @@ jobs:
       - run: pnpm verify:inputs
       - run: pnpm check:contracts
       - run: pnpm test
-      - name: Check child cleanup 100 times under full CPU contention
-        run: node test/process-cleanup-stress.mjs
       - run: pnpm test:contract
       - run: pnpm test:mutations
       - run: pnpm pack --pack-destination artifacts

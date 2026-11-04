@@ -1,4 +1,4 @@
-import {SUITE_INSTALL_COMMAND} from './install-command.js';
+import {formatSuiteInstallCommand} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
 import type {ComponentObservation} from '../health/types.js';
@@ -88,6 +88,7 @@ export class SuiteDeclarationService {
       if (reason) {blocked.push({code: reason}); if (completeness === 'complete') completeness = reason === 'CORE_SUITE_PEER_UNKNOWN' ? 'unknown' : 'incomplete';}
     }
     let registry: string | null = null;
+    let installCommand: string | null = null;
     if (request === undefined) blocked.push({code: 'CORE_SUITE_SOURCE_MISSING'});
     else {
       try {
@@ -100,6 +101,11 @@ export class SuiteDeclarationService {
         for (const name of names) {
           const data = await this.options.registry.read(registry, name);
           if (data.registry !== registry || data.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
+          if (name === manifest.bundle.name && data.latestVersion) {
+            const latest = data.versions[data.latestVersion];
+            if (!latest || !this.validRecord(latest, name, data.latestVersion, manifest.bundle.repository)) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
+            installCommand = formatSuiteInstallCommand(latest.version);
+          }
           catalogs.set(name, data.versions); metadataDigests[`registry:${name}`] = digest(data.versions);
         }
         const versions = Object.keys(catalogs.get(manifest.bundle.name)!).filter(version => semver.valid(version) && bundleVersion && semver.gt(version, bundleVersion) && (!request.bundleVersion || version === request.bundleVersion)).sort(semver.rcompare);
@@ -133,7 +139,7 @@ export class SuiteDeclarationService {
       peerFacts['react'] = 'unknown';
       blocked.push({code: clientPeerFacts.contextId !== clientAtStart?.contextId ? 'CORE_SUITE_CLIENT_PEER_CHANGED' : clientPeerFacts.reason!});
     }
-    const facts = {schemaVersion: 1 as const, bundleVersion, installCommand: SUITE_INSTALL_COMMAND, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
+    const facts = {schemaVersion: 1 as const, bundleVersion, installCommand, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {

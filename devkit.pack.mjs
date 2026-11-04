@@ -14,9 +14,9 @@ export const packConfig = {
     assert.equal(read('lib/dsh.mjs').toString(), await readFile('src/dsh.mjs', 'utf8'));
     const packed = JSON.parse(read('package.json'));
     assert.equal(packed.version, source.version);
-    // R1-COMBO-02 was in the shipped client; validate the actual normal tgz as well as source-level UI tests.
-    const repairCommand = 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh';
-    assert.ok(read('lib/client.js').toString().includes(JSON.stringify(repairCommand)), 'PACKED_SUITE_REPAIR_COMMAND_MISMATCH');
+    // Packed UI obtains the provider-owned exact command; no static unversioned fallback.
+    assert.ok(read('lib/client.js').toString().includes('/api/hanamesh/core/suite-declaration'), 'PACKED_SUITE_REPAIR_ROUTE_MISSING');
+    assert.ok(!read('lib/client.js').toString().includes('add --save-exact @hanamesh/hanamesh'), 'PACKED_STATIC_SUITE_COMMAND');
     const patch = load(read(packed.dsh.bundle.patch.replace(/^\.\//, '')).toString());
     assert.equal(patch[0].insert.length, 1);
     assert.equal(patch[0].insert[0].id, 'hanamesh-core');

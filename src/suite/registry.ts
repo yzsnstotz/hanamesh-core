@@ -1,3 +1,4 @@
+import semver from 'semver';
 import {CoreError} from '../errors.js';
 import {CORE_DEFAULTS} from '../validation.js';
 import type {RegistryMetadata} from './types.js';
@@ -47,7 +48,10 @@ export class RegistryMetadataReader {
       const row = data as RegistryMetadata;
       if (row.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
       if (!row.versions || typeof row.versions !== 'object' || Array.isArray(row.versions)) throw new CoreError('CORE_SUITE_METADATA_INVALID', 502);
-      return {registry: base.href, name, versions: row.versions};
+      const tags = (data as {"dist-tags"?: {latest?: unknown}})['dist-tags'];
+      const latest = tags?.latest;
+      if (latest !== undefined && (typeof latest !== 'string' || semver.valid(latest) !== latest || row.versions[latest]?.name !== name || row.versions[latest]?.version !== latest)) throw new CoreError('CORE_SUITE_METADATA_INVALID', 502);
+      return {registry: base.href, name, versions: row.versions, ...(typeof latest === 'string' ? {latestVersion: latest} : {})};
     } catch (error) {
       if (error instanceof CoreError) throw error;
       throw new CoreError(abort.signal.aborted ? 'CORE_SUITE_METADATA_TIMEOUT' : 'CORE_SUITE_METADATA_UNAVAILABLE', 502);

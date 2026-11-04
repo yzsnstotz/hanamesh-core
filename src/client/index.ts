@@ -1,4 +1,3 @@
-import {SUITE_INSTALL_COMMAND} from '../suite/install-command.js';
 import {createElement, Fragment, useEffect, useRef, useState, version as reactVersion, type ReactNode} from 'react';
 import type {Modal as DSHModal, isBehindModal as DSHIsBehindModal} from '@deepseek-ai/dsh-client-ui-primitives';
 
@@ -345,6 +344,7 @@ function HanaMeshSection(): ReactNode {
   const [localUsage, setLocalUsage] = useState<LocalUsageSummary>({status: 'loading'});
   const [localUsageOpen, setLocalUsageOpen] = useState(false);
   const [suiteCopyStatus, setSuiteCopyStatus] = useState<string | null>(null);
+  const [suiteInstallCommand, setSuiteInstallCommand] = useState<string | null>(null);
   const localUsageEntry = useRef<HTMLButtonElement | null>(null);
   const localUsageRead = useRef(0);
   const consentWrite = useRef(false);
@@ -487,10 +487,14 @@ function HanaMeshSection(): ReactNode {
   const missingComponents = state.components.filter(row => row.status === 'missing');
   const inactiveComponents = state.components.filter(row => row.status === 'inactive');
   const copySuiteCommand = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(SUITE_INSTALL_COMMAND);
-      setSuiteCopyStatus('已复制安装/修复命令');
-    } catch { setSuiteCopyStatus('复制失败，请手动选择并复制上方命令。'); }
+    setSuiteInstallCommand(null);
+    let command: string | null;
+    try {command = (await jsonRequest<{installCommand: string | null}>('/api/hanamesh/core/suite-declaration')).installCommand;}
+    catch {setSuiteCopyStatus('暂时无法读取总包的已发布版本，请稍后重新读取。');return;}
+    if (!command) {setSuiteCopyStatus('暂时无法读取总包的已发布版本，请稍后重新读取。');return;}
+    setSuiteInstallCommand(command);
+    try {await navigator.clipboard.writeText(command);setSuiteCopyStatus('已复制安装/修复命令');}
+    catch {setSuiteCopyStatus('复制失败，请手动选择并复制上方命令。');}
   };
   return createElement('section', {className: 'hm-core-section', 'data-hanamesh-core': 'ready'},
     createElement('h2', null, 'HanaMesh'),
@@ -499,7 +503,7 @@ function HanaMeshSection(): ReactNode {
       missingComponents.length > 0 && createElement('p', {className: 'hm-core-error'}, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`),
       inactiveComponents.length > 0 && createElement('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`),
       createElement('p', {className: 'hm-core-muted'}, '下方官方命令仅适用于 macOS / Linux 终端；Windows 安全命令暂未提供。此命令仅用于手动安装/修复，不是兼容升级计划。请手动安装/修复并启用套件；此页面不会自动执行。'),
-      createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, SUITE_INSTALL_COMMAND),
+      suiteInstallCommand && createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, suiteInstallCommand),
       createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: copySuiteCommand}, '复制安装/修复命令'), suiteCopyStatus && createElement('span', {role: 'status'}, suiteCopyStatus))),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(SuiteSourceSettings,{'data-suite-source-section':true}),

@@ -64,3 +64,7 @@ try{
  const state=request({operation:'state'});assert.equal(state.result.agentProtocolVersion,2);assert.equal(state.result.consent.state,'withheld');assert.deepEqual(await readdir(agentHome),[]);
  assert.equal(request({operation:'consent',state:'granted'},1).error.code,'CORE_AGENT_WEB_CONSENT_REQUIRED');
 }finally{await rm(agentHome,{recursive:true,force:true});}
+
+const {formatSuiteInstallCommand} = await import('@hanamesh/core/suite');
+assert.equal(formatSuiteInstallCommand('2.4.6'), 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@2.4.6');
+for(const version of ['latest','^2.4.6','', 'v2.4.6']) assert.throws(()=>formatSuiteInstallCommand(version),error=>error.code==='CORE_SUITE_CANDIDATE_INVALID');
