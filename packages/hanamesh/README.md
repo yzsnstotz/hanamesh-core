@@ -12,4 +12,4 @@ bundle_version="$(npm view @hanamesh/hanamesh version --registry=https://registr
 
 生成器改编自 ai-workbench connect/packages/workbench/build.mjs（origin/main 472b5f3）。它读取三个精确 npm 归档，合并公开 patch 与 @deepseek-ai/* peer，拒绝重复 id、相对入口、非 insert 操作与 peer 冲突；release.json 记录来源 SHA256。构建失败不复用旧输出。根仓的 js-yaml 是构建依赖；发布包只含 patch、release.json、说明和许可证。
 
-审过、合入、打 tag 后，从标签使用 `node packages/hanamesh/build.mjs --version 0.1.2 --core 0.3.31 --usage 0.3.0-rc.15 --app-host 0.6.21 --output /absolute/new-directory` 生成正常归档。发布后立即使用总包精确版本进行原生安装验收。发布不得从未审的本地候选执行。
+审过、合入、打 tag 后，从标签使用 `node packages/hanamesh/build.mjs --version 0.1.3 --core 0.3.32 --usage 0.3.0-rc.15 --app-host 0.6.22 --output /absolute/new-directory` 生成正常归档。发布后立即使用总包精确版本进行原生安装验收。发布不得从未审的本地候选执行。
