@@ -71,7 +71,7 @@ export class SuiteDeclarationService {
           if (actual === 'unknown') return 'CORE_SUITE_PEER_UNKNOWN';
           if (actual === null && record.peerDependenciesMeta?.[name]?.optional === true) continue;
           if (actual === null) return 'CORE_SUITE_PEER_UNKNOWN';
-          if (!semver.satisfies(actual, range)) return 'CORE_SUITE_PEER_INCOMPATIBLE';
+          if (!semver.satisfies(actual, range, {includePrerelease: name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')})) return 'CORE_SUITE_PEER_INCOMPATIBLE';
         }
       }
       return null;

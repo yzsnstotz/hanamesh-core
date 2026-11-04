@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {SuiteDeclarationService} from '../lib/suite/service.js';
 import {loadCoreSchema, validateCoreValue} from '../lib/contract-suite.js';
 const registry='https://registry.invalid/';
@@ -71,4 +72,15 @@ test('candidate source remains checked when published latest is a different vali
  s.options.registry.read=async(...args)=>{const row=await read(...args);return {...row,...(row.name==='bundle'?{latestVersion:'1.0.0'}:{})}};
  const d=await s.read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.bundleVersion==='1.1.0'&&row.code==='CORE_SUITE_SOURCE_MISMATCH'));
  assert.equal(d.installCommand,'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@1.0.0');
+});
+
+test('DSH prerelease runtime remains complete without opting other peers into prereleases',async()=>{
+ const range=JSON.parse(readFileSync(new URL('../packages/hanamesh/package.json',import.meta.url),'utf8')).peerDependencies['@deepseek-ai/dsh-client-ui-primitives'];
+ const peers={'@deepseek-ai/dsh':range,'@deepseek-ai/dsh-client-ui-primitives':range};
+ const runtime='0.2.2-rc.1';
+ const declaration=await service({currentBundle:{...installedBundle,peerDependencies:peers},peerVersion:async()=>runtime}).read();
+ assert.equal(declaration.completeness,'complete','official DSH accepts this prerelease runtime');
+ assert.deepEqual(declaration.peerFacts,Object.fromEntries(Object.keys(peers).map(name=>[name,runtime])));
+ const other=await service({currentBundle:{...installedBundle,peerDependencies:{external:range}},peerVersion:async()=>runtime}).read();
+ assert.equal(other.completeness,'incomplete','other peer ranges keep standard SemVer prerelease behavior');
 });
