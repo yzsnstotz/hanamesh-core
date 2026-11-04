@@ -74,7 +74,7 @@ export async function apply(ctx, config) {
   }
   try {
     for (const path of Object.values(ROUTES)) {
-      const methods = path===ROUTES.suiteSource?/** @type {const} */(['GET','POST']):path === ROUTES.state || path === ROUTES.diagnostics || path === ROUTES.health || path === ROUTES.points || path === ROUTES.activity ? /** @type {const} */ (['GET']) : /** @type {const} */ (['POST']);
+      const methods = path===ROUTES.suiteSource?/** @type {const} */(['GET','POST']):path === ROUTES.suiteDeclaration || path === ROUTES.state || path === ROUTES.diagnostics || path === ROUTES.health || path === ROUTES.points || path === ROUTES.activity ? /** @type {const} */ (['GET']) : /** @type {const} */ (['POST']);
       disposers.push(ctx.connection.fetch.register({path, methods, requestBody: 'buffered', fetch: activation.fetch}));
     }
   const {defineDomain} = await import('@deepseek-ai/dsh-storage-domain');

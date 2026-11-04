@@ -67,7 +67,7 @@ interface SlotRegistry {
 interface ClientContext {slots: SlotRegistry; connection?: PeerConnection; effect(run: () => (() => void), label?: string): unknown}
 
 /** Current external React observation only. No storage, timers, retries or backend dependency inference. */
-export function startClientPeerLease(connection: PeerConnection | undefined, page: Pick<Window, 'addEventListener' | 'removeEventListener'>, doFetch: typeof fetch | undefined = globalThis.fetch): () => void {
+export function startClientPeerLease(connection: PeerConnection | undefined, page: Pick<Window, 'addEventListener' | 'removeEventListener'>, doFetch: typeof fetch | undefined = typeof fetch === 'function' ? fetch : undefined): () => void {
   const generation = connection?.generation;
   if (typeof generation?.getSnapshot !== 'function' || typeof generation.subscribe !== 'function' || typeof doFetch !== 'function') return () => {};
   const pageId = crypto.randomUUID();
