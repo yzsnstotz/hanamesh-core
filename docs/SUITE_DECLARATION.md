@@ -88,7 +88,7 @@ On ordinary activation Core registers its own routes before asynchronous storage
 
 ## Manual installation command
 
-`installCommand` is nullable. An explicit registry read uses the bundle's validated `dist-tags.latest` exact version to format `dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@<version>`. This is a manual repair command, independent of compatible upgrade selection. A no-request read stays offline and returns null; missing/unavailable published version never creates an unversioned fallback. The Core settings copy action GETs the authenticated local `/api/hanamesh/core/suite-declaration` route, which calls the same service with the fixed public npm registry. It returns the full SuiteDeclaration, does not install or mutate settings, and preserves existing route admission. Publication is followed immediately by exact-version native acceptance.
+`installCommand` is nullable. An explicit registry read validates the exact name/version from this Core release's `hanameshSuiteInstall` against the corresponding immutable package record and canonical repository, then forwards that same command. Registry mutable tags are neither parsed nor used. Missing/invalid Core release data or an unavailable exact package yields no repair command and a named blocked reason. Compatible upgrade selection remains independent. A no-request read stays offline and returns null. The Core settings copy action GETs the authenticated local `/api/hanamesh/core/suite-declaration` route, which calls the same service with the fixed public npm registry. It does not install or mutate settings. Publication is followed immediately by exact-version native acceptance.
 
 ### Host peer resolution
 

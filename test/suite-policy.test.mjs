@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {formatSuiteInstallCommand} from '../lib/suite/index.js';
 import {SuiteDeclarationService} from '../lib/suite/service.js';
 import {loadCoreSchema, validateCoreValue} from '../lib/contract-suite.js';
 const registry='https://registry.invalid/';
@@ -12,8 +13,8 @@ const bundle=(version,dependencies)=>({...record('bundle',version),dependencies}
 const installedBundle=bundle('1.0.0',{core:'1.0.0',usage:'1.0.0',apps:'1.0.0'});
 const catalog={bundle:{'1.0.0':installedBundle,'1.1.0':bundle('1.1.0',{core:'1.1.0',usage:'1.1.0',apps:'1.1.0'})},core:{'1.0.0':{...record('core','1.0.0'),hanameshSuite:manifest('1.0.0')},'1.1.0':{...record('core','1.1.0'),hanameshSuite:manifest('1.1.0')}},usage:{'1.0.0':record('usage','1.0.0'),'1.1.0':record('usage','1.1.0')},apps:{'1.0.0':record('apps','1.0.0'),'1.1.0':record('apps','1.1.0')}};
 const observed=name=>({kind:'present',phase:'active',version:'1.0.0',repository:repo(name),metadata:catalog[name]['1.0.0']});
-function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null}={}){
- return new SuiteDeclarationService({profile,core:catalog.core['1.0.0'],manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{},...(name==='bundle'?{...(data.bundle['1.1.0']?{latestVersion:'1.1.0'}:{})}:{})})}});
+function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null,repairRelease={name:'bundle',version:'1.0.0',command:formatSuiteInstallCommand('1.0.0')}}={}){
+ return new SuiteDeclarationService({profile,core:{...catalog.core['1.0.0'],...(repairRelease?{hanameshSuiteInstall:repairRelease}:{})},manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{},...(name==='bundle'?{...(data.bundle['1.1.0']?{latestVersion:'1.1.0'}:{})}:{})})}});
 }
 test('current facts require the installed bundle and all active physical members, without network',async()=>{
  const s=service();s.options.registry.read=()=>assert.fail('no source means no network');const d=await s.read();assert.equal(d.completeness,'complete');assert.equal(d.bundleVersion,'1.0.0');assert.deepEqual(d.upgrades,[]);assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.equal(d.installCommand,null);
@@ -57,21 +58,18 @@ test('malformed future manifests and engine declarations never produce ready bun
  for(const engines of [null,[],'node>=24',{node:24},{node:''},{node:'not-a-range'}]){const data=structuredClone(catalog);data.core['1.1.0'].engines=engines;assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
 });
 
-test('manual repair command reads the published bundle latest exact version, independently of installed or candidate versions',async()=>{
- const s=service();const read=s.options.registry.read;
- s.options.registry.read=async(...args)=>{const row=await read(...args);return {...row,...(row.name==='bundle'?{latestVersion:'1.0.0'}:{})}};
- assert.equal((await s.read({registry})).installCommand,'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@1.0.0');
- s.options.registry.read=async(...args)=>{const row=await read(...args);delete row.latestVersion;return row;};
- assert.equal((await s.read({registry})).installCommand,null);
+test('A2 repair uses the Core release pin even when registry tags and compatible candidates move',async()=>{
+ const s=service();
+ assert.equal((await s.read({registry})).installCommand,formatSuiteInstallCommand('1.0.0'));
+ for(const repairRelease of [null,{name:'foreign',version:'1.0.0',command:formatSuiteInstallCommand('1.0.0')},{name:'bundle',version:'^1.0.0',command:'unreviewed'},{name:'bundle',version:'1.0.0',command:'unreviewed'},{name:'bundle',version:'9.0.0',command:formatSuiteInstallCommand('9.0.0')}]){
+  const d=await service({repairRelease}).read({registry});assert.equal(d.installCommand,null,'missing or unavailable exact Core pin never uses a registry tag');
+ }
 });
 
-
-test('candidate source remains checked when published latest is a different valid bundle',async()=>{
+test('candidate source remains checked independently of the exact Core repair pin',async()=>{
  const data=structuredClone(catalog);data.bundle['1.1.0'].repository=repo('foreign');
- const s=service({data});const read=s.options.registry.read;
- s.options.registry.read=async(...args)=>{const row=await read(...args);return {...row,...(row.name==='bundle'?{latestVersion:'1.0.0'}:{})}};
- const d=await s.read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.bundleVersion==='1.1.0'&&row.code==='CORE_SUITE_SOURCE_MISMATCH'));
- assert.equal(d.installCommand,'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@1.0.0');
+ const d=await service({data}).read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.bundleVersion==='1.1.0'&&row.code==='CORE_SUITE_SOURCE_MISMATCH'));
+ assert.equal(d.installCommand,formatSuiteInstallCommand('1.0.0'));
 });
 
 test('DSH prerelease runtime remains complete without opting other peers into prereleases',async()=>{

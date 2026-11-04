@@ -107,10 +107,16 @@ export class SuiteDeclarationService {
         for (const name of names) {
           const data = await this.options.registry.read(registry, name);
           if (data.registry !== registry || data.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
-          if (name === manifest.bundle.name && data.latestVersion) {
-            const latest = data.versions[data.latestVersion];
-            if (!latest || !this.validRecord(latest, name, data.latestVersion, manifest.bundle.repository)) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
-            installCommand = formatSuiteInstallCommand(latest.version);
+          if (name === manifest.bundle.name) {
+            const release=core.hanameshSuiteInstall;
+            if (release && release.name===name && typeof release.version==='string' && semver.valid(release.version)===release.version && release.command===formatSuiteInstallCommand(release.version)) {
+              const pinned=data.versions[release.version];
+              if (pinned) {
+                if (!this.validRecord(pinned,name,release.version,manifest.bundle.repository)) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH',502);
+                installCommand=release.command;
+              }
+            }
+            if (!installCommand) blocked.push({code:'CORE_SUITE_CANDIDATE_UNAVAILABLE',moduleName:name});
           }
           catalogs.set(name, data.versions); metadataDigests[`registry:${name}`] = digest(data.versions);
         }

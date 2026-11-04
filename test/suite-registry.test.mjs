@@ -38,9 +38,9 @@ test('metadata timeout is named and does not become an empty upgrade list',async
 });
 
 
-test('registry latest tag must name an existing exact release of the same package',async t=>{
+test('A2 registry metadata ignores mutable tags and only supplies exact version records',async t=>{
  let latest='2.4.6';const versions={'2.4.6':{name:'@hanamesh/hanamesh',version:'2.4.6'}};
  const url=await server(t,(_req,res)=>res.end(JSON.stringify({name:'@hanamesh/hanamesh','dist-tags':{latest},versions})));
- const reader=new RegistryMetadataReader({localTestRegistries:[url]});assert.equal((await reader.read(url,'@hanamesh/hanamesh')).latestVersion,'2.4.6');
- for(const invalid of ['latest','^2.4.6','2.4.7']){latest=invalid;await assert.rejects(reader.read(url,'@hanamesh/hanamesh'),e=>e.code==='CORE_SUITE_METADATA_INVALID');}
+ const reader=new RegistryMetadataReader({localTestRegistries:[url]});
+ for(const tag of ['2.4.6','latest','^2.4.6','2.4.7']){latest=tag;const data=await reader.read(url,'@hanamesh/hanamesh');assert.deepEqual(Object.keys(data).sort(),['name','registry','versions']);assert.deepEqual(data.versions,versions);}
 });

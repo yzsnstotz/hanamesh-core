@@ -7,6 +7,7 @@ export interface SuiteManifest {
   readonly core: {readonly name: string; readonly version: string; readonly repository: string};
   readonly components: readonly {readonly id: string; readonly moduleName: string; readonly versionRange: string; readonly repository: string}[];
 }
+export interface SuiteInstallRelease {readonly name:string;readonly version:string;readonly command:string}
 export interface PackageMetadata {
   readonly name: string;
   readonly version: string;
@@ -17,12 +18,12 @@ export interface PackageMetadata {
   readonly peerDependenciesMeta?: Readonly<Record<string, {readonly optional?: boolean}>>;
   readonly dsh?: {readonly bundle?: {readonly patch?: string}};
   readonly hanameshSuite?: SuiteManifest;
+  readonly hanameshSuiteInstall?: SuiteInstallRelease;
 }
 export interface RegistryMetadata {
   readonly registry: string;
   readonly name: string;
   readonly versions: Readonly<Record<string, PackageMetadata>>;
-  readonly latestVersion?: string;
 }
 export interface SuiteDeclarationRequest {readonly registry: string; readonly bundleVersion?: string}
 export interface SuiteBlocked {readonly code: string; readonly bundleVersion?: string; readonly moduleName?: string}
