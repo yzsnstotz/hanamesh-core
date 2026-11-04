@@ -6,7 +6,7 @@ export async function generateSuiteManifest({verify = false} = {}) {
   const repository = value => value.replace(/^git\+/, '').replace(/\.git\/?$/, '').replace(/\/$/, '');
   assert.equal(profile.version, pkg.version);
   assert.equal(profile.components.length, 2);
-  const manifest = {schemaVersion: 1, id: profile.id, core: {name: pkg.name, version: pkg.version, repository: repository(pkg.repository.url)}, components: profile.components.map(({id, moduleName, versionRange, repository: source}) => {
+  const manifest = {schemaVersion: 1, id: profile.id, bundle: {name: '@hanamesh/hanamesh', repository: repository(pkg.repository.url)}, core: {name: pkg.name, version: pkg.version, repository: repository(pkg.repository.url)}, components: profile.components.map(({id, moduleName, versionRange, repository: source}) => {
     assert.equal(typeof source, 'string');
     return {id, moduleName, versionRange, repository: repository(source)};
   })};

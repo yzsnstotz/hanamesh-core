@@ -1,9 +1,13 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
+  "bundle": {
+    "name": "@hanamesh/hanamesh",
+    "repository": "https://github.com/yzsnstotz/hanamesh-core"
+  },
   "core": {
     "name": "@hanamesh/core",
-    "version": "0.3.29",
+    "version": "0.3.30",
     "repository": "https://github.com/yzsnstotz/hanamesh-core"
   },
   "components": [

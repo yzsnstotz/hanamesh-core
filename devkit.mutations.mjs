@@ -23,8 +23,8 @@ export const cases = [
  {id: 'consent-prompt-ignores-refusal', file: 'lib/controller.js', mutate: code => code.replace("this.#state.consent.changedAt === null && shownAt === null", "shownAt === null"), test: 'test/first-consent.test.mjs'},
  {id: 'consent-prompt-stamps-before-display', file: 'lib/client.js', mutate: code => code.replace("setView(next);", "setView(next); void jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'});"), test: 'test/first-consent-client.test.mjs'},
  {id:"suite-bundle-admission",file:"lib/suite/service.js",mutate:code=>code.replace("const bundle = tuple.map(bundleFailure).find(Boolean);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
- {id:"suite-same-core-upgrade",file:"lib/suite/service.js",mutate:code=>code.replace("const candidate = record.hanameshSuite;", "if (coreVersion === core.version) continue;\n                    const candidate = record.hanameshSuite;"),test:"test/suite-policy.test.mjs"},
- {id:"suite-source-binding",file:"lib/suite/service.js",mutate:code=>code.replace("if (!this.validRecord(record, core.name, coreVersion, manifest.core.repository))", "if (false)"),test:"test/suite-policy.test.mjs"},
+ {id:"suite-bundle-version-upgrade",file:"lib/suite/service.js",mutate:code=>code.replace("const reason = await compatible([bundle, ...tuple]);", "if (tuple.every((row, i) => row.version === installed[i].actualVersion)) continue;\n                const reason = await compatible([bundle, ...tuple]);"),test:"test/suite-policy.test.mjs"},
+ {id:"suite-source-binding",file:"lib/suite/service.js",mutate:code=>code.replace("if (!this.validRecord(bundle, manifest.bundle.name, version, manifest.bundle.repository))", "if (false)"),test:"test/suite-policy.test.mjs"},
     {
       id: 'domain-name', file: 'lib/dsh.mjs',
       mutate: code => code.replace("name: 'hanamesh_core'", "name: 'hanamesh-core'"),

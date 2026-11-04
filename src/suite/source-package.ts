@@ -81,7 +81,7 @@ async function archive(path: string, expected: string, options: SuitePackageSour
 export async function createSuitePackageSource(options: SuitePackageSourceOptions): Promise<SuitePackageSource> {
   if (!options || !Array.isArray(options.archives) || !Number.isInteger(options.port) || options.port < 0 || options.port > 65535 || ![options.maxArchiveBytes, options.maxExpandedBytes, options.maxEntries, options.maxManifestBytes, options.maxResponseBytes, options.timeoutMs].every(n => Number.isSafeInteger(n) && n > 0) || options.timeoutMs > 2_147_483_647) throw new CoreError('CORE_INPUT_INVALID', 400);
   const peerRegistry = registryUrl(options.peerRegistry);
-  const members = [SUITE_MANIFEST.core, ...SUITE_MANIFEST.components.map(row => ({name: row.moduleName, repository: row.repository}))];
+  const members = [SUITE_MANIFEST.bundle, SUITE_MANIFEST.core, ...SUITE_MANIFEST.components.map(row => ({name: row.moduleName, repository: row.repository}))];
   const records = new Map<string, Map<string, {bytes: Buffer; metadata: Record<string, unknown>; integrity: string}>>();
   for (const item of options.archives) {
     const value = await archive(item?.path, item?.integrity, options);

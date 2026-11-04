@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "sources": [
+    {
+      "name": "@hanamesh/core",
+      "version": "0.3.30",
+      "sha256": "e95080083d9b100514b35a1858a86f623aa3922a6906e0290d4201d2bfe50716"
+    },
+    {
+      "name": "@hanamesh/usage",
+      "version": "0.3.0-rc.15",
+      "sha256": "dfb9b5c32a58bc5c5e0ff010029abb679c620418ef6ac97a0f562c03a02240af"
+    },
+    {
+      "name": "@hanamesh/dsh-app-host",
+      "version": "0.6.20",
+      "sha256": "fec646af5b5ef676d9a9cc58405e8ba47d1deced2659634b05d37907d0aab20a"
+    }
+  ],
+  "entryIds": [
+    "hanamesh-core",
+    "hanamesh-usage",
+    "hanamesh-app-host"
+  ]
+}

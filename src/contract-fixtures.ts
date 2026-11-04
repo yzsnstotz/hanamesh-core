@@ -211,7 +211,7 @@ export function createCoreProviderFixture(options: CoreProviderFixtureOptions = 
     getServerOrigin: () => origin,
     getHealth: () => Object.freeze({revision: 0, mode: 'restricted' as const, components: Object.freeze([]), fault: 'CONTRACT_FIXTURE'}),
     getSuiteDeclaration: async () => {
-      const facts = {schemaVersion: 1 as const, installCommand: SUITE_INSTALL_COMMAND, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
+      const facts = {schemaVersion: 1 as const, bundleVersion: null, installCommand: SUITE_INSTALL_COMMAND, manifest: SUITE_MANIFEST, nodeVersion: process.versions.node, registry: null, completeness: 'unknown' as const, installed: [], upgrades: [], blocked: [{code: 'CORE_SUITE_FIXTURE'}, {code: 'CORE_SUITE_SOURCE_MISSING'}], peerFacts: {}, metadataDigests: {}};
       return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
     },
   });

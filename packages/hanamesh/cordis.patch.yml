@@ -1,0 +1,18 @@
+- insert:
+    - id: hanamesh-core
+      name: '@hanamesh/core'
+      config:
+        serverOrigin: https://api.hanamesh.com
+        websiteOrigin: https://market.hanamesh.com
+        allowSystemBrowser: true
+- insert:
+    - id: hanamesh-usage
+      name: '@hanamesh/usage'
+      config:
+        maxRecords: 5000
+        maxPending: 128
+        allowExport: false
+- insert:
+    - id: hanamesh-app-host
+      name: '@hanamesh/dsh-app-host'
+      config: {}

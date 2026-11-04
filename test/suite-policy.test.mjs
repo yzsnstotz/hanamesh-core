@@ -1,66 +1,57 @@
-import test from 'node:test';import assert from 'node:assert/strict';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {SuiteDeclarationService} from '../lib/suite/service.js';
 import {loadCoreSchema, validateCoreValue} from '../lib/contract-suite.js';
+const registry='https://registry.invalid/';
 const repo=name=>`https://github.com/fixture/${name}`;
-const profile={schemaVersion:1,id:'hanamesh-suite',version:'1.0.0',label:'fixture',runningTaskPolicy:'preserve-and-pause',components:[{id:'usage',moduleName:'usage',repository:repo('usage'),label:'usage',versionRange:'^1.0.0',onFailure:'notice',impact:''},{id:'app-host',moduleName:'apps',repository:repo('apps'),label:'apps',versionRange:'^1.0.0',onFailure:'notice',impact:''}]};
-const core={name:'core',version:'1.0.0',repository:repo('core'),engines:{node:'>=24 <25'},dsh:{bundle:{patch:'./profile/cordis.patch.yml'}}};
-const manifest=version=>({schemaVersion:1,id:profile.id,core:{name:'core',version,repository:repo('core')},components:profile.components.map(({id,moduleName,versionRange,repository})=>({id,moduleName,versionRange,repository}))});
-const record=(name,version,peers={})=>({name,version,repository:{url:'git+'+repo(name)+'.git'},engines:{node:'>=24 <25'},dsh:{bundle:{patch:'./profile/cordis.patch.yml'}},peerDependencies:peers});
-const catalog={core:{'1.0.0':{...core,hanameshSuite:manifest('1.0.0')},'1.1.0':{...record('core','1.1.0'),hanameshSuite:manifest('1.1.0')}},usage:{'1.0.0':record('usage','1.0.0'), '1.1.0':record('usage','1.1.0',{apps:'1.0.0'})},apps:{'1.0.0':record('apps','1.0.0'), '1.2.0':record('apps','1.2.0',{usage:'9.0.0'})}};
-function service({data=catalog,observations, nodeVersion='24.13.1',peerVersion=async()=>null,coreObservation}={}){return new SuiteDeclarationService({profile,core,manifest:manifest('1.0.0'),coreInventory:async()=>coreObservation??({kind:'present',phase:'active',version:core.version,repository:core.repository,metadata:core}),inventory:{observe:async()=>observations??profile.components.map((_,i)=>({kind:'present',version:'1.0.0',phase:'active',repository:repo(profile.components[i].moduleName),metadata:record(profile.components[i].moduleName,'1.0.0')}))},nodeVersion,peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{}})}});}
-test('no source reports current requirements and completeness without treating normal health as complete',async()=>{
- let d=await service().read();assert.equal(d.completeness,'complete');assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.deepEqual(d.upgrades,[]);
- d=await service({observations:[{kind:'missing'},{kind:'present',version:'1.0.0',phase:'active'}]}).read({registry:'https://registry.invalid/'});assert.equal(d.completeness,'incomplete');assert.deepEqual(d.upgrades,[]);
+const record=(name,version,peers={})=>({name,version,repository:repo(name),engines:{node:'>=24 <25'},dsh:{bundle:{patch:'./profile/cordis.patch.yml'}},peerDependencies:peers});
+const profile={schemaVersion:1,id:'hanamesh-suite',version:'1.0.0',label:'fixture',runningTaskPolicy:'preserve-and-pause',components:['usage','apps'].map((moduleName,i)=>({id:['usage','app-host'][i],moduleName,repository:repo(moduleName),label:moduleName,versionRange:'^1.0.0',onFailure:'notice',impact:''}))};
+const manifest=version=>({schemaVersion:1,id:profile.id,bundle:{name:'bundle',repository:repo('bundle')},core:{name:'core',version,repository:repo('core')},components:profile.components.map(({id,moduleName,versionRange,repository})=>({id,moduleName,versionRange,repository}))});
+const bundle=(version,dependencies)=>({...record('bundle',version),dependencies});
+const installedBundle=bundle('1.0.0',{core:'1.0.0',usage:'1.0.0',apps:'1.0.0'});
+const catalog={bundle:{'1.0.0':installedBundle,'1.1.0':bundle('1.1.0',{core:'1.1.0',usage:'1.1.0',apps:'1.1.0'})},core:{'1.0.0':{...record('core','1.0.0'),hanameshSuite:manifest('1.0.0')},'1.1.0':{...record('core','1.1.0'),hanameshSuite:manifest('1.1.0')}},usage:{'1.0.0':record('usage','1.0.0'),'1.1.0':record('usage','1.1.0')},apps:{'1.0.0':record('apps','1.0.0'),'1.1.0':record('apps','1.1.0')}};
+const observed=name=>({kind:'present',phase:'active',version:'1.0.0',repository:repo(name),metadata:catalog[name]['1.0.0']});
+function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null}={}){
+ return new SuiteDeclarationService({profile,core:catalog.core['1.0.0'],manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{}})}});
+}
+test('current facts require the installed bundle and all active physical members, without network',async()=>{
+ const s=service();s.options.registry.read=()=>assert.fail('no source means no network');const d=await s.read();assert.equal(d.completeness,'complete');assert.equal(d.bundleVersion,'1.0.0');assert.deepEqual(d.upgrades,[]);assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.match(d.installCommand,/@hanamesh\/hanamesh/);
+ for(const currentBundle of [null,{...installedBundle,dependencies:{...installedBundle.dependencies,usage:'1.1.0'}}])assert.notEqual((await service({currentBundle}).read()).completeness,'complete');
+ for(const phase of ['disabled','failed','pending'])assert.equal((await service({observations:[{...observed('usage'),phase},observed('apps')]}).read()).completeness,'incomplete');
 });
-test('whole tuple search avoids individually highest incompatible versions and forbids downgrade/no-op',async()=>{
- const d=await service().read({registry:'https://registry.invalid/'});const target=d.upgrades.find(x=>x.coreVersion==='1.1.0');assert.ok(target);assert.deepEqual(target.targets.map(x=>x.version),['1.1.0','1.0.0','1.0.0']);assert.ok(d.upgrades.every(x=>x.targets.some((t,i)=>t.version!=='1.0.0')));assert.ok(Object.isFrozen(d));
+test('upgrade selects one bundle version and its exact three locked versions',async()=>{
+ const d=await service().read({registry});assert.equal(d.upgrades.length,1);assert.equal(d.upgrades[0].bundle.version,'1.1.0');assert.deepEqual(d.upgrades[0].targets.map(r=>r.version),['1.1.0','1.1.0','1.1.0']);assert.ok(Object.isFrozen(d));
+ const data=structuredClone(catalog);data.usage['1.9.0']=record('usage','1.9.0');assert.deepEqual((await service({data}).read({registry})).upgrades[0].targets.map(r=>r.version),['1.1.0','1.1.0','1.1.0']);
+ assert.deepEqual((await service().read({registry,bundleVersion:'9.0.0'})).upgrades,[]);
 });
-test('future Core without own manifest, wrong version, source mismatch, Node and required peers cannot upgrade',async()=>{
- for(const mutation of [d=>delete d.core['1.1.0'].hanameshSuite,d=>d.core['1.1.0'].hanameshSuite.core.version='9.0.0',d=>d.core['1.1.0'].repository=repo('other'),d=>d.core['1.1.0'].engines.node='>=25',d=>d.core['1.1.0'].peerDependencies={unknown:'^1.0.0'}]){
-  const data=structuredClone(catalog);mutation(data);const d=await service({data}).read({registry:'https://registry.invalid/'});assert.ok(!d.upgrades.some(x=>x.coreVersion==='1.1.0'));assert.ok(d.blocked.some(x=>x.coreVersion==='1.1.0'));
+test('bundle dependencies reject ranges, foreign members, missing metadata and downgrades',async()=>{
+ for(const mutate of [d=>d.bundle['1.1.0'].dependencies.usage='^1.0.0',d=>delete d.bundle['1.1.0'].dependencies.apps,d=>d.bundle['1.1.0'].dependencies.foreign='1.0.0',d=>delete d.usage['1.1.0'],d=>{d.usage['0.9.0']=record('usage','0.9.0');d.bundle['1.1.0'].dependencies.usage='0.9.0';}]){
+  const data=structuredClone(catalog);mutate(data);const d=await service({data}).read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(r=>r.bundleVersion==='1.1.0'));
  }
 });
-test('stable declaration digest binds source/current versions/target facts and missing inventory fails closed',async()=>{
- const a=await service().read({registry:'https://registry.invalid/'}),b=await service().read({registry:'https://registry.invalid/'});assert.equal(a.declarationId,b.declarationId);
- assert.notEqual(a.declarationId,(await service().read({registry:'https://different.invalid/'})).declarationId);
- assert.equal((await service({observations:[]}).read({registry:'https://registry.invalid/'})).completeness,'unknown');
+test('unpublished child releases never become an independently chosen tuple',async()=>{
+ const data=structuredClone(catalog);delete data.bundle['1.1.0'];assert.deepEqual((await service({data}).read({registry})).upgrades,[]);
+ data.bundle['1.0.0+repack']=bundle('1.0.0+repack',{core:'1.1.0',usage:'1.1.0',apps:'1.1.0'});assert.deepEqual((await service({data}).read({registry})).upgrades,[]);
+ data.bundle['1.1.0']=bundle('1.1.0',installedBundle.dependencies);const promoted=await service({data}).read({registry});assert.equal(promoted.upgrades.length,1,'a new bundle remains upgradeable with retained child versions');assert.equal(promoted.upgrades[0].bundle.version,'1.1.0');
 });
-
-test("same Core version must search past the unchanged tuple for a compatible dependency upgrade",async()=>{const d=await service().read({registry:"https://registry.invalid/",coreVersion:"1.0.0"});assert.ok(d.upgrades.some(x=>x.coreVersion==="1.0.0"&&x.targets.some(t=>t.version==="1.1.0")),"SAME_CORE_DEPENDENCY_UPGRADE_MISSING");});
-
-test("running/physical Core mismatch and ambiguous inventory cannot be complete",async()=>{for(const physical of [{kind:"present",phase:"active",version:"1.1.0",repository:repo("core"),metadata:record("core","1.1.0")},{kind:"ambiguous"},{kind:"unreadable"}]){const d=await service({coreObservation:physical}).read({registry:"https://registry.invalid/"});assert.notEqual(d.completeness,"complete");assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(x=>x.code==="CORE_SUITE_RUNNING_PHYSICAL_MISMATCH"));}});
-test("optional peers distinguish absent from installed incompatible and unknown; invalid peer paths never reach local inspection",async()=>{const data=structuredClone(catalog);data.core["1.1.0"].peerDependencies={external:"^2.0.0"};data.core["1.1.0"].peerDependenciesMeta={external:{optional:true}};for(const [actual,allowed]of [[null,true],["1.0.0",false],[{status:"unknown"},false],["2.0.0",true]]){const d=await service({data,peerVersion:async()=>actual}).read({registry:"https://registry.invalid/"});assert.equal(d.upgrades.some(x=>x.coreVersion==="1.1.0"),allowed);}for(const name of ["../private","/tmp/private","file:secret","@scope/name/private"]){data.core["1.1.0"].peerDependencies={[name]:"*"};let calls=0;const d=await service({data,peerVersion:async()=>{calls++;return"1.0.0";}}).read({registry:"https://registry.invalid/"});assert.equal(calls,0);assert.ok(!d.upgrades.some(x=>x.coreVersion==="1.1.0"));}});
-
-test("notice health does not make missing, inactive, failed or ambiguous components complete",async()=>{for(const observation of [{kind:"missing"},{kind:"present",version:"1.0.0",phase:"disabled",repository:repo("usage"),metadata:record("usage","1.0.0")},{kind:"present",version:"1.0.0",phase:"failed",repository:repo("usage"),metadata:record("usage","1.0.0")},{kind:"ambiguous"}]){const d=await service({observations:[observation,{kind:"present",version:"1.0.0",phase:"active",repository:repo("apps"),metadata:record("apps","1.0.0")}]}).read({registry:"https://registry.invalid/"});assert.notEqual(d.completeness,"complete");assert.deepEqual(d.upgrades,[]);}});
-test('unsupported registry inputs never echo userinfo, query or fragments into public declarations',async()=>{
- for(const registry of ['https://fixture-user:fixture-pass@registry.invalid/','https://registry.invalid/?fixture-token=hidden','https://registry.invalid/#private','file:///tmp/private/']) {
-  const declaration=await service().read({registry});assert.equal(declaration.registry,null);assert.ok(declaration.blocked.some(row=>row.code==='CORE_SUITE_SOURCE_UNSUPPORTED'));assert.doesNotMatch(JSON.stringify(declaration),/fixture-pass|fixture-token|#private|file:\/\/\/tmp/);
+test('every locked record and the bundle must satisfy source, manifest, Node and peers',async()=>{
+ for(const mutate of [d=>delete d.core['1.1.0'].hanameshSuite,d=>d.core['1.1.0'].hanameshSuite.core.version='9.0.0',d=>d.bundle['1.1.0'].repository=repo('foreign'),d=>d.core['1.1.0'].engines={node:'>=25'},d=>d.apps['1.1.0'].peerDependencies={usage:'9.0.0'},d=>d.bundle['1.1.0'].peerDependencies={external:'^1.0.0'},d=>d.usage['1.1.0'].dsh=undefined]){
+  const data=structuredClone(catalog);mutate(data);assert.deepEqual((await service({data}).read({registry})).upgrades,[]);
  }
+ const data=structuredClone(catalog);data.bundle['1.1.0'].peerDependencies={external:'^2.0.0'};data.bundle['1.1.0'].peerDependenciesMeta={external:{optional:true}};
+ for(const [actual,allowed] of [[null,true],['1.0.0',false],[{status:'unknown'},false],['2.0.0',true]])assert.equal((await service({data,peerVersion:async()=>actual}).read({registry})).upgrades.length>0,allowed);
+});
+test('physical mismatch, unknown metadata and live renderer changes revoke upgrades',async()=>{
+ for(const physical of [{kind:'ambiguous'},{kind:'unreadable'},{...observed('core'),version:'1.1.0'}]){const d=await service({physical}).read({registry});assert.notEqual(d.completeness,'complete');assert.deepEqual(d.upgrades,[]);}
+ const s=service();let context='a'.repeat(64);s.options.clientPeerFacts=()=>({source:'core-client-lease',status:'known',reason:null,reactVersion:'18.3.1',contextId:context});const read=s.options.registry.read;s.options.registry.read=async(...args)=>{context='b'.repeat(64);return read(...args)};const d=await s.read({registry});assert.equal(d.completeness,'unknown');assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(r=>r.code==='CORE_SUITE_CLIENT_PEER_CHANGED'));
+});
+test('declaration schema and digest bind bundle version and metadata without leaking unsafe registries',async()=>{
+ await loadCoreSchema();const a=await service().read({registry}),b=await service().read({registry});assert.equal(a.declarationId,b.declarationId);assert.deepEqual(validateCoreValue('SuiteDeclaration',a),[]);
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies.usage='1.0.0';assert.notEqual((await service({data}).read({registry})).declarationId,a.declarationId);
+ for(const registry of ['https://fixture:password@registry.invalid/','https://registry.invalid/?token=hidden','file:///private/']){const d=await service().read({registry});assert.equal(d.registry,null);assert.doesNotMatch(JSON.stringify(d),/password|token=hidden|file:\/\/\/private/);}
 });
 
-test("build metadata changes alone are not a semantic version upgrade",async()=>{const data=structuredClone(catalog);data.core={"1.0.0+repack":{...record("core","1.0.0+repack"),hanameshSuite:manifest("1.0.0+repack")}};data.usage={"1.0.0":record("usage","1.0.0")};data.apps={"1.0.0":record("apps","1.0.0")};assert.deepEqual((await service({data}).read({registry:"https://registry.invalid/"})).upgrades,[]);});
-test('future manifests with object repositories, empty ranges or unknown required roles never produce ready tuples',async()=>{
- await loadCoreSchema();
- for(const mutate of [m=>m.core.repository={url:repo('core')},m=>m.components[0].repository={url:repo('usage')},m=>m.components[0].versionRange='',m=>m.components.push({...m.components[0],id:'unknown',moduleName:'unknown'}),m=>m.components[0]=null]){
-  const data=structuredClone(catalog);mutate(data.core['1.1.0'].hanameshSuite);const declaration=await service({data}).read({registry:'https://registry.invalid/'});assert.ok(!declaration.upgrades.some(row=>row.coreVersion==='1.1.0'));assert.ok(declaration.blocked.some(row=>row.coreVersion==='1.1.0'&&row.code==='CORE_SUITE_MANIFEST_MISMATCH'));assert.deepEqual(validateCoreValue('SuiteDeclaration',declaration),[]);
- }
- assert.deepEqual(validateCoreValue('SuiteDeclaration',await service().read({registry:'https://registry.invalid/'})),[]);
-});
-
-test("explicit malformed engines metadata is unknown rather than unconstrained",async()=>{for(const engines of [null,[],"node>=24",{node:24},{node:""},{node:"not-a-range"}]){const data=structuredClone(catalog);data.core["1.1.0"].engines=engines;const declaration=await service({data}).read({registry:"https://registry.invalid/"});assert.ok(!declaration.upgrades.some(row=>row.coreVersion==="1.1.0"));assert.ok(declaration.blocked.some(row=>row.coreVersion==="1.1.0"&&row.code==="CORE_SUITE_METADATA_INVALID"));}});
-
-test("all current and candidate tuple members require a supported public DSH bundle declaration",async()=>{for(const name of ["core","usage","apps"]){for(const dsh of [undefined,null,[],{},{bundle:null},{bundle:"unknown"},{bundle:{patch:"../private.yml"}},{bundle:{patch:"https://other.invalid/bundle.yml"}},{bundle:{patch:24}}]){const data=structuredClone(catalog);for(const record of Object.values(data[name]))record.dsh=dsh;const declaration=await service({data}).read({registry:"https://registry.invalid/"});assert.deepEqual(declaration.upgrades,[],name);assert.ok(declaration.blocked.some(row=>/^CORE_SUITE_BUNDLE_(MISSING|INVALID)$/.test(row.code)),JSON.stringify(declaration.blocked));}}const observations=profile.components.map(row=>({kind:"present",phase:"active",version:"1.0.0",repository:repo(row.moduleName),metadata:{...record(row.moduleName,"1.0.0"),dsh:undefined}}));const current=await service({observations}).read();assert.equal(current.completeness,"incomplete");assert.ok(current.blocked.some(row=>row.code==="CORE_SUITE_BUNDLE_MISSING"));});
-
-test('client lease changes during inventory or metadata reads revoke stale completeness and tuple',async()=>{
- for(const phase of ['inventory','registry']){
-  const s=service();let context='a'.repeat(64);
-  s.options.clientPeerFacts=()=>({source:'core-client-lease',status:'known',reason:null,reactVersion:'18.3.1',contextId:context});
-  if(phase==='inventory'){const observe=s.options.inventory.observe;s.options.inventory.observe=async(...args)=>{context='b'.repeat(64);return observe(...args);};}
-  else{const read=s.options.registry.read;s.options.registry.read=async(...args)=>{context='b'.repeat(64);return read(...args);};}
-  const d=await s.read({registry:'https://registry.invalid/'});assert.equal(d.completeness,'unknown','a declaration cannot outlive its renderer observation');assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.code==='CORE_SUITE_CLIENT_PEER_CHANGED'));assert.equal(d.clientPeerFacts.contextId,'b'.repeat(64));
- }
-});
-
-test('withdrawn or replaced renderer lease never leaves an obsolete known React value in the final DTO',async()=>{
- for(const status of ['known','unknown']){const s=service();s.options.core.peerDependencies={react:'^18.3.1'};let changed=false;s.options.clientPeerFacts=()=>({source:'core-client-lease',status:changed?status:'known',reason:changed&&status==='unknown'?'CORE_SUITE_CLIENT_PEER_NOT_CONNECTED':null,reactVersion:changed&&status==='unknown'?null:'18.3.1',contextId:(changed?'b':'a').repeat(64)});const read=s.options.registry.read;s.options.registry.read=async(...args)=>{changed=true;return read(...args);};const d=await s.read({registry:'https://registry.invalid/'});assert.equal(d.peerFacts.react,'unknown');assert.equal(d.completeness,'unknown');assert.deepEqual(d.upgrades,[]);delete s.options.core.peerDependencies;}
+test('malformed future manifests and engine declarations never produce ready bundle upgrades',async()=>{
+ for(const mutate of [m=>m.core.repository={url:repo('core')},m=>m.components[0].repository={url:repo('usage')},m=>m.components[0].versionRange='',m=>m.components.push({...m.components[0],id:'foreign',moduleName:'foreign'}),m=>m.components[0]=null,m=>m.bundle.name='foreign']){const data=structuredClone(catalog);mutate(data.core['1.1.0'].hanameshSuite);assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
+ for(const engines of [null,[],'node>=24',{node:24},{node:''},{node:'not-a-range'}]){const data=structuredClone(catalog);data.core['1.1.0'].engines=engines;assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
 });

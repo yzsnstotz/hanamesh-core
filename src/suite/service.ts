@@ -39,6 +39,14 @@ export class SuiteDeclarationService {
       blocked.push({code: row.actualRepository ? 'CORE_SUITE_SOURCE_MISMATCH' : 'CORE_SUITE_INSTALLED_SOURCE_UNKNOWN', moduleName: row.moduleName});
       if (completeness === 'complete') completeness = 'unknown';
     }
+    let physicalBundle: PackageMetadata | null = null;
+    try {physicalBundle = await this.options.bundleInventory();} catch { /* unreadable package metadata is reported below */ }
+    const bundleVersion = physicalBundle && semver.valid(physicalBundle.version) ? physicalBundle.version : null;
+    if (!physicalBundle || !bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || Object.keys(physicalBundle.dependencies ?? {}).length !== installed.length || installed.some(row => physicalBundle.dependencies?.[row.moduleName] !== row.actualVersion)) {
+      if (completeness === 'complete') completeness = 'unknown';
+      blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH', moduleName: manifest.bundle.name});
+    }
+    if (physicalBundle) metadataDigests[`installed:${physicalBundle.name}`] = digest(physicalBundle);
     // External peer facts are read from the current Core/Loader resolution context once per declaration.
     const peer = async (name: string): Promise<string | null> => {
       if (!Object.hasOwn(peerFacts, name)) {
@@ -76,49 +84,46 @@ export class SuiteDeclarationService {
     } else if (currentRecords.some((row, i) => !this.validRecord(row!, installed[i]!.moduleName, installed[i]!.actualVersion ?? '', installed[i]!.repository))) {
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH'}); if (completeness === 'complete') completeness = 'unknown';
     } else {
-      const reason = await compatible(currentRecords as PackageMetadata[]);
+      const reason = await compatible([...(physicalBundle ? [physicalBundle] : []), ...currentRecords as PackageMetadata[]]);
       if (reason) {blocked.push({code: reason}); if (completeness === 'complete') completeness = reason === 'CORE_SUITE_PEER_UNKNOWN' ? 'unknown' : 'incomplete';}
     }
     let registry: string | null = null;
     if (request === undefined) blocked.push({code: 'CORE_SUITE_SOURCE_MISSING'});
     else {
       try {
-        if (!request || typeof request !== 'object' || Array.isArray(request) || Object.keys(request).some(key => !['registry', 'coreVersion'].includes(key))) throw new CoreError('CORE_SUITE_REQUEST_INVALID', 400);
+        if (!request || typeof request !== 'object' || Array.isArray(request) || Object.keys(request).some(key => !['registry', 'bundleVersion'].includes(key))) throw new CoreError('CORE_SUITE_REQUEST_INVALID', 400);
         if (typeof request.registry !== 'string') throw new CoreError('CORE_SUITE_SOURCE_UNSUPPORTED', 400);
         registry = this.options.registry.normalize ? this.options.registry.normalize(request.registry) : registryUrl(request.registry);
-        if (request.coreVersion !== undefined && !semver.valid(request.coreVersion)) throw new CoreError('CORE_SUITE_CANDIDATE_INVALID', 400);
-        const names = [core.name, ...manifest.components.map(row => row.moduleName)];
+        if (request.bundleVersion !== undefined && !semver.valid(request.bundleVersion)) throw new CoreError('CORE_SUITE_CANDIDATE_INVALID', 400);
+        const names = [manifest.bundle.name, core.name, ...manifest.components.map(row => row.moduleName)];
         const catalogs = new Map<string, Readonly<Record<string, PackageMetadata>>>();
         for (const name of names) {
           const data = await this.options.registry.read(registry, name);
           if (data.registry !== registry || data.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
           catalogs.set(name, data.versions); metadataDigests[`registry:${name}`] = digest(data.versions);
         }
-        const coreVersions = Object.keys(catalogs.get(core.name)!).filter(version => semver.valid(version) && semver.gte(version, core.version) && (!request.coreVersion || version === request.coreVersion)).sort(semver.rcompare);
-        if (!coreVersions.length) blocked.push({code: 'CORE_SUITE_CANDIDATE_UNAVAILABLE', ...(request.coreVersion ? {coreVersion: request.coreVersion} : {})});
-        for (const coreVersion of coreVersions) {
-          const record = catalogs.get(core.name)![coreVersion]!;
-          const candidate = record.hanameshSuite;
-          const reject = (code: string): void => {blocked.push({code, coreVersion});};
+        const versions = Object.keys(catalogs.get(manifest.bundle.name)!).filter(version => semver.valid(version) && bundleVersion && semver.gt(version, bundleVersion) && (!request.bundleVersion || version === request.bundleVersion)).sort(semver.rcompare);
+        if (!versions.length) blocked.push({code: 'CORE_SUITE_CANDIDATE_UNAVAILABLE', ...(request.bundleVersion ? {bundleVersion: request.bundleVersion} : {})});
+        for (const version of versions) {
+          const bundle = catalogs.get(manifest.bundle.name)![version]!;
+          const reject = (code: string): void => {blocked.push({code, bundleVersion: version});};
+          if (!this.validRecord(bundle, manifest.bundle.name, version, manifest.bundle.repository)) {reject('CORE_SUITE_SOURCE_MISMATCH'); continue;}
+          const bundleReason = bundleFailure(bundle);
+          if (bundleReason) {reject(bundleReason); continue;}
+          const dependencies = bundle.dependencies;
+          const memberNames = names.slice(1);
+          if (!dependencies || Object.keys(dependencies).length !== memberNames.length || memberNames.some(name => typeof dependencies[name] !== 'string' || semver.valid(dependencies[name]) !== dependencies[name])) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
+          const chosen = memberNames.map(name => catalogs.get(name)![dependencies[name]!]);
+          const record = chosen[0], candidate = record?.hanameshSuite;
           if (!candidate) {reject('CORE_SUITE_MANIFEST_MISSING'); continue;}
-          if (!this.validManifest(candidate, record, coreVersion)) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
-          if (!this.validRecord(record, core.name, coreVersion, manifest.core.repository)) {reject('CORE_SUITE_SOURCE_MISMATCH'); continue;}
-          const lists = candidate.components.map((requirement, i) => Object.entries(catalogs.get(requirement.moduleName)!).filter(([version, item]) => semver.valid(version) && installed[i + 1]?.actualVersion && semver.gte(version, installed[i + 1]!.actualVersion!) && semver.satisfies(version, requirement.versionRange) && this.validRecord(item, requirement.moduleName, version, requirement.repository)).map(([, item]) => item).sort((a, b) => a.version === installed[i + 1]?.actualVersion ? -1 : b.version === installed[i + 1]?.actualVersion ? 1 : semver.rcompare(a.version, b.version)));
-          let chosen: readonly PackageMetadata[] | null = null, reason = 'CORE_SUITE_NO_COMPATIBLE_TUPLE';
-          // Three members only. Exhaust the finite metadata set; no hidden truncation or search budget.
-          for (const first of lists[0] ?? []) {
-            for (const second of lists[1] ?? []) {
-              const tuple = [record, first, second];
-              if (!tuple.some((item, i) => semver.gt(item.version, installed[i]!.actualVersion!))) continue;
-              const failure = await compatible(tuple);
-              if (failure) {reason = failure; continue;}
-              chosen = tuple; break;
-            }
-            if (chosen) break;
-          }
-          if (!chosen) {reject(reason); continue;}
+          if (!record || !this.validManifest(candidate, record, record.version)) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
+          if (chosen.some((row, i) => !row || !this.validRecord(row, installed[i]!.moduleName, dependencies[installed[i]!.moduleName]!, installed[i]!.repository))) {reject('CORE_SUITE_SOURCE_MISMATCH'); continue;}
+          const tuple = chosen as PackageMetadata[];
+          if (tuple.some((row, i) => !installed[i]!.actualVersion || semver.lt(row.version, installed[i]!.actualVersion!) || i > 0 && !semver.satisfies(row.version, candidate.components[i - 1]!.versionRange))) {reject('CORE_SUITE_NO_COMPATIBLE_TUPLE'); continue;}
+          const reason = await compatible([bundle, ...tuple]);
+          if (reason) {reject(reason); continue;}
           if (completeness !== 'complete') {reject('CORE_SUITE_CURRENT_INCOMPLETE'); continue;}
-          upgrades.push({coreVersion, registry, manifestDigest: digest(candidate), targets: chosen.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: i === 0 ? candidate.core.repository : candidate.components[i - 1]!.repository, metadataDigest: digest(row)}))});
+          upgrades.push({coreVersion: record.version, registry, manifestDigest: digest(bundle), bundle: {id: 'bundle', moduleName: bundle.name, version, repository: manifest.bundle.repository, metadataDigest: digest(bundle)}, targets: tuple.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: installed[i]!.repository, metadataDigest: digest(row)}))});
         }
       } catch (error) {blocked.push({code: error instanceof CoreError ? error.code : 'CORE_SUITE_METADATA_INVALID'});}
     }
@@ -128,7 +133,7 @@ export class SuiteDeclarationService {
       peerFacts['react'] = 'unknown';
       blocked.push({code: clientPeerFacts.contextId !== clientAtStart?.contextId ? 'CORE_SUITE_CLIENT_PEER_CHANGED' : clientPeerFacts.reason!});
     }
-    const facts = {schemaVersion: 1 as const, installCommand: SUITE_INSTALL_COMMAND, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
+    const facts = {schemaVersion: 1 as const, bundleVersion, installCommand: SUITE_INSTALL_COMMAND, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {
@@ -136,6 +141,6 @@ export class SuiteDeclarationService {
   }
   private validManifest(value: SuiteManifest, record: PackageMetadata, version: string): boolean {
     const expected = this.options.manifest;
-    return value.schemaVersion === 1 && value.id === expected.id && value.core?.name === expected.core.name && value.core.version === version && record.version === version && typeof value.core.repository === 'string' && repositoryIdentity(value.core.repository) === repositoryIdentity(expected.core.repository) && Array.isArray(value.components) && value.components.length === 2 && value.components.every((row, i) => !!row && typeof row === 'object' && row.id === expected.components[i]!.id && isPackageName(row.moduleName) && row.moduleName === expected.components[i]!.moduleName && typeof row.versionRange === 'string' && !!row.versionRange.trim() && !!semver.validRange(row.versionRange) && typeof row.repository === 'string' && repositoryIdentity(row.repository) === repositoryIdentity(expected.components[i]!.repository));
+    return value.schemaVersion === 1 && value.id === expected.id && value.bundle?.name === expected.bundle.name && typeof value.bundle.repository === 'string' && repositoryIdentity(value.bundle.repository) === repositoryIdentity(expected.bundle.repository) && value.core?.name === expected.core.name && value.core.version === version && record.version === version && typeof value.core.repository === 'string' && repositoryIdentity(value.core.repository) === repositoryIdentity(expected.core.repository) && Array.isArray(value.components) && value.components.length === 2 && value.components.every((row, i) => !!row && typeof row === 'object' && row.id === expected.components[i]!.id && isPackageName(row.moduleName) && row.moduleName === expected.components[i]!.moduleName && typeof row.versionRange === 'string' && !!row.versionRange.trim() && !!semver.validRange(row.versionRange) && typeof row.repository === 'string' && repositoryIdentity(row.repository) === repositoryIdentity(expected.components[i]!.repository));
   }
 }

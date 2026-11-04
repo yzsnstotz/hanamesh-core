@@ -1,6 +1,6 @@
-# hanamesh-core · 0.3.10
+# hanamesh-core · 0.3.30
 
-Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；Usage/AppHost独立安装，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
+Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；DSH 通过 `@hanamesh/hanamesh` 总包一次安装 Core/Usage/AppHost，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
 
 组件启动失败时，健康行显示白名单错误码、已识别的数据域、原因与处理建议；读取失败原因最多等待250ms，未知错误安全降级。不保存或展示原始错误、路径、堆栈或记录内容。数据格式不兼容时先备份并安装支持该格式的组件版本，保留原数据后重新检查；Core不迁移其他组件的数据。修复前仍保持repair并拒绝新的受保护操作，重新检查确认组件健康后恢复normal。
 
@@ -49,3 +49,5 @@ Agent capability2 (0.3.25) prepares fixed website onboarding without granting up
 Binding links carry the original Identity expiry and clock domain as unsigned display metadata; they never change server expiry or authorize confirmation. See docs/API.md and docs/SECURITY.md.
 
 `lib/` and `.build/` are generated locally and excluded from Git. `npm pack` runs the strict build through `prepack`; normal archives retain their public generated files.
+
+总包位于 [packages/hanamesh](packages/hanamesh/README.md)，精确锁三个子包并合并公开 patch。套件版本为总包版本；兼容判断见 [SUITE_DECLARATION](docs/SUITE_DECLARATION.md)，AppHost 只安装声明选中的总包。

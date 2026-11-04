@@ -113,6 +113,10 @@ export async function apply(ctx, config) {
       inventory: suiteInventory, nodeVersion: process.versions.node,
       clientPeerFacts: () => clientPeers.snapshot(),
       registry:{normalize:value=>registryReader().normalize(value),read:(registry,name)=>registryReader().read(registry,name)},
+      bundleInventory: async () => {
+        const entry = [.../** @type {any} */ (ctx).loader.entries()].find(entry => entry.options.name === SUITE_MANIFEST.core.name);
+        return packageMetadata(SUITE_MANIFEST.bundle.name, entry?.parent?.tree?.ctx?.baseUrl ?? import.meta.url, SUITE_MANIFEST.bundle.name, config.maxResponseBytes);
+      },
       coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
       peerVersion: async name => {
         if (name === 'react') return clientPeers.snapshot().reactVersion ?? {status: 'unknown'};

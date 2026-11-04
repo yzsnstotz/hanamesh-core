@@ -3,6 +3,7 @@ import type {ObservationSource, SuiteProfile} from '../health/types.js';
 export interface SuiteManifest {
   readonly schemaVersion: 1;
   readonly id: string;
+  readonly bundle: {readonly name: string; readonly repository: string};
   readonly core: {readonly name: string; readonly version: string; readonly repository: string};
   readonly components: readonly {readonly id: string; readonly moduleName: string; readonly versionRange: string; readonly repository: string}[];
 }
@@ -10,6 +11,7 @@ export interface PackageMetadata {
   readonly name: string;
   readonly version: string;
   readonly repository?: string | {readonly url?: string};
+  readonly dependencies?: Readonly<Record<string, string>>;
   readonly engines?: {readonly node?: string};
   readonly peerDependencies?: Readonly<Record<string, string>>;
   readonly peerDependenciesMeta?: Readonly<Record<string, {readonly optional?: boolean}>>;
@@ -21,10 +23,11 @@ export interface RegistryMetadata {
   readonly name: string;
   readonly versions: Readonly<Record<string, PackageMetadata>>;
 }
-export interface SuiteDeclarationRequest {readonly registry: string; readonly coreVersion?: string}
-export interface SuiteBlocked {readonly code: string; readonly coreVersion?: string; readonly moduleName?: string}
+export interface SuiteDeclarationRequest {readonly registry: string; readonly bundleVersion?: string}
+export interface SuiteBlocked {readonly code: string; readonly coreVersion?: string; readonly bundleVersion?: string; readonly moduleName?: string}
 export interface SuiteTarget {readonly id: string; readonly moduleName: string; readonly version: string; readonly repository: string; readonly metadataDigest: string}
 export interface SuiteUpgrade {
+  readonly bundle: SuiteTarget;
   readonly coreVersion: string;
   readonly registry: string;
   readonly manifestDigest: string;
@@ -41,6 +44,7 @@ export interface SuiteInstalled {
   readonly runningVersion?: string;
 }
 export interface SuiteDeclaration {
+  readonly bundleVersion: string | null;
   readonly installCommand: string;
   readonly schemaVersion: 1;
   readonly checkedAt: string;
@@ -63,6 +67,7 @@ export interface SuiteServiceOptions {
   readonly core: PackageMetadata;
   readonly manifest: SuiteManifest;
   readonly inventory: ObservationSource;
+  readonly bundleInventory: () => Promise<PackageMetadata | null>;
   readonly coreInventory: () => Promise<import('../health/types.js').ComponentObservation>;
   readonly registry: {normalize?(registry: string): string; read(registry: string, name: string): Promise<RegistryMetadata>};
   readonly nodeVersion: string;

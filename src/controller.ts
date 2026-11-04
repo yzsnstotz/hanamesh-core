@@ -134,7 +134,7 @@ export class SessionController {
     this.#identity = this.#identityOf(shared ? 'failed' : 'local-only', null, null);
     const unobservedSuite = new SuiteDeclarationService({manifest: SUITE_MANIFEST,
       profile: OWN_PROFILE, core: OWN_PACKAGE, nodeVersion: process.versions.node,
-      inventory: {observe: async () => []}, coreInventory: async () => ({kind: 'unreadable'}), peerVersion: async () => null,
+      inventory: {observe: async () => []}, bundleInventory: async () => null, coreInventory: async () => ({kind: 'unreadable'}), peerVersion: async () => null,
       registry: new RegistryMetadataReader({timeoutMs: this.#config.timeoutMs, maxResponseBytes: this.#config.maxResponseBytes, localTestRegistries: this.#config.suiteLocalTestRegistries})});
     this.service = Object.freeze({
       protocolVersion: '1' as const,

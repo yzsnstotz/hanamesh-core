@@ -43,7 +43,7 @@ test('physical Core and external peer facts come from public installed metadata 
   observed = (await source.observe([requirement]))[0];
   assert.equal(observed.version, '1.1.0', 'physical metadata is reread, not require-cached');
   const profile = {schemaVersion: 1, id: 'fixture', version: '1.0.0', label: 'fixture', runningTaskPolicy: 'preserve-and-pause', components: []};
-  const service = new SuiteDeclarationService({core, profile, manifest: {schemaVersion: 1, id: 'fixture', core, components: []}, inventory: {observe: async () => []}, coreInventory: async () => (await source.observe([requirement]))[0], nodeVersion: process.versions.node, peerVersion: async () => null, registry: {read: async () => {throw Error('NO_NETWORK');}}});
+  const service = new SuiteDeclarationService({bundleInventory:async()=>null,core, profile, manifest: {schemaVersion: 1, id: 'fixture', bundle:{name:'@hanamesh/hanamesh',repository:'https://github.com/yzsnstotz/hanamesh-core'}, core, components: []}, inventory: {observe: async () => []}, coreInventory: async () => (await source.observe([requirement]))[0], nodeVersion: process.versions.node, peerVersion: async () => null, registry: {read: async () => {throw Error('NO_NETWORK');}}});
   const declaration = await service.read();
   assert.equal(declaration.installed[0].runningVersion, '1.0.0');
   assert.equal(declaration.installed[0].actualVersion, '1.1.0');
