@@ -65,13 +65,19 @@ export class SuiteDeclarationService {
         if (record.peerDependencies !== undefined && (!record.peerDependencies || typeof record.peerDependencies !== 'object' || Array.isArray(record.peerDependencies))) return 'CORE_SUITE_METADATA_INVALID';
         for (const [name, range] of Object.entries(record.peerDependencies ?? {})) {
           if (!isPackageName(name)) return 'CORE_SUITE_METADATA_INVALID';
-          if (typeof range !== 'string' || !range.trim() || !semver.validRange(range)) return 'CORE_SUITE_METADATA_INVALID';
+          const dshPeer = name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-');
+          if (typeof range !== 'string' || !dshPeer && (!range.trim() || !semver.validRange(range))) return 'CORE_SUITE_METADATA_INVALID';
           const member = tuple.find(row => row.name === name);
           const actual = member?.version ?? await peer(name);
           if (actual === 'unknown') return 'CORE_SUITE_PEER_UNKNOWN';
           if (actual === null && record.peerDependenciesMeta?.[name]?.optional === true) continue;
           if (actual === null) return 'CORE_SUITE_PEER_UNKNOWN';
-          if (!semver.satisfies(actual, range, {includePrerelease: name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')})) return 'CORE_SUITE_PEER_INCOMPATIBLE';
+          if (dshPeer) {
+            const {evaluatePluginCompatibility} = await import('@deepseek-ai/dsh-app-boot');
+            try {
+              if (evaluatePluginCompatibility(record, {}, actual)) return 'CORE_SUITE_PEER_INCOMPATIBLE';
+            } catch {return 'CORE_SUITE_METADATA_INVALID';}
+          } else if (!semver.satisfies(actual, range)) return 'CORE_SUITE_PEER_INCOMPATIBLE';
         }
       }
       return null;

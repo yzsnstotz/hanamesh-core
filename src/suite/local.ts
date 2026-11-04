@@ -1,7 +1,6 @@
 import {createRequire} from 'node:module';
 import {readFile, stat} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {inspectPackage} from '../health/loader.js';
 import {CORE_DEFAULTS} from '../validation.js';
 import type {ComponentObservation} from '../health/types.js';
@@ -9,13 +8,13 @@ import type {PackageMetadata} from './types.js';
 import {isPackageName} from './facts.js';
 
 /** Reads public package metadata only; resolving an entry never executes its module. */
-export async function packageMetadata(name: string, baseUrl: string, entry = name, maxResponseBytes = CORE_DEFAULTS.maxResponseBytes, resolveUrl?: (specifier: string, parentURL: string) => string): Promise<PackageMetadata | null> {
+export async function packageMetadata(name: string, baseUrl: string, entry = name, maxResponseBytes = CORE_DEFAULTS.maxResponseBytes): Promise<PackageMetadata | null> {
   try {
     if (!isPackageName(name) || (entry !== name && entry !== `${name}/dsh`)) return null;
-    const resolve = resolveUrl ? (specifier: string): string => fileURLToPath(resolveUrl(specifier, baseUrl)) : createRequire(baseUrl).resolve;
+    const require = createRequire(baseUrl);
     let path: string | undefined;
-    try {path = resolve(`${name}/package.json`);} catch {
-      let cursor = dirname(resolve(entry));
+    try {path = require.resolve(`${name}/package.json`);} catch {
+      let cursor = dirname(require.resolve(entry));
       for (;;) {
         const candidate = join(cursor, 'package.json');
         try {if ((await stat(candidate)).size <= maxResponseBytes && JSON.parse(await readFile(candidate, 'utf8')).name === name) {path = candidate; break;}} catch { /* a parent may contain the package's public metadata */ }

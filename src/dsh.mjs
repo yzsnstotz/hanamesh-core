@@ -16,7 +16,7 @@ import {INITIAL_CORE_SNAPSHOT, snapshotOf, configOf} from './validation.js';
 import {fileSharedDeviceStore, sharedIdentityRoot} from './shared-device.js';
 
 export const name = 'hanamesh-core';
-export const inject = ['connection', 'storageDomain', 'loader'];
+export const inject = ['connection', 'storageDomain', 'loader', 'pluginPackages'];
 
 /** Duck-typed optional seam: do not add a hard inject edge to the usage plugin.
  * @param {import('@deepseek-ai/cordis').Context} ctx
@@ -108,6 +108,7 @@ export async function apply(ctx, config) {
     const ownedHealth = healthService;
     controller.attachHealth(ownedHealth);
     const suiteInventory = new LoaderObservationSource(/** @type {any} */ (ctx).loader, import.meta.url, suiteInspector(config.maxResponseBytes));
+    const {getDshRuntimeVersion} = await import('@deepseek-ai/dsh-app-boot');
     controller.attachSuite(new SuiteDeclarationService({
       profile: suiteProfile, core: OWN_PACKAGE, manifest: SUITE_MANIFEST,
       inventory: suiteInventory, nodeVersion: process.versions.node,
@@ -120,19 +121,9 @@ export async function apply(ctx, config) {
       coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
       peerVersion: async name => {
         if (name === 'react') return clientPeers.snapshot().reactVersion ?? {status: 'unknown'};
-        // Match DSH app-boot's resource reader: host peers may be import-only or
-        // supplied by the active profile resolver, outside this package's CJS tree.
-        const internal = /** @type {any} */ (ctx).loader.internal;
-        if (!internal) return {status: 'unknown'};
-        // DSH's evaluatePluginCompatibility checks dsh-* peer APIs against the
-        // running app-boot version. Client-only packages need no backend files.
-        const identity = name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-') ? '@deepseek-ai/dsh-app-boot' : name;
-        const metadata = await packageMetadata(identity, import.meta.url, identity, config.maxResponseBytes, (specifier, parentURL) => (
-          internal.version === 'v2'
-            ? internal.resolveSync(parentURL, {specifier, attributes: {}})
-            : internal.resolveSync(specifier, parentURL, {})
-        ).url);
-        return metadata?.version ?? {status: 'unknown'};
+        if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) return getDshRuntimeVersion();
+        const metadata = ctx.pluginPackages.packageOf(name, import.meta.url);
+        return metadata?.name === name ? metadata.version ?? {status: 'unknown'} : {status: 'unknown'};
       },
     }));
     controller.attachUsageProbe(() => usageServiceReady(/** @type {any} */ (ctx)));
