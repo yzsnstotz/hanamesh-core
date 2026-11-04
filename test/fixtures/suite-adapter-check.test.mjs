@@ -4,7 +4,7 @@ import {createServer} from 'node:http';
 import {readFile, mkdtemp, mkdir, writeFile, rm, symlink} from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join,dirname} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import {apply} from '../../lib/dsh.mjs';
@@ -40,7 +40,7 @@ test('actual apply consumes public DSH metadata and compatibility without privat
  await writeFile(join(hostPeerDir,'package.json'),JSON.stringify({name:'@deepseek-ai/cordis',version:'4.0.5-alpha.2'}));
  const bootDir=join(root,'host-app-boot');await mkdir(bootDir);await writeFile(join(bootDir,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh-app-boot',version:'0.2.1-rc.3'}));
  process.env.HM_TEST_DSH_BOOT_METADATA=join(bootDir,'package.json');process.env.HM_TEST_DSH_CORDIS_METADATA=join(hostPeerDir,'package.json');
- const ctx={loader:{entries:()=>entries},pluginPackages:{packageOf(name,parentURL){const path=name==='@deepseek-ai/cordis'?process.env.HM_TEST_DSH_CORDIS_METADATA:createRequire(parentURL).resolve(name+'/package.json');const manifest=JSON.parse(readFileSync(path,'utf8'));return {name:manifest.name,version:manifest.version,manifest,manifestPath:path};}},storageDomain:{open:async spec=>{let value=structuredClone(spec.global.initial);return {global:{get:()=>value,set:async next=>{value=next;writes++;}},close:async()=>{}};}},connection:{rpc:{intercept:()=>{throw Error('GATEWAY_ALREADY_OWNS_INTERCEPTOR');}},fetch:{register:route=>{if(route.path==='/api/hanamesh/core/client-peer-lease')leaseHandler=route.fetch;return async()=>{if(throwOnDispose)throw Error('FIXTURE_UNREGISTER_FAILED');};}},requestRejection:()=>undefined},provide:(name,value)=>{if(name==='hanameshCore')service=value;return()=>{};},on:()=>()=>{},effect:fn=>{dispose=fn();}};
+ const ctx={loader:{entries:()=>entries},pluginPackages:{packageOf(name,parentURL){const path=name==='@deepseek-ai/cordis'?process.env.HM_TEST_DSH_CORDIS_METADATA:createRequire(parentURL).resolve(name+'/package.json');const manifest=JSON.parse(readFileSync(path,'utf8'));return {name:manifest.name,version:manifest.version,manifest,manifestPath:path,dir:dirname(path)};}},storageDomain:{open:async spec=>{let value=structuredClone(spec.global.initial);return {global:{get:()=>value,set:async next=>{value=next;writes++;}},close:async()=>{}};}},connection:{rpc:{intercept:()=>{throw Error('GATEWAY_ALREADY_OWNS_INTERCEPTOR');}},fetch:{register:route=>{if(route.path==='/api/hanamesh/core/client-peer-lease')leaseHandler=route.fetch;return async()=>{if(throwOnDispose)throw Error('FIXTURE_UNREGISTER_FAILED');};}},requestRejection:()=>undefined},provide:(name,value)=>{if(name==='hanameshCore')service=value;return()=>{};},on:()=>()=>{},effect:fn=>{dispose=fn();}};
  await apply(ctx,{serverOrigin:null,websiteOrigin:null,sharedIdentityDir:join(root,'identity-root'),suiteLocalTestRegistries:[registry]});
  t.after(()=>disposed?undefined:dispose());
  const absent=await service.getSuiteDeclaration();assert.equal(absent.completeness,'unknown');assert.equal(absent.peerFacts.react,'unknown');assert.equal(absent.clientPeerFacts.reason,'CORE_SUITE_CLIENT_PEER_NOT_CONNECTED');assert.equal(service.getConsent(),'withheld');

@@ -211,3 +211,5 @@ Portable Agent process capability2 (Core0.3.25): state declares agentProtocolVer
 
 
 手动补齐：`SuiteDeclaration.installCommand: string | null` 从公开总包发布元数据的精确版本生成，读取失败或无发布版本时为空，禁止无版本命令。设置页点击复制时读取已鉴权的只读 `GET /api/hanamesh/core/suite-declaration`（固定公开 npm，返回完整声明）；升级仍执行声明中所选兼容总包的精确版本。
+
+DSH peer observations use the public `pluginPackages.packageOf` service and the public `@deepseek-ai/dsh-app-boot` runtime/compatibility exports. `pluginPackages` is a required host injection. Core does not inspect private Loader internals or reproduce DSH peer compatibility rules.
