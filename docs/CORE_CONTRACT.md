@@ -12,7 +12,7 @@
 | `getSession()` | `() => SessionSnapshot` | 设备注册观察；可能陈旧，不是授权证明 | 是（只读展示） |
 | `getServerOrigin()` | `() => string \| null` | 生效的 Server origin（0.3.4：设置页地址 ?? 配置）；null = 离线 | 是 |
 | `getHealth()` | `() => HealthSnapshot` | 组件健康快照 | 否 |
-| `getSuiteDeclaration?(request?)` | `({registry, coreVersion?}?) => Promise<SuiteDeclaration>` | Core 唯一只读套件声明与兼容三包组合；协议1可选扩展，见 [公开说明](SUITE_DECLARATION.md) | 否 |
+| `getSuiteDeclaration?(request?)` | `({registry, bundleVersion?}?) => Promise<SuiteDeclaration>` | Core 唯一只读套件声明与总包锁定的成员组合；协议1可选扩展，见 [公开说明](SUITE_DECLARATION.md) | 否 |
 
 契约明确不暴露私钥、PKCS8、token、cookie、nonce、传输实例或 storage-domain 写接口。
 

@@ -566,24 +566,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "coreVersion",
         "registry",
-        "manifestDigest",
         "targets",
         "bundle"
       ],
       "properties": {
-        "coreVersion": {
-          "type": "string",
-          "minLength": 1
-        },
         "registry": {
           "type": "string",
           "minLength": 1
-        },
-        "manifestDigest": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
         },
         "targets": {
           "type": "array",
@@ -611,10 +601,6 @@
             "CORE_SUITE_BUNDLE_MISSING",
             "CORE_SUITE_BUNDLE_INVALID"
           ]
-        },
-        "coreVersion": {
-          "type": "string",
-          "minLength": 1
         },
         "moduleName": {
           "type": "string",

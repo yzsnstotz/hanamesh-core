@@ -123,7 +123,7 @@ export class SuiteDeclarationService {
           const reason = await compatible([bundle, ...tuple]);
           if (reason) {reject(reason); continue;}
           if (completeness !== 'complete') {reject('CORE_SUITE_CURRENT_INCOMPLETE'); continue;}
-          upgrades.push({coreVersion: record.version, registry, manifestDigest: digest(bundle), bundle: {id: 'bundle', moduleName: bundle.name, version, repository: manifest.bundle.repository, metadataDigest: digest(bundle)}, targets: tuple.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: installed[i]!.repository, metadataDigest: digest(row)}))});
+          upgrades.push({registry, bundle: {id: 'bundle', moduleName: bundle.name, version, repository: manifest.bundle.repository, metadataDigest: digest(bundle)}, targets: tuple.map((row, i) => ({id: installed[i]!.id, moduleName: row.name, version: row.version, repository: installed[i]!.repository, metadataDigest: digest(row)}))});
         }
       } catch (error) {blocked.push({code: error instanceof CoreError ? error.code : 'CORE_SUITE_METADATA_INVALID'});}
     }

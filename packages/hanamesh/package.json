@@ -8,9 +8,6 @@
     "url": "https://github.com/yzsnstotz/hanamesh-core.git",
     "directory": "packages/hanamesh"
   },
-  "exports": {
-    "./package.json": "./package.json"
-  },
   "files": [
     "cordis.patch.yml",
     "release.json",
@@ -38,9 +35,7 @@
     "@deepseek-ai/dsh-storage": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "@deepseek-ai/dsh-storage-domain": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
     "@deepseek-ai/dsh-typert-protocol": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0",
-    "@deepseek-ai/schemastery": ">=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0",
-    "react": "^18.3.1",
-    "zod": "^4.5.4"
+    "@deepseek-ai/schemastery": ">=3.18.4 <3.19.0-0 || >=3.18.5-alpha.1 <3.19.0-0"
   },
   "dsh": {
     "bundle": {

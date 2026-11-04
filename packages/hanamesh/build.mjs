@@ -40,6 +40,7 @@ export function mergeBundles(version,sources){
   dependencies[pkg.name]=pkg.version;
   if(!record(pkg.peerDependencies))throw Error(`SOURCE_PEERS_MISSING: ${pkg.name}`);
   for(const [name,range] of Object.entries(pkg.peerDependencies)){
+   if(!name.startsWith('@deepseek-ai/'))continue;
    if(typeof range!=='string'||!range.trim())throw Error(`SOURCE_PEER_INVALID: ${name}`);
    // Preserve the providers' shared declaration. Differing declarations need review, never a guessed range.
    if(peerDependencies[name]!==undefined&&peerDependencies[name]!==range)throw Error(`PEER_DECLARATIONS_DIFFER: ${name}: ${peerDependencies[name]} / ${range}`);
@@ -57,7 +58,7 @@ export function mergeBundles(version,sources){
  }
  const peers=Object.fromEntries(Object.entries(peerDependencies).sort(([a],[b])=>a.localeCompare(b))),peerDependenciesMeta=Object.fromEntries([...optional].filter(([,value])=>value).map(([name])=>[name,{optional:true}]));
  if(!Object.keys(peers).length)throw Error('SOURCE_PEERS_MISSING');
- return {manifest:{name:'@hanamesh/hanamesh',version,description:'HanaMesh Core, Usage and AppHost for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},exports:{'./package.json':'./package.json'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
+ return {manifest:{name:'@hanamesh/hanamesh',version,description:'HanaMesh Core, Usage and AppHost for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
 }
 export async function buildHanaMesh(input,fetchPackage){
  if(!record(input)||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');

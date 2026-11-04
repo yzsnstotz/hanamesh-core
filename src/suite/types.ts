@@ -24,13 +24,11 @@ export interface RegistryMetadata {
   readonly versions: Readonly<Record<string, PackageMetadata>>;
 }
 export interface SuiteDeclarationRequest {readonly registry: string; readonly bundleVersion?: string}
-export interface SuiteBlocked {readonly code: string; readonly coreVersion?: string; readonly bundleVersion?: string; readonly moduleName?: string}
+export interface SuiteBlocked {readonly code: string; readonly bundleVersion?: string; readonly moduleName?: string}
 export interface SuiteTarget {readonly id: string; readonly moduleName: string; readonly version: string; readonly repository: string; readonly metadataDigest: string}
 export interface SuiteUpgrade {
   readonly bundle: SuiteTarget;
-  readonly coreVersion: string;
   readonly registry: string;
-  readonly manifestDigest: string;
   readonly targets: readonly SuiteTarget[];
 }
 export interface SuiteInstalled {

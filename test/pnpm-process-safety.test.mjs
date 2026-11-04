@@ -1,6 +1,16 @@
 import test from 'node:test';import assert from 'node:assert/strict';import{mkdtemp,mkdir,writeFile,readFile,rm}from'node:fs/promises';import{join,dirname}from'node:path';import{fileURLToPath}from'node:url';import{tmpdir}from'node:os';
 import{resolvePinnedPnpm,runProcessGroup}from'./support/pnpm-process.mjs';
+import {setImmediate as yieldTurn} from 'node:timers/promises';
 async function isolated(t,{cleanup=true}={}){const root=await mkdtemp(join(tmpdir(),'hm-core-process-safe-'));if(cleanup)t.after(()=>rm(root,{recursive:true,force:true}));await mkdir(join(root,'home'));return root;}
+async function waitForReapedGroup(pid,deadline){
+ // The driver's exit is not the orphan's exit/reap event. Observe both exact OS identities;
+ // never resend a signal, retry an assertion, or replace disappearance with a fixed delay.
+ const exists=target=>{try{process.kill(target,0);return true;}catch(error){if(error.code==='ESRCH')return false;throw error;}};
+ while(exists(pid)||exists(-pid)){
+  assert.ok(performance.now()<deadline,'owned child and group must be reaped within the existing operation deadline');
+  await yieldTurn();
+ }
+}
 test('a lower version pnpm on PATH fails before executing it or invoking any install',async t=>{
  const root=await isolated(t),bin=join(root,'bin');await mkdir(bin);const marker=join(root,'unexpected-execution');
  await writeFile(join(bin,'pnpm'),'#!/bin/sh\necho invoked >> "'+marker+'"\necho 10.23.0\n',{mode:0o700});
@@ -24,11 +34,14 @@ for(const outcome of['timeout','parent-exit'])test('whole child process group is
 
 for(const outcome of ['exit','interrupt'])test('outer runner '+outcome+' also reaps its detached owned children',{skip:process.platform==='win32'},async t=>{
  const root=await isolated(t),pidfile=join(root,'owned.pid'),helper=new URL('./support/pnpm-process.mjs',import.meta.url).href;
- const child="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000)";
- const driver="import{runProcessGroup}from "+JSON.stringify(helper)+";void runProcessGroup(process.execPath,['-e',"+JSON.stringify(child)+",process.argv[1]],{cwd:process.cwd(),env:{},timeoutMs:10000,graceMs:100});"+(outcome==='exit'?"setTimeout(()=>process.exit(0),300);":"");
+ const child="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000);"+(outcome==='exit'?"require('node:net').createConnection({host:'127.0.0.1',port:Number(process.argv[2])},function(){this.end('ready')});":"");
+ const start="void runProcessGroup(process.execPath,['-e',"+JSON.stringify(child)+",process.argv[1],String(server.address().port)],{cwd:process.cwd(),env:{},timeoutMs:10000,graceMs:100});";
+ const driver="import{runProcessGroup}from "+JSON.stringify(helper)+";"+(outcome==='exit'?"import{createServer}from'node:net';const server=createServer(socket=>socket.once('data',data=>{if(data.toString()!=='ready')throw Error('CHILD_NOT_READY');process.exit(0)}));server.listen(0,'127.0.0.1',()=>{"+start+"});":"void runProcessGroup(process.execPath,['-e',"+JSON.stringify(child)+",process.argv[1]],{cwd:process.cwd(),env:{},timeoutMs:10000,graceMs:100});");
+ const deadline=performance.now()+5000;
  const result=await runProcessGroup(process.execPath,['--input-type=module','-e',driver,pidfile],{cwd:root,env:{PATH:dirname(process.execPath)+':/usr/bin:/bin'},timeoutMs:outcome==='interrupt'?500:5000,graceMs:1000});
  assert.equal(result.timedOut,outcome==='interrupt');assert.equal(result.groupCleaned,true);
- const pid=Number(await readFile(pidfile,'utf8'));assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});
+ if(outcome==='exit')assert.equal(result.status,0,result.stderr);
+ const pid=Number(await readFile(pidfile,'utf8'));await waitForReapedGroup(pid,deadline);assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});assert.throws(()=>process.kill(-pid,0),{code:'ESRCH'});
 });
 
 test('repeated termination waits for every concurrently owned group',{skip:process.platform==='win32'},async t=>{
