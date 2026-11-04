@@ -124,7 +124,10 @@ export async function apply(ctx, config) {
         // supplied by the active profile resolver, outside this package's CJS tree.
         const internal = /** @type {any} */ (ctx).loader.internal;
         if (!internal) return {status: 'unknown'};
-        const metadata = await packageMetadata(name, import.meta.url, name, config.maxResponseBytes, (specifier, parentURL) => (
+        // DSH's evaluatePluginCompatibility checks dsh-* peer APIs against the
+        // running app-boot version. Client-only packages need no backend files.
+        const identity = name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-') ? '@deepseek-ai/dsh-app-boot' : name;
+        const metadata = await packageMetadata(identity, import.meta.url, identity, config.maxResponseBytes, (specifier, parentURL) => (
           internal.version === 'v2'
             ? internal.resolveSync(parentURL, {specifier, attributes: {}})
             : internal.resolveSync(specifier, parentURL, {})
