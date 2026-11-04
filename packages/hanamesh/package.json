@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/hanamesh",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "HanaMesh Core, Usage and AppHost for DSH in one installation.",
   "license": "MIT",
   "repository": {
@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@hanamesh/core": "0.3.30",
+    "@hanamesh/core": "0.3.31",
     "@hanamesh/usage": "0.3.0-rc.15",
     "@hanamesh/dsh-app-host": "0.6.21"
   },
