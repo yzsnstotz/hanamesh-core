@@ -2,7 +2,7 @@ import test from 'node:test';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 const windowsAcl = async (file, action) => {
-  const script = `$ErrorActionPreference='Stop';$p=$env:HM_ACL_PATH;$sid=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;$acl=Get-Acl -LiteralPath $p;` + action;
+  const script = `$ErrorActionPreference='Stop';$PSModuleAutoLoadingPreference='None';$p=$env:HM_ACL_PATH;$sid=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;$isDirectory=([System.IO.File]::GetAttributes($p) -band [System.IO.FileAttributes]::Directory) -ne 0;$acl=if($isDirectory){[System.IO.Directory]::GetAccessControl($p)}else{[System.IO.File]::GetAccessControl($p)};` + action;
   return (await promisify(execFile)(join(process.env.SystemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{env:{...process.env,HM_ACL_PATH:file}})).stdout.trim();
 };
 import assert from 'node:assert/strict';
@@ -98,14 +98,14 @@ for (const [name, prepare, reason] of [
     const device = createDevice();
     await writeFile(file, JSON.stringify({schemaVersion: 1, ...device, deviceId: createDevice().deviceId}));
   }, 'CORE_DEVICE_CORRUPT'],
-  ['unreadable shared file', async file => { await writeFile(file, '{}'); if(process.platform==='win32')await windowsAcl(file, `$rule=[System.Security.AccessControl.FileSystemAccessRule]::new($sid,[System.Security.AccessControl.FileSystemRights]::ReadData,[System.Security.AccessControl.AccessControlType]::Deny);$acl.AddAccessRule($rule);Set-Acl -LiteralPath $p -AclObject $acl`);else await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
+  ['unreadable shared file', async file => { await writeFile(file, '{}'); if(process.platform==='win32')await windowsAcl(file, `$rule=[System.Security.AccessControl.FileSystemAccessRule]::new($sid,[System.Security.AccessControl.FileSystemRights]::ReadData,[System.Security.AccessControl.AccessControlType]::Deny);$acl.AddAccessRule($rule);if($isDirectory){[System.IO.Directory]::SetAccessControl($p,$acl)}else{[System.IO.File]::SetAccessControl($p,$acl)}`);else await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
 ]) {
   test(`${name}: fails visibly and never silently creates a new identity`, async t => {
     if (reason === 'CORE_DEVICE_STORE_UNAVAILABLE' && process.getuid?.() === 0) { t.skip('root bypasses file modes'); return; }
     const root = await scratch(t);
     await mkdir(join(root, 'identity'), {recursive: true, mode: 0o700});
     const file = join(root, 'identity', 'device.json');
-    t.after(async()=>{if(process.platform==='win32')await windowsAcl(file, `foreach($rule in @($acl.Access)){if($rule.AccessControlType -eq 'Deny'){$acl.RemoveAccessRuleSpecific($rule)}};Set-Acl -LiteralPath $p -AclObject $acl`).catch(()=>{});});
+    t.after(async()=>{if(process.platform==='win32')await windowsAcl(file, `foreach($rule in @($acl.Access)){if($rule.AccessControlType -eq 'Deny'){$acl.RemoveAccessRuleSpecific($rule)}};if($isDirectory){[System.IO.Directory]::SetAccessControl($p,$acl)}else{[System.IO.File]::SetAccessControl($p,$acl)}`).catch(()=>{});});
     await prepare(file);
     const before = await readFile(file).catch(() => null);
     const legacy = {...INITIAL_CORE_SNAPSHOT, device: createDevice()};
