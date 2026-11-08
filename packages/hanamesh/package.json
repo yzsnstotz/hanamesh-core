@@ -15,7 +15,7 @@
   ],
   "dependencies": {
     "@hanamesh/core": "0.3.33",
-    "@hanamesh/usage": "0.3.0-rc.17",
+    "@hanamesh/usage": "0.3.0-rc.18",
     "@hanamesh/dsh-app-host": "0.6.23"
   },
   "peerDependencies": {
