@@ -1,3 +1,5 @@
+PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。
+
 # hanamesh-core · 0.3.31
 
 Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；DSH 通过 `@hanamesh/hanamesh` 总包一次安装 Core/Usage/AppHost，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。

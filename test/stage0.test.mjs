@@ -18,9 +18,10 @@ test('Core admits official rc.2 and compatible 0.2.x prereleases without admitti
     if (name.startsWith('@deepseek-ai/dsh-')) {
       for (const host of ['0.2.0-rc.2','0.2.0','0.2.1-alpha.1','0.2.1-alpha.9','0.2.1','0.2.9-alpha.1','0.2.99']) assert.equal(semver.satisfies(host,version,{includePrerelease:true}),true,`${name} rejects ${host}`);
       for (const host of ['0.2.0-rc.1','0.1.9','0.3.0-alpha.1','0.3.0','1.0.0']) assert.equal(semver.satisfies(host,version,{includePrerelease:true}),false,`${name} admits ${host}`);
-      for (const host of ['0.2.0-rc.2','0.2.1-alpha.2']) assert.equal(semver.satisfies(host,version),true,`normal package resolver rejects ${host}`);
+      for (const host of ['0.2.0-rc.2','0.2.1-alpha.2','0.2.2-rc.1']) assert.equal(semver.satisfies(host,version),true,`normal package resolver rejects ${host}`);
     }
-    if (name==='@deepseek-ai/cordis') for (const host of ['4.0.4','4.0.5-alpha.1','4.0.5']) assert.equal(semver.satisfies(host,version),true);
+    if (name==='@deepseek-ai/cordis') for (const host of ['4.0.4','4.0.5-alpha.1','4.0.5','4.1.0']) assert.equal(semver.satisfies(host,version),true);
+    if (name==='@deepseek-ai/cordis') for (const host of ['4.0.3','4.2.0-alpha.1','4.2.0','5.0.0']) assert.equal(semver.satisfies(host,version,{includePrerelease:true}),false);
     if (pkg.devDependencies[name] && name.startsWith('@deepseek-ai/')) assert.ok(semver.valid(pkg.devDependencies[name]),'development input remains exact');
   }
   assert.equal((await readJson('profile/suite.profile.json')).version, pkg.version);
@@ -101,4 +102,13 @@ test('settings about text matches package and describes support instead of a gue
   assert.ok(client.includes(`const CORE_VERSION = '${pkg.version}';`));
   assert.ok(client.includes('hanamesh-core ${CORE_VERSION} · 支持 DSH 0.2.x'));
   assert.ok(!client.includes('· DSH 0.2.1-alpha.2'));
+});
+
+test('latest DSH uses public official bundle exports', async () => {
+ const official = await import('@deepseek-ai/dsh-official-bundles');
+ assert.ok(Array.isArray(official.PROFILE_TEMPLATES.web.bundles));
+ assert.ok(official.PROFILE_TEMPLATES.web.bundles.length > 0);
+ const boot = await import('@deepseek-ai/dsh-app-boot');
+ assert.equal(typeof boot.evaluatePluginCompatibility, 'function');
+ assert.equal(typeof boot.getDshRuntimeVersion, 'function');
 });

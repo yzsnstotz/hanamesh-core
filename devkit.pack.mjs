@@ -29,15 +29,15 @@ export const packConfig = {
   },
   consumer: {
     // The consumer stands in for the DSH host: it supplies the published peers and the host packages' own peers.
-    packageJson: {private: true, type: 'module', dependencies: {'@hanamesh/core': 'file:' + tarball, ...Object.fromEntries(Object.keys(source.peerDependencies).map(name=>[name,source.devDependencies[name]])), '@types/node': '24.13.4', '@types/js-yaml': '4.0.9',
+    packageJson: {private: true, type: 'module', dependencies: {'@hanamesh/core': 'file:' + tarball, ...Object.fromEntries(Object.keys(source.peerDependencies).map(name=>[name,source.devDependencies[name]])), '@types/node': '24.13.4', '@types/js-yaml': '4.0.9', '@deepseek-ai/dsh-util-file-drag':'0.2.2-rc.1', '@shikijs/langs':'4.4.3',
       // Public app-boot's host peers are explicit here: this consumer has autoInstallPeers disabled.
-      '@deepseek-ai/cordis-plugin-group': '1.0.5-alpha.1',
-      '@deepseek-ai/cordis-plugin-include': '1.0.10-alpha.1',
-      '@deepseek-ai/cordis-plugin-loader': '1.0.6-alpha.1',
-      '@deepseek-ai/dsh-home-paths': '0.2.1-alpha.2',
-      '@deepseek-ai/dsh-launch-environment': '0.2.1-alpha.2',
-      '@deepseek-ai/dsh-system-prompt': '0.2.1-alpha.2',
-      '@deepseek-ai/dsh-llm': '0.2.1-alpha.2'}},
+      '@deepseek-ai/cordis-plugin-group': '1.1.0',
+      '@deepseek-ai/cordis-plugin-include': '1.1.0',
+      '@deepseek-ai/cordis-plugin-loader': '1.1.0',
+      '@deepseek-ai/dsh-home-paths': '0.2.2-rc.1',
+      '@deepseek-ai/dsh-launch-environment': '0.2.2-rc.1',
+      '@deepseek-ai/dsh-system-prompt': '0.2.2-rc.1',
+      '@deepseek-ai/dsh-llm': '0.2.2-rc.1'}},
     javascript: (await readFile(new URL('./devkit.consumer.mjs', import.meta.url), 'utf8')).replace("'__CORE_VERSION__'", JSON.stringify(source.version)),
     typescript: "import {createManagedSuitePackageSource,type HanaMeshSuiteSourceService,type SuiteSourceState,createSuitePackageSource, type SuitePackageSourceOptions} from '@hanamesh/core/suite/source';\nvoid [createSuitePackageSource,createManagedSuitePackageSource];\ndeclare const source:HanaMeshSuiteSourceService;\nconst sourceState:SuiteSourceState=source.getState();\nvoid sourceState;\ndeclare const options: SuitePackageSourceOptions;\nvoid options;\nimport {SUITE_MANIFEST, type SuiteDeclaration} from '@hanamesh/core/suite';\nvoid SUITE_MANIFEST;\nimport {name, apply} from '@hanamesh/core';\nconst pluginName: 'hanamesh-core' = name;\nvoid [pluginName, apply];\nimport type {HanaMeshCoreContract, ConsentPrompt} from '@hanamesh/core/contract';\nconst prompt: ConsentPrompt = {show:true,shownAt:null};\nvoid prompt;\ndeclare const core: HanaMeshCoreContract;\nconst deviceId: string = core.getDeviceId();\nconst consent: 'granted' | 'withheld' = core.getConsent();\nconst signature: Uint8Array = core.sign(new Uint8Array());\nconst declaration: Promise<SuiteDeclaration> | undefined = core.getSuiteDeclaration?.();\nvoid [deviceId, consent, signature, declaration];\nimport {checkCoreService, type CoreHandshake} from '@hanamesh/core/contract';\nimport {runCoreProviderSuite, type CoreSuiteResult} from '@hanamesh/core/contract/suite';\nimport {createCoreProviderFixture} from '@hanamesh/core/contract/fixtures';\nconst handshake: CoreHandshake = checkCoreService(core);\nconst pending: Promise<CoreSuiteResult> = runCoreProviderSuite(createCoreProviderFixture());\nvoid [handshake, pending];\n",
   },

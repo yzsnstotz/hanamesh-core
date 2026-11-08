@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { cp, rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import {generateSuiteManifest} from './suite-manifest.mjs';
+import ts from 'typescript';
 const compiler = process.env.HM_TSC || 'tsc';
 const version = spawnSync(compiler, ['--version'], {encoding: 'utf8'});
 const pnpm = spawnSync('pnpm', ['--version'], {encoding: 'utf8'});
@@ -20,10 +21,12 @@ const suiteBundle = JSON.parse(await readFile('packages/hanamesh/package.json', 
 const coreMetadata = JSON.parse(await readFile('package.json', 'utf8'));
 coreMetadata.hanameshSuiteInstall = createSuiteInstallRelease(suiteBundle.version);
 await writeFile('package.json', JSON.stringify(coreMetadata, null, 2) + '\n');
-await rm('.build/client-cjs', {recursive: true, force: true});
+await rm('.build/client', {recursive: true, force: true});
 const clientResult = spawnSync(compiler, ['-p', 'tsconfig.client.json'], {stdio: 'inherit'});
 if (clientResult.status !== 0) process.exit(clientResult.status ?? 1);
-const clientCode = await readFile('.build/client-cjs/client/index.js', 'utf8');
+// Check the host's export-map types with NodeNext, then emit the existing lazy-CJS format.
+const checkedClient = await readFile('.build/client/client/index.js', 'utf8');
+const clientCode = ts.transpileModule(checkedClient, {compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS}}).outputText;
 const packageInfo = JSON.parse(await readFile('package.json', 'utf8'));
 const clientBundle = `/* Generated from strictly checked HanaMesh core client source. React is host-supplied. */\nwindow.__ModuleLoader__.load({id:${JSON.stringify(packageInfo.name)},factory:function(require){'use strict';const module={exports:{}};const exports=module.exports;(function(module,exports,require){\n${clientCode}\n})(module,exports,require);return module.exports;}});\n`;
 await mkdir('lib/client', {recursive: true});

@@ -81,7 +81,7 @@ test('DSH prerelease runtime remains complete without opting other peers into pr
  assert.deepEqual(declaration.peerFacts,Object.fromEntries(Object.keys(peers).map(name=>[name,runtime])));
  const workspace=await service({currentBundle:{...installedBundle,peerDependencies:{'@deepseek-ai/dsh':'workspace:^'}},peerVersion:async()=>runtime}).read();
  assert.equal(workspace.completeness,'complete','DSH range syntax is interpreted by the public SDK, not Core SemVer checks');
- const other=await service({currentBundle:{...installedBundle,peerDependencies:{external:range}},peerVersion:async()=>runtime}).read();
+ const other=await service({currentBundle:{...installedBundle,peerDependencies:{external:'>=0.2.0 <0.3.0-0'}},peerVersion:async()=>runtime}).read();
  assert.equal(other.completeness,'incomplete','other peer ranges keep standard SemVer prerelease behavior');
 });
 
