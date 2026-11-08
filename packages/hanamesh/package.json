@@ -16,7 +16,7 @@
   "dependencies": {
     "@hanamesh/core": "0.3.33",
     "@hanamesh/usage": "0.3.0-rc.18",
-    "@hanamesh/dsh-app-host": "0.6.23"
+    "@hanamesh/dsh-app-host": "0.6.24"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0",
