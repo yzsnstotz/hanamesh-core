@@ -141,3 +141,5 @@ These URL values are editable, unsigned display hints. They are not a fresh chal
 积分绑定提示同样仅在Core Modal实际入场且位于前景后记录原points/prompt-shown标记；宿主等待中卸载不记为已显示。标记写失败保留提示并说明检查设置，不自动重试/绑定。
 
 Portable Agent process capability2 (Core0.3.25): state declares agentProtocolVersion:2; prepareOnboarding/syncOnboarding use only fixed device-generation endpoints and verified website audits. New model/terminal booleans cannot grant. Existing old grants remain legacy-terminal; explicit local close dominates late responses. Cordis service protocolVersion remains1, DSH consent unchanged. Exact inputs, state shape, origins and error codes: [AGENT.md](AGENT.md).
+
+Windows 身份文件权限：Node 的 chmod/open mode 只改变写入位，不能表达 POSIX owner/group/other（[Node 官方说明](https://nodejs.org/docs/latest-v24.x/api/fs.html#fschmodpath-mode-callback)）。Core 在写入私钥前为 identity 目录设置不继承的当前 Windows SID FullControl DACL，新文件继承该 ACL；失败则报 CORE_DEVICE_STORE_UNAVAILABLE，不写入密钥。已有文件与显式共享根由同一 OS 用户管理，管理员可接管所有权的 OS 边界与 POSIX root 相同。不可读测试使用真实 ReadData deny ACE，不能以 chmod 000 代替 ACL。

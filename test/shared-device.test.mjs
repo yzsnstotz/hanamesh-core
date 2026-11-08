@@ -1,4 +1,10 @@
 import test from 'node:test';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+const windowsAcl = async (file, action) => {
+  const script = `$ErrorActionPreference='Stop';$p=$env:HM_ACL_PATH;$sid=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;$acl=Get-Acl -LiteralPath $p;` + action;
+  return (await promisify(execFile)(join(process.env.SystemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{env:{...process.env,HM_ACL_PATH:file}})).stdout.trim();
+};
 import assert from 'node:assert/strict';
 import {chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -29,8 +35,14 @@ test('two clients on one machine resolve to the same device identity through the
   assert.equal(a.service.getDeviceId(), b.service.getDeviceId());
   assert.equal(dsh.memory.read().device.deviceId, hanamesh.memory.read().device.deviceId, 'each client mirrors the shared device');
   const file = join(root, 'identity', 'device.json');
-  assert.equal((await stat(file)).mode & 0o777, 0o600);
-  assert.equal((await stat(join(root, 'identity'))).mode & 0o777, 0o700);
+  if (process.platform === 'win32') {
+    for (const path of [file, join(root, 'identity')]) {
+      assert.equal(await windowsAcl(path, `if($acl.Access.Count -eq 0){throw 'NO_PRIVATE_ACL'};foreach($rule in $acl.Access){if($rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value -ne $sid.Value -or $rule.AccessControlType -ne 'Allow' -or ($rule.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::FullControl) -ne [System.Security.AccessControl.FileSystemRights]::FullControl){throw 'NON_PRIVATE_ACL'}};'PRIVATE'`), 'PRIVATE');
+    }
+  } else {
+    assert.equal((await stat(file)).mode & 0o777, 0o600);
+    assert.equal((await stat(join(root, 'identity'))).mode & 0o777, 0o700);
+  }
   assert.deepEqual((await readdir(join(root, 'identity'))).sort(), ['device.json'], 'losing writer leaves no temp file');
   for (const controller of [a, b]) {
     const identity = controller.state().identity;
@@ -86,13 +98,14 @@ for (const [name, prepare, reason] of [
     const device = createDevice();
     await writeFile(file, JSON.stringify({schemaVersion: 1, ...device, deviceId: createDevice().deviceId}));
   }, 'CORE_DEVICE_CORRUPT'],
-  ['unreadable shared file', async file => { await writeFile(file, '{}'); await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
+  ['unreadable shared file', async file => { await writeFile(file, '{}'); if(process.platform==='win32')await windowsAcl(file, `$rule=[System.Security.AccessControl.FileSystemAccessRule]::new($sid,[System.Security.AccessControl.FileSystemRights]::ReadData,[System.Security.AccessControl.AccessControlType]::Deny);$acl.AddAccessRule($rule);Set-Acl -LiteralPath $p -AclObject $acl`);else await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
 ]) {
   test(`${name}: fails visibly and never silently creates a new identity`, async t => {
     if (reason === 'CORE_DEVICE_STORE_UNAVAILABLE' && process.getuid?.() === 0) { t.skip('root bypasses file modes'); return; }
     const root = await scratch(t);
     await mkdir(join(root, 'identity'), {recursive: true, mode: 0o700});
     const file = join(root, 'identity', 'device.json');
+    t.after(async()=>{if(process.platform==='win32')await windowsAcl(file, `foreach($rule in @($acl.Access)){if($rule.AccessControlType -eq 'Deny'){$acl.RemoveAccessRuleSpecific($rule)}};Set-Acl -LiteralPath $p -AclObject $acl`).catch(()=>{});});
     await prepare(file);
     const before = await readFile(file).catch(() => null);
     const legacy = {...INITIAL_CORE_SNAPSHOT, device: createDevice()};

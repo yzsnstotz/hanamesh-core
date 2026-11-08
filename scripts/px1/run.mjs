@@ -30,6 +30,7 @@ async function command(file,args,cwd=repo,overrides={}){
  const code=await new Promise((res,rej)=>{child.once('error',rej);child.once('close',res);});
  if(code!==0)throw Error('COMMAND_EXIT_'+code+': '+file+' '+args.join(' '));
 }
+env.PX1_PINNED_PNPM=pnpm;
 const pm=(args,cwd=repo)=>command(process.execPath,[pnpm,...args],cwd);
 const nm=(args,cwd=repo)=>command(process.execPath,[npm,...args],cwd);
 const role=process.env.PX1_ROLE,phase=process.argv[2];

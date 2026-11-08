@@ -1,3 +1,4 @@
+import {privateWindowsDirectory} from './windows-private.js';
 import {randomBytes} from 'node:crypto';
 import {link, mkdir, open, readFile, unlink} from 'node:fs/promises';
 import {isAbsolute, join} from 'node:path';
@@ -59,6 +60,7 @@ export function fileSharedDeviceStore(root: string): SharedDeviceStore {
       const temp = `${location}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
       try {
         await mkdir(dir, {recursive: true, mode: 0o700});
+        await privateWindowsDirectory(dir);
         const handle = await open(temp, 'wx', 0o600);
         try {
           await handle.writeFile(`${JSON.stringify({schemaVersion: 1, ...device})}\n`);
