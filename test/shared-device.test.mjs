@@ -19,9 +19,9 @@ import {memoryStore} from './fixtures/core-store.mjs';
 const windowsReadLocks=new Map();
 async function lockWindowsFile(file){
   const script=`$ErrorActionPreference='Stop';$PSModuleAutoLoadingPreference='None';$handle=[System.IO.File]::Open($env:HM_ACL_PATH,[System.IO.FileMode]::Open,[System.IO.FileAccess]::ReadWrite,[System.IO.FileShare]::None);try{[Console]::WriteLine('LOCK_READY');[Console]::Out.Flush();[Console]::ReadLine()|Out-Null}finally{$handle.Dispose()}`.replace('[Console]::ReadLine()|Out-Null','$null=[Console]::ReadLine()');
+  const bytes=await readFile(file);
   const child=spawn(join(process.env.SystemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{env:{...process.env,HM_ACL_PATH:file},stdio:['pipe','pipe','pipe'],windowsHide:true});
   const done=new Promise(resolve=>child.once('close',resolve));
-  const bytes=await readFile(file);
   const release=async()=>{child.stdin.end('release\n');assert.equal(await done,0);assert.deepEqual(await readFile(file),bytes,'an unavailable shared identity is never overwritten');};
   windowsReadLocks.set(file,release);
   await new Promise((resolve,reject)=>{let text='';const timer=setTimeout(()=>reject(new Error('WINDOWS_FILE_LOCK_NOT_READY')),2000);child.once('error',reject);child.stdout.on('data',chunk=>{text+=chunk;if(text.includes('LOCK_READY')){clearTimeout(timer);resolve();}});child.once('close',()=>{clearTimeout(timer);reject(new Error('WINDOWS_FILE_LOCK_FAILED'));});});
