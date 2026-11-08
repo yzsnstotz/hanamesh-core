@@ -13,5 +13,9 @@ export async function privateWindowsDirectory(path: string): Promise<void> {
     await promisify(execFile)(join(system, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
       ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')],
       {env: {...process.env, HM_PRIVATE_DIRECTORY: path}, timeout: 10000, windowsHide: true});
-  } catch { throw Object.assign(new Error('Private directory ACL unavailable'), {code: 'EACCES'}); }
+  } catch (error) {
+    const failure=error as {code?:string|number;killed?:boolean;stderr?:string};
+    if(process.env['CI']==='true')console.error(JSON.stringify({event:'windows-private-acl-failed',code:failure.code??null,killed:failure.killed??false,stderr:failure.stderr?.slice(0,2048)}));
+    throw Object.assign(new Error('Private directory ACL unavailable'), {code: 'EACCES'});
+  }
 }
