@@ -3,6 +3,7 @@ import {resolve,join,isAbsolute,posix} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
+import {nodeToolCommand} from '../../scripts/node-tool.mjs';
 import yaml from 'js-yaml';
 import {createSuiteInstallRelease} from '../../lib/suite/install-command.js';
 
@@ -12,7 +13,8 @@ const record=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 export async function command(file,args,options={}){
  return new Promise((resolve,reject)=>{
-  const child=spawn(file,args,{shell:false,...options,stdio:['ignore','pipe','pipe']});const out=[],err=[];
+  const executable=file==='npm'?nodeToolCommand('npm',args):{file,args};
+  const child=spawn(executable.file,executable.args,{shell:false,...options,stdio:['ignore','pipe','pipe']});const out=[],err=[];
   child.stdout.on('data',chunk=>out.push(chunk));child.stderr.on('data',chunk=>err.push(chunk));
   child.once('error',reject);child.once('close',code=>code===0?resolve(Buffer.concat(out).toString('utf8')):reject(Error(`${file} exited ${code}: ${Buffer.concat(err).toString('utf8').trim()}`)));
  });

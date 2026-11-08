@@ -147,7 +147,7 @@ test('separate client processes racing for the first claim all end with one iden
     let out = '';
     child.stdout.on('data', chunk => { out += chunk; });
     child.on('error', reject);
-    child.on('exit', status => status === 0 ? resolve(out) : reject(new Error(`claim child exited ${status}`)));
+    child.on('close', status => status === 0 ? resolve(out) : reject(new Error(`claim child exited ${status}`)));
   });
   const ids = await Promise.all(Array.from({length: 6}, run));
   assert.equal(new Set(ids).size, 1, ids.join(','));
