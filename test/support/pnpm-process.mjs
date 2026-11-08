@@ -50,7 +50,7 @@ function ownGroup(pid,graceMs){
 }
 function releaseGroup(pid){ownedGroups.delete(pid);if(!shutdown&&ownedGroups.size===0)removeHandlers();}
 /** The group is terminated on normal exit too: a successful parent cannot leave its children running. */
-export async function runProcessGroup(program,args,{cwd,env,timeoutMs=30000,graceMs=1000}={}){
+export async function runProcessGroup(program,args,{cwd,env,timeoutMs=30000,graceMs=1000,readyText}={}){
  if(shutdown)throw Error('PROCESS_RUNNER_STOPPING');
  if(!isAbsolute(program))throw Error('ABSOLUTE_EXECUTABLE_REQUIRED');
  if(process.platform==='win32')throw Error('POSIX_PROCESS_GROUP_REQUIRED');
@@ -58,13 +58,17 @@ export async function runProcessGroup(program,args,{cwd,env,timeoutMs=30000,grac
  if(child.pid)ownGroup(child.pid,graceMs);
  let stdout='',stderr='',timedOut=false,overflow=false,timer,spawnError;
  const append=(current,chunk)=>{if(current.length+chunk.length>1024*1024){overflow=true;void terminateGroup(child.pid,graceMs).catch(()=>{});return current;}return current+chunk;};
- child.stdout.on('data',chunk=>{stdout=append(stdout,chunk)});child.stderr.on('data',chunk=>{stderr=append(stderr,chunk)});
+ let ready=readyText===undefined;
+ child.stdout.on('data',chunk=>{stdout=append(stdout,chunk);if(!ready&&stdout.includes(readyText)){ready=true;clearTimeout(timer);timer=setTimeout(expire,timeoutMs);}});child.stderr.on('data',chunk=>{stderr=append(stderr,chunk)});
  const exited=new Promise(resolve=>{child.once('exit',(code,signal)=>resolve({status:code,signal}));child.once('error',error=>{spawnError=error;resolve({status:null,signal:null})});});
  // Observe exit rather than close: orphan descendants may still hold the parent's pipes open.
- timer=setTimeout(()=>{timedOut=true;void terminateGroup(child.pid,graceMs).catch(()=>{});},timeoutMs);
+ const expire=()=>{timedOut=true;void terminateGroup(child.pid,graceMs).catch(()=>{});};
+ // Controlled cleanup fixtures separate their readiness handshake from the
+ // unchanged operation timeout. Ordinary package-manager calls use no handshake.
+ timer=setTimeout(expire,readyText===undefined?timeoutMs:5000);
  let result;try{result=await exited;}finally{clearTimeout(timer);try{if(child.pid)await terminateGroup(child.pid,graceMs);}finally{if(child.pid)releaseGroup(child.pid);child.stdout.destroy();child.stderr.destroy();}}
  if(spawnError)throw spawnError;
- return {...result,stdout,stderr,timedOut,overflow,groupCleaned:true};
+ return {...result,stdout,stderr,timedOut,overflow,groupCleaned:true,readinessObserved:readyText===undefined?null:ready};
 }
 export async function resolvePinnedPnpm({env=process.env,root}={}){
  if(process.versions.node!=='24.13.1')throw Error('PINNED_NODE_24_13_1_REQUIRED');

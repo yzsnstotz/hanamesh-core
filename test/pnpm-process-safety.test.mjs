@@ -25,21 +25,23 @@ test('the package manager executable is pinned to the current Node installation'
 });
 for(const outcome of['timeout','parent-exit'])test('whole child process group is reaped after '+outcome,{skip:process.platform==='win32'},async t=>{
  const root=await isolated(t),pidfile=join(root,'grandchild.pid');
- const grandchild="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000)";
- const code="const {spawn}=require('node:child_process');spawn(process.execPath,['-e',"+JSON.stringify(grandchild)+",process.argv[1]],{stdio:'ignore'});"+(outcome==='timeout'?"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)":"setTimeout(()=>process.exit(0),250)");
- const result=await runProcessGroup(process.execPath,['-e',code,pidfile],{cwd:root,env:{PATH:dirname(process.execPath)+':/usr/bin:/bin',HOME:join(root,'home')},timeoutMs:outcome==='timeout'?500:5000,graceMs:100});
+ const grandchild="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.stdout.write('GROUP_READY\\n');process.on('SIGTERM',()=>{});setInterval(()=>{},1000)";
+ const code="const {spawn}=require('node:child_process');const child=spawn(process.execPath,['-e',"+JSON.stringify(grandchild)+",process.argv[1]],{stdio:['ignore','pipe','ignore']});child.stdout.pipe(process.stdout);"+(outcome==='timeout'?"process.on('SIGTERM',()=>{});setInterval(()=>{},1000)":"child.stdout.once('data',()=>process.exit(0))");
+ const result=await runProcessGroup(process.execPath,['-e',code,pidfile],{cwd:root,env:{PATH:dirname(process.execPath)+':/usr/bin:/bin',HOME:join(root,'home')},timeoutMs:outcome==='timeout'?500:5000,graceMs:100,...(outcome==='timeout'?{readyText:'GROUP_READY'}:{})});
  assert.equal(result.timedOut,outcome==='timeout');assert.equal(result.groupCleaned,true);
+ if(outcome==='timeout')assert.equal(result.readinessObserved,true,'the owned grandchild existed before the unchanged timeout began');
  const pid=Number(await readFile(pidfile,'utf8'));assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});
 });
 
 for(const outcome of ['exit','interrupt'])test('outer runner '+outcome+' also reaps its detached owned children',{skip:process.platform==='win32'},async t=>{
  const root=await isolated(t),pidfile=join(root,'owned.pid'),helper=new URL('./support/pnpm-process.mjs',import.meta.url).href;
- const child="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000);"+(outcome==='exit'?"require('node:net').createConnection({host:'127.0.0.1',port:Number(process.argv[2])},function(){this.end('ready')});":"");
+ const child="require('node:fs').writeFileSync(process.argv[1],String(process.pid));process.on('SIGTERM',()=>{});setInterval(()=>{},1000);"+"require('node:net').createConnection({host:'127.0.0.1',port:Number(process.argv[2])},function(){this.end('ready')});";
  const start="void runProcessGroup(process.execPath,['-e',"+JSON.stringify(child)+",process.argv[1],String(server.address().port)],{cwd:process.cwd(),env:{},timeoutMs:10000,graceMs:100});";
- const driver="import{runProcessGroup}from "+JSON.stringify(helper)+";"+(outcome==='exit'?"import{createServer}from'node:net';const server=createServer(socket=>socket.once('data',data=>{if(data.toString()!=='ready')throw Error('CHILD_NOT_READY');process.exit(0)}));server.listen(0,'127.0.0.1',()=>{"+start+"});":"void runProcessGroup(process.execPath,['-e',"+JSON.stringify(child)+",process.argv[1]],{cwd:process.cwd(),env:{},timeoutMs:10000,graceMs:100});");
+ const driver="import{runProcessGroup}from "+JSON.stringify(helper)+";import{createServer}from'node:net';const server=createServer(socket=>socket.once('data',data=>{if(data.toString()!=='ready')throw Error('CHILD_NOT_READY');"+(outcome==='exit'?"process.exit(0)":"process.stdout.write('OWNED_READY\\n')")+"}));server.listen(0,'127.0.0.1',()=>{"+start+"});";
  const deadline=performance.now()+5000;
- const result=await runProcessGroup(process.execPath,['--input-type=module','-e',driver,pidfile],{cwd:root,env:{PATH:dirname(process.execPath)+':/usr/bin:/bin'},timeoutMs:outcome==='interrupt'?500:5000,graceMs:1000});
+ const result=await runProcessGroup(process.execPath,['--input-type=module','-e',driver,pidfile],{cwd:root,env:{PATH:dirname(process.execPath)+':/usr/bin:/bin'},timeoutMs:outcome==='interrupt'?500:5000,graceMs:1000,...(outcome==='interrupt'?{readyText:'OWNED_READY'}:{})});
  assert.equal(result.timedOut,outcome==='interrupt');assert.equal(result.groupCleaned,true);
+ if(outcome==='interrupt')assert.equal(result.readinessObserved,true,'the inner owned child existed before interruption');
  if(outcome==='exit')assert.equal(result.status,0,result.stderr);
  const pid=Number(await readFile(pidfile,'utf8'));await waitForReapedGroup(pid,deadline);assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});assert.throws(()=>process.kill(-pid,0),{code:'ESRCH'});
 });
