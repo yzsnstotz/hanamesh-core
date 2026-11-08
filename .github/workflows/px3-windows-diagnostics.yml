@@ -1,0 +1,27 @@
+name: PX3 Windows ACL diagnosis
+on:
+  push:
+    branches: [ci/px1-platform-matrix-1109]
+permissions: {}
+jobs:
+  acl:
+    if: github.event.repository.private == false
+    runs-on: windows-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Fetch exact public source without credentials
+        env:
+          PX3_REPOSITORY: ${{ github.repository }}
+          PX3_REVISION: ${{ github.sha }}
+        run: |
+          git -c credential.helper= init -q
+          git -c credential.helper= fetch --depth=1 "https://github.com/$PX3_REPOSITORY.git" "$PX3_REVISION"
+          git checkout --detach FETCH_HEAD
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.13.1
+          token: ''
+      - run: node scripts/px3/windows-acl-probe.mjs
