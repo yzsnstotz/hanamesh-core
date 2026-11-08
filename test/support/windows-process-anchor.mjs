@@ -6,5 +6,5 @@ process.once('message',({program,args,env})=>{
  const child=spawn(program,args,{env,cwd:process.cwd(),stdio:['ignore','pipe','pipe']});
  child.stdout.pipe(process.stdout);child.stderr.pipe(process.stderr);
  child.once('error',()=>process.send({status:null,signal:null}));
- child.once('exit',(status,signal)=>process.send({status,signal}));
+ child.once('close',(status,signal)=>{let flushed=0;const complete=()=>{if(++flushed===2&&process.connected)process.send({status,signal});};process.stdout.write('',complete);process.stderr.write('',complete);});
 });
