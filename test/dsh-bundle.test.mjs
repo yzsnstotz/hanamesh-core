@@ -1,3 +1,5 @@
+import {win32} from 'node:path';
+const tarBinary=process.platform==='win32'?win32.join(process.env.SystemRoot??process.env.SYSTEMROOT??process.env.WINDIR,'System32','tar.exe'):'/usr/bin/tar';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createSuiteInstallRelease} from '../lib/suite/index.js';
@@ -14,5 +16,5 @@ test('bundle refuses duplicate entries, unsupported patches, relative entrypoint
  for(const change of [s=>s[1].patch[0].insert[0].id='core',s=>s[0].patch=[{id:'core',disabled:true}],s=>s[0].patch[0].insert[0].name='./private.js',s=>s[0].pkg.version='^1.0.0',s=>s[1].pkg.peerDependencies['@deepseek-ai/cordis']='^5.0.0']){const input=sources();change(input);assert.throws(()=>mergeBundles('0.1.0',input));}
 });
 test('normal archive reader binds identity/version and public bundle metadata before merging',async t=>{
- const root=await mkdtemp(join(tmpdir(),'hm-bundle-'));t.after(()=>rm(root,{recursive:true,force:true}));const directory=join(root,'package');await mkdir(directory);await writeFile(join(directory,'package.json'),JSON.stringify({name:'@hanamesh/core',version:'1.0.0',dsh:{bundle:{patch:'./patch.yml'}}}));await writeFile(join(directory,'patch.yml'),'- insert:\n  - id: core\n    name: "@hanamesh/core"\n');const file=join(root,'core.tgz');execFileSync('tar',['-czf',file,'-C',root,'package']);assert.equal((await readBundle(file,'@hanamesh/core','1.0.0')).patch[0].insert[0].id,'core');await assert.rejects(readBundle(file,'@hanamesh/usage','1.0.0'),/SOURCE_IDENTITY_MISMATCH/);await assert.rejects(readBundle(file,'@hanamesh/core','1.0.1'),/SOURCE_IDENTITY_MISMATCH/);
+ const root=await mkdtemp(join(tmpdir(),'hm-bundle-'));t.after(()=>rm(root,{recursive:true,force:true}));const directory=join(root,'package');await mkdir(directory);await writeFile(join(directory,'package.json'),JSON.stringify({name:'@hanamesh/core',version:'1.0.0',dsh:{bundle:{patch:'./patch.yml'}}}));await writeFile(join(directory,'patch.yml'),'- insert:\n  - id: core\n    name: "@hanamesh/core"\n');const file=join(root,'core.tgz');execFileSync(tarBinary,['-czf',file,'-C',root,'package']);assert.equal((await readBundle(file,'@hanamesh/core','1.0.0')).patch[0].insert[0].id,'core');await assert.rejects(readBundle(file,'@hanamesh/usage','1.0.0'),/SOURCE_IDENTITY_MISMATCH/);await assert.rejects(readBundle(file,'@hanamesh/core','1.0.1'),/SOURCE_IDENTITY_MISMATCH/);
 });

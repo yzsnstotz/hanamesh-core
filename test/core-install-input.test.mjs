@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {coreInstallInput} from './fixtures/core-install-input.mjs';
 import {configOf, CORE_DEFAULTS} from '../lib/validation.js';
@@ -8,7 +9,7 @@ import {memoryStore} from './fixtures/core-store.mjs';
 
 test('pre-activation input explicitly supplies offline origins and an owned shared identity without changing legal budgets', async t => {
   const input = coreInstallInput('/FIXTURE/current-environment');
-  assert.deepEqual(input.config, {serverOrigin: null, websiteOrigin: null, sharedIdentityDir: '/FIXTURE/current-environment/core-shared', allowSystemBrowser: false});
+  assert.deepEqual(input.config, {serverOrigin: null, websiteOrigin: null, sharedIdentityDir: join('/FIXTURE/current-environment','core-shared'), allowSystemBrowser: false});
   const configured = configOf(input.config);
   for (const [key, value] of Object.entries(CORE_DEFAULTS)) assert.equal(configured[key], value, key);
   assert.match(input.patch, /serverOrigin: null/);

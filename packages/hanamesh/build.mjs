@@ -13,7 +13,7 @@ const record=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 export async function command(file,args,options={}){
  return new Promise((resolve,reject)=>{
-  const executable=file==='npm'?nodeToolCommand('npm',args):{file,args};
+  const executable=file==='npm'?nodeToolCommand('npm',args):{file:file==='tar'&&process.platform==='win32'?join(process.env.SystemRoot??process.env.SYSTEMROOT??process.env.WINDIR,'System32','tar.exe'):file,args};
   const child=spawn(executable.file,executable.args,{shell:false,...options,stdio:['ignore','pipe','pipe']});const out=[],err=[];
   child.stdout.on('data',chunk=>out.push(chunk));child.stderr.on('data',chunk=>err.push(chunk));
   child.once('error',reject);child.once('close',code=>code===0?resolve(Buffer.concat(out).toString('utf8')):reject(Error(`${file} exited ${code}: ${Buffer.concat(err).toString('utf8').trim()}`)));
@@ -24,7 +24,7 @@ function archivePath(value){
  return 'package/'+value.replace(/^\.\//,'');
 }
 export async function readBundle(file,name,version){
- const listing=(await command('tar',['-tzf',file],{env:{...process.env,LC_ALL:'C'}})).trimEnd().split('\n');
+ const listing=(await command('tar',['-tzf',file],{env:{...process.env,LC_ALL:'C'}})).trimEnd().split(/\r?\n/u);
  if(listing.some(path=>!path.startsWith('package/')||path.split('/').includes('..')||/[\x00-\x1f\x7f\\]/.test(path))||new Set(listing).size!==listing.length)throw Error('SOURCE_ARCHIVE_PATH_INVALID');
  const read=async path=>{if(!listing.includes(path))throw Error(`SOURCE_FILE_MISSING: ${path}`);return command('tar',['-xOzf',file,path],{env:{...process.env,LC_ALL:'C'}});};
  const pkg=JSON.parse(await read('package/package.json'));
