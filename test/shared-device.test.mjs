@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {execFile} from 'node:child_process';
+import {execFile,spawn} from 'node:child_process';
 import {promisify} from 'node:util';
 const windowsAcl = async (file, action) => {
   const script = `$ErrorActionPreference='Stop';$PSModuleAutoLoadingPreference='None';$p=$env:HM_ACL_PATH;$sid=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;$isDirectory=([System.IO.File]::GetAttributes($p) -band [System.IO.FileAttributes]::Directory) -ne 0;$acl=if($isDirectory){[System.IO.Directory]::GetAccessControl($p)}else{[System.IO.File]::GetAccessControl($p)};` + action;
@@ -16,10 +16,21 @@ import {createDevice} from '../lib/device.js';
 import {fileSharedDeviceStore, sharedIdentityRoot} from '../lib/shared-device.js';
 import {memoryStore} from './fixtures/core-store.mjs';
 
+const windowsReadLocks=new Map();
+async function lockWindowsFile(file){
+  const script=`$ErrorActionPreference='Stop';$PSModuleAutoLoadingPreference='None';$handle=[System.IO.File]::Open($env:HM_ACL_PATH,[System.IO.FileMode]::Open,[System.IO.FileAccess]::ReadWrite,[System.IO.FileShare]::None);try{[Console]::WriteLine('LOCK_READY');[Console]::Out.Flush();[Console]::ReadLine()|Out-Null}finally{$handle.Dispose()}`.replace('[Console]::ReadLine()|Out-Null','$null=[Console]::ReadLine()');
+  const child=spawn(join(process.env.SystemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{env:{...process.env,HM_ACL_PATH:file},stdio:['pipe','pipe','pipe'],windowsHide:true});
+  const done=new Promise(resolve=>child.once('close',resolve));
+  const bytes=await readFile(file);
+  const release=async()=>{child.stdin.end('release\n');assert.equal(await done,0);assert.deepEqual(await readFile(file),bytes,'an unavailable shared identity is never overwritten');};
+  windowsReadLocks.set(file,release);
+  await new Promise((resolve,reject)=>{let text='';const timer=setTimeout(()=>reject(new Error('WINDOWS_FILE_LOCK_NOT_READY')),2000);child.once('error',reject);child.stdout.on('data',chunk=>{text+=chunk;if(text.includes('LOCK_READY')){clearTimeout(timer);resolve();}});child.once('close',()=>{clearTimeout(timer);reject(new Error('WINDOWS_FILE_LOCK_FAILED'));});});
+  await assert.rejects(readFile(file),{code:'EBUSY'},'the real Windows sharing lock must refuse a new read');
+}
 const CONFIG = {serverOrigin: null, websiteOrigin: null};
 const scratch = async t => {
   const dir = await mkdtemp(join(tmpdir(), 'hm-shared-device-'));
-  t.after(() => rm(dir, {recursive: true, force: true}));
+  t.after(async () => {const file=join(dir,'identity','device.json'),release=windowsReadLocks.get(file);if(release){await release();windowsReadLocks.delete(file);}await rm(dir, {recursive:true,force:true});});
   return dir;
 };
 const client = (snapshot, shared) => {
@@ -98,14 +109,13 @@ for (const [name, prepare, reason] of [
     const device = createDevice();
     await writeFile(file, JSON.stringify({schemaVersion: 1, ...device, deviceId: createDevice().deviceId}));
   }, 'CORE_DEVICE_CORRUPT'],
-  ['unreadable shared file', async file => { await writeFile(file, '{}'); if(process.platform==='win32')await windowsAcl(file, `$rule=[System.Security.AccessControl.FileSystemAccessRule]::new($sid,[System.Security.AccessControl.FileSystemRights]::ReadData,[System.Security.AccessControl.AccessControlType]::Deny);$acl.AddAccessRule($rule);if($isDirectory){[System.IO.Directory]::SetAccessControl($p,$acl)}else{[System.IO.File]::SetAccessControl($p,$acl)}`);else await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
+  ['unreadable shared file', async file => { await writeFile(file, '{}'); if(process.platform==='win32')await lockWindowsFile(file);else await chmod(file, 0o000); }, 'CORE_DEVICE_STORE_UNAVAILABLE'],
 ]) {
   test(`${name}: fails visibly and never silently creates a new identity`, async t => {
     if (reason === 'CORE_DEVICE_STORE_UNAVAILABLE' && process.getuid?.() === 0) { t.skip('root bypasses file modes'); return; }
     const root = await scratch(t);
     await mkdir(join(root, 'identity'), {recursive: true, mode: 0o700});
     const file = join(root, 'identity', 'device.json');
-    t.after(async()=>{if(process.platform==='win32')await windowsAcl(file, `foreach($rule in @($acl.Access)){if($rule.AccessControlType -eq 'Deny'){$acl.RemoveAccessRuleSpecific($rule)}};if($isDirectory){[System.IO.Directory]::SetAccessControl($p,$acl)}else{[System.IO.File]::SetAccessControl($p,$acl)}`).catch(()=>{});});
     await prepare(file);
     const before = await readFile(file).catch(() => null);
     const legacy = {...INITIAL_CORE_SNAPSHOT, device: createDevice()};
@@ -122,7 +132,7 @@ for (const [name, prepare, reason] of [
     assert.equal(state.identity.status, 'failed');
     assert.equal(state.identity.reason, reason);
     assert.equal(state.identity.location, file);
-    assert.equal(state.identity.detail, reason === 'CORE_DEVICE_STORE_UNAVAILABLE' ? 'EACCES' : null);
+    assert.equal(state.identity.detail, reason === 'CORE_DEVICE_STORE_UNAVAILABLE' ? (process.platform==='win32'?'EBUSY':'EACCES') : null);
     const routed = await createRouteHandler(controller)(new Request(`http://127.0.0.1${ROUTES.state}`));
     assert.equal(routed.status, 200, 'the settings section can still read why identity is unavailable');
     assert.equal((await routed.json()).identity.reason, reason);
