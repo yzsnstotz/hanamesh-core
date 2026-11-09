@@ -8,6 +8,8 @@ export interface PluginConfig {
   readonly timeoutMs?: number;
   readonly authNonceSource?: 'client' | 'server';
   readonly checkIntervalMs?: number;
+  /** Transport heartbeat delay for live client peer streams; default 30000 ms. */
+  readonly clientPeerHeartbeatMs?: number;
   /** Local response budget; not a server pagination limit. Default 200 Hana rows. */
   readonly maxHanaRows?: number;
   /** Catalog request deadline in milliseconds, default 1500, bounded by timeoutMs. */

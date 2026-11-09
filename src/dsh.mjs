@@ -128,7 +128,7 @@ export async function apply(ctx, config) {
     }));
     controller.attachUsageProbe(() => usageServiceReady(/** @type {any} */ (ctx)));
     await ownedHealth.recheck();
-    const handler = createRouteHandler(controller, {requestRejection: request => ctx.connection.requestRejection(request)}, clientPeers, suiteSource);
+    const handler = createRouteHandler(controller, {requestRejection: request => ctx.connection.requestRejection(request)}, clientPeers, suiteSource, config.clientPeerHeartbeatMs);
     disposers.push(ctx.provide('hanameshCore', controller.service));
     disposers.push(ctx.provide('hanameshSuiteSource',suiteSource.service));
     healthTimer = setInterval(() => { void ownedHealth.recheck(); }, config.checkIntervalMs ?? 3000);

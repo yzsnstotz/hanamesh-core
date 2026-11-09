@@ -30,7 +30,7 @@ export class ClientPeerLeases {
     if (this.disposed || !this.capable || signal.aborted) return failure('CORE_SUITE_CLIENT_PEER_INACTIVE');
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
     const p = payload as Record<string, unknown>;
-    if (Object.keys(p).length !== 5 || Object.keys(p).some(key => !['protocol', 'pageId', 'activationId', 'generation', 'reactVersion'].includes(key)) || p['protocol'] !== 1 || !Number.isSafeInteger(p['generation']) || (p['generation'] as number) < 1 || !['pageId', 'activationId'].every(key => typeof p[key] === 'string' && /^[A-Za-z0-9-]{16,64}$/.test(p[key] as string)) || typeof p['reactVersion'] !== 'string' || p['reactVersion'].length > 64 || !semver.valid(p['reactVersion'])) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
+    if (Object.keys(p).length !== 5 || Object.keys(p).some(key => !['protocol', 'pageId', 'activationId', 'generation', 'reactVersion'].includes(key)) || (p['protocol'] !== 1 && p['protocol'] !== 2) || !Number.isSafeInteger(p['generation']) || (p['generation'] as number) < 1 || !['pageId', 'activationId'].every(key => typeof p[key] === 'string' && /^[A-Za-z0-9-]{16,64}$/.test(p[key] as string)) || typeof p['reactVersion'] !== 'string' || p['reactVersion'].length > 64 || !semver.valid(p['reactVersion'])) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
     let finish!: () => void;
     const closed = new Promise<void>(resolve => {
       const key = Symbol();

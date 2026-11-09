@@ -3,6 +3,7 @@ import {SessionController} from './controller.js';
 import {CoreError, safeError, upstreamFacts} from './errors.js';
 import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
 import type {ClientPeerLeases} from './suite/client-peers.js';
+import {CORE_DEFAULTS} from './validation.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
@@ -43,7 +44,7 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?:ManagedSuitePackageSource): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?:ManagedSuitePackageSource, clientPeerHeartbeatMs: number = CORE_DEFAULTS.clientPeerHeartbeatMs): (request: Request) => Promise<Response> {
   return async request => {
     try {
       const rejection = admission?.requestRejection(request);
@@ -91,16 +92,24 @@ export function createRouteHandler(controller: SessionController, admission: {re
           return response({error: lease.error}, lease.error.code === 'CORE_SUITE_CLIENT_PEER_INVALID' ? 400 : 409);
         }
         let cancelled = false;
+        let heartbeat: ReturnType<typeof setInterval> | undefined;
         try {
         const body = new ReadableStream<Uint8Array>({
           start(stream) {
-            stream.enqueue(new TextEncoder().encode('hanamesh-core-client-peer-lease/1\n'));
-            void lease.closed.then(() => {if (!cancelled) stream.close();});
+            const heartbeatProtocol = (parsed as {protocol: number}).protocol === 2;
+            const frame = new TextEncoder().encode(`hanamesh-core-client-peer-lease/${heartbeatProtocol ? 2 : 1}\n`);
+            stream.enqueue(frame);
+            // Native HTTP forwarding expires a body that stays idle for five minutes.
+            if (heartbeatProtocol) {
+              heartbeat = setInterval(() => stream.enqueue(frame), clientPeerHeartbeatMs);
+              heartbeat.unref();
+            }
+            void lease.closed.then(() => {clearInterval(heartbeat); if (!cancelled) stream.close();});
           },
-          cancel() {cancelled = true; lease.close();},
+          cancel() {cancelled = true; clearInterval(heartbeat); lease.close();},
         });
         return new Response(body, {headers: {'content-type': 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'}});
-        } catch (error) {lease.close(); throw error;}
+        } catch (error) {clearInterval(heartbeat); lease.close(); throw error;}
       }
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length !== 1) throw new CoreError('CORE_INPUT_INVALID', 400);
       if (url.pathname === ROUTES.openExternal) {

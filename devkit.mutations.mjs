@@ -5,6 +5,8 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'peer-heartbeat-missing',file:'lib/routes.js',mutate:code=>code.replace('stream.enqueue(frame), clientPeerHeartbeatMs','void 0, clientPeerHeartbeatMs'),test:'test/suite-peer-heartbeat.test.mjs'},
+ {id:'peer-heartbeat-client-rejected',file:'lib/client.js',mutate:code=>code.replace(/if \(offset === frame\.length\)\s+offset = 0;/, ''),test:'test/suite-peer-heartbeat.test.mjs'},
  {id:'settings-consent-review-bypassed',file:'lib/client.js',mutate:code=>code.replace('setConsentReview(requested);',"if (page === 'account') setConsentReview(requested); else void saveConsent(requested);"),test:'test/website-setting-ui.test.mjs'},
 
  {id:'bundle-stale-core-release',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("throw Error('CORE_RELEASE_PIN_MISMATCH');", "void 0;"),test:'test/dsh-bundle.test.mjs'},

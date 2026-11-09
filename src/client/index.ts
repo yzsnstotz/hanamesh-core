@@ -80,7 +80,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
     withdraw(); current = next;
     if (!next) return;
     const invocation = new AbortController(); active = invocation;
-    const payload = {protocol: 1, pageId, activationId: crypto.randomUUID(), generation: next, reactVersion};
+    const payload = {protocol: 2, pageId, activationId: crypto.randomUUID(), generation: next, reactVersion};
     const failed = (code: string): void => {
       if (disposed || invocation.signal.aborted) return;
       invocation.abort();
@@ -95,14 +95,15 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
       }
       if (!response.ok) {failed(code); return;}
       if (response.headers.get('content-type') !== 'application/octet-stream' || !response.body) {failed('CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); return;}
-      const reader = response.body.getReader(), frame = new TextEncoder().encode('hanamesh-core-client-peer-lease/1\n');
+      const reader = response.body.getReader(), frame = new TextEncoder().encode('hanamesh-core-client-peer-lease/2\n');
       let offset = 0;
       try {
         for (;;) {
           const chunk = await reader.read();
           if (chunk.done) {failed(offset === frame.length ? code : 'CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); break;}
           for (const byte of chunk.value) {
-            if (offset >= frame.length || byte !== frame[offset++]) {failed('CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); await reader.cancel(); return;}
+            if (offset === frame.length) offset = 0;
+            if (byte !== frame[offset++]) {failed('CORE_SUITE_CLIENT_PEER_RESPONSE_INVALID'); await reader.cancel(); return;}
           }
         }
       } finally {reader.releaseLock();}
@@ -117,7 +118,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.35';
+const CORE_VERSION = '0.3.36';
 type CorePage = 'settings' | 'account' | 'environment';
 /** Public navigation seats; other plugins contribute content through declared slots. */
 let selectCorePage: ((id: string | null) => void) | undefined;

@@ -12,7 +12,7 @@ bundle_version="$(npm view @hanamesh/hanamesh version --registry=https://registr
 
 生成器改编自 ai-workbench connect/packages/workbench/build.mjs（origin/main 472b5f3）。它读取四个精确 npm 归档，合并公开 patch 与 @deepseek-ai/* peer，拒绝重复 id、相对入口、非 insert 操作与 peer 冲突；release.json 记录来源 SHA256。构建失败不复用旧输出。根仓的 js-yaml 是构建依赖；发布包只含 patch、release.json、说明和许可证。
 
-审过、合入、打 tag 后，从标签先执行 `pnpm install --frozen-lockfile && pnpm build`，再使用 `node packages/hanamesh/build.mjs --version 0.1.6 --core 0.3.35 --usage 0.3.0-rc.19 --app-host 0.6.25 --theme 0.1.0 --output /absolute/new-directory` 生成正常归档。发布后立即使用总包精确版本进行原生安装验收。发布不得从未审的本地候选执行。
+审过、合入、打 tag 后，从标签先执行 `pnpm install --frozen-lockfile && pnpm build`，再使用 `node packages/hanamesh/build.mjs --version 0.1.7 --core 0.3.36 --usage 0.3.0-rc.19 --app-host 0.6.26 --theme 0.1.0 --output /absolute/new-directory` 生成正常归档。发布后立即使用总包精确版本进行原生安装验收。发布不得从未审的本地候选执行。
 
 总包的公开 package.json 包含由 Core 同一 SDK 生成的 `hanameshSuiteInstall:{name,version,command,args}`。生成器必须在正常 Core 构建后运行；Web 的 npm latest 只发现总包精确版本，显示该版本的 Core 命令。四个子包必须先按审后统一发布顺序公开发布，才能从公开 npm 重建本轮总包。候选门可将正常归档通过 buildHanaMesh 的已有 fetchPackage 注入点提供；这不是 npm 发布。
 
