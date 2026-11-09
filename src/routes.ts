@@ -2,8 +2,7 @@ import type {ManagedSuitePackageSource} from './suite/source.js';
 import {SessionController} from './controller.js';
 import {CoreError, safeError, upstreamFacts} from './errors.js';
 import {USAGE_MAX_WINDOW_DAYS} from './validation.js';
-import type {ClientPeerLeases} from './suite/client-peers.js';
-import {CORE_DEFAULTS} from './validation.js';
+import {CLIENT_PEER_FRAME, CLIENT_PEER_HEARTBEAT_MS, type ClientPeerLeases} from './suite/client-peers.js';
 
 export const ROUTES = Object.freeze({
   state: '/api/hanamesh/core/state',
@@ -44,7 +43,7 @@ function response(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {status, headers: {'content-type': 'application/json', 'cache-control': 'no-store'}});
 }
 
-export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?:ManagedSuitePackageSource, clientPeerHeartbeatMs: number = CORE_DEFAULTS.clientPeerHeartbeatMs): (request: Request) => Promise<Response> {
+export function createRouteHandler(controller: SessionController, admission: {requestRejection(request: Request): 401 | 403 | undefined} | null = null, clientPeers?: Pick<ClientPeerLeases, 'open'>, suiteSource?:ManagedSuitePackageSource, clientPeerHeartbeatMs: number = CLIENT_PEER_HEARTBEAT_MS): (request: Request) => Promise<Response> {
   return async request => {
     try {
       const rejection = admission?.requestRejection(request);
@@ -96,19 +95,16 @@ export function createRouteHandler(controller: SessionController, admission: {re
         try {
         const body = new ReadableStream<Uint8Array>({
           start(stream) {
-            const heartbeatProtocol = (parsed as {protocol: number}).protocol === 2;
-            const frame = new TextEncoder().encode(`hanamesh-core-client-peer-lease/${heartbeatProtocol ? 2 : 1}\n`);
-            stream.enqueue(frame);
+            stream.enqueue(CLIENT_PEER_FRAME);
             // Native HTTP forwarding expires a body that stays idle for five minutes.
-            if (heartbeatProtocol) {
-              heartbeat = setInterval(() => stream.enqueue(frame), clientPeerHeartbeatMs);
-              heartbeat.unref();
-            }
+            heartbeat = setInterval(() => stream.enqueue(CLIENT_PEER_FRAME), clientPeerHeartbeatMs);
+            heartbeat.unref();
             void lease.closed.then(() => {clearInterval(heartbeat); if (!cancelled) stream.close();});
           },
           cancel() {cancelled = true; clearInterval(heartbeat); lease.close();},
         });
-        return new Response(body, {headers: {'content-type': 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff'}});
+        // no-transform: Host gzip would otherwise hold every small frame inside zlib, so no byte reaches the forwarder.
+        return new Response(body, {headers: {'content-type': 'application/octet-stream', 'cache-control': 'no-store, no-transform', 'x-content-type-options': 'nosniff'}});
         } catch (error) {clearInterval(heartbeat); lease.close(); throw error;}
       }
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length !== 1) throw new CoreError('CORE_INPUT_INVALID', 400);

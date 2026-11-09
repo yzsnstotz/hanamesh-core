@@ -13,6 +13,10 @@ export interface ClientPeerFacts {
 type Lease = {ok: true; closed: Promise<void>; close: () => void};
 type Result = {ok: false; error: {code: string; message: string; details: object}};
 const failure = (code: string): Result => ({ok: false, error: {code, message: code, details: {}}});
+/** Fixed lease frame; Host repeats it while the lease is open so idle native forwarding keeps receiving bytes. */
+export const CLIENT_PEER_FRAME = new TextEncoder().encode('hanamesh-core-client-peer-lease/2\n');
+/** Below the 300 s Undici body timeout of the Electron forwarder. */
+export const CLIENT_PEER_HEARTBEAT_MS = 30_000;
 
 /** Each authenticated Fetch invocation owns one live observation until its actual transport aborts. */
 export class ClientPeerLeases {
@@ -30,7 +34,7 @@ export class ClientPeerLeases {
     if (this.disposed || !this.capable || signal.aborted) return failure('CORE_SUITE_CLIENT_PEER_INACTIVE');
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
     const p = payload as Record<string, unknown>;
-    if (Object.keys(p).length !== 5 || Object.keys(p).some(key => !['protocol', 'pageId', 'activationId', 'generation', 'reactVersion'].includes(key)) || (p['protocol'] !== 1 && p['protocol'] !== 2) || !Number.isSafeInteger(p['generation']) || (p['generation'] as number) < 1 || !['pageId', 'activationId'].every(key => typeof p[key] === 'string' && /^[A-Za-z0-9-]{16,64}$/.test(p[key] as string)) || typeof p['reactVersion'] !== 'string' || p['reactVersion'].length > 64 || !semver.valid(p['reactVersion'])) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
+    if (Object.keys(p).length !== 5 || Object.keys(p).some(key => !['protocol', 'pageId', 'activationId', 'generation', 'reactVersion'].includes(key)) || p['protocol'] !== 2 || !Number.isSafeInteger(p['generation']) || (p['generation'] as number) < 1 || !['pageId', 'activationId'].every(key => typeof p[key] === 'string' && /^[A-Za-z0-9-]{16,64}$/.test(p[key] as string)) || typeof p['reactVersion'] !== 'string' || p['reactVersion'].length > 64 || !semver.valid(p['reactVersion'])) return failure('CORE_SUITE_CLIENT_PEER_INVALID');
     let finish!: () => void;
     const closed = new Promise<void>(resolve => {
       const key = Symbol();
@@ -47,12 +51,6 @@ export class ClientPeerLeases {
       if (signal.aborted) finish();
     });
     return {ok: true, closed, close: finish};
-  }
-  async hold(payload: unknown, signal: AbortSignal): Promise<Result> {
-    const lease = this.open(payload, signal);
-    if (!lease.ok) return lease;
-    await lease.closed;
-    return failure('CORE_SUITE_CLIENT_PEER_INACTIVE');
   }
   close(): void {
     if (this.disposed) return;

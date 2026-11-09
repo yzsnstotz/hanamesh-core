@@ -3,7 +3,7 @@ import {CoreError} from './errors.js';
 import {INITIAL_CORE_SNAPSHOT, type PluginConfig, type StoredCoreSnapshot} from './contracts.js';
 import {registryUrl} from './suite/facts.js';
 
-export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, clientPeerHeartbeatMs: 30000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4, contributionWindowDays: 90, suiteLocalTestRegistries: Object.freeze([] as string[])});
+export const CORE_DEFAULTS = Object.freeze({timeoutMs: 10_000, checkIntervalMs: 3_000, maxHanaRows: 200, profileTimeoutMs: 1_500, maxResponseBytes: 1024 * 1024, clientPollIntervalMs: 10000, pointsRefreshMs: 60000, contributionIntervalMs: 60000, activityPageBudget: 5, activityDisplayRows: 25, catalogConcurrency: 4, contributionWindowDays: 90, suiteLocalTestRegistries: Object.freeze([] as string[])});
 /** C-USAGE: a raw-event window (contributions from/to, device events from/to) is at most 90 days. Contract invariant, not a setting. */
 export const USAGE_MAX_WINDOW_DAYS = 90;
 
@@ -41,18 +41,17 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
   for (const value of [maxHanaRows, profileTimeoutMs, maxResponseBytes]) {
     if (!Number.isSafeInteger(value) || value < 1) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
-  const clientPeerHeartbeatMs = input.clientPeerHeartbeatMs ?? CORE_DEFAULTS.clientPeerHeartbeatMs;
   const clientPollIntervalMs = input.clientPollIntervalMs ?? CORE_DEFAULTS.clientPollIntervalMs;
   const pointsRefreshMs = input.pointsRefreshMs ?? CORE_DEFAULTS.pointsRefreshMs;
   const contributionIntervalMs = input.contributionIntervalMs ?? CORE_DEFAULTS.contributionIntervalMs;
   const activityPageBudget = input.activityPageBudget ?? CORE_DEFAULTS.activityPageBudget;
   const activityDisplayRows = input.activityDisplayRows ?? CORE_DEFAULTS.activityDisplayRows;
   const catalogConcurrency = input.catalogConcurrency ?? CORE_DEFAULTS.catalogConcurrency;
-  for (const value of [clientPeerHeartbeatMs, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency]) {
+  for (const value of [clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency]) {
     if (!Number.isSafeInteger(value) || value < 1) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
   // JavaScript timers use a signed 32-bit millisecond delay.
-  for (const value of [clientPeerHeartbeatMs, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs]) {
+  for (const value of [clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs]) {
     if (value > 2_147_483_647) throw new CoreError('CORE_INPUT_INVALID', 400);
   }
   const contributionWindowDays = input.contributionWindowDays ?? CORE_DEFAULTS.contributionWindowDays;
@@ -80,7 +79,7 @@ export function configOf(input: PluginConfig): Required<PluginConfig> {
     allowSystemBrowser: input.allowSystemBrowser ?? false,
     timeoutMs,
     authNonceSource: input.authNonceSource ?? 'client',
-    checkIntervalMs, clientPeerHeartbeatMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
+    checkIntervalMs, maxHanaRows, profileTimeoutMs, maxResponseBytes, clientPollIntervalMs, pointsRefreshMs, contributionIntervalMs, activityPageBudget, activityDisplayRows, catalogConcurrency, contributionWindowDays,
     suitePackageSource: input.suitePackageSource===undefined?null:structuredClone(input.suitePackageSource),
     sharedIdentityDir, suiteLocalTestRegistries, suitePackageRegistries: Object.freeze([...suitePackageRegistries]),
   });

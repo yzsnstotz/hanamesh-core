@@ -5,7 +5,9 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
- {id:'peer-heartbeat-missing',file:'lib/routes.js',mutate:code=>code.replace('stream.enqueue(frame), clientPeerHeartbeatMs','void 0, clientPeerHeartbeatMs'),test:'test/suite-peer-heartbeat.test.mjs'},
+ {id:'peer-heartbeat-missing',file:'lib/routes.js',mutate:code=>code.replace('stream.enqueue(CLIENT_PEER_FRAME), clientPeerHeartbeatMs','void 0, clientPeerHeartbeatMs'),test:'test/suite-peer-heartbeat.test.mjs'},
+ {id:'peer-stream-transformable',file:'lib/routes.js',mutate:code=>code.replace("'cache-control': 'no-store, no-transform'","'cache-control': 'no-store'"),test:'test/suite-peer-transport.test.mjs'},
+ {id:'peer-legacy-protocol-admitted',file:'lib/suite/client-peers.js',mutate:code=>code.replace("p['protocol'] !== 2","p['protocol'] !== 2 && p['protocol'] !== 1"),test:'test/suite-peer-transport.test.mjs'},
  {id:'peer-heartbeat-client-rejected',file:'lib/client.js',mutate:code=>code.replace(/if \(offset === frame\.length\)\s+offset = 0;/, ''),test:'test/suite-peer-heartbeat.test.mjs'},
  {id:'settings-consent-review-bypassed',file:'lib/client.js',mutate:code=>code.replace('setConsentReview(requested);',"if (page === 'account') setConsentReview(requested); else void saveConsent(requested);"),test:'test/website-setting-ui.test.mjs'},
 

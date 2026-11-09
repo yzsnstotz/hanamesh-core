@@ -120,7 +120,6 @@ export async function apply(ctx, config) {
       },
       coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
       peerVersion: async name => {
-        if (name === 'react') return clientPeers.snapshot().reactVersion ?? {status: 'unknown'};
         if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) return getDshRuntimeVersion();
         const metadata = ctx.pluginPackages.packageOf(name, import.meta.url);
         return metadata?.name === name ? metadata.version ?? {status: 'unknown'} : {status: 'unknown'};
@@ -128,7 +127,7 @@ export async function apply(ctx, config) {
     }));
     controller.attachUsageProbe(() => usageServiceReady(/** @type {any} */ (ctx)));
     await ownedHealth.recheck();
-    const handler = createRouteHandler(controller, {requestRejection: request => ctx.connection.requestRejection(request)}, clientPeers, suiteSource, config.clientPeerHeartbeatMs);
+    const handler = createRouteHandler(controller, {requestRejection: request => ctx.connection.requestRejection(request)}, clientPeers, suiteSource);
     disposers.push(ctx.provide('hanameshCore', controller.service));
     disposers.push(ctx.provide('hanameshSuiteSource',suiteSource.service));
     healthTimer = setInterval(() => { void ownedHealth.recheck(); }, config.checkIntervalMs ?? 3000);

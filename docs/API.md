@@ -85,8 +85,6 @@ rc.31 的一次性绑定引导挂在 `sidebar.footer.action`（始终挂载）�
 
 名称结果包含displayNameStatus ready/not-found/failed与displayNameReason：404且响应码为REGISTRY_NOT_FOUND才判不存在；其他404仍为故障，传输/非法响应失败保留权威积分且显示故障，失败不缓存为不存在。显式refresh清名称缓存；窗口focus/visibility返回沿既有refresh更新。注册失败不安排后台指数重试，错误保留在registration.lastError及registrationFailure；失败状态无法保存时另外显示CORE_STORAGE_UNAVAILABLE，通过设置中重试注册重新发起。dispose中止本模块活动请求，不改变设备/同意/签名和持久化schema身份。
 
-peer 租约传输心跳配置：`clientPeerHeartbeatMs=30000`，正安全整数且不超过 2147483647 毫秒；部署时应低于原生转发的正文空闲时限。它只维持已建立流，不续造客户端事实、不轮询、不重试；流取消、请求中止及插件释放均清除计时器。
-
 客户端与读取调度配置：`clientPollIntervalMs=10000`、`pointsRefreshMs=60000`、`contributionIntervalMs=60000`、`activityPageBudget=5`、`activityDisplayRows=25`、`catalogConcurrency=4`。它们是本地展示、缓存或资源预算，不是签名/权限安全常量；均可在插件配置设置正安全整数，定时器上限为 JavaScript 有符号 32 位毫秒值。活动游标保持不透明，达到扫描预算仍明确显示未到末尾并支持继续加载。上游单页 200 条、金额与签名约束保持。
 
 `contributionWindowDays`（0.3.4）：贡献累计与活动缺省窗口的天数，默认 90，整数 1..90（C-USAGE 规定原始事件窗口最长 90 天；服务端自己的原始事件保留天数 `retentionDays` 是服务端设置，服务端不公布）。state/diagnostics 的 `configuration` 与设置页「运行配置」行展示当前值，所有「近 N 天」文案随它变化。贡献响应 `availability:'unavailable'`（窗口有一部分超出服务端保留或无法精确恢复）时保留数字并在设置页注明「服务端只保留了这个窗口的一部分记录，数字不完整」；服务端未给 `availability` 时为 `null`，设置页注明未说明是否完整；其他取值视为非法响应 `CORE_UPSTREAM_UNAVAILABLE`。

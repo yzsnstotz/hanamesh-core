@@ -1,6 +1,4 @@
-WIP 交接（DT3 → Claude）：本分支心跳候选在真实签名客户端的 330 秒原生回归仍失败，约 301 秒再次断流；不得发布或宣称 suite Unknown 已修复。证据位于 DT3 工作根的 native-green/after.json、evidence/candidate-peer-errors.json 和 questions/DT3-delivery.md。
-
-DT3 候选：Core 的 live client peer 流发送可配置的定长心跳，避免原生 Node fetch 五分钟正文空闲超时后将已运行套件降为 Unknown。心跳不改变 peer context、完整性准则、安装状态或采集同意；连接丢失仍撤销当前观察。见 [套件声明](docs/SUITE_DECLARATION.md)。
+CD2 候选（0.3.36）：client peer 租约流响应带 `cache-control: no-store, no-transform` 并每 30 秒重复同一定长帧。根因是 DSH Host gzip 把 `application/octet-stream` 当可压缩、把小帧全部留在 zlib 缓冲里，原生转发 300 秒收不到正文字节即断流，已安装套件随之降为 Unknown。心跳不改变 peer context、完整性准则、安装状态或采集同意；只接受协议 2。见 [套件声明](docs/SUITE_DECLARATION.md)。
 
 PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。
 
