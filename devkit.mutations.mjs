@@ -5,6 +5,8 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'bundle-stale-core-release',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("throw Error('CORE_RELEASE_PIN_MISMATCH');", "void 0;"),test:'test/dsh-bundle.test.mjs'},
+
  {id:'distribution-theme-pin',file:'lib/suite/service.js',mutate:code=>code.replace("theme && dependencies['@hanamesh/theme'] !== '0.1.0'","false"),test:'test/suite-policy.test.mjs'},
  {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace(",['theme','@hanamesh/theme']", ""),test:'test/dsh-bundle.test.mjs'},
  {id:'bundle-peer-widened',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("const previous=peerDependencies[name];", "const previous=undefined;"),test:'test/dsh-bundle.test.mjs'},

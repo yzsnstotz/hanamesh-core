@@ -173,15 +173,15 @@
   },
   "hanameshSuiteInstall": {
     "name": "@hanamesh/hanamesh",
-    "version": "0.1.4",
-    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.4",
+    "version": "0.1.5",
+    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.5",
     "args": [
       "plugin",
       "--profile",
       "desktop",
       "add",
       "--save-exact",
-      "@hanamesh/hanamesh@0.1.4"
+      "@hanamesh/hanamesh@0.1.5"
     ]
   }
 }

@@ -48,3 +48,15 @@ test('PK4 nested peers cannot widen an earlier narrower declaration',()=>{
  input[3].pkg.peerDependencies['@deepseek-ai/cordis']='>=4.1.5 <4.3.0-0';
  assert.throws(()=>mergeBundles('0.1.5',input),/PEER_DECLARATIONS_DIFFER/);
 });
+
+test('PK4 normal bundle generation rejects a stale Core repair release before producing a distribution',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'hm-bundle-release-'));t.after(()=>rm(root,{recursive:true,force:true}));const files=new Map();
+ for(const [i,row] of sources().entries()){
+  const dir=join(root,String(i));await mkdir(join(dir,'package'),{recursive:true});
+  const pkg={...row.pkg,dsh:{bundle:{patch:'./patch.yml'}},...(i===0?{hanameshSuiteInstall:createSuiteInstallRelease('0.1.4')}:{})};
+  await writeFile(join(dir,'package/package.json'),JSON.stringify(pkg));await writeFile(join(dir,'package/patch.yml'),JSON.stringify(row.patch));
+  const file=join(root,i+'.tgz');execFileSync(tarBinary,['-czf',file,'-C',dir,'package']);files.set(pkg.name,file);
+ }
+ const input={version:'0.1.5',core:'1.0.0',usage:'1.0.1',appHost:'1.0.2',theme:'1.0.3',outputDir:join(root,'output')};
+ await assert.rejects(buildHanaMesh(input,async name=>files.get(name)),/CORE_RELEASE_PIN_MISMATCH/);
+});

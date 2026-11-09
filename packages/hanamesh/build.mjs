@@ -86,6 +86,8 @@ export async function buildHanaMesh(input,fetchPackage){
   const file=await fetch(name,input[role],destination);
   sources.push(await readBundle(file,name,input[role]));
  }
+ const coreRelease=sources[0].pkg.hanameshSuiteInstall,expectedRelease=createSuiteInstallRelease(input.version);
+ if(!coreRelease||coreRelease.name!==expectedRelease.name||coreRelease.version!==expectedRelease.version||coreRelease.command!==expectedRelease.command||JSON.stringify(coreRelease.args)!==JSON.stringify(expectedRelease.args))throw Error('CORE_RELEASE_PIN_MISMATCH');
  const {manifest,patch}=mergeBundles(input.version,sources),packageDir=join(input.outputDir,'package');await mkdir(packageDir);
  const release={version:input.version,sources:sources.map(({pkg,sha256})=>({name:pkg.name,version:pkg.version,sha256})),entryIds:patch.flatMap(row=>row.insert.map(entry=>entry.id))};
  await writeFile(join(packageDir,'package.json'),JSON.stringify(manifest,null,2)+'\n');await writeFile(join(packageDir,'cordis.patch.yml'),yaml.dump(patch,{noRefs:true,lineWidth:-1}));await writeFile(join(packageDir,'release.json'),JSON.stringify(release,null,2)+'\n');

@@ -19,3 +19,5 @@ bundle_version="$(npm view @hanamesh/hanamesh version --registry=https://registr
 仓内旧候选 release.json（rc.15来源）已删除，不能当作本次发布证明。审后构建输出目录中的 release.json 才记录该次真实输入归档摘要；从发布tag/公开npm重新获取，禁止沿用历史SHA。
 
 Theme 的 token 层默认由公开 patch 启用。其 Cordis peer 更窄时，总包保留该已声明的更窄范围；不扩大任一提供方兼容范围。不同且无包含关系的 peer 仍拒绝，不猜交集。Theme 不成为 Core 服务成员或本地归档源白名单成员。
+
+生成器在读完正常归档后核对 Core 的 `hanameshSuiteInstall` 与本次总包精确版本、命令及 argv；旧发布定义拒绝 `CORE_RELEASE_PIN_MISMATCH`，不得把旧总包修复命令带入新分发。
