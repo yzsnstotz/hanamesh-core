@@ -241,8 +241,8 @@ test('return refresh errors stay visible and the next focus can read the bound a
   assert.doesNotMatch(textIn(fixture.section.render()), /CORE_UPSTREAM_UNAVAILABLE/);
 });
 
-for (const [bound, unboundLine, boundRow] of [[true, false, true], [false, true, false], [null, false, false]]) {
-  test(`granting consent and refreshing points keeps one bound state (Usage bound=${bound})`, async () => {
+for (const [bound, unboundLine, boundRow] of [[true, false, true], [false, false, false], [null, false, false]]) {
+  test(`granting consent keeps the authoritative bound state with assets on the website (Usage bound=${bound})`, async () => {
     let core;
     const fixture = await consentSection(path => {
       if (core && path === ROUTES.state) return Response.json({...core.state(), session: {...core.service.getSession(), bound}, account: bound ? {provider: 'github', displayName: 'fixture-bound-account'} : null});

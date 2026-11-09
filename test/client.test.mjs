@@ -24,8 +24,8 @@ test('account row is state-aware: bound hides the bind button and names the acco
   assert.match(source, /'去网站绑定'/);
   assert.match(source, /已绑定到网站账号/);
   // Return-triggered POST refresh and its rendered result are exercised in settings-page.test.mjs.
-  // rc.31: the 我的 Hana row stopped being a placeholder and now renders the real points read (T2).
-  assert.match(source, /'data-hanamesh-core-points': points\?\.status \?\? 'loading'/);
+  // Owner 11-09: asset detail now belongs to the website.
+  assert.match(source, /label: '市场与资产'/);
 });
 
 test('B7: bound account row names the GitHub account from state.account and falls back to the rc.19 wording when the server omits it', async () => {
@@ -38,29 +38,17 @@ test('B7: bound account row names the GitHub account from state.account and fall
   assert.match(bundle, /已绑定到 GitHub 账号/);
 });
 
-test('T2: the 我的 Hana row renders real 分 from the host points route, with readable empty states and a "分不是代币" note', async () => {
+test('CL1: asset details remain on the website while Core keeps its original identity boundary', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /jsonRequest<PointsState>\('\/api\/hanamesh\/core\/points'\)/); // client reads the host route, never ctx.get
-  assert.doesNotMatch(source, /ctx\.get\(/); // DELIVERY_RULES §1.6: host services are absent from the browser root context
-  assert.doesNotMatch(source, /api\.hanamesh\.com|\/v1\/custody/); // the custody read is signed host-side only
-  assert.match(source, /const fen = \(value: number\): string => `\$\{Number\(value\.toFixed\(3\)\)\} 分`;/);
-  assert.match(source, /CONSENT_WITHHELD: '未开启数据授权/);
-  assert.match(source, /NOT_REGISTERED: '本设备尚未注册成功/);
-  assert.match(source, /NOT_CONNECTED: '未连接服务端/);
-  assert.match(source, /'data-hanamesh-core-hint': 'points-not-token'\}, '分不是代币/);
-  assert.match(source, /\['creatorMirror', 'Creator 镜像奖励'\], \['launchInitiator', '发起奖励'\]/);
-  const bundle = await readFile('lib/client.js', 'utf8');
-  assert.match(bundle, /\/api\/hanamesh\/core\/points/);
-  assert.match(bundle, /分不是代币/);
-  // The whole surface stays in 分 and %; no token or currency units leak into the client copy.
-  assert.doesNotMatch(source, /HANA 币|代币数量|USDT|\bBNB\b/);
+  const section = source.slice(source.indexOf('function HanaMeshSection'), source.indexOf('/** Core owns its settings content'));
+  assert.match(section, /label: '市场与资产'/);assert.match(section, /在网站查看/);
+  assert.doesNotMatch(section, /loadPoints|setPoints|data-hanamesh-core-points|\/core\/points/);
+  assert.doesNotMatch(source, /ctx\.get\(/);
+  assert.doesNotMatch(source, /api\.hanamesh\.com|\/v1\/custody/);
 });
 
-test('P01-U04: native points distinguish typed totals from signed device event history', async () => {
+test('P01-U04: device event history retains bounded latest-page semantics', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /row\.displayName\s*\?\?/);
-  assert.match(source, /积分来源（按类型汇总）/);
-  assert.match(source, /filter\(\(\[, value\]\) => value !== 0\)/);
   assert.match(source, /\/api\/hanamesh\/core\/activity/);
   assert.match(source, /本设备近 \$\{windowDays\} 天贡献事件/);
   assert.match(source, /最新事件（新到旧）/);
@@ -71,7 +59,6 @@ test('P01-U04: native points distinguish typed totals from signed device event h
   assert.match(source, /activityPageBudget: 5/);
   assert.match(source, /slice\(-limits\.activityDisplayRows\)/);
   assert.match(source, /activityDisplayRows: 25/);
-  assert.match(source, /row\.displayName \?\? `\$\{row\.hanaId\.slice\(0, 8\)\}…`/);
 });
 
 test('use is a successful plugin command and open a presented plugin page; copy carries no hardcoded server settings', async () => {

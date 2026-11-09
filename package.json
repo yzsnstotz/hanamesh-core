@@ -52,7 +52,8 @@
     "docs/API.md",
     "docs/SECURITY.md",
     "docs/AGENT.md",
-    "docs/SUITE_DECLARATION.md"
+    "docs/SUITE_DECLARATION.md",
+    "docs/CLIENT_PAGES.md"
   ],
   "engines": {
     "node": ">=24.13.1 <25"
