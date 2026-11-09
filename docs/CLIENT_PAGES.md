@@ -19,3 +19,12 @@ Market transactions, issuance, LP and assets are website actions using Core's ex
 Page CSS is scoped and consumes host theme tokens. The home navigation glyph reuses the exact supplied DS1 dashboard icon asset. No host layout selector or persistent appearance preference is changed. Existing host settings and admitted Modal fallback remain available independently of the additive layout scope.
 
 The source/contract tests are not a visual or real-host acceptance result. See CL1 delivery for the exact archives, checks and outstanding DSH/browser verification.
+
+The account main page now reviews both enabling and withdrawing recording through
+the existing public DSH Modal. It shows the destination (or local-only status);
+cancel/Escape leave consent unchanged. Confirmation invokes the original serialized
+save and authoritative readback. The original settings-section integration remains
+available. The native browser run found this missing review and now verifies cancel
+without any consent POST. Theme coverage includes the dedicated sidebar, composer,
+menu and bubble surfaces as well as the generic background aliases; disposing the
+real owning theme fiber retracts the layer in the live client.

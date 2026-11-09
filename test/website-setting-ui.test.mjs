@@ -14,7 +14,7 @@ let state = {
   contributions: {status: 'ready', windowDays: 90, availability: 'available', actions: {install: 900, open: 800, use: 700, uninstall: 600}},
 };
 
-async function fixture(panelResponse = () => Response.json({total: 7, outbox: {pending: 3}, events: []}), stateResponse = () => Response.json(state)) {
+async function fixture(panelResponse = () => Response.json({total: 7, outbox: {pending: 3}, events: []}), stateResponse = () => Response.json(state), sectionProps = {}) {
   let current;
   const slots = new Map(); const timers = []; const requests = []; const opened = [];
   const React = {
@@ -31,6 +31,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
     window: {addEventListener() {}, removeEventListener() {}, setInterval: run => { timers.push(run); return timers.length; }, clearInterval() {}, open(url) { opened.push(url); }},
     fetch: async (path, init) => {
       requests.push({path, method: init?.method ?? 'GET', body: init?.body});
+      if(path === '/api/hanamesh/core/consent') {state={...state,consent:{state:JSON.parse(init.body).state}};return Response.json(state);}
       if(path === '/api/hanamesh/core/website') {const {websiteOrigin}=JSON.parse(init.body);state={...state,websiteOrigin:websiteOrigin??'https://market.fixture.invalid',websiteOriginSource:websiteOrigin?'setting':'config',websiteBinding:{ready:!!websiteOrigin,reason:websiteOrigin?null:'CORE_WEBSITE_CONFIGURATION_REQUIRED',message:websiteOrigin?'':'服务端已更换，请设置对应的网站地址；设置前不能打开网站或绑定。'}};return Response.json(state);}
       if(path === '/api/hanamesh/core/open-external') return Response.json({opened:false,reason:'DISABLED'});
       if (path === '/api/hanamesh/core/state') return stateResponse();
@@ -43,7 +44,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
   // In-memory compilation exercises current UI source without changing build outputs.
   vm.runInNewContext(ts.transpileModule(await readFile('src/client/index.ts', 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText, sandbox);
   sandbox.exports.apply({effect: run => run(), slots: {inject: (_name, run) => run(), register: (spec, component) => { slots.set(spec.name, component); return () => {}; }}});
-  const section = mount(slots.get('settings.section'));
+  const section = mount(slots.get('settings.section'), sectionProps);
   section.render(); section.effects().forEach(run => run()); await settle();
   return {section, mount, requests, timers, opened};
 }
@@ -81,4 +82,19 @@ test('a state read started before website save cannot replace the newly saved ad
  await elements(row).find(e=>e.children.includes('保存')).props.onClick();
  release(Response.json(old));await settle();
  assert.match(textIn(elements(f.section.render()).find(e=>e.props['data-hanamesh-core-website'])),/40002.*你设置的/);
+});
+
+
+test('account consent review cancels without a write and only confirmation uses the original consent route',async()=>{
+ state={...state,consent:{state:'withheld'},serverOrigin:null};
+ const f=await fixture(undefined,undefined,{page:'account'});
+ const toggle=()=>elements(f.section.render()).find(e=>e.type==='input'&&e.props.type==='checkbox');
+ toggle().props.onChange({currentTarget:{checked:true}});await settle();
+ let tree=f.section.render();assert.match(textIn(tree),/确认数据授权/);assert.match(textIn(tree),/只在本机记录/);
+ assert.equal(f.requests.some(r=>r.path.endsWith('/consent')),false);
+ elements(tree).find(e=>e.type==='button'&&e.children.includes('取消')).props.onClick();await settle();
+ assert.equal(toggle().props.checked,false);assert.equal(f.requests.some(r=>r.path.endsWith('/consent')),false);
+ toggle().props.onChange({currentTarget:{checked:true}});await settle();tree=f.section.render();
+ elements(tree).find(e=>e.type==='button'&&e.children.includes('确认开启')).props.onClick();await settle();
+ assert.equal(f.requests.filter(r=>r.path.endsWith('/consent')).length,1);assert.equal(toggle().props.checked,true);
 });

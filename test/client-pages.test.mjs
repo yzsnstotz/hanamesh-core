@@ -17,7 +17,7 @@ test('Core uses additive keyed main navigation and disposes its own registration
  // A focused public registration helper makes the additive seats reviewable.
  const stop=api.registerCorePages({layout:{selectPanel(){}},slots:{inject(_slot,run){return run();},register(options,component){entries.push([options,component]);return()=>released.push(options.key??options.id);}}});
  for(const id of ['hanamesh-home','hanamesh-account','hanamesh-environment'])assert(entries.some(([spec])=>spec.name==='main'&&spec.key===id));
- assert(entries.some(([spec])=>spec.name==='sidebar.panellist'&&spec.id==='hanamesh-home'));
+ assert(entries.some(([spec])=>spec.name==='sidebar.panellist'&&spec.id==='hanamesh-home'&&spec.order===-30));
  assert.equal(entries.some(([spec])=>['root','sidebar','conversation'].includes(spec.name)),false);
  assert.equal(entries.find(([spec])=>spec.key==='hanamesh-environment')[0].children['hanamesh.environment.content'].kind,'list');
  stop();assert.equal(released.length,4);

@@ -6,6 +6,18 @@ const pair = (light, dark = light) => Object.freeze({light, dark});
 const sans = '-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif';
 const mono = 'ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace';
 export const tokens = Object.freeze({
+  // DSH consumes these dedicated surfaces instead of the generic bg aliases.
+  '--dsw-specific-sidebar-fill': pair('#eef1f8','#0a0e18'),
+  '--dsw-specific-sidebar-nav-item-active': pair('rgba(8,145,178,.10)','rgba(34,211,238,.10)'),
+  '--dsw-specific-sidebar-nav-item-active-accent': pair('rgba(8,145,178,.16)','rgba(34,211,238,.16)'),
+  '--dsw-specific-input-major': pair('#ffffff','#0f1422'),
+  '--dsw-specific-login-input': pair('#ffffff','#0a0e18'),
+  '--dsw-specific-bubble': pair('#eef1f8','#151c2e'),
+  '--dsw-specific-bubble-highlight': pair('#eaeef7','#1b2439'),
+  '--dsw-specific-menu': pair('#ffffff','#151c2e'),
+  '--dsw-menu-surface-fill': pair('#ffffff','#151c2e'),
+  '--dsw-specific-selector': pair('#eef1f8','#151c2e'),
+  '--dsw-specific-tip': pair('#eef1f8','#151c2e'),
   '--dsw-alias-bg-base': pair('#f4f6fb','#06080e'),
   '--dsw-alias-bg-layer-1': pair('#eef1f8','#0a0e18'),
   '--dsw-alias-bg-layer-2': pair('#ffffff','#0f1422'),

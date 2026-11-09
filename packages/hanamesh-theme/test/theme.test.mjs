@@ -14,6 +14,8 @@ test('A palette uses paired website colors, fonts and consumed radius tokens',()
     assert.equal(typeof value.light,'string'); assert.equal(typeof value.dark,'string');
     assert(value.light.length&&value.dark.length);
   }
+  assert.equal(tokens['--dsw-specific-sidebar-fill'].dark,'#0a0e18');
+  assert.equal(tokens['--dsw-specific-input-major'].dark,'#0f1422');
   assert.equal(tokens['--dsw-radius-lg'].dark,'18px');
   assert.match(tokens['--dsh-font-family-text-default'].dark,/PingFang SC/);
   assert.match(tokens['--dsh-font-family-code-default'].light,/Menlo/);
