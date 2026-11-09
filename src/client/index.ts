@@ -197,7 +197,7 @@ function HanaMeshHome({navigate, navigationError}: {navigate: (id: string | null
   const consent = state ? state.consent.state === 'granted' ? '已开启' : '未开启' : '读取中';
   return createElement('div', {className: 'hm-core-page', 'data-hanamesh-home': 'true'},
     createElement('nav', {'aria-label': '位置', className: 'hm-core-breadcrumb'}, 'HanaMesh / HanaMesh 首页'),
-    createElement('div', {className: 'hm-core-notice', role: 'status'}, bound === true ? `已连接 ${state?.account?.displayName ?? '网站账号'}。使用记录${consent}；模型连接独立管理。` : bound === false ? '尚未连接账号。你可先使用本地工作台；数据记录不会自动开启。' : '正在读取账号与设备状态…'),
+    createElement('div', {className: 'hm-core-notice', role: 'status'}, bound === true ? `已连接 ${state?.account?.displayName ?? '网站账号'}。使用记录${consent}；模型连接独立管理。` : bound === false ? '尚未连接账号。你可先使用本地工作台；数据记录不会自动开启。' : state ? '绑定状态暂不可用。请在账号与设备中查看当前连接；数据授权单独管理。' : '正在读取账号与设备状态…'),
     createElement('header', null, createElement('div', {className: 'hm-core-eyebrow'}, 'YOUR HANAMESH'), createElement('h1', null, '欢迎回来，开始创造。'), createElement('p', null, '应用、设备与使用记录，集中在一个清晰的工作空间。')),
     navigationError && createElement('p', {role: 'alert'}, '页面暂不可用。请确认对应 HanaMesh 组件已安装并启用。'),
     error && createElement('p', {role: 'alert'}, `读取未完成：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
@@ -205,7 +205,7 @@ function HanaMeshHome({navigate, navigationError}: {navigate: (id: string | null
     createElement('div', {className: 'hm-core-metrics'},
       createElement('div', null, createElement('span', null, '本机已安装项'), createElement('strong', null, installed?.count ?? '—'), createElement('small', null, catalogError ? '应用库暂不可用' : installed ? '来自本机 AppHost 清单' : '正在读取本机清单')),
       createElement('div', null, createElement('span', null, '记录状态'), createElement('strong', null, consent), createElement('small', null, '由你选择是否记录')),
-      createElement('div', null, createElement('span', null, '市场与资产'), createElement('button', {type: 'button', disabled: !state?.websiteBinding?.ready, onClick: visit}, '在网站查看'), createElement('small', null, '发行、交易、LP 与资产由网站管理'))),
+      createElement('div', null, createElement('span', null, '市场与资产'), createElement('button', {type: 'button', disabled: !(state?.websiteBinding?.ready ?? !!state?.websiteOrigin), onClick: visit}, '在网站查看'), createElement('small', null, '发行、交易、LP 与资产由网站管理'))),
     createElement('div', {className: 'hm-core-page-grid'},
       createElement('div', null, createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '继续使用'),
         ...(installed?.names ?? []).map(name => createElement('div', {key: name, className: 'hm-core-home-item'}, createElement('span', null, name), createElement('button', {type: 'button', onClick: () => navigate('hanamesh-library')}, '查看'))),
