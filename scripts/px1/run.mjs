@@ -35,7 +35,7 @@ env.PX1_PINNED_PNPM=pnpm;
 const pm=(args,cwd=repo)=>command(process.execPath,[pnpm,...args],cwd);
 const nm=(args,cwd=repo)=>command(process.execPath,[npm,...args],cwd);
 const role=process.env.PX1_ROLE,phase=process.argv[2];
-const names={core:'hanamesh-core-0.3.34.tgz',usage:'hanamesh-usage-0.3.0-rc.19.tgz',apphost:'hanamesh-dsh-app-host-0.6.25.tgz'};
+const names={core:'hanamesh-core-0.3.35.tgz',usage:'hanamesh-usage-0.3.0-rc.19.tgz',apphost:'hanamesh-dsh-app-host-0.6.25.tgz'};
 const artifacts=join(root,'artifacts'),host=join(root,'native');
 const receipt={phase,role,platform:process.platform,arch:process.arch,node:process.version,startedAt:new Date().toISOString()};
 try{
@@ -85,14 +85,14 @@ try{
   // Repack the unchanged suite tuple/patch with the actual local archive hashes.
   // Tuple and patch come from PK4's normal four-package builder; no dependency ranges change.
   const suite=join(root,'suite');await mkdir(suite,{recursive:true});
-  await command('tar',['-xzf',join(fixture,'hanamesh-hanamesh-0.1.5.tgz'),'-C',suite]);
+  await command('tar',['-xzf',join(fixture,'hanamesh-hanamesh-0.1.6.tgz'),'-C',suite]);
   const releasePath=join(suite,'package/release.json'),release=JSON.parse(await readFile(releasePath,'utf8'));
   const files=[...Object.values(names),'hanamesh-theme-0.1.0.tgz'],archives=[];
   for(const file of files){const path=join(artifacts,file),bytes=await readFile(path);archives.push({path,integrity:'sha512-'+createHash('sha512').update(bytes).digest('base64')});}
   for(const [i,row]of release.sources.entries())row.sha256=createHash('sha256').update(await readFile(archives[i].path)).digest('hex');
   await writeFile(releasePath,JSON.stringify(release,null,2)+'\n');
   await nm(['pack','--ignore-scripts','--offline','--pack-destination',artifacts],join(suite,'package'));
-  const suiteFile=join(artifacts,'hanamesh-hanamesh-0.1.5.tgz');archives.push({path:suiteFile,integrity:'sha512-'+createHash('sha512').update(await readFile(suiteFile)).digest('base64')});
+  const suiteFile=join(artifacts,'hanamesh-hanamesh-0.1.6.tgz');archives.push({path:suiteFile,integrity:'sha512-'+createHash('sha512').update(await readFile(suiteFile)).digest('base64')});
   const source=await createSuitePackageSource({archives:archives.filter(row=>!row.path.endsWith('hanamesh-theme-0.1.0.tgz')),port:0,peerRegistry:'https://registry.npmjs.org/',maxArchiveBytes:32*1024*1024,maxExpandedBytes:128*1024*1024,maxEntries:10000,maxManifestBytes:2*1024*1024,maxResponseBytes:32*1024*1024,timeoutMs:10000});
   let themeSource;const results=[];
   try{themeSource=await themeFixtureRegistry(source.registry,join(artifacts,'hanamesh-theme-0.1.0.tgz')); for(const kind of ['core','usage','apphost','suite']){

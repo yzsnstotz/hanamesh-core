@@ -96,6 +96,10 @@ test('HanaMesh footer opens complete Core-owned settings through DSH Modal witho
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
 const switchIn = section => elements(section.render()).find(e => e.type === 'input' && e.props.type === 'checkbox');
+const confirmConsent = section => {
+  const button = elements(section.render()).find(e => e.type === 'button' && ['确认开启', '确认撤回'].some(label => e.children.includes(label)));
+  assert.ok(button, 'all consent writes must follow an explicit review');button.props.onClick();
+};
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 test('main settings visibly explains registration recovery and its real retry deadline', async t => {
   let state;
@@ -159,7 +163,7 @@ test('suite repair rows from older providers remain renderable without reason', 
 test('About displays the package release and supported DSH line', async t => {
   const pkg = JSON.parse(await readFile('package.json', 'utf8'));
   const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'));
-  assert.equal(pkg.version, '0.3.34');
+  assert.equal(pkg.version, '0.3.35');
   assert.equal(profile.version, pkg.version);
   const fixture = await consentSection();
   t.after(async () => { fixture.cleanup(); await fixture.controller.dispose(); });
@@ -251,6 +255,7 @@ for (const [bound, unboundLine, boundRow] of [[true, false, true], [false, false
     });
     core = fixture.controller;
     switchIn(fixture.section).props.onChange({currentTarget: {checked: true}});
+    confirmConsent(fixture.section);
     await settle();
     const tree = fixture.section.render();
     assert.equal(switchIn(fixture.section).props.checked, true);
@@ -266,10 +271,12 @@ test('consent UI reads the saved grant and withdrawal through Core routes', asyn
   const {section, controller, memory} = await consentSection();
   assert.equal(switchIn(section).props.checked, false);
   switchIn(section).props.onChange({currentTarget: {checked: true}});
+  confirmConsent(section);
   await settle();
   assert.equal(switchIn(section).props.checked, true);
   assert.equal(controller.service.getConsent(), 'granted');
   switchIn(section).props.onChange({currentTarget: {checked: false}});
+  confirmConsent(section);
   await settle();
   assert.equal(switchIn(section).props.checked, false);
   const reopened = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(memory.read()).store);
@@ -278,7 +285,7 @@ test('consent UI reads the saved grant and withdrawal through Core routes', asyn
   await reopened.dispose();
 });
 
-test('J2S1: HanaMesh section shows device identity and a default-off consent switch whose status and service effect follow each toggle', async () => {
+test('J2S1: HanaMesh section shows device identity and a default-off consent switch whose status and service effect follow each confirmed toggle', async () => {
   const {section, controller} = await consentSection();
   const statusText = () => textIn(elements(section.render()).find(e => e.props.role === 'status'));
   const tree = section.render();
@@ -292,11 +299,13 @@ test('J2S1: HanaMesh section shows device identity and a default-off consent swi
   const seen = [];
   controller.service.onConsentChange(state => seen.push(state));
   switchIn(section).props.onChange({currentTarget: {checked: true}});
+  confirmConsent(section);
   await settle();
   assert.equal(controller.service.getConsent(), 'granted', 'C-CORE getConsent sees the grant without a reload');
   assert.deepEqual(seen, ['granted']);
   assert.equal(statusText(), '当前：已开启');
   switchIn(section).props.onChange({currentTarget: {checked: false}});
+  confirmConsent(section);
   await settle();
   assert.equal(controller.service.getConsent(), 'withheld');
   assert.deepEqual(seen, ['granted', 'withheld']);
@@ -309,6 +318,7 @@ test('consent UI disables the switch until its write and authoritative read fini
   const waiting = new Promise(resolve => { release = resolve; });
   const {section, controller} = await consentSection((path, init) => path === ROUTES.consent && init.method === 'POST' ? waiting.then(() => Response.json({state: 'granted'})) : undefined);
   switchIn(section).props.onChange({currentTarget: {checked: true}});
+  confirmConsent(section);
   assert.equal(switchIn(section).props.disabled, true);
   assert.match(textIn(section.render()), /正在保存/);
   release();
@@ -320,6 +330,7 @@ test('consent UI disables the switch until its write and authoritative read fini
 test('consent write failure remains explicit after the regular state poll succeeds', async () => {
   const {f, section, controller} = await consentSection((path, init) => path === ROUTES.consent && init.method === 'POST' ? Response.json({error: {code: 'CORE_STORAGE_UNAVAILABLE'}}, {status: 503}) : undefined);
   switchIn(section).props.onChange({currentTarget: {checked: true}});
+  confirmConsent(section);
   await settle();
   assert.match(textIn(section.render()), /CORE_STORAGE_UNAVAILABLE/);
   f.timers[0]();
@@ -333,6 +344,7 @@ test('consent write failure remains explicit after the regular state poll succee
 test('consent UI cannot claim a confirmed save when the readback disagrees', async () => {
   const {section, controller} = await consentSection((path, init) => path === ROUTES.consent && init.method === 'POST' ? Response.json({state: 'granted'}) : undefined);
   switchIn(section).props.onChange({currentTarget: {checked: true}});
+  confirmConsent(section);
   await settle();
   assert.match(textIn(section.render()), /授权保存未确认.*CORE_CONSENT_NOT_CONFIRMED/);
   assert.equal(switchIn(section).props.checked, false);

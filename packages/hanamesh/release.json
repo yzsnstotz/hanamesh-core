@@ -1,10 +1,10 @@
 {
-  "version": "0.1.5",
+  "version": "0.1.6",
   "sources": [
     {
       "name": "@hanamesh/core",
-      "version": "0.3.34",
-      "sha256": "c1649d3b32a6b19496401ac09d9d7c57bd5994e4398e53f37ae938679df7a7f7"
+      "version": "0.3.35",
+      "sha256": "3a6fefb6445e1e131525fb9c8f222fc56767c1c3042d537ae7172bf9bcee7b29"
     },
     {
       "name": "@hanamesh/usage",

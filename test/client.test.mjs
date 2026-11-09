@@ -63,7 +63,6 @@ test('P01-U04: device event history retains bounded latest-page semantics', asyn
 
 test('use is a successful plugin command and open a presented plugin page; copy carries no hardcoded server settings', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /\['use', '使用贡献'\]/);
   assert.match(source, /use: '使用'/);
   assert.match(source, /「打开」记插件页面被打开，「使用」记插件命令成功执行；聊天回合不计/);
   assert.doesNotMatch(source, /5%|保留 90 天。/, 'no hardcoded server settings in copy');

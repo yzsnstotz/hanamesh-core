@@ -1,17 +1,17 @@
 {
   "name": "@hanamesh/hanamesh",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "hanameshSuiteInstall": {
     "name": "@hanamesh/hanamesh",
-    "version": "0.1.5",
-    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.5",
+    "version": "0.1.6",
+    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.6",
     "args": [
       "plugin",
       "--profile",
       "desktop",
       "add",
       "--save-exact",
-      "@hanamesh/hanamesh@0.1.5"
+      "@hanamesh/hanamesh@0.1.6"
     ]
   },
   "description": "HanaMesh Core, Usage, AppHost and Theme for DSH in one installation.",
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@hanamesh/core": "0.3.34",
+    "@hanamesh/core": "0.3.35",
     "@hanamesh/usage": "0.3.0-rc.19",
     "@hanamesh/dsh-app-host": "0.6.25",
     "@hanamesh/theme": "0.1.0"

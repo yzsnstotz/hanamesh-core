@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
-import ts from 'typescript';
 
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
@@ -41,8 +40,9 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
       assert.fail(`unexpected path ${path}`);
     },
   };
-  // In-memory compilation exercises current UI source without changing build outputs.
-  vm.runInNewContext(ts.transpileModule(await readFile('src/client/index.ts', 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText, sandbox);
+  // Exercise the same normal client artifact shipped to DSH; mutations of lib must be observable.
+  sandbox.window.__ModuleLoader__ = {load: spec => { sandbox.exports = spec.factory(sandbox.require); }};
+  vm.runInNewContext(await readFile(process.env.HM_SETTINGS_CLIENT_FILE ?? 'lib/client.js', 'utf8'), sandbox);
   sandbox.exports.apply({effect: run => run(), slots: {inject: (_name, run) => run(), register: (spec, component) => { slots.set(spec.name, component); return () => {}; }}});
   const section = mount(slots.get('settings.section'), sectionProps);
   section.render(); section.effects().forEach(run => run()); await settle();
@@ -85,16 +85,31 @@ test('a state read started before website save cannot replace the newly saved ad
 });
 
 
-test('account consent review cancels without a write and only confirmation uses the original consent route',async()=>{
- state={...state,consent:{state:'withheld'},serverOrigin:null};
- const f=await fixture(undefined,undefined,{page:'account'});
- const toggle=()=>elements(f.section.render()).find(e=>e.type==='input'&&e.props.type==='checkbox');
- toggle().props.onChange({currentTarget:{checked:true}});await settle();
- let tree=f.section.render();assert.match(textIn(tree),/确认数据授权/);assert.match(textIn(tree),/只在本机记录/);
- assert.equal(f.requests.some(r=>r.path.endsWith('/consent')),false);
- elements(tree).find(e=>e.type==='button'&&e.children.includes('取消')).props.onClick();await settle();
- assert.equal(toggle().props.checked,false);assert.equal(f.requests.some(r=>r.path.endsWith('/consent')),false);
- toggle().props.onChange({currentTarget:{checked:true}});await settle();tree=f.section.render();
- elements(tree).find(e=>e.type==='button'&&e.children.includes('确认开启')).props.onClick();await settle();
- assert.equal(f.requests.filter(r=>r.path.endsWith('/consent')).length,1);assert.equal(toggle().props.checked,true);
-});
+for (const [entry, props] of [['settings', {}], ['account', {page: 'account'}]]) {
+ test(`${entry} consent review defaults off, cancels and closes without a write, then confirms once`,async()=>{
+  state={...state,consent:{state:'withheld'},serverOrigin:'https://records.fixture.invalid'};
+  const f=await fixture(undefined,undefined,props);
+  const toggle=()=>elements(f.section.render()).find(e=>e.type==='input'&&e.props.type==='checkbox');
+  const writes=()=>f.requests.filter(r=>r.path.endsWith('/consent'));
+  const review=()=>elements(f.section.render()).find(e=>e.props.title==='确认数据授权');
+  assert.equal(toggle().props.checked,false);assert.equal(writes().length,0);
+  toggle().props.onChange({currentTarget:{checked:true}});await settle();
+  let tree=f.section.render();assert.ok(review(),'every entry must review before authorizing');
+  assert.match(textIn(tree),/安装、打开、使用与卸载摘要/);
+  assert.match(textIn(tree),/不包含对话、文件或凭据/);
+  assert.match(textIn(tree),/https:\/\/records.fixture.invalid/);
+  assert.equal(toggle().props.checked,false);assert.equal(writes().length,0);
+  elements(tree).find(e=>e.type==='button'&&e.children.includes('取消')).props.onClick();await settle();
+  assert.equal(toggle().props.checked,false);assert.equal(state.consent.state,'withheld');assert.equal(writes().length,0);assert.equal(review(),undefined);
+  toggle().props.onChange({currentTarget:{checked:true}});await settle();review().props.onClose();await settle();
+  assert.equal(toggle().props.checked,false);assert.equal(state.consent.state,'withheld');assert.equal(writes().length,0);
+  toggle().props.onChange({currentTarget:{checked:true}});await settle();tree=f.section.render();
+  const confirm=elements(tree).find(e=>e.type==='button'&&e.children.includes('确认开启'));
+  confirm.props.onClick();confirm.props.onClick();await settle();
+  assert.equal(writes().length,1);assert.deepEqual(JSON.parse(writes()[0].body),{state:'granted'});assert.equal(toggle().props.checked,true);
+  toggle().props.onChange({currentTarget:{checked:false}});await settle();
+  assert.ok(review());assert.equal(writes().length,1);assert.equal(toggle().props.checked,true);
+  elements(f.section.render()).find(e=>e.type==='button'&&e.children.includes('确认撤回')).props.onClick();await settle();
+  assert.equal(writes().length,2);assert.equal(toggle().props.checked,false);assert.equal(state.consent.state,'withheld');
+ });
+}

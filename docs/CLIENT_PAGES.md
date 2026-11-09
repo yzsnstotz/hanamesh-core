@@ -28,3 +28,7 @@ available. The native browser run found this missing review and now verifies can
 without any consent POST. Theme coverage includes the dedicated sidebar, composer,
 menu and bubble surfaces as well as the generic background aliases; disposing the
 real owning theme fiber retracts the layer in the live client.
+
+## R152 consent entry parity
+
+The retained DSH `settings.section`, footer settings Modal and keyed account page share the same consent review. A switch gesture only opens the existing CoreModal: state remains withheld until “确认开启”. The dialog explains the usage summary fields, excluded content/credentials and configured destination. Cancel, Escape/backdrop close and default mount do not post consent. Confirmation uses the existing serialized write plus authoritative readback; withdrawal also uses the same review. No backend or permission protocol changes.
