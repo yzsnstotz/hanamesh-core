@@ -1,7 +1,20 @@
 {
   "name": "@hanamesh/hanamesh",
-  "version": "0.1.4",
-  "description": "HanaMesh Core, Usage and AppHost for DSH in one installation.",
+  "version": "0.1.5",
+  "hanameshSuiteInstall": {
+    "name": "@hanamesh/hanamesh",
+    "version": "0.1.5",
+    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.5",
+    "args": [
+      "plugin",
+      "--profile",
+      "desktop",
+      "add",
+      "--save-exact",
+      "@hanamesh/hanamesh@0.1.5"
+    ]
+  },
+  "description": "HanaMesh Core, Usage, AppHost and Theme for DSH in one installation.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -14,12 +27,13 @@
     "LICENSE"
   ],
   "dependencies": {
-    "@hanamesh/core": "0.3.33",
-    "@hanamesh/usage": "0.3.0-rc.18",
-    "@hanamesh/dsh-app-host": "0.6.24"
+    "@hanamesh/core": "0.3.34",
+    "@hanamesh/usage": "0.3.0-rc.19",
+    "@hanamesh/dsh-app-host": "0.6.25",
+    "@hanamesh/theme": "0.1.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": ">=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0",
+    "@deepseek-ai/cordis": ">=4.1.0 <4.2.0-0",
     "@deepseek-ai/dsh-agent": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-app-boot": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-attachment": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
@@ -29,6 +43,7 @@
     "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-client-ui-settings": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-theme": ">=0.2.2-rc.1 <0.3.0-0",
     "@deepseek-ai/dsh-host-webserver": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-scope": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
     "@deepseek-ai/dsh-session": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",

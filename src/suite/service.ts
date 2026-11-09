@@ -19,6 +19,14 @@ function bundleFailure(record: PackageMetadata): string | null {
   if (typeof bundle.patch !== 'string' || !/^\.\/[A-Za-z0-9._/-]+$/.test(bundle.patch) || bundle.patch.slice(2).split('/').some(part => !part || part === '.' || part === '..')) return 'CORE_SUITE_BUNDLE_INVALID';
   return null;
 }
+/** A fixed distribution asset is not an authoritative business member or archive-source member.
+ * Retain the three-member identity checks and reject all other dependency additions. */
+function distributionDependencies(dependencies: Readonly<Record<string, string>> | undefined, members: readonly string[]): boolean {
+  if (!dependencies) return false;
+  const theme = Object.hasOwn(dependencies, '@hanamesh/theme');
+  if (theme && dependencies['@hanamesh/theme'] !== '0.1.0') return false;
+  return Object.keys(dependencies).length === members.length + (theme ? 1 : 0) && members.every(name => Object.hasOwn(dependencies, name));
+}
 export const DEFAULT_SUITE_REGISTRY = 'https://registry.npmjs.org/';
 export class SuiteDeclarationService {
   constructor(readonly options: SuiteServiceOptions) {}
@@ -43,7 +51,7 @@ export class SuiteDeclarationService {
     let physicalBundle: PackageMetadata | null = null;
     try {physicalBundle = await this.options.bundleInventory();} catch { /* unreadable package metadata is reported below */ }
     const bundleVersion = physicalBundle && semver.valid(physicalBundle.version) ? physicalBundle.version : null;
-    if (!physicalBundle || !bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || Object.keys(physicalBundle.dependencies ?? {}).length !== installed.length || installed.some(row => physicalBundle.dependencies?.[row.moduleName] !== row.actualVersion)) {
+    if (!physicalBundle || !bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || !distributionDependencies(physicalBundle.dependencies, installed.map(row => row.moduleName)) || installed.some(row => physicalBundle.dependencies?.[row.moduleName] !== row.actualVersion)) {
       if (completeness === 'complete') completeness = 'unknown';
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH', moduleName: manifest.bundle.name});
     }
@@ -133,7 +141,7 @@ export class SuiteDeclarationService {
           if (bundleReason) {reject(bundleReason); continue;}
           const dependencies = bundle.dependencies;
           const memberNames = names.slice(1);
-          if (!dependencies || Object.keys(dependencies).length !== memberNames.length || memberNames.some(name => typeof dependencies[name] !== 'string' || semver.valid(dependencies[name]) !== dependencies[name])) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
+          if (!dependencies || !distributionDependencies(dependencies, memberNames) || memberNames.some(name => typeof dependencies[name] !== 'string' || semver.valid(dependencies[name]) !== dependencies[name])) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
           const chosen = memberNames.map(name => catalogs.get(name)![dependencies[name]!]);
           const record = chosen[0], candidate = record?.hanameshSuite;
           if (!candidate) {reject('CORE_SUITE_MANIFEST_MISSING'); continue;}

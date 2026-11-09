@@ -5,6 +5,10 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'distribution-theme-pin',file:'lib/suite/service.js',mutate:code=>code.replace("theme && dependencies['@hanamesh/theme'] !== '0.1.0'","false"),test:'test/suite-policy.test.mjs'},
+ {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace(",['theme','@hanamesh/theme']", ""),test:'test/dsh-bundle.test.mjs'},
+ {id:'bundle-peer-widened',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("const previous=peerDependencies[name];", "const previous=undefined;"),test:'test/dsh-bundle.test.mjs'},
+
  {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","void 0;"),test:'test/agent-onboarding.test.mjs'},
  {id:'agent-local-close-dominates-website',file:'lib/agent.js',mutate:code=>code.replace(/(\/\/ Explicit local close[^\n]*\n)\s*return result;/,"$1"),test:'test/agent-onboarding.test.mjs'},
  {id:'points-prompt-stamps-before-display',file:'lib/client.js',mutate:code=>code.replace('setPending(next.pendingTotal);',"setPending(next.pendingTotal); void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'});"),test:'test/points-prompt-display.test.mjs'},

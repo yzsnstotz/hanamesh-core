@@ -16,3 +16,6 @@
     - id: hanamesh-app-host
       name: '@hanamesh/dsh-app-host'
       config: {}
+- insert:
+    - id: hanamesh-theme
+      name: '@hanamesh/theme'

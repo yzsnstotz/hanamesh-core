@@ -9,3 +9,5 @@ Compatibility: DSH 0.2.2-rc.1 and subsequent 0.2.x versions that retain the publ
 The theme maps consumed background/text/border/accent/status/code/card/font/radius variables. It never changes host DOM, layout, slots, feature state, model credentials, or third-party iframe contents. Components with hardcoded styles remain the host's responsibility; report observed gaps rather than patching them here. Both product scenarios use the same tarball. Distribution/suite adoption follows review and publication of this package; no unpublished registry dependency is inserted into the existing suite.
 
 Build: `npm run build`; unit/lifecycle/bundle validation: `npm test`; package: `npm pack`. No build dependencies are needed.
+
+PK4 首版候选固定为 0.1.0；总包精确采用此包并默认插入主题层。`npm run test:mutations` 检查配色双态、所属层撤回和缺 API 拒绝均被真实断言捕获。未执行 npm 发布。

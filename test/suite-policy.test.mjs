@@ -95,3 +95,19 @@ test('Core emits the selected exact upgrade definition for the actual profile an
  assert.equal((await service().read()).registry,null,'passive facts stay offline');
  const bad=await service().read({registry,profile:'../owner'});assert.deepEqual(bad.upgrades,[]);
 });
+
+test('PK4 pins the independent distribution theme without adding a trusted business member',async()=>{
+ const currentBundle={...installedBundle,dependencies:{...installedBundle.dependencies,'@hanamesh/theme':'0.1.0'}};
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies['@hanamesh/theme']='0.1.0';
+ const s=service({currentBundle,data}),reads=[];const read=s.options.registry.read;s.options.registry.read=async(...args)=>{reads.push(args[1]);return read(...args);};
+ const d=await s.read({registry});assert.equal(d.completeness,'complete');assert.equal(d.upgrades.length,1);
+ assert.equal(d.installed.length,3);assert.equal(d.upgrades[0].targets.length,3);assert(!reads.includes('@hanamesh/theme'));
+ for(const value of ['^0.1.0','latest','0.1.1',null]){
+  const current={...currentBundle,dependencies:{...currentBundle.dependencies,'@hanamesh/theme':value}};
+  assert.notEqual((await service({currentBundle:current}).read()).completeness,'complete');
+  const changed=structuredClone(data);changed.bundle['1.1.0'].dependencies['@hanamesh/theme']=value;
+  assert.deepEqual((await service({currentBundle,data:changed}).read({registry})).upgrades,[]);
+ }
+ const foreign=structuredClone(data);foreign.bundle['1.1.0'].dependencies.foreign='1.0.0';
+ assert.deepEqual((await service({currentBundle,data:foreign}).read({registry})).upgrades,[]);
+});
