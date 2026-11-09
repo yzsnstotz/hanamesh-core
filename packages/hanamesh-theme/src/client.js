@@ -1,0 +1,66 @@
+/** Website design-tokens.css (DS1 approved A). No DOM writes, preference writes,
+ * fonts downloaded, or host layout selectors: the host presenter owns projection. */
+export const name = 'hanamesh-theme-client';
+export const inject = ['theme'];
+const pair = (light, dark = light) => Object.freeze({light, dark});
+const sans = '-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif';
+const mono = 'ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace';
+export const tokens = Object.freeze({
+  '--dsw-alias-bg-base': pair('#f4f6fb','#06080e'),
+  '--dsw-alias-bg-layer-1': pair('#eef1f8','#0a0e18'),
+  '--dsw-alias-bg-layer-2': pair('#ffffff','#0f1422'),
+  '--dsw-alias-bg-layer-3': pair('#f5f7fc','#151c2e'),
+  '--dsw-alias-bg-overlay': pair('#ffffff','#151c2e'),
+  '--dsw-alias-bg-module-platform': pair('#eef1f8','#0a0e18'),
+  '--dsw-alias-label-primary': pair('#0d1424','#eaf0fb'),
+  '--dsw-alias-label-primary-bluish': pair('#0d1424','#eaf0fb'),
+  '--dsw-alias-label-secondary': pair('#3a4660','#b4bfd6'),
+  '--dsw-alias-label-tertiary': pair('#68738c','#7e8aa6'),
+  '--dsw-alias-label-caption': pair('#68738c','#7e8aa6'),
+  '--dsw-alias-label-primary-inverted': pair('#ffffff','#04121a'),
+  '--dsw-alias-label-primary-foreground': pair('#ffffff','#04121a'),
+  '--dsw-alias-border-l1': pair('rgba(20,35,70,.10)','rgba(160,180,220,.12)'),
+  '--dsw-alias-border-l2': pair('rgba(20,35,70,.20)','rgba(160,180,220,.22)'),
+  '--dsw-alias-border-l2-darkmode-thin': pair('rgba(20,35,70,.20)','rgba(160,180,220,.22)'),
+  '--dsw-alias-border-l3': pair('rgba(20,35,70,.20)','rgba(160,180,220,.22)'),
+  '--dsw-alias-brand-primary': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-brand-text': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-link': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-button-primary-fill': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-button-primary-hover': pair('#0e7490','#67e8f9'),
+  '--dsw-alias-button-elevated-fill': pair('#f5f7fc','#151c2e'),
+  '--dsw-alias-button-floating-fill': pair('#ffffff','#151c2e'),
+  '--dsw-alias-button-floating-hover': pair('#eaeef7','#1b2439'),
+  '--dsw-alias-button-ghost-active-fill': pair('rgba(8,145,178,.10)','rgba(34,211,238,.10)'),
+  '--dsw-alias-button-ghost-active-hover': pair('rgba(8,145,178,.16)','rgba(34,211,238,.16)'),
+  '--dsw-alias-button-ghost-active-border': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-interactive-bg-hover': pair('#eaeef7','#1b2439'),
+  '--dsw-alias-interactive-bg-active': pair('rgba(8,145,178,.10)','rgba(34,211,238,.10)'),
+  '--dsw-alias-interactive-bg-hover-accent': pair('rgba(8,145,178,.10)','rgba(34,211,238,.10)'),
+  '--dsw-alias-settings-card-fill': pair('#ffffff','#0f1422'),
+  '--dsw-alias-settings-card-stroke': pair('rgba(20,35,70,.10)','rgba(160,180,220,.12)'),
+  '--dsw-alias-markdown-code-block': pair('#eef1f8','#0a0e18'),
+  '--dsw-alias-markdown-inline-code': pair('#eaeef7','#1b2439'),
+  '--dsw-alias-onboarding-accent': pair('#0891b2','#22d3ee'),
+  '--dsw-alias-onboarding-card-fill': pair('#ffffff','#0f1422'),
+  '--dsw-alias-state-business-primary': pair('#6d4dff','#8b7cff'),
+  '--dsw-alias-state-business-tertiary': pair('rgba(109,77,255,.10)','rgba(139,124,255,.10)'),
+  '--dsw-alias-state-success-primary': pair('#16a34a','#4ade80'),
+  '--dsw-alias-state-error-primary': pair('#e11d48','#fb7185'),
+  '--dsw-alias-state-warn-primary': pair('#b45309','#fbbf24'),
+  '--dsw-alias-state-warn-tertiary': pair('rgba(180,83,9,.08)','rgba(251,191,36,.08)'),
+  '--dsh-font-family-text-default': pair(sans),
+  '--dsh-font-family-code-default': pair(mono),
+  '--dsw-font-family': pair('var(--dsh-font-family-text, var(--dsh-font-family-text-default))'),
+  '--dsw-font-family-brand': pair('var(--dsh-font-family-text, var(--dsh-font-family-text-default))'),
+  '--dsw-radius-xs': pair('6px'),
+  '--dsw-radius-sm': pair('10px'),
+  '--dsw-radius-md': pair('14px'),
+  '--dsw-radius-lg': pair('18px'),
+  '--dsw-radius-xl': pair('22px'),
+  '--dsw-radius-panel': pair('22px'),
+});
+export function apply(ctx) {
+  if (typeof ctx.theme?.overrideTokens !== 'function') throw new Error('HANAMESH_THEME_API_UNAVAILABLE');
+  ctx.effect(() => ctx.theme.overrideTokens('@hanamesh/theme', tokens), 'hanamesh-theme:tokens');
+}

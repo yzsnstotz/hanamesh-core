@@ -1,0 +1,4 @@
+# Installing the bundle enables A for both distribution scenarios.
+- insert:
+    - id: hanamesh-theme
+      name: '@hanamesh/theme'
