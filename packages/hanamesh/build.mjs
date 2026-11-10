@@ -41,7 +41,7 @@ export function mergeBundles(version,sources){
  const dependencies={},peerDependencies={},optional=new Map(),patch=[],ids=new Set();
  for(const [index,{pkg,patch:rows}] of sources.entries()){
   if(pkg.name!==components[index][1]||!exactVersion.test(pkg.version))throw Error('SOURCE_ORDER_OR_VERSION_INVALID');
-  dependencies[pkg.name]=pkg.version;
+  dependencies[pkg.name]='^'+pkg.version;
   if(!record(pkg.peerDependencies))throw Error(`SOURCE_PEERS_MISSING: ${pkg.name}`);
   for(const [name,range] of Object.entries(pkg.peerDependencies)){
    if(!name.startsWith('@deepseek-ai/'))continue;
@@ -68,7 +68,7 @@ export function mergeBundles(version,sources){
  if(!Object.keys(peers).length)throw Error('SOURCE_PEERS_MISSING');
  return {manifest:{name:'@hanamesh/hanamesh',version,hanameshSuiteInstall:createSuiteInstallRelease(version),description:'HanaMesh Core, Usage, AppHost and Theme for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
 }
-export async function buildHanaMesh(input,fetchPackage){
+export async function buildHanaMesh(input,fetchPackage,packPackage=command){
  if(!record(input)||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');
  // A fresh directory prevents a failed build from leaving a previous release looking current.
  await mkdir(input.outputDir,{mode:0o700});
@@ -93,7 +93,7 @@ export async function buildHanaMesh(input,fetchPackage){
  await writeFile(join(packageDir,'package.json'),JSON.stringify(manifest,null,2)+'\n');await writeFile(join(packageDir,'cordis.patch.yml'),yaml.dump(patch,{noRefs:true,lineWidth:-1}));await writeFile(join(packageDir,'release.json'),JSON.stringify(release,null,2)+'\n');
  await writeFile(join(packageDir,'README.md'),await readFile(new URL('./README.md',import.meta.url),'utf8'));
  await writeFile(join(packageDir,'LICENSE'),await readFile(new URL('../../LICENSE',import.meta.url),'utf8'));
- const packed=JSON.parse(await command('npm',['pack','--ignore-scripts','--offline','--json','--pack-destination',input.outputDir],{cwd:packageDir,env}));
+ const packed=JSON.parse(await packPackage('npm',['pack','--ignore-scripts','--offline','--json','--pack-destination',input.outputDir],{cwd:packageDir,env}));
  if(!Array.isArray(packed)||packed.length!==1||packed[0].name!==manifest.name||packed[0].version!==manifest.version||posix.basename(packed[0].filename)!==packed[0].filename)throw Error('OUTPUT_PACK_INVALID');
  const file=join(input.outputDir,packed[0].filename),sha256=digest(await readFile(file)),result={file,sha256,manifest,release};
  await writeFile(join(input.outputDir,'SHA256SUMS'),sha256+'  '+packed[0].filename+'\n');await writeFile(join(input.outputDir,'result.json'),JSON.stringify(result,null,2)+'\n');return result;

@@ -21,3 +21,5 @@ bundle_version="$(npm view @hanamesh/hanamesh version --registry=https://registr
 Theme 的 token 层默认由公开 patch 启用。其 Cordis peer 更窄时，总包保留该已声明的更窄范围；不扩大任一提供方兼容范围。不同且无包含关系的 peer 仍拒绝，不猜交集。Theme 不成为 Core 服务成员或本地归档源白名单成员。
 
 生成器在读完正常归档后核对 Core 的 `hanameshSuiteInstall` 与本次总包精确版本、命令及 argv；旧发布定义拒绝 `CORE_RELEASE_PIN_MISMATCH`，不得把旧总包修复命令带入新分发。
+
+总包的 Core、AppHost、Usage、Theme 运行时依赖使用 `^` 兼容范围。生成输入仍须是四个精确版本的正常 tgz；`release.json` 保留每个来源的精确版本和 SHA256，发布门不变。桌面构建读取当时 npm 最新发布，将总包/Brand 精确版本和完整解析锁随安装包预装。安装后在 HanaMesh 应用库显示已装/最新兼容版本，确认后可升级或选择历史版本；实际安装固定为精确版本，不降低 DSH 兼容或供应链规则。

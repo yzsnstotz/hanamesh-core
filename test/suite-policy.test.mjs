@@ -26,8 +26,8 @@ test('upgrade selects one bundle version and its exact three locked versions',as
  const data=structuredClone(catalog);data.usage['1.9.0']=record('usage','1.9.0');assert.deepEqual((await service({data}).read({registry})).upgrades[0].targets.map(r=>r.version),['1.1.0','1.1.0','1.1.0']);
  assert.deepEqual((await service().read({registry,bundleVersion:'9.0.0'})).upgrades,[]);
 });
-test('bundle dependencies reject ranges, foreign members, missing metadata and downgrades',async()=>{
- for(const mutate of [d=>d.bundle['1.1.0'].dependencies.usage='^1.0.0',d=>delete d.bundle['1.1.0'].dependencies.apps,d=>d.bundle['1.1.0'].dependencies.foreign='1.0.0',d=>delete d.usage['1.1.0'],d=>{d.usage['0.9.0']=record('usage','0.9.0');d.bundle['1.1.0'].dependencies.usage='0.9.0';}]){
+test('bundle dependencies reject invalid ranges, foreign members, missing metadata and unrequested downgrades',async()=>{
+ for(const mutate of [d=>d.bundle['1.1.0'].dependencies.usage='latest',d=>delete d.bundle['1.1.0'].dependencies.apps,d=>d.bundle['1.1.0'].dependencies.foreign='1.0.0',d=>delete d.usage['1.1.0'],d=>{d.usage['0.9.0']=record('usage','0.9.0');d.bundle['1.1.0'].dependencies.usage='0.9.0';}]){
   const data=structuredClone(catalog);mutate(data);const d=await service({data}).read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(r=>r.bundleVersion==='1.1.0'));
  }
 });
@@ -102,7 +102,7 @@ test('PK4 pins the independent distribution theme without adding a trusted busin
  const s=service({currentBundle,data}),reads=[];const read=s.options.registry.read;s.options.registry.read=async(...args)=>{reads.push(args[1]);return read(...args);};
  const d=await s.read({registry});assert.equal(d.completeness,'complete');assert.equal(d.upgrades.length,1);
  assert.equal(d.installed.length,3);assert.equal(d.upgrades[0].targets.length,3);assert(!reads.includes('@hanamesh/theme'));
- for(const value of ['^0.1.0','latest','0.1.1',null]){
+ for(const value of ['latest','garbage',null]){
   const current={...currentBundle,dependencies:{...currentBundle.dependencies,'@hanamesh/theme':value}};
   assert.notEqual((await service({currentBundle:current}).read()).completeness,'complete');
   const changed=structuredClone(data);changed.bundle['1.1.0'].dependencies['@hanamesh/theme']=value;
@@ -111,3 +111,20 @@ test('PK4 pins the independent distribution theme without adding a trusted busin
  const foreign=structuredClone(data);foreign.bundle['1.1.0'].dependencies.foreign='1.0.0';
  assert.deepEqual((await service({currentBundle,data:foreign}).read({registry})).upgrades,[]);
 });
+
+ test('VR1 installed compatible dependencies remain complete and select the latest satisfying release',async()=>{
+ const currentBundle={...installedBundle,dependencies:{core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0','@hanamesh/theme':'^0.1.0'}};
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies={core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0','@hanamesh/theme':'^0.1.0'};
+ data.usage['1.9.0']=record('usage','1.9.0');
+ const d=await service({currentBundle,data}).read({registry});assert.equal(d.completeness,'complete');assert.deepEqual(d.upgrades[0].targets.map(r=>r.version),['1.1.0','1.9.0','1.1.0']);
+ });
+ test('VR1 explicitly selected older release is checked and offered for version switching',async()=>{
+ const data=structuredClone(catalog);data.bundle['0.9.0']=bundle('0.9.0',installedBundle.dependencies);
+ assert.equal((await service({data}).read({registry,bundleVersion:'0.9.0'})).upgrades[0].bundle.version,'0.9.0');
+ assert.equal((await service({data}).read({registry})).upgrades.some(row=>row.bundle.version==='0.9.0'),false);
+ });
+
+ test('VR1 ranged member metadata must match its selected registry version key',async()=>{
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies.usage='^1.0.0';data.usage['1.1.0']=record('usage','9.0.0');
+ const declaration=await service({data}).read({registry});assert.deepEqual(declaration.upgrades,[]);assert(declaration.blocked.some(row=>row.code==='CORE_SUITE_SOURCE_MISMATCH'));
+ });

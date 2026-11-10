@@ -13,7 +13,9 @@ export const cases = [
 
  {id:'bundle-stale-core-release',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("throw Error('CORE_RELEASE_PIN_MISMATCH');", "void 0;"),test:'test/dsh-bundle.test.mjs'},
 
- {id:'distribution-theme-pin',file:'lib/suite/service.js',mutate:code=>code.replace("theme && dependencies['@hanamesh/theme'] !== '0.1.0'","false"),test:'test/suite-policy.test.mjs'},
+ {id:'range-member-key-unbound',file:'lib/suite/service.js',mutate:code=>code.replace('this.validRecord(row, installed[i].moduleName, chosenVersions[i], installed[i].repository)','this.validRecord(row, installed[i].moduleName, row.version, installed[i].repository)'),test:'test/suite-policy.test.mjs'},
+ {id:'bundle-compatible-ranges',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("dependencies[pkg.name]='^'+pkg.version;","dependencies[pkg.name]=pkg.version;"),test:'test/dsh-bundle.test.mjs'},
+ {id:'distribution-theme-range',file:'lib/suite/service.js',mutate:code=>code.replace("theme && (typeof dependencies['@hanamesh/theme'] !== 'string' || !semver.validRange(dependencies['@hanamesh/theme']))","false"),test:'test/suite-policy.test.mjs'},
  {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace(",['theme','@hanamesh/theme']", ""),test:'test/dsh-bundle.test.mjs'},
  {id:'bundle-peer-widened',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("const previous=peerDependencies[name];", "const previous=undefined;"),test:'test/dsh-bundle.test.mjs'},
 

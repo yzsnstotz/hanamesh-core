@@ -9,8 +9,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 const sources=()=>components.map(([role,name],i)=>({pkg:{name,version:`1.0.${i}`,peerDependencies:{'@deepseek-ai/cordis':'^4.0.4',react:'^18.3.1',...(i<2?{zod:'^4.5.4'}:{})}},patch:[{insert:[{id:role,name,config:{ownedBy:role}}]}]}));
-test('bundle locks exact identities, merges only DSH peers and keeps the original entries and configuration',()=>{
- const input=sources(),result=mergeBundles('0.1.0',input);assert.deepEqual(result.manifest.hanameshSuiteInstall,createSuiteInstallRelease('0.1.0'));assert.deepEqual(result.manifest.dependencies,Object.fromEntries(input.map(r=>[r.pkg.name,r.pkg.version])));assert.deepEqual(result.manifest.peerDependencies,{'@deepseek-ai/cordis':'^4.0.4'});assert.equal(Object.hasOwn(result.manifest,'exports'),false);assert.deepEqual(result.patch,input.flatMap(r=>r.patch));assert.equal(result.manifest.dsh.bundle.patch,'./cordis.patch.yml');result.patch[0].insert[0].config.ownedBy='changed';assert.equal(input[0].patch[0].insert[0].config.ownedBy,'core');
+test('bundle keeps exact source identities and emits compatible dependencies, merges only DSH peers and keeps the original entries and configuration',()=>{
+ const input=sources(),result=mergeBundles('0.1.0',input);assert.deepEqual(result.manifest.hanameshSuiteInstall,createSuiteInstallRelease('0.1.0'));assert.deepEqual(result.manifest.dependencies,Object.fromEntries(input.map(r=>[r.pkg.name,'^'+r.pkg.version])));assert.deepEqual(result.manifest.peerDependencies,{'@deepseek-ai/cordis':'^4.0.4'});assert.equal(Object.hasOwn(result.manifest,'exports'),false);assert.deepEqual(result.patch,input.flatMap(r=>r.patch));assert.equal(result.manifest.dsh.bundle.patch,'./cordis.patch.yml');result.patch[0].insert[0].config.ownedBy='changed';assert.equal(input[0].patch[0].insert[0].config.ownedBy,'core');
 });
 test('bundle refuses duplicate entries, unsupported patches, relative entrypoints, ranges and differing peers',()=>{
  for(const change of [s=>s[1].patch[0].insert[0].id='core',s=>s[0].patch=[{id:'core',disabled:true}],s=>s[0].patch[0].insert[0].name='./private.js',s=>s[0].pkg.version='^1.0.0',s=>s[1].pkg.peerDependencies['@deepseek-ai/cordis']='^5.0.0']){const input=sources();change(input);assert.throws(()=>mergeBundles('0.1.0',input));}
@@ -27,7 +27,7 @@ test('PK4 bundle contains the four exact providers and preserves the stricter re
  input[3].pkg.peerDependencies['@deepseek-ai/dsh-client-ui-theme']='>=0.2.2-rc.1 <0.3.0-0';
  const result=mergeBundles('0.1.5',input);
  assert.equal(result.manifest.peerDependencies['@deepseek-ai/cordis'],narrow);
- assert.equal(result.manifest.dependencies['@hanamesh/theme'],'1.0.3');
+ assert.equal(result.manifest.dependencies['@hanamesh/theme'],'^1.0.3');
  assert.equal(result.patch.length,4);
  input.reverse();assert.throws(()=>mergeBundles('0.1.5',input),/SOURCE_ORDER/);
 });
@@ -58,5 +58,5 @@ test('PK4 normal bundle generation rejects a stale Core repair release before pr
   const file=join(root,i+'.tgz');execFileSync(tarBinary,['-czf',file,'-C',dir,'package']);files.set(pkg.name,file);
  }
  const input={version:'0.1.5',core:'1.0.0',usage:'1.0.1',appHost:'1.0.2',theme:'1.0.3',outputDir:join(root,'output')};
- await assert.rejects(buildHanaMesh(input,async name=>files.get(name)),/CORE_RELEASE_PIN_MISMATCH/);
+ await assert.rejects(buildHanaMesh(input,async name=>files.get(name),async()=>assert.fail('stale build reached npm pack')),/CORE_RELEASE_PIN_MISMATCH/);
 });
