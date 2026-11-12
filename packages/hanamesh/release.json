@@ -1,10 +1,10 @@
 {
-  "version": "0.1.7",
+  "version": "0.1.8",
   "sources": [
     {
       "name": "@hanamesh/core",
-      "version": "0.3.36",
-      "sha256": "239a0d425e87e74ec7bc781d782c5303b26ff01e092d01a7d2d8ddbebeb7311c"
+      "version": "0.3.37",
+      "sha256": "907d12c977495467e7e8c20791c1cf5ece9bbb8a3eca74a7a0bd4c6b7bf6f6d1"
     },
     {
       "name": "@hanamesh/usage",
@@ -13,8 +13,8 @@
     },
     {
       "name": "@hanamesh/dsh-app-host",
-      "version": "0.6.26",
-      "sha256": "3ecd584001cb8a55d8aa49809fd78eb1a9aa99707b5c5fa39e3bd89813cca7d3"
+      "version": "0.6.27",
+      "sha256": "dbd9bcdb86c954dfa29c024cdd7d92b412751add3de0466e2900e0feb89090f3"
     },
     {
       "name": "@hanamesh/theme",
