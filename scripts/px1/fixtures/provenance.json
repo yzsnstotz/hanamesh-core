@@ -1,7 +1,7 @@
 {
   "source": "GT41 Core 0.3.37 / suite 0.1.8 release candidate: VR1, AppHost v0.6.27, reviewed caret dependency policy. Normal npm archives; unpublished.",
   "sourceInputs": {
-    "coreBase": "1bb3562d",
+    "coreBase": "1bb3562db457117204e14b102616197bb8db238e",
     "appHostTag": "v0.6.27",
     "appHost": "7d112c92b0534fa01b901b19876b2a230fc2ada3",
     "usageTag": "v0.3.0-rc.19",
@@ -17,7 +17,7 @@
   "archives": [
     {
       "file": "hanamesh-core-0.3.37.tgz",
-      "sha256": "907d12c977495467e7e8c20791c1cf5ece9bbb8a3eca74a7a0bd4c6b7bf6f6d1"
+      "sha256": "2ca07b0871c319f030700ca30e2e30afb16a254c71eb4083d3f0d1deaab5139e"
     },
     {
       "file": "hanamesh-usage-0.3.0-rc.19.tgz",
@@ -33,7 +33,7 @@
     },
     {
       "file": "hanamesh-hanamesh-0.1.8.tgz",
-      "sha256": "d45faf1ef5118013a85a8beb52be4c552822d497b5e4f8d94e2f17e31ca60570"
+      "sha256": "c06aa00451b6f04d35e6ec21f6851404859003d17310d892f87a66232e112d4a"
     }
   ],
   "previousProvenance": {

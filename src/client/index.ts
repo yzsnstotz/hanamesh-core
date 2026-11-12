@@ -118,7 +118,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.36';
+const CORE_VERSION = '0.3.37';
 type CorePage = 'settings' | 'account' | 'environment';
 /** Public navigation seats; other plugins contribute content through declared slots. */
 let selectCorePage: ((id: string | null) => void) | undefined;
