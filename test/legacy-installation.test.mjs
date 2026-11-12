@@ -63,3 +63,23 @@ test('DT7 legacy assessment rechecks renderer context after its last asynchronou
  const s=new SuiteDeclarationService({profile,manifest,core:pkg,inventory:{observe:async()=>[{kind:'missing'},f.components[2].observation]},coreInventory:async()=>f.components[0].observation,bundleInventory:async()=>null,nodeVersion:f.nodeVersion,peerVersion:async()=>{context='changed';return'1.0.0'},clientPeerFacts:()=>({source:'core-client-lease',status:'known',reason:null,reactVersion:'18.3.1',contextId:context}),registry:{read:()=>assert.fail('no network')}});
  const result=await s.read();assert.equal(result.legacy.status,'unknown');assert.ok(result.blocked.some(r=>r.code==='CORE_SUITE_CLIENT_PEER_CHANGED'));
 });
+// R204-C01: declaration validity does not depend on observing a host version.
+for(const [field,value] of [['peer','not-a-range'],['engine','workspace:*'],['engine',''],['peer','workspace:bad']])test(`DT8 C01 rejects invalid DSH ${field} ${JSON.stringify(value)} without host facts`,async()=>{
+ const f={...facts(),scope:'profile'};
+ if(field==='peer')f.components[0].observation.metadata.peerDependencies={'@deepseek-ai/dsh':value};
+ else f.components[0].observation.metadata.engines.dsh=value;
+ const result=await assess(f);assert.equal(result.status,'incomplete');assert.ok(result.issues.some(i=>i.moduleName===names[0]&&i.code==='CORE_SUITE_METADATA_INVALID'));
+});
+test('DT8 C01 SDK workspace peers and engines.dsh precedence remain valid',async()=>{
+ for(const range of ['workspace:^','workspace:~','workspace:*','>=0.2.2-0 <0.3.0-0']){
+  const f={...facts(),scope:'profile'};f.components[0].observation.metadata.peerDependencies={'@deepseek-ai/dsh':range};assert.equal((await assess(f)).status,'installed',range);
+ }
+ const f={...facts(),scope:'profile'};f.components[0].observation.metadata.engines.dsh='>=0.2.2-0 <0.3.0-0';f.components[0].observation.metadata.peerDependencies={'@deepseek-ai/dsh':'ignored-by-engines'};assert.equal((await assess(f)).status,'installed');
+});
+test('DT8 C02 explicit unreadable peer stays unknown and names the dependency',async()=>{
+ const f={...facts(),scope:'profile'};f.components[0].observation.metadata.peerDependencies={external:'^1.0.0'};f.components[0].peers.external='unknown';
+ const result=await assess(f);assert.equal(result.status,'unknown');assert.ok(result.issues.some(i=>i.moduleName===names[0]&&i.code==='CORE_SUITE_PEER_UNKNOWN'&&i.message.includes('external')));
+ assert.match(result.reason.message,/external/);
+ f.components[0].observation.metadata.peerDependenciesMeta={external:{optional:true}};assert.equal((await assess(f)).status,'unknown','optional unreadable is not authoritative absence');
+ for(const value of [undefined,null]){f.components[0].peers.external=value;assert.equal((await assess(f)).status,'installed','unobserved disk host injection stays outside this scope')}
+});

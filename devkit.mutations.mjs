@@ -5,6 +5,8 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/compatibility.js', 'suite/legacy.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'legacy-dsh-format-bypassed',file:'lib/suite/compatibility.js',mutate:code=>code.replace('if (dshRanges.some(', 'if (false && dshRanges.some('),test:'test/legacy-installation.test.mjs'},
+ {id:'legacy-unreadable-peer-discarded',file:'lib/suite/legacy.js',mutate:code=>code.replace("value === undefined || value === null", "value === undefined || value === null || value === 'unknown'"),test:'test/legacy-installation.test.mjs'},
  {id:'legacy-range-bypassed',file:'lib/suite/legacy.js',mutate:code=>code.replace('member.versionRange && !semver.satisfies(version, member.versionRange)','false'),test:'test/legacy-installation.test.mjs'},
  {id:'legacy-all-absent-called-installed',file:'lib/suite/legacy.js',mutate:code=>code.replace("absent ? 'not-installed'", "absent ? 'installed'"),test:'test/legacy-installation.test.mjs'},
  {id:'legacy-physical-runtime-mismatch-ignored',file:'lib/suite/legacy.js',mutate:code=>code.replace('runningVersion !== undefined && runningVersion !== version','false'),test:'test/legacy-installation.test.mjs'},

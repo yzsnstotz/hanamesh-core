@@ -6,7 +6,7 @@ import {OWN_PACKAGE} from './own.js';
 import {formatSuiteInstallCommand} from './install-command.js';
 import type {LegacyInstallationFacts, LegacyInstallationAssessment, SuiteManifest, PackageMetadata} from './types.js';
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
-/** Public, read-only Core assessor. Core has no independent numeric version floor (pending owner ratification). */
+/** Public, read-only Core assessor. Core has no independent numeric version floor (owner ratified). */
 export async function assessLegacyInstallation(facts: LegacyInstallationFacts): Promise<LegacyInstallationAssessment> {
   return assessLegacyInstallationWithManifest(facts, OWN_PACKAGE.hanameshSuite!, OWN_PACKAGE.hanameshSuiteInstall?.command ?? null);
 }
@@ -35,10 +35,14 @@ export async function assessLegacyInstallationWithManifest(facts: LegacyInstalla
     if (runningVersion !== undefined && runningVersion !== version) add(member.moduleName, 'CORE_LEGACY_RUNNING_PHYSICAL_MISMATCH', '磁盘版本与当前运行版本不一致，需完全退出并重开客户端。');
     records.push(metadata as unknown as PackageMetadata);
   }
+  const unknownPeers = new Map<string, Set<string>>();
   const compatibility = await compatibilityIssues(records, facts.scope === 'profile' ? null : facts.nodeVersion, async (name, record) => {
     if (!isPackageName(name)) return 'unknown';
     const value = facts.components.find(row => row.moduleName === record.name)?.peers[name];
-    if (facts.scope === 'profile' && (value === undefined || value === null || value === 'unknown')) return undefined;
+    if (facts.scope === 'profile' && (value === undefined || value === null)) return undefined;
+    if (value === null || typeof value !== 'string' || semver.valid(value) !== value) {
+      const names = unknownPeers.get(record.name) ?? new Set<string>(); names.add(name); unknownPeers.set(record.name, names);
+    }
     return value === null ? null : typeof value === 'string' && semver.valid(value) === value ? value : 'unknown';
   });
   const explanations: Record<string, string> = {
@@ -46,7 +50,10 @@ export async function assessLegacyInstallationWithManifest(facts: LegacyInstalla
     CORE_SUITE_METADATA_INVALID: '运行环境或依赖要求格式无效。', CORE_SUITE_NODE_INCOMPATIBLE: 'Node 版本不满足组件自身要求。',
     CORE_SUITE_PEER_UNKNOWN: '组件所需依赖版本无法确认。', CORE_SUITE_PEER_INCOMPATIBLE: '依赖版本不满足组件自身要求。',
   };
-  for (const issue of compatibility) add(issue.moduleName!, issue.code, explanations[issue.code] ?? '组件兼容性校验失败。');
+  for (const issue of compatibility) {
+    const peers = issue.code === 'CORE_SUITE_PEER_UNKNOWN' ? [...(unknownPeers.get(issue.moduleName!) ?? [])].join('、') : '';
+    add(issue.moduleName!, issue.code, peers ? `组件所需依赖 ${peers} 的版本无法确认。` : explanations[issue.code] ?? '组件兼容性校验失败。');
+  }
   const absent = facts.components.every(row => row.observation.kind === 'missing');
   const uncertain = (code: string) => ['CORE_LEGACY_COMPONENT_UNKNOWN', 'CORE_SUITE_PEER_UNKNOWN'].includes(code);
   const status = absent ? 'not-installed' : issues.some(i => !uncertain(i.code)) ? 'incomplete' : issues.length ? 'unknown' : 'installed';

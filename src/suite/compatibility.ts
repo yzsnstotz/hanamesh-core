@@ -24,6 +24,15 @@ export async function compatibilityIssues(tuple: readonly PackageMetadata[], nod
     if (range !== undefined && (typeof range !== 'string' || !range.trim() || !semver.validRange(range))) {fail('CORE_SUITE_METADATA_INVALID'); continue;}
     if (range !== undefined && nodeVersion !== null && !semver.satisfies(nodeVersion, range)) fail('CORE_SUITE_NODE_INCOMPATIBLE');
     if (record.peerDependencies !== undefined && (!record.peerDependencies || typeof record.peerDependencies !== 'object' || Array.isArray(record.peerDependencies))) {fail('CORE_SUITE_METADATA_INVALID'); continue;}
+    // Declaration syntax is observable even without a runtime. Match the public DSH SDK:
+    // engines.dsh takes precedence; only peer declarations admit workspace:^/~/*.
+    const dshEngine = record.engines && Object.hasOwn(record.engines, 'dsh');
+    const dshRanges = dshEngine ? [record.engines!.dsh] : Object.entries(record.peerDependencies ?? {}).filter(([name]) => name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')).map(([, range]) => range);
+    if (dshRanges.some(range => {
+      if (typeof range !== 'string') return true;
+      if (!dshEngine && ['workspace:^', 'workspace:~', 'workspace:*'].includes(range)) return false;
+      return !range.trim() || !semver.validRange(range);
+    })) {fail('CORE_SUITE_METADATA_INVALID'); continue;}
     for (const [name, range] of Object.entries(record.peerDependencies ?? {})) {
       const dshPeer = name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-');
       if (!isPackageName(name) || typeof range !== 'string' || !dshPeer && (!range.trim() || !semver.validRange(range))) {fail('CORE_SUITE_METADATA_INVALID'); continue;}

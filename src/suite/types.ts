@@ -13,7 +13,7 @@ export interface PackageMetadata {
   readonly version: string;
   readonly repository?: string | {readonly url?: string};
   readonly dependencies?: Readonly<Record<string, string>>;
-  readonly engines?: {readonly node?: string};
+  readonly engines?: {readonly node?: string; readonly dsh?: string};
   readonly peerDependencies?: Readonly<Record<string, string>>;
   readonly peerDependenciesMeta?: Readonly<Record<string, {readonly optional?: boolean}>>;
   readonly dsh?: {readonly bundle?: {readonly patch?: string}};
