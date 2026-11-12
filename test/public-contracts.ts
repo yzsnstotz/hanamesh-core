@@ -24,3 +24,9 @@ void [SUITE_MANIFEST, declaration];
 import type {ConsentPrompt} from '../lib/contract.js';
 const prompt: ConsentPrompt = {show: true, shownAt: null};
 void prompt;
+
+import {assessLegacyInstallation, type LegacyInstallationFacts, type LegacyInstallationAssessment} from '@hanamesh/core/suite';
+declare const legacyFacts: LegacyInstallationFacts;
+const legacyResult: Promise<LegacyInstallationAssessment> = assessLegacyInstallation(legacyFacts);
+const optionalLegacyResult: Promise<LegacyInstallationAssessment> | undefined = core.assessLegacyInstallation?.(legacyFacts);
+void [legacyResult,optionalLegacyResult];

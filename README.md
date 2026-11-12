@@ -1,3 +1,5 @@
+DT7 候选（0.3.38 / 总包 0.1.9）：Core 通过可选 protocol 1 `assessLegacyInstallation(facts)` 统一评估无总包的单独组件；已安装可用旧组件仅建议升级，缺必需成员、低于现有范围或格式不符给出具名原因。磁盘清单与 runtime 的观察范围保持区分。Core 没有独立数值最低版本的口径待 owner 追认。见 [公开接口](docs/SUITE_DECLARATION.md#legacy-component-assessment-0338)。
+
 CD2 候选（0.3.36）：client peer 租约流响应带 `cache-control: no-store, no-transform` 并每 30 秒重复同一定长帧。根因是 DSH Host gzip 把 `application/octet-stream` 当可压缩、把小帧全部留在 zlib 缓冲里，原生转发 300 秒收不到正文字节即断流，已安装套件随之降为 Unknown。心跳不改变 peer context、完整性准则、安装状态或采集同意；只接受协议 2。见 [套件声明](docs/SUITE_DECLARATION.md)。
 
 PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。

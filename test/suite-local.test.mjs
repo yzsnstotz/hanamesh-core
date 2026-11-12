@@ -69,3 +69,13 @@ test('public getter without a registry performs zero network or persistence writ
     assert.ok(Object.isFrozen(first.manifest));
   } finally {globalThis.fetch = fetch;}
 });
+
+test('DT7 bundle inventory distinguishes actual absence from a corrupt/missing manifest',async t=>{
+ const {bundleMetadata}=await import('../lib/suite/local.js');
+ const dir=await mkdtemp(join(tmpdir(),'dt7-bundle-observation-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+ const base=pathToFileURL(join(dir,'package.json')).href;await writeFile(join(dir,'package.json'),'{}');
+ assert.equal(await bundleMetadata('@hanamesh/hanamesh',base),null);
+ const target=join(dir,'node_modules/@hanamesh/hanamesh');await mkdir(target,{recursive:true});
+ await assert.rejects(bundleMetadata('@hanamesh/hanamesh',base));
+ for(const invalid of ['{','null']){await writeFile(join(target,'package.json'),invalid);await assert.rejects(bundleMetadata('@hanamesh/hanamesh',base));}
+});

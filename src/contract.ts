@@ -1,5 +1,5 @@
-import type {SuiteDeclaration, SuiteDeclarationRequest} from './suite/types.js';
-export type {SuiteDeclaration, SuiteDeclarationRequest} from './suite/types.js';
+import type {SuiteDeclaration, SuiteDeclarationRequest, LegacyInstallationFacts, LegacyInstallationAssessment} from './suite/types.js';
+export type {SuiteDeclaration, SuiteDeclarationRequest, LegacyInstallationFacts, LegacyInstallationAssessment} from './suite/types.js';
 export type ConsentState = 'granted' | 'withheld';
 
 export interface ConsentPrompt {
@@ -44,6 +44,7 @@ export interface HanaMeshCoreContract {
   getSession(): SessionSnapshot;
   getServerOrigin(): string | null;
   getHealth(): HealthSnapshot;
+  assessLegacyInstallation?(facts: LegacyInstallationFacts): Promise<LegacyInstallationAssessment>;
   getSuiteDeclaration?(request?: SuiteDeclarationRequest): Promise<SuiteDeclaration>;
 }
 
@@ -53,7 +54,7 @@ export const CORE_SERVICE_NAME = 'hanameshCore' as const;
 export const CORE_PROTOCOL_VERSION = '1' as const;
 export const CORE_SUPPORTED_PROTOCOL_VERSIONS: readonly string[] = Object.freeze([CORE_PROTOCOL_VERSION]);
 export const CORE_REQUIRED_METHODS = Object.freeze(['getDeviceId', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin'] as const);
-export const CORE_OPTIONAL_METHODS = Object.freeze(['getPublicKey', 'getHealth', 'getSuiteDeclaration'] as const);
+export const CORE_OPTIONAL_METHODS = Object.freeze(['getPublicKey', 'getHealth', 'getSuiteDeclaration', 'assessLegacyInstallation'] as const);
 export type CoreRequiredMethod = (typeof CORE_REQUIRED_METHODS)[number];
 export type CoreOptionalMethod = (typeof CORE_OPTIONAL_METHODS)[number];
 

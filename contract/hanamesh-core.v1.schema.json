@@ -18,7 +18,8 @@
     "optionalMethods": [
       "getPublicKey",
       "getHealth",
-      "getSuiteDeclaration"
+      "getSuiteDeclaration",
+      "assessLegacyInstallation"
     ],
     "handshake": {
       "order": [
@@ -76,6 +77,11 @@
         "input": "#/$defs/SuiteDeclarationRequest | undefined",
         "returns": "Promise<#/$defs/SuiteDeclaration>",
         "note": "Optional protocol1 read-only declaration; no args means current facts and candidate source missing. No install authorization."
+      },
+      "assessLegacyInstallation": {
+        "input": "#/$defs/LegacyInstallationFacts",
+        "returns": "Promise<#/$defs/LegacyInstallationAssessment>",
+        "note": "Optional read-only Core-owned legacy component assessment. Caller-collected public facts, no paths, network, installation or authorization."
       }
     },
     "notExposed": [
@@ -391,6 +397,9 @@
             "string",
             "null"
           ]
+        },
+        "legacy": {
+          "$ref": "#/$defs/LegacyInstallationAssessment"
         }
       }
     },
@@ -711,6 +720,167 @@
             "type": "string",
             "minLength": 1
           }
+        }
+      }
+    },
+    "LegacyInstallationFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodeVersion",
+        "components"
+      ],
+      "properties": {
+        "nodeVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "moduleName",
+              "observation",
+              "peers"
+            ],
+            "properties": {
+              "moduleName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "observation": {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "present",
+                      "missing",
+                      "unreadable",
+                      "damaged",
+                      "ambiguous"
+                    ]
+                  }
+                }
+              },
+              "peers": {
+                "type": "object"
+              },
+              "runningVersion": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "scope": {
+          "const": "profile"
+        }
+      }
+    },
+    "LegacyInstallationAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "components",
+        "issues",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "installed",
+            "incomplete",
+            "not-installed",
+            "unknown"
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "version",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "status": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "moduleName",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "moduleName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "reason": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "action": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "action"
+          ],
+          "additionalProperties": false
         }
       }
     }

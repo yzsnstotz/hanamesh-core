@@ -32,8 +32,8 @@ const {SessionController} = await import(pathToFileURL(join(packageRoot, 'lib/co
 const {INITIAL_CORE_SNAPSHOT} = await import(pathToFileURL(join(packageRoot, 'lib/contracts.js')).href);
 let value = structuredClone(INITIAL_CORE_SNAPSHOT);
 const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, {read: () => value, publish: async next => { value = next; }, close: async () => undefined});
-assert.deepEqual(Object.keys(controller.service).sort(), ['protocolVersion', 'getDeviceId', 'getPublicKey', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin', 'getHealth', 'getSuiteDeclaration'].sort());
-assert.deepEqual(contract.checkCoreService(controller.service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration']});
+assert.deepEqual(Object.keys(controller.service).sort(), ['assessLegacyInstallation', 'protocolVersion', 'getDeviceId', 'getPublicKey', 'sign', 'signRequest', 'getConsent', 'onConsentChange', 'getSession', 'getServerOrigin', 'getHealth', 'getSuiteDeclaration'].sort());
+assert.deepEqual(contract.checkCoreService(controller.service), {status: 'present', protocolVersion: '1', optional: ['getPublicKey', 'getHealth', 'getSuiteDeclaration', 'assessLegacyInstallation']});
 const {runCoreProviderSuite, runCoreConsumerSuite} = await import('@hanamesh/core/contract/suite');
 const {createCoreProviderFixture, createCoreConsumerFixture} = await import('@hanamesh/core/contract/fixtures');
 const {default: schema} = await import('@hanamesh/core/contract/schema.json', {with: {type: 'json'}});
@@ -68,3 +68,7 @@ try{
 const {formatSuiteInstallCommand} = await import('@hanamesh/core/suite');
 assert.equal(formatSuiteInstallCommand('2.4.6'), 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@2.4.6');
 for(const version of ['latest','^2.4.6','', 'v2.4.6']) assert.throws(()=>formatSuiteInstallCommand(version),error=>error.code==='CORE_SUITE_CANDIDATE_INVALID');
+
+const {assessLegacyInstallation}=await import('@hanamesh/core/suite');
+const absence={nodeVersion:process.versions.node,components:[SUITE_MANIFEST.core.name,...SUITE_MANIFEST.components.map(row=>row.moduleName)].map(moduleName=>({moduleName,observation:{kind:'missing'},peers:{}}))};
+assert.equal((await assessLegacyInstallation(absence)).status,'not-installed');

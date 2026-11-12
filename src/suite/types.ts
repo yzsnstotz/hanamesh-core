@@ -45,6 +45,7 @@ export interface SuiteInstalled {
   readonly runningVersion?: string;
 }
 export interface SuiteDeclaration {
+  readonly legacy?: LegacyInstallationAssessment;
   readonly bundleVersion: string | null;
   readonly installCommand: string | null;
   readonly schemaVersion: 1;
@@ -74,4 +75,17 @@ export interface SuiteServiceOptions {
   readonly nodeVersion: string;
   readonly peerVersion: (name: string) => Promise<string | null | {readonly status: 'unknown'}>;
   readonly clientPeerFacts?: () => import('./client-peers.js').ClientPeerFacts;
+}
+
+/** Caller-collected public package facts. No paths, credentials, installation or loading occurs. */
+export interface LegacyInstallationFacts {
+  readonly scope?: 'profile';
+  readonly nodeVersion: string;
+  readonly components: readonly {readonly moduleName: string; readonly runningVersion?: string; readonly observation: import('../health/types.js').ComponentObservation; readonly peers: Readonly<Record<string, string | null | 'unknown'>>}[];
+}
+export interface LegacyInstallationAssessment {
+  readonly status: 'installed' | 'incomplete' | 'not-installed' | 'unknown';
+  readonly components: readonly {readonly name: string; readonly version: string | null; readonly active?: boolean; readonly status: string}[];
+  readonly issues: readonly {readonly code: string; readonly moduleName: string; readonly message: string}[];
+  readonly reason: {readonly code: string; readonly message: string; readonly action: string} | null;
 }

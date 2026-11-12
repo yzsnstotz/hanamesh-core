@@ -1,3 +1,5 @@
+import {assessLegacyInstallation} from './suite/legacy.js';
+import type {LegacyInstallationFacts} from './suite/types.js';
 import {createBindLink} from './bind-link.js';
 import {createHash} from 'node:crypto';
 import type {CoreStore, PluginConfig, StoredCoreSnapshot} from './contracts.js';
@@ -150,6 +152,10 @@ export class SessionController {
       getSession: () => this.#session(),
       getServerOrigin: () => this.#serverOrigin(),
       getHealth: () => this.#health?.getHealth() ?? COLD_HEALTH,
+      assessLegacyInstallation: (facts: LegacyInstallationFacts) => {
+        if (this.#disposed) return Promise.reject(new CoreError('CORE_DISPOSED', 503));
+        return assessLegacyInstallation(facts);
+      },
       getSuiteDeclaration: (request?: SuiteDeclarationRequest) => {
         if (this.#disposed) return Promise.reject(new CoreError('CORE_DISPOSED', 503));
         return (this.#suite ?? unobservedSuite).read(request);

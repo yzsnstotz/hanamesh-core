@@ -3,8 +3,12 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
 const production = new Map();
-for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
+for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/compatibility.js', 'suite/legacy.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'legacy-range-bypassed',file:'lib/suite/legacy.js',mutate:code=>code.replace('member.versionRange && !semver.satisfies(version, member.versionRange)','false'),test:'test/legacy-installation.test.mjs'},
+ {id:'legacy-all-absent-called-installed',file:'lib/suite/legacy.js',mutate:code=>code.replace("absent ? 'not-installed'", "absent ? 'installed'"),test:'test/legacy-installation.test.mjs'},
+ {id:'legacy-physical-runtime-mismatch-ignored',file:'lib/suite/legacy.js',mutate:code=>code.replace('runningVersion !== undefined && runningVersion !== version','false'),test:'test/legacy-installation.test.mjs'},
+
  {id:'peer-heartbeat-missing',file:'lib/routes.js',mutate:code=>code.replace('stream.enqueue(CLIENT_PEER_FRAME), clientPeerHeartbeatMs','void 0, clientPeerHeartbeatMs'),test:'test/suite-peer-heartbeat.test.mjs'},
  {id:'peer-stream-transformable',file:'lib/routes.js',mutate:code=>code.replace("'cache-control': 'no-store, no-transform'","'cache-control': 'no-store'"),test:'test/suite-peer-transport.test.mjs'},
  {id:'peer-legacy-protocol-admitted',file:'lib/suite/client-peers.js',mutate:code=>code.replace("p['protocol'] !== 2","p['protocol'] !== 2 && p['protocol'] !== 1"),test:'test/suite-peer-transport.test.mjs'},
@@ -36,7 +40,7 @@ export const cases = [
  {id: 'archive-integrity-ignored', file: 'lib/suite/source-package.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},
  {id: 'consent-prompt-ignores-refusal', file: 'lib/controller.js', mutate: code => code.replace("this.#state.consent.changedAt === null && shownAt === null", "shownAt === null"), test: 'test/first-consent.test.mjs'},
  {id: 'consent-prompt-stamps-before-display', file: 'lib/client.js', mutate: code => code.replace("setView(next);", "setView(next); void jsonRequest('/api/hanamesh/core/consent/prompt-shown', {method: 'POST'});"), test: 'test/first-consent-client.test.mjs'},
- {id:"suite-bundle-admission",file:"lib/suite/service.js",mutate:code=>code.replace("const bundle = tuple.map(bundleFailure).find(Boolean);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
+ {id:"suite-bundle-admission",file:"lib/suite/compatibility.js",mutate:code=>code.replace("const bundle = bundleFailure(record);", "const bundle = null;"),test:"test/suite-policy.test.mjs"},
  {id:"suite-bundle-version-upgrade",file:"lib/suite/service.js",mutate:code=>code.replace("const reason = await compatible([bundle, ...tuple]);", "if (tuple.every((row, i) => row.version === installed[i].actualVersion)) continue;\n                const reason = await compatible([bundle, ...tuple]);"),test:"test/suite-policy.test.mjs"},
  {id:"suite-source-binding",file:"lib/suite/service.js",mutate:code=>code.replace("if (!this.validRecord(bundle, manifest.bundle.name, version, manifest.bundle.repository))", "if (false)"),test:"test/suite-policy.test.mjs"},
     {

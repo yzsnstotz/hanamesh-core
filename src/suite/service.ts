@@ -1,3 +1,5 @@
+import {bundleFailure, compatibilityIssues} from './compatibility.js';
+import {assessLegacyInstallationWithManifest} from './legacy.js';
 import {formatSuiteInstallCommand, createSuiteInstallRelease, suiteInstallArgs} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
@@ -6,19 +8,6 @@ import {CoreError} from '../errors.js';
 import {digest, frozen, repositoryIdentity, isPackageName, registryUrl} from './facts.js';
 import type {PackageMetadata, SuiteBlocked, SuiteDeclaration, SuiteDeclarationRequest, SuiteManifest, SuiteServiceOptions, SuiteUpgrade} from './types.js';
 
-/** Existing C-MARKET admission fact: a package must declare the supported public DSH patch bundle.
- * This checks metadata only, never an uninstalled package's internal patch file. */
-function bundleFailure(record: PackageMetadata): string | null {
-  const dsh = record.dsh;
-  if (dsh === undefined) return 'CORE_SUITE_BUNDLE_MISSING';
-  if (!dsh || typeof dsh !== 'object' || Array.isArray(dsh)) return 'CORE_SUITE_BUNDLE_INVALID';
-  const bundle = dsh.bundle;
-  if (bundle === undefined) return 'CORE_SUITE_BUNDLE_MISSING';
-  if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle) || Object.keys(bundle).some(key => key !== 'patch')) return 'CORE_SUITE_BUNDLE_INVALID';
-  if (bundle.patch === undefined) return 'CORE_SUITE_BUNDLE_MISSING';
-  if (typeof bundle.patch !== 'string' || !/^\.\/[A-Za-z0-9._/-]+$/.test(bundle.patch) || bundle.patch.slice(2).split('/').some(part => !part || part === '.' || part === '..')) return 'CORE_SUITE_BUNDLE_INVALID';
-  return null;
-}
 /** A fixed distribution asset is not an authoritative business member or archive-source member.
  * Retain the three-member identity checks and reject all other dependency additions. */
 function distributionDependencies(dependencies: Readonly<Record<string, string>> | undefined, members: readonly string[]): boolean {
@@ -49,7 +38,8 @@ export class SuiteDeclarationService {
       if (completeness === 'complete') completeness = 'unknown';
     }
     let physicalBundle: PackageMetadata | null = null;
-    try {physicalBundle = await this.options.bundleInventory();} catch { /* unreadable package metadata is reported below */ }
+    let bundleReadFailed = false;
+    try {physicalBundle = await this.options.bundleInventory();} catch { bundleReadFailed = true; /* unreadable is not authoritative absence */ }
     const bundleVersion = physicalBundle && semver.valid(physicalBundle.version) ? physicalBundle.version : null;
     if (!physicalBundle || !bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || !distributionDependencies(physicalBundle.dependencies, installed.map(row => row.moduleName)) || installed.some(row => !row.actualVersion || !semver.satisfies(row.actualVersion, physicalBundle.dependencies?.[row.moduleName] ?? ''))) {
       if (completeness === 'complete') completeness = 'unknown';
@@ -63,34 +53,8 @@ export class SuiteDeclarationService {
       }
       return peerFacts[name] ?? null;
     };
-    const compatible = async (tuple: readonly PackageMetadata[]): Promise<string | null> => {
-      const bundle = tuple.map(bundleFailure).find(Boolean);
-      if (bundle) return bundle;
-      for (const record of tuple) {
-        if (record.engines !== undefined && (!record.engines || typeof record.engines !== 'object' || Array.isArray(record.engines))) return 'CORE_SUITE_METADATA_INVALID';
-        const range = record.engines?.node;
-        if (range !== undefined && (typeof range !== 'string' || !range.trim() || !semver.validRange(range))) return 'CORE_SUITE_METADATA_INVALID';
-        if (range !== undefined && !semver.satisfies(nodeVersion, range)) return 'CORE_SUITE_NODE_INCOMPATIBLE';
-        if (record.peerDependencies !== undefined && (!record.peerDependencies || typeof record.peerDependencies !== 'object' || Array.isArray(record.peerDependencies))) return 'CORE_SUITE_METADATA_INVALID';
-        for (const [name, range] of Object.entries(record.peerDependencies ?? {})) {
-          if (!isPackageName(name)) return 'CORE_SUITE_METADATA_INVALID';
-          const dshPeer = name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-');
-          if (typeof range !== 'string' || !dshPeer && (!range.trim() || !semver.validRange(range))) return 'CORE_SUITE_METADATA_INVALID';
-          const member = tuple.find(row => row.name === name);
-          const actual = member?.version ?? await peer(name);
-          if (actual === 'unknown') return 'CORE_SUITE_PEER_UNKNOWN';
-          if (actual === null && record.peerDependenciesMeta?.[name]?.optional === true) continue;
-          if (actual === null) return 'CORE_SUITE_PEER_UNKNOWN';
-          if (dshPeer) {
-            const {evaluatePluginCompatibility} = await import('@deepseek-ai/dsh-app-boot');
-            try {
-              if (evaluatePluginCompatibility(record, {}, actual)) return 'CORE_SUITE_PEER_INCOMPATIBLE';
-            } catch {return 'CORE_SUITE_METADATA_INVALID';}
-          } else if (!semver.satisfies(actual, range)) return 'CORE_SUITE_PEER_INCOMPATIBLE';
-        }
-      }
-      return null;
-    };
+    const compatible = async (tuple: readonly PackageMetadata[]): Promise<string | null> =>
+      (await compatibilityIssues(tuple, nodeVersion, peer))[0]?.code ?? null;
     const currentRecords = [physicalCore.metadata, ...observations.map(row => row.metadata)];
     for (const record of currentRecords) if (record) metadataDigests[`installed:${record.name}`] = digest(record);
     if (currentRecords.some(row => !row)) {
@@ -157,13 +121,22 @@ export class SuiteDeclarationService {
         }
       } catch (error) {blocked.push({code: error instanceof CoreError ? error.code : 'CORE_SUITE_METADATA_INVALID'});}
     }
+    let legacy = physicalBundle === null && !bundleReadFailed ? await assessLegacyInstallationWithManifest({nodeVersion,
+      components: await Promise.all([physicalCore, ...profile.components.map((_, i) => observations[i] ?? {kind: 'unreadable' as const})].map(async (observation, i) => {
+        const peers: Record<string, string | null | 'unknown'> = {};
+        for (const name of Object.keys(observation.metadata?.peerDependencies ?? {})) if (isPackageName(name)) peers[name] = await peer(name);
+        return {moduleName: installed[i]!.moduleName, observation, peers, ...(i === 0 ? {runningVersion: manifest.core.version} : {})};
+      }))}, manifest, core.hanameshSuiteInstall?.command ?? null) : undefined;
     const clientPeerFacts = this.options.clientPeerFacts?.();
     if (clientPeerFacts && (clientPeerFacts.status !== 'known' || clientPeerFacts.contextId !== clientAtStart?.contextId)) {
       completeness = 'unknown'; upgrades.length = 0;
       peerFacts['react'] = 'unknown';
       blocked.push({code: clientPeerFacts.contextId !== clientAtStart?.contextId ? 'CORE_SUITE_CLIENT_PEER_CHANGED' : clientPeerFacts.reason!});
     }
-    const facts = {schemaVersion: 1 as const, bundleVersion, installCommand, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
+    if (legacy && clientPeerFacts && (clientPeerFacts.status !== 'known' || clientPeerFacts.contextId !== clientAtStart?.contextId)) {
+      legacy = {...legacy, status: 'unknown', reason: {code:'CORE_LEGACY_COMPONENTS_UNKNOWN', message:'当前客户端的依赖观察尚未确认或已变化，请重新检测。', action:legacy.reason?.action ?? '重新检测。'}};
+    }
+    const facts = {...(legacy ? {legacy} : {}), schemaVersion: 1 as const, bundleVersion, installCommand, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {

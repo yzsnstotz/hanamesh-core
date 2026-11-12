@@ -8,7 +8,7 @@ import {HealthService} from './health/service.js';
 import {LoaderObservationSource} from './health/loader.js';
 import {SuiteDeclarationService} from './suite/service.js';
 import {RegistryMetadataReader} from './suite/registry.js';
-import {suiteInspector, packageMetadata} from './suite/local.js';
+import {suiteInspector, packageMetadata, bundleMetadata} from './suite/local.js';
 import {SUITE_MANIFEST} from './suite/index.js';
 import {OWN_PACKAGE} from './suite/own.js';
 import {ClientPeerLeases} from './suite/client-peers.js';
@@ -116,7 +116,7 @@ export async function apply(ctx, config) {
       registry:{normalize:value=>registryReader().normalize(value),read:(registry,name)=>registryReader().read(registry,name)},
       bundleInventory: async () => {
         const entry = [.../** @type {any} */ (ctx).loader.entries()].find(entry => entry.options.name === SUITE_MANIFEST.core.name);
-        return packageMetadata(SUITE_MANIFEST.bundle.name, entry?.parent?.tree?.ctx?.baseUrl ?? import.meta.url, SUITE_MANIFEST.bundle.name, config.maxResponseBytes);
+        return bundleMetadata(SUITE_MANIFEST.bundle.name, entry?.parent?.tree?.ctx?.baseUrl ?? import.meta.url, config.maxResponseBytes);
       },
       coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
       peerVersion: async name => {

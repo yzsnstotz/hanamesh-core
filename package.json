@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/core",
-  "version": "0.3.37",
+  "version": "0.3.38",
   "description": "HanaMesh Core: device identity, consent, component health, and suite entrypoint.",
   "type": "module",
   "main": "./lib/dsh.mjs",
@@ -153,7 +153,7 @@
     },
     "core": {
       "name": "@hanamesh/core",
-      "version": "0.3.37",
+      "version": "0.3.38",
       "repository": "https://github.com/yzsnstotz/hanamesh-core"
     },
     "components": [
@@ -173,15 +173,15 @@
   },
   "hanameshSuiteInstall": {
     "name": "@hanamesh/hanamesh",
-    "version": "0.1.8",
-    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.8",
+    "version": "0.1.9",
+    "command": "dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.9",
     "args": [
       "plugin",
       "--profile",
       "desktop",
       "add",
       "--save-exact",
-      "@hanamesh/hanamesh@0.1.8"
+      "@hanamesh/hanamesh@0.1.9"
     ]
   }
 }

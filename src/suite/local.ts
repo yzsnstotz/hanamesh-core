@@ -33,3 +33,24 @@ export function suiteInspector(maxResponseBytes = CORE_DEFAULTS.maxResponseBytes
     return {...observed, ...(metadata ? {repository: metadata.repository, metadata} : {})};
   };
 }
+
+/** A total bundle must be known absent before applying the legacy policy. Never hide read/format failures as absence. */
+export async function bundleMetadata(name: string, baseUrl: string, maxResponseBytes = CORE_DEFAULTS.maxResponseBytes): Promise<PackageMetadata | null> {
+  if (!isPackageName(name)) throw new Error('CORE_SUITE_METADATA_INVALID');
+  const resolver = createRequire(baseUrl);
+  let path: string;
+  try {path = resolver.resolve(`${name}/package.json`);}
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'MODULE_NOT_FOUND') throw error;
+    for (const base of resolver.resolve.paths(name) ?? []) {
+      try {await stat(join(base, name));}
+      catch (missing) {if (['ENOENT','ENOTDIR'].includes((missing as NodeJS.ErrnoException).code ?? '')) continue; throw missing;}
+      throw new Error('CORE_SUITE_INSTALLED_METADATA_UNKNOWN');
+    }
+    return null;
+  }
+  if ((await stat(path)).size > maxResponseBytes) throw new Error('CORE_SUITE_METADATA_LIMIT');
+  const value = JSON.parse(await readFile(path, 'utf8')) as PackageMetadata;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('CORE_SUITE_METADATA_INVALID');
+  return value;
+}

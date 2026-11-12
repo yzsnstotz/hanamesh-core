@@ -22,7 +22,7 @@
 
 | 导出 | 内容 |
 |---|---|
-| `@hanamesh/core/contract` | 上述类型；新增 `CORE_SERVICE_NAME`、`CORE_PROTOCOL_VERSION`、`CORE_SUPPORTED_PROTOCOL_VERSIONS`、`CORE_REQUIRED_METHODS`（7 个）、`CORE_OPTIONAL_METHODS`（`getPublicKey`、`getHealth`、`getSuiteDeclaration`）与握手 `checkCoreService(value, accept?)` |
+| `@hanamesh/core/contract` | 上述类型；新增 `CORE_SERVICE_NAME`、`CORE_PROTOCOL_VERSION`、`CORE_SUPPORTED_PROTOCOL_VERSIONS`、`CORE_REQUIRED_METHODS`（7 个）、`CORE_OPTIONAL_METHODS`（`getPublicKey`、`getHealth`、`getSuiteDeclaration`、`assessLegacyInstallation`）与握手 `checkCoreService(value, accept?)` |
 | `@hanamesh/core/contract/schema.json` | v1 数据形状（JSON Schema 2020-12）；`x-hanamesh` 列出服务名、版本、必需/可选方法、`signRequest` canonical 与握手顺序 |
 | `@hanamesh/core/contract/fixtures` | 提供方 fixture `createCoreProviderFixture()`、消费方参考 fixture `createCoreConsumerFixture()`、13 项握手矩阵 `coreHandshakeCases()`；全部带 `CORE_FIXTURE_LABEL`，不是产品提供方 |
 | `@hanamesh/core/contract/suite` | `runCoreProviderSuite(provider)`、`runCoreConsumerSuite(consumer)`、`validateCoreValue(def, value)` |

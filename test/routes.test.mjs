@@ -11,7 +11,7 @@ const sameOriginHeaders = {'content-type': 'application/json', origin, host: '12
 test('service contract has exactly eleven frozen keys', async () => {
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store);
   assert.equal(Object.isFrozen(controller.service), true);
-  assert.deepEqual(Object.keys(controller.service).sort(), ['getConsent', 'getDeviceId', 'getHealth', 'getPublicKey', 'getServerOrigin', 'getSession', 'getSuiteDeclaration', 'onConsentChange', 'protocolVersion', 'sign', 'signRequest'].sort());
+  assert.deepEqual(Object.keys(controller.service).sort(), ['assessLegacyInstallation', 'getConsent', 'getDeviceId', 'getHealth', 'getPublicKey', 'getServerOrigin', 'getSession', 'getSuiteDeclaration', 'onConsentChange', 'protocolVersion', 'sign', 'signRequest'].sort());
 });
 
 test('state, consent and diagnostics routes preserve method, origin and secret fences', async () => {
