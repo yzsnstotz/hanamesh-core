@@ -1,3 +1,24 @@
+## DSH 桌面安装（推荐） / DSH Desktop (recommended) / DSH デスクトップ（推奨）
+
+**中文**
+1. 打开 DSH「插件 → 添加插件」（Plugins → Add plugin）。
+2. 到 [HanaMesh 安装页](https://market.hanamesh.com/connect#install)，选择 DSH，点击「复制精确包名」。将完整的 `@hanamesh/hanamesh` **带精确版本的包规格**粘贴到「包名或地址」。网页从 Core 的公开发布数据读取版本，不使用本仓未发布的版本号。
+3. 核对来源，点击「安装」，完成后点击「立即启用」；仅在 DSH 提示时重启。总包包含 Core、Usage、AppHost、Theme，无需逐个安装。数据授权与账号绑定仍由本人完成。
+
+**English**
+1. Open **Plugins → Add plugin** in DSH Desktop.
+2. Choose DSH on the [HanaMesh installation page](https://market.hanamesh.com/connect#install) and **Copy exact package name**. Paste the complete **versioned** `@hanamesh/hanamesh` spec into **Package name or address**. The page reads Core's public release metadata; an unpublished repository version is not an installation target.
+3. Confirm the source, choose **Install**, then **Enable now**. Restart only if DSH requests it. The bundle includes Core, Usage, AppHost and Theme; no separate component installation is needed. Review data consent and bind your account yourself.
+
+**日本語**
+1. DSH の「プラグイン → プラグインを追加」（Plugins → Add plugin）を開きます。
+2. [HanaMesh 導入ページ](https://market.hanamesh.com/connect#install)で DSH を選び、「固定版のパッケージ名をコピー」を押します。`@hanamesh/hanamesh` の**固定版を含む完全な指定**を「パッケージ名またはアドレス」に貼り付けます。公開版は Core のリリース情報から取得し、リポジトリ内の未公開版を使いません。
+3. 出所を確認し、「インストール」、完了後に「今すぐ有効化」を選びます。DSH が求めた場合だけ再起動します。Core、Usage、AppHost、Theme は総合パッケージに含まれ、個別導入は不要です。同意とアカウント連携はご本人が行います。
+
+CLI 和交给 AI 是备选 / CLI and agent installation are alternatives / CLI とエージェントによる導入も選べます：[安装页 / Installation page / 導入ページ](https://market.hanamesh.com/connect#install)。CLI 必须操作自己的 desktop profile，不在项目目录执行 npm install。
+
+界面用语依据 / Interface reference：[DSH Plugin Manager](https://github.com/deepseek-ai/DeepSeek-Harness/tree/39163dd30f703a79079e2d2446545cff3c453738/packages/client/ui-plugin-manager)。
+
 DT7 候选（0.3.38 / 总包 0.1.9）：Core 通过可选 protocol 1 `assessLegacyInstallation(facts)` 统一评估无总包的单独组件；已安装可用旧组件仅建议升级，缺必需成员、低于现有范围或格式不符给出具名原因。磁盘清单与 runtime 的观察范围保持区分。owner 已追认：Core 没有独立数值最低版本，只校验已有元数据、格式和自身约束。见 [公开接口](docs/SUITE_DECLARATION.md#legacy-component-assessment-0338)。
 
 CD2 候选（0.3.36）：client peer 租约流响应带 `cache-control: no-store, no-transform` 并每 30 秒重复同一定长帧。根因是 DSH Host gzip 把 `application/octet-stream` 当可压缩、把小帧全部留在 zlib 缓冲里，原生转发 300 秒收不到正文字节即断流，已安装套件随之降为 Unknown。心跳不改变 peer context、完整性准则、安装状态或采集同意；只接受协议 2。见 [套件声明](docs/SUITE_DECLARATION.md)。

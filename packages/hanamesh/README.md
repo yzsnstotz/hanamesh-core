@@ -1,6 +1,29 @@
 # @hanamesh/hanamesh
 
-在 DSH「插件 → 添加插件」填写带当前发布精确版本的完整包名（网页安装页提供可复制内容），安装后立即启用并重启一次。终端安装从 npm 读取同一发布版本：
+## DSH 桌面安装（推荐） / DSH Desktop (recommended) / DSH デスクトップ（推奨）
+
+**中文**
+1. 打开 DSH「插件 → 添加插件」（Plugins → Add plugin）。
+2. 到 [HanaMesh 安装页](https://market.hanamesh.com/connect#install)，选择 DSH，点击「复制精确包名」。将完整的 `@hanamesh/hanamesh` **带精确版本的包规格**粘贴到「包名或地址」。网页从 Core 的公开发布数据读取版本，不使用本仓未发布的版本号。
+3. 核对来源，点击「安装」，完成后点击「立即启用」；仅在 DSH 提示时重启。总包包含 Core、Usage、AppHost、Theme，无需逐个安装。数据授权与账号绑定仍由本人完成。
+
+**English**
+1. Open **Plugins → Add plugin** in DSH Desktop.
+2. Choose DSH on the [HanaMesh installation page](https://market.hanamesh.com/connect#install) and **Copy exact package name**. Paste the complete **versioned** `@hanamesh/hanamesh` spec into **Package name or address**. The page reads Core's public release metadata; an unpublished repository version is not an installation target.
+3. Confirm the source, choose **Install**, then **Enable now**. Restart only if DSH requests it. The bundle includes Core, Usage, AppHost and Theme; no separate component installation is needed. Review data consent and bind your account yourself.
+
+**日本語**
+1. DSH の「プラグイン → プラグインを追加」（Plugins → Add plugin）を開きます。
+2. [HanaMesh 導入ページ](https://market.hanamesh.com/connect#install)で DSH を選び、「固定版のパッケージ名をコピー」を押します。`@hanamesh/hanamesh` の**固定版を含む完全な指定**を「パッケージ名またはアドレス」に貼り付けます。公開版は Core のリリース情報から取得し、リポジトリ内の未公開版を使いません。
+3. 出所を確認し、「インストール」、完了後に「今すぐ有効化」を選びます。DSH が求めた場合だけ再起動します。Core、Usage、AppHost、Theme は総合パッケージに含まれ、個別導入は不要です。同意とアカウント連携はご本人が行います。
+
+CLI 和交给 AI 是备选 / CLI and agent installation are alternatives / CLI とエージェントによる導入も選べます：[安装页 / Installation page / 導入ページ](https://market.hanamesh.com/connect#install)。CLI 必须操作自己的 desktop profile，不在项目目录执行 npm install。
+
+界面用语依据 / Interface reference：[DSH Plugin Manager](https://github.com/deepseek-ai/DeepSeek-Harness/tree/39163dd30f703a79079e2d2446545cff3c453738/packages/client/ui-plugin-manager)。
+
+### CLI 备选 / CLI alternative / CLI で導入
+
+如需终端安装，从 npm 读取同一公开发布版本：
 ```sh
 bundle_version="$(npm view @hanamesh/hanamesh version --registry=https://registry.npmjs.org/)" &&
   [ -n "$bundle_version" ] &&
