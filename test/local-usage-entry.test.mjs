@@ -42,7 +42,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
   // In-memory compilation exercises current UI source without changing build outputs.
   vm.runInNewContext(ts.transpileModule(await readFile('src/client/index.ts', 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText, sandbox);
   sandbox.exports.apply({effect: run => run(), slots: {inject: (_name, run) => run(), register: (spec, component) => { slots.set(spec.name, component); return () => {}; }}});
-  const section = mount(slots.get('settings.section'));
+  const section = mount(sandbox.exports.HanaMeshSection);
   section.render(); section.effects().forEach(run => run()); await settle();
   return {section, mount, requests, timers};
 }
@@ -65,7 +65,7 @@ test('main HanaMesh section shows real local Usage counts and opens its own reco
   assert.equal(iframe.props.src, '/api/hanamesh/usage/panel/view');
   assert.equal(iframe.props.title, '本机使用记录详情');
   assert.equal(dialog.effects().length, 0, 'DSH owns modal layering and focus; Core adds no native showModal lifecycle');
-  elements(tree).find(e => e.type === 'button' && e.children.includes('返回 HanaMesh 设置')).props.onClick();
+  elements(tree).find(e => e.type === 'button' && e.children.includes('返回账号')).props.onClick();
   assert.equal(elements(f.section.render()).filter(e => typeof e.type === 'function' && e.props.onClose && e.props.restoreFocus).length, 0);
   assert.equal(restored, 0, 'Core delegates return focus to the DSH Modal stack');
   assert.ok(f.requests.some(r => r.path === '/api/hanamesh/usage/panel'));

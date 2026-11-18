@@ -12,7 +12,7 @@ interface CoreModalProps {title: string; onClose: () => void; className: string;
 /** Admit a background Core layer only when DSH's public modal stack permits it.
  * Observe portal mutations, not clocks: no host selectors, inert writes, retries
  * or custom z-index. After admission DSH itself owns every later overlay. */
-function CoreModal({title, onClose, className, children, onDisplayed, onDisplayError}: CoreModalProps): ReactNode {
+export function CoreModal({title, onClose, className, children, onDisplayed, onDisplayError}: CoreModalProps): ReactNode {
   const anchor = useRef<HTMLSpanElement | null>(null);
   const content = useRef<HTMLDivElement | null>(null);
   const [admitted, setAdmitted] = useState(false);
@@ -60,7 +60,11 @@ interface PeerConnection {
   generation?: {getSnapshot(): {id: number} | undefined; subscribe(listener: () => void): () => void};
 }
 
-interface SlotRegistry {
+export interface SlotRegistry {
+  entries?(name: string): readonly {options: {id?: string; label?: string; order?: number}}[];
+  entriesOfSlot?(name: string): readonly {options: {id?: string; label?: string; order?: number}}[];
+  subscribe?(name: string, listener: () => void): () => void;
+  snapshot?(name: string): readonly unknown[];
   inject(name: string, run: () => (() => void)): () => void;
   register(spec: {name: string; id?: string; key?: string; order?: number; label?: string; children?: Record<string, {kind: 'list'; scope: 'root'}>}, component: unknown): () => void;
 }
@@ -119,113 +123,147 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
 }
 
 const CORE_VERSION = '0.3.38';
-type CorePage = 'settings' | 'account' | 'environment';
-/** Public navigation seats; other plugins contribute content through declared slots. */
+type CorePage = 'account' | 'configuration' | 'diagnostics';
+/** Root-scoped, versioned owner contract. Modules declare their own id/label/order. */
+export interface HanaMeshTabProps {
+  readonly version: 1;
+  readonly navigateTab: (id: string) => void;
+  readonly openPlugins: () => void;
+}
+export interface CorePluginTabOwner {
+  readonly install?: unknown;
+  readonly openPackage?: unknown;
+  readonly update?: unknown;
+}
+/** rc.1 has install/openPackage; later peers may also offer update. Never call absent methods. */
+export function corePluginCapabilities(owner: CorePluginTabOwner | undefined): {install: boolean; openPackage: boolean; update: boolean} {
+  return {install: typeof owner?.install === 'function', openPackage: typeof owner?.openPackage === 'function', update: typeof owner?.update === 'function'};
+}
 let selectCorePage: ((id: string | null) => void) | undefined;
-export function corePageShowsRow(page: CorePage, label: string): boolean {
+let selectHanaMeshTab: ((id: string) => void) | undefined;
+let requestedTab = 'home';
+function openCoreAccount(): void {requestedTab = 'account';selectCorePage?.('hanamesh-home');selectHanaMeshTab?.('account');}
+export function corePageShowsRow(page: CorePage | undefined, label: string): boolean {
   if (label === '我的Hana') return false;
-  if (page === 'account') return ['账号', '设备身份', '数据授权', '本机使用记录'].includes(label);
-  if (page === 'environment') return ['网站', '服务端', '运行配置', '组件与版本', '关于'].includes(label);
+  if (page === 'account') return ['账号', '设备身份', '数据授权', '本机使用记录', '市场与资产'].includes(label);
+  if (page === 'configuration') return ['网站', '服务端', '运行配置'].includes(label);
+  if (page === 'diagnostics') return ['服务端', '网站', '运行配置', '组件与版本', '关于', '贡献事件', '本设备贡献累计'].includes(label);
   return true;
 }
-function corePageContent(page: CorePage, content: ReactNode[]): ReactNode[] {
+function corePageContent(page: CorePage | undefined, content: ReactNode[]): ReactNode[] {
   return content.filter(child => {
     if (!child || typeof child !== 'object' || !('type' in child)) return !!child;
-    const node = child as {type: unknown; props: {label?: string; role?: string}};
+    const node = child as {type: unknown; props: {label?: string; role?: string; 'data-hanamesh-core-hint'?: string}};
     if (node.type === Row) return corePageShowsRow(page, node.props.label ?? '');
-    if (page === 'settings') return true;
-    if (node.type === SuiteSourceSettings) return page === 'environment';
-    return node.props.role === 'alert' || node.props.role === 'status';
+    if (page === undefined) return true;
+    if (node.type === SuiteSourceSettings) return page === 'configuration';
+    return node.props.role === 'alert' || node.props.role === 'status' || (page === 'diagnostics' && node.props['data-hanamesh-core-hint'] === 'suite-repair');
   });
 }
-type CoreRenderSlot = (key: string, owner: Record<string, never>) => ReactNode;
-function CorePageFrame({page, navigate, renderSlot}: {page: 'home' | 'account' | 'environment'; navigate: (id: string | null) => void; renderSlot?: CoreRenderSlot}): ReactNode {
-  const [navigationError, setNavigationError] = useState(false);
-  const go = (id: string | null): void => { try {navigate(id);setNavigationError(false);} catch {setNavigationError(true);} };
-  if (page === 'home') return createElement(HanaMeshHome, {navigate: go, navigationError});
-  return createElement('div', {className: `hm-core-page hm-core-page-${page}`},
-    createElement('nav', {'aria-label': '位置', className: 'hm-core-breadcrumb'}, 'HanaMesh / ', page === 'account' ? '账号与设备' : '环境与来源'),
-    createElement('header', null, createElement('div', {className: 'hm-core-eyebrow'}, page === 'account' ? 'CORE / CONNECTION' : 'SETTINGS / ENVIRONMENT'),
-      createElement('h1', null, page === 'account' ? '让你的设备，找到归属。' : '把复杂留在需要的时候。'),
-      createElement('p', null, page === 'account' ? '账号、设备、数据授权分别管理。每一步都有明确状态。' : '安装环境、目录来源与服务地址，集中管理；日常使用只显示必要状态。')),
-    createElement('nav', {className: 'hm-core-page-tabs', 'aria-label': '设置与连接'}, ...[
-      ['hanamesh-account', '账号与设备'], ['hanamesh-providers', '模型连接'], ['hanamesh-environment', '环境与来源'],
-    ].map(([id, label]) => createElement('button', {key: id, type: 'button', 'aria-current': id === `hanamesh-${page}` ? 'page' : undefined, onClick: () => go(id!)}, label))),
-    navigationError && createElement('p', {role: 'alert'}, '页面暂不可用。请确认对应 HanaMesh 组件已安装并启用。'),
-    createElement('div', {className: 'hm-core-page-grid'},
-      createElement<{page?: CorePage; onOpenUsage?: () => void}>(HanaMeshSection, {page, onOpenUsage: () => go('hanamesh-usage')}),
-      page === 'account' && createElement('aside', null,
-        createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '登录不等于授权'),
-          createElement('ol', {className: 'hm-core-steps'},
-            createElement('li', null, createElement('b', null, '登录账号'), createElement('p', null, '确认你在 HanaMesh 上的身份。')),
-            createElement('li', null, createElement('b', null, '绑定设备'), createElement('p', null, '关联设备与账号的归属关系。')),
-            createElement('li', null, createElement('b', null, '开启记录与上报'), createElement('p', null, '看清目的地址后，单独选择。')))),
-        createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '模型连接单独配置'), createElement('p', null, 'HanaMesh 登录不会自动提供模型额度。对话所需的模型与凭据，在模型连接中管理。'), createElement('button', {type: 'button', onClick: () => go('hanamesh-providers')}, '管理模型连接')),
-        createElement('button', {type: 'button', onClick: () => go('hanamesh-usage')}, '查看使用记录'))),
-    page === 'environment' && renderSlot?.('hanamesh.environment.content', {}),
-    createElement('footer', null, 'HanaMesh · Let every use bloom.'));
+export type CoreRenderSlot = (key: string, owner: HanaMeshTabProps, options?: {only?: string; fallback?: ReactNode}) => ReactNode;
+function pluginPageAvailable(slots: SlotRegistry): boolean {return (slots.snapshot?.('plugins.tab').length ?? 0) > 0;}
+function usePluginPage(slots: SlotRegistry): boolean {
+  const [available, setAvailable] = useState(() => pluginPageAvailable(slots));
+  useEffect(() => {const read = (): void => setAvailable(pluginPageAvailable(slots));read();return slots.subscribe?.('plugins.tab', read);}, [slots]);
+  return available;
 }
-function HanaMeshHome({navigate, navigationError}: {navigate: (id: string | null) => void; navigationError: boolean}): ReactNode {
+function tabRows(slots: SlotRegistry): {id: string; label: string}[] {
+  const rows = slots.entriesOfSlot?.('hanamesh.tab') ?? slots.entries?.('hanamesh.tab') ?? [];
+  return rows.filter(row => typeof row.options.id === 'string' && typeof row.options.label === 'string').map(row => ({id: row.options.id!, label: row.options.label!}));
+}
+function HanaMeshShell({slots, navigate, renderSlot}: {slots: SlotRegistry; navigate: (id: string | null) => void; renderSlot?: CoreRenderSlot}): ReactNode {
+  const [tabs, setTabs] = useState(() => tabRows(slots));
+  const [selected, setSelected] = useState(requestedTab);
+  const [notice, setNotice] = useState<string | null>(null);
+  const available = usePluginPage(slots);
+  const active = tabs.some(tab => tab.id === selected) ? selected : 'home';
+  useEffect(() => {const read = (): void => setTabs(tabRows(slots));read();return slots.subscribe?.('hanamesh.tab', read);}, [slots]);
+  useEffect(() => {if (active !== selected) {requestedTab = 'home';setSelected('home');setNotice('当前标签已停用，已返回首页。');}}, [active, selected]);
+  const navigateTab = (id: string): void => {
+    if (!tabRows(slots).some(tab => tab.id === id)) {setNotice('该标签尚未安装或已停用。');return;}
+    requestedTab = id;setSelected(id);setNotice(null);
+  };
+  useEffect(() => {selectHanaMeshTab = navigateTab;return () => {if (selectHanaMeshTab === navigateTab) selectHanaMeshTab = undefined;};}, [slots]);
+  const openPlugins = (): void => {
+    if (!pluginPageAvailable(slots)) {setNotice('当前 DSH 未提供插件页接口，请启用插件管理器或升级 DSH。');return;}
+    try {navigate('plugins');} catch {setNotice('当前 DSH 插件页暂不可用，请启用插件管理器。');}
+  };
+  const owner: HanaMeshTabProps = {version: 1, navigateTab, openPlugins};
+  const keyboard = (event: {key: string; preventDefault(): void; currentTarget: HTMLButtonElement}, index: number): void => {
+    let next: number;
+    if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabs.length - 1;
+    else return;
+    event.preventDefault();navigateTab(tabs[next]!.id);
+    const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');buttons?.[next]?.focus();
+  };
+  return createElement('div', {className: 'hm-core-page hm-core-shell', 'data-hanamesh-shell': '1'},
+    createElement('header', {className: 'hm-core-shell-head'}, createElement('h1', null, 'HanaMesh')),
+    createElement('nav', {className: 'hm-core-page-tabs', role: 'tablist', 'aria-label': 'HanaMesh'}, ...tabs.map((tab, index) => createElement('button', {
+      key: tab.id, id: `hm-tab-${tab.id}`, type: 'button', role: 'tab', 'aria-selected': active === tab.id, 'aria-controls': 'hm-tab-panel', tabIndex: active === tab.id ? 0 : -1,
+      onClick: () => navigateTab(tab.id), onKeyDown: (event: {key: string; preventDefault(): void; currentTarget: HTMLButtonElement}) => keyboard(event, index),
+    }, tab.label))),
+    (!available || notice) && createElement('p', {role: 'status', className: 'hm-core-notice'}, notice ?? '当前 DSH 未提供插件页接口，请启用插件管理器或升级 DSH。'),
+    createElement('div', {role: 'tabpanel', id: 'hm-tab-panel', 'aria-labelledby': `hm-tab-${active}`, tabIndex: 0},
+      renderSlot ? renderSlot('hanamesh.tab', owner, {only: active}) : createElement('p', {role: 'alert'}, '当前 DSH 未提供标签渲染接口，请升级 DSH。')));
+}
+function HanaMeshHome(props: HanaMeshTabProps & {renderSlot?: CoreRenderSlot}): ReactNode {
   const [state, setState] = useState<CoreState | null>(null);
-  const [installed, setInstalled] = useState<{count: number; names: string[]} | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [catalogError, setCatalogError] = useState(false);
   const read = useRef(0);
   const load = async (refresh = false): Promise<void> => {
     const sequence = ++read.current;
     try {const next = await jsonRequest<CoreState>(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? {method: 'POST'} : undefined);if (sequence === read.current) {setState(next);setError(null);}}
     catch (cause) {if (sequence === read.current) setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR');}
   };
-  useEffect(() => {
-    void load();
-    let active = true;
-    // Public AppHost inventory, read once while this page is mounted. No model or asset reads.
-    void jsonRequest<{apps: {name?: string; packageName: string; state: string}[]; plugins: {packageName: string; state: string}[]}>('/hanamesh/library/installedPlugins').then(snapshot => {
-      if (!active) return;
-      if (!Array.isArray(snapshot.apps) || !Array.isArray(snapshot.plugins)) throw new Error('CORE_INVENTORY_UNAVAILABLE');
-      const rows = [...new Map([...snapshot.apps, ...snapshot.plugins].filter(row => ['registered', 'installed', 'installed-not-loaded', 'runtime-missing'].includes(row.state)).map(row => [row.packageName, row])).values()];
-      setInstalled({count: rows.length, names: rows.slice(0, 3).map(row => 'name' in row && typeof row.name === 'string' ? row.name : row.packageName)});
-    }).catch(() => {if (active) setCatalogError(true);});
-    const focus = (): void => {void load(true);};
-    window.addEventListener('focus', focus);
-    return () => {active = false;read.current++;window.removeEventListener('focus', focus);};
-  }, []);
+  useEffect(() => {void load();const focus = (): void => {void load(true);};window.addEventListener('focus', focus);return () => {read.current++;window.removeEventListener('focus', focus);};}, []);
   const bound = state?.session?.bound ?? null;
-  const visit = (): void => {
-    if (!state?.websiteOrigin) return;
-    void openWebsite(new URL('/me', state.websiteOrigin).href).catch(cause => setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'));
-  };
-  const consent = state ? state.consent.state === 'granted' ? '已开启' : '未开启' : '读取中';
-  return createElement('div', {className: 'hm-core-page', 'data-hanamesh-home': 'true'},
-    createElement('nav', {'aria-label': '位置', className: 'hm-core-breadcrumb'}, 'HanaMesh / HanaMesh 首页'),
-    createElement('div', {className: 'hm-core-notice', role: 'status'}, bound === true ? `已连接 ${state?.account?.displayName ?? '网站账号'}。使用记录${consent}；模型连接独立管理。` : bound === false ? '尚未连接账号。你可先使用本地工作台；数据记录不会自动开启。' : state ? '绑定状态暂不可用。请在账号与设备中查看当前连接；数据授权单独管理。' : '正在读取账号与设备状态…'),
-    createElement('header', null, createElement('div', {className: 'hm-core-eyebrow'}, 'YOUR HANAMESH'), createElement('h1', null, '欢迎回来，开始创造。'), createElement('p', null, '应用、设备与使用记录，集中在一个清晰的工作空间。')),
-    navigationError && createElement('p', {role: 'alert'}, '页面暂不可用。请确认对应 HanaMesh 组件已安装并启用。'),
+  const visit = (): void => {if (state?.websiteOrigin) void openWebsite(new URL('/me', state.websiteOrigin).href).catch(cause => setError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR'));};
+  return createElement('div', {'data-hanamesh-home': 'true', className: 'hm-core-home'},
+    createElement('div', {className: 'hm-core-notice', role: 'status'}, bound === true ? `已连接 · ${state?.account?.displayName ?? '网站账号'}` : bound === false ? '尚未连接账号。登录、设备绑定和数据授权分别管理。' : state ? '账号连接状态暂不可用，请在账号标签核对服务连接。' : '正在读取账号连接状态…'),
     error && createElement('p', {role: 'alert'}, `读取未完成：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
-    createElement('section', {className: 'hm-core-hero'}, createElement('div', {className: 'hm-core-hero-copy'}, createElement('div', {className: 'hm-core-eyebrow'}, 'LET EVERY USE BLOOM.'), createElement('h2', null, '发现新的可能。', createElement('br'), '用起来，才会发生。'), createElement('p', null, '从应用库找到适合的工具，把下一次灵感变成一次行动。'), createElement('button', {type: 'button', className: 'hm-core-primary', onClick: () => navigate('hanamesh-library')}, '探索应用')), createElement('aside', {className: 'hm-core-hero-quote'}, createElement('small', null, '连接到 HanaMesh', createElement('br'), '让使用与创造相连'), createElement('strong', null, 'Discover.', createElement('br'), 'Use.Own.'))),
-    createElement('div', {className: 'hm-core-metrics'},
-      createElement('div', null, createElement('span', null, '本机已安装项'), createElement('strong', null, installed?.count ?? '—'), createElement('small', null, catalogError ? '应用库暂不可用' : installed ? '来自本机 AppHost 清单' : '正在读取本机清单')),
-      createElement('div', null, createElement('span', null, '记录状态'), createElement('strong', null, consent), createElement('small', null, '由你选择是否记录')),
-      createElement('div', null, createElement('span', null, '市场与资产'), createElement('button', {type: 'button', disabled: !(state?.websiteBinding?.ready ?? !!state?.websiteOrigin), onClick: visit}, '在网站查看'), createElement('small', null, '发行、交易、LP 与资产由网站管理'))),
-    createElement('div', {className: 'hm-core-page-grid'},
-      createElement('div', null, createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '继续使用'),
-        ...(installed?.names ?? []).map(name => createElement('div', {key: name, className: 'hm-core-home-item'}, createElement('span', null, name), createElement('button', {type: 'button', onClick: () => navigate('hanamesh-library')}, '查看'))),
-        !installed?.count && createElement('p', null, catalogError ? '暂时读不到本机应用，请在应用库查看准确原因。' : installed ? '还没有可显示的已安装项。' : '正在读取本机应用…'), createElement('button', {type: 'button', onClick: () => navigate(null)}, '对话工作台')),
-        createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '最近使用记录'), createElement('p', null, state?.consent.state === 'granted' ? '查看本机摘要与上报状态；查看页面不会产生使用记录。' : '使用记录尚未开启。开启后才记录摘要，登录不会自动授权。'), createElement('button', {type: 'button', onClick: () => navigate(state?.consent.state === 'granted' ? 'hanamesh-usage' : 'hanamesh-account')}, state?.consent.state === 'granted' ? '查看使用记录' : '了解并选择'))),
-      createElement('aside', null, createElement('section', {className: 'hm-core-card'}, createElement('h2', null, bound === true ? '账号已连接' : '完成你的连接'), createElement('p', null, bound === true ? state?.account?.displayName ?? '已绑定到网站账号' : '连接 HanaMesh 账号、确认设备，再单独选择数据授权。'), createElement('button', {type: 'button', onClick: () => navigate('hanamesh-account')}, '管理账号与数据授权')),
-        createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '套件状态'), ...(state?.components ?? []).map(row => createElement('div', {key: row.id, className: 'hm-core-home-item'}, createElement('b', null, row.label), createElement('span', null, componentText(row)))), createElement('button', {type: 'button', onClick: () => navigate('hanamesh-environment')}, '环境与来源')))),
-    createElement('footer', null, 'HanaMesh · Let every use bloom.'));
+    createElement(PointsBindBanner, {navigateTab: props.navigateTab}),
+    createElement('section', null, createElement('div', {className: 'hm-core-section-head'}, createElement('h2', null, '继续使用'), createElement('button', {type: 'button', onClick: props.openPlugins}, '去市场逛逛 →')),
+      createElement('p', {className: 'hm-core-muted'}, '市场在 DSH「插件」页，进入后选择 HanaMesh 标签。'),
+      props.renderSlot?.('hanamesh.home.continue', props, {fallback: createElement('p', {className: 'hm-core-muted'}, '暂无应用贡献内容，可前往插件页查看。')})),
+    createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '套件状态'),createElement('p', {className: 'hm-core-muted'}, `Core ${CORE_VERSION}`),
+      ...(state?.components ?? []).map(row => createElement('div', {key: row.id, className: 'hm-core-home-item'}, createElement('b', null, row.label), createElement('span', null, `${row.version ?? '未知版本'} · ${componentText(row)}`))),
+      !state && createElement('p', null, '正在读取套件状态…'),
+      createElement('button', {type: 'button', onClick: props.openPlugins}, '技术设置 → DSH 插件页')),
+    createElement('section', {className: 'hm-core-card'}, createElement('h2', null, '我的资产在网站上'), createElement('p', null, '积分、发布的插件、收益明细都在 HanaMesh 网站查看。'),
+      createElement('button', {type: 'button', disabled: !(state?.websiteBinding?.ready ?? !!state?.websiteOrigin), onClick: visit}, '去网站看资产 ↗')));
 }
+function CoreAccount(props: HanaMeshTabProps & {renderSlot?: CoreRenderSlot}): ReactNode {
+  return createElement(Fragment, null, createElement<{page?: CorePage; onOpenUsage?: () => void}>(HanaMeshSection, {page: 'account'}),
+    createElement('section', {className: 'hm-core-card', 'data-hanamesh-models': 'contributions'}, createElement('h2', null, '模型连接'), createElement('p', null, '沿用 DSH 当前选择的模型；连接内容由提供方插件贡献。'), props.renderSlot?.('hanamesh.account.models', props)));
+}
+/** The standalone composition boundary is exported for public contract consumers and portable UI tests. */
 export function registerCorePages(ctx: Pick<ClientContext, 'slots' | 'layout'>): () => void {
   if (!ctx.layout) throw new Error('CORE_LAYOUT_UNAVAILABLE');
   const previous = selectCorePage, navigate = (id: string | null): void => ctx.layout!.selectPanel(id);
   selectCorePage = navigate;
   const releases: (() => void)[] = [];
-  for (const [id, page, label] of [['hanamesh-home', 'home', 'HanaMesh 首页'], ['hanamesh-account', 'account', '账号与设备'], ['hanamesh-environment', 'environment', '环境与来源']] as const) {
-    releases.push(ctx.slots.inject('main', () => ctx.slots.register({name: 'main', key: id, ...(page === 'environment' ? {children: {'hanamesh.environment.content': {kind: 'list' as const, scope: 'root' as const}}} : {})}, (props: {renderSlot?: CoreRenderSlot}) => createElement(CorePageFrame, {page, navigate, ...(props.renderSlot ? {renderSlot: props.renderSlot} : {})}))));
-  }
-  releases.push(ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({name: 'sidebar.panellist', id: 'hanamesh-home', order: -30, label: 'HanaMesh 首页'}, CoreHomeIcon)));
+  releases.push(ctx.slots.inject('main', () => ctx.slots.register({name: 'main', key: 'hanamesh-home', children: {'hanamesh.tab': {kind: 'list', scope: 'root'}}}, (props: {renderSlot?: CoreRenderSlot}) => createElement(HanaMeshShell, {...props, slots: ctx.slots, navigate}))));
+  releases.push(ctx.slots.inject('hanamesh.tab', () => ctx.slots.register({name: 'hanamesh.tab', id: 'home', label: '首页', order: 0, children: {'hanamesh.home.continue': {kind: 'list', scope: 'root'}}}, HanaMeshHome)));
+  releases.push(ctx.slots.inject('hanamesh.tab', () => ctx.slots.register({name: 'hanamesh.tab', id: 'account', label: '账号', order: 100, children: {'hanamesh.account.models': {kind: 'list', scope: 'root'}}}, CoreAccount)));
+  releases.push(ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({name: 'sidebar.panellist', id: 'hanamesh-home', order: -30, label: 'HanaMesh'}, CoreHomeIcon)));
   return () => {for (const release of releases.reverse()) release();if (selectCorePage === navigate) selectCorePage = previous;};
+}
+function CorePluginConfig({page, view}: {page: CorePage; view?: 'page' | 'summary'}): ReactNode {
+  if (view === 'summary') return createElement('span', null, page === 'configuration' ? '服务地址与本机套件来源' : '诊断、贡献事件与关于');
+  return createElement('div', {className: 'hm-core-plugin-config'}, createElement<{page?: CorePage; onOpenUsage?: () => void}>(HanaMeshSection, {page}));
+}
+export function registerCorePluginConfig(ctx: Pick<ClientContext, 'slots' | 'layout'>): () => void {
+  const releases: (() => void)[] = [];
+  for (const key of ['@hanamesh/hanamesh', '@hanamesh/core']) releases.push(ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({name: 'plugins.bundle.config', key}, (props: {view?: 'page' | 'summary'}) => createElement(CorePluginConfig, {...props, page: 'configuration'}))));
+  for (const key of ['@hanamesh/hanamesh#hanamesh-core', '@hanamesh/core#hanamesh-core']) releases.push(ctx.slots.inject('plugins.row.config', () => ctx.slots.register({name: 'plugins.row.config', key}, (props: {view?: 'page' | 'summary'}) => createElement(CorePluginConfig, {...props, page: 'diagnostics'}))));
+  releases.push(ctx.slots.inject('plugins.detail.section', () => ctx.slots.register({name: 'plugins.detail.section', id: 'hanamesh-core.backlink'}, ({subject}: {subject?: {kind: string; pkg?: {name: string; rows?: readonly {moduleName: string}[]}}}) => {
+    if (subject?.pkg?.name !== '@hanamesh/core' && !(subject?.pkg?.name === '@hanamesh/hanamesh' && subject.pkg.rows?.some(row => row.moduleName === '@hanamesh/core'))) return null;
+    return createElement('section', {className: 'hm-core-section'}, createElement('button', {type: 'button', onClick: () => {try {(ctx.layout ? (id: string) => ctx.layout!.selectPanel(id) : selectCorePage)?.('hanamesh-home');} catch { /* The shell exposes host availability through its own status. */ }}}, '在 HanaMesh 中打开 →'));
+  })));
+  return () => {for (const release of releases.reverse()) release();};
 }
 function CoreHomeIcon({size = 20}: {size?: number}): ReactNode {return createElement('span', {'aria-hidden': true, style: {display: 'block', width: size, height: size, background: 'currentColor', maskImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxheW91dC1kYXNoYm9hcmQiIGFyaWEtaGlkZGVuPSJ0cnVlIj48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSI5IiB4PSIzIiB5PSIzIiByeD0iMSI+PC9yZWN0PjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjUiIHg9IjE0IiB5PSIzIiByeD0iMSI+PC9yZWN0PjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjkiIHg9IjE0IiB5PSIxMiIgcng9IjEiPjwvcmVjdD48cmVjdCB3aWR0aD0iNyIgaGVpZ2h0PSI1IiB4PSIzIiB5PSIxNiIgcng9IjEiPjwvcmVjdD48L3N2Zz4=")', maskSize: 'contain', maskRepeat: 'no-repeat'}});}
 
@@ -323,7 +361,7 @@ export function coreErrorText(code: string | null, upstreamStatus?: number): str
 }
 const pointsReason = coreErrorText;
 const ACTION_ERRORS: Record<string, string> = {
-  CORE_WEBSITE_CONFIGURATION_REQUIRED: '服务端已更换，请先在 HanaMesh 设置中保存对应的网站地址；本机服务端只能打开本机网站。',
+  CORE_WEBSITE_CONFIGURATION_REQUIRED: '服务端已更换，请先在 HanaMesh 账号中保存对应的网站地址；本机服务端只能打开本机网站。',
   CORE_CONFIGURATION_CHANGED: '地址已改变，请重新点击绑定。',
   CORE_CONSENT_REQUIRED: '打开数据授权后才会向服务端注册设备（绑定也需要已注册的设备）',
 };
@@ -342,22 +380,16 @@ const IDENTITY_SOURCES: Record<NonNullable<IdentityState['source']>, string> = {
 const short = (id: string): string => `${id.slice(0, 8)}…`;
 
 const styleText = `
-/* Scoped HanaMesh pages. The host still owns the frame, sidebar and Session. */
-.hm-core-page{height:100%;overflow:auto;box-sizing:border-box;min-width:0;padding:36px 38px;max-width:1360px;margin:auto;background:var(--dsw-alias-bg-base,Canvas);color:var(--dsw-alias-label-primary,CanvasText);font:14px/1.55 var(--dsw-font-family,system-ui)}.hm-core-page *{box-sizing:border-box}.hm-core-page h1{margin:0;font-size:32px;line-height:1.25;letter-spacing:-.025em}.hm-core-page h2{font-size:17px;margin:0 0 18px}.hm-core-page p{color:var(--dsw-alias-label-secondary);line-height:1.7}.hm-core-page header{margin:28px 0}.hm-core-breadcrumb{font-size:12px;color:var(--dsw-alias-label-tertiary);margin-bottom:28px}.hm-core-eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--dsw-alias-brand-primary);margin-bottom:10px}.hm-core-page button,.hm-core-page input{font:inherit;min-height:44px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;padding:10px 14px;background:var(--dsw-alias-bg-layer-3);color:inherit;max-width:100%}.hm-core-page button{cursor:pointer}.hm-core-page button:disabled{opacity:.5;cursor:default}.hm-core-page input[type=checkbox]{min-height:20px;width:20px;accent-color:var(--dsw-alias-brand-primary)}.hm-core-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:3px}.hm-core-page-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 24px}.hm-core-page-tabs [aria-current=page]{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}.hm-core-page-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}.hm-core-page-grid>*{min-width:0}.hm-core-card,.hm-core-page .hm-core-row,.hm-core-page [data-hanamesh-suite-source]{border:1px solid var(--dsw-alias-border-l1);border-radius:18px;padding:22px;background:var(--dsw-alias-bg-layer-2);margin:0 0 20px;display:block;min-width:0}.hm-core-page .hm-core-row>strong{display:block;font-size:17px;margin-bottom:18px}.hm-core-page .hm-core-row .hm-core-actions{margin-top:8px}.hm-core-page .hm-core-row input:not([type=checkbox]){width:100%;min-width:0}.hm-core-page .hm-core-copy{overflow-wrap:anywhere}.hm-core-page aside>button{width:100%}.hm-core-page-environment>.hm-core-page-grid{display:block}.hm-core-page-environment .hm-core-section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}.hm-core-steps{display:grid;gap:20px;padding-left:24px;color:var(--dsw-alias-brand-primary)}.hm-core-steps b{color:var(--dsw-alias-label-primary)}.hm-core-steps p{font-size:12px;margin:6px 0}.hm-core-notice{padding:14px 16px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:12px}.hm-core-hero{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:24px;align-items:center;padding:30px;border:1px solid var(--dsw-alias-border-l2);border-radius:22px;background:var(--dsw-alias-bg-layer-2)}.hm-core-hero-quote{padding:22px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}.hm-core-hero-quote small{font-size:12px;color:var(--dsw-alias-label-tertiary)}.hm-core-hero-quote strong{display:block;margin-top:16px;font-size:26px;line-height:1.5;color:var(--dsw-alias-state-success-primary)}.hm-core-hero h2{font-size:27px;line-height:1.45;margin:0}.hm-core-primary{background:var(--dsw-alias-button-primary-fill)!important;color:var(--dsw-alias-label-primary-inverted)!important;border:0!important;margin-top:20px}.hm-core-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}.hm-core-metrics>div{border:1px solid var(--dsw-alias-border-l1);border-radius:14px;padding:17px 20px;background:var(--dsw-alias-bg-layer-2)}.hm-core-metrics span,.hm-core-metrics small{display:block;color:var(--dsw-alias-label-tertiary);font-size:12px}.hm-core-metrics strong{font-size:28px;display:block;margin:10px 0}.hm-core-metrics button{margin:10px 0}.hm-core-home-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--dsw-alias-border-l1);overflow-wrap:anywhere}.hm-core-page footer{font-size:11px;color:var(--dsw-alias-label-tertiary);margin-top:26px}
-@media(max-width:760px){.hm-core-hero{grid-template-columns:minmax(0,1fr)}.hm-core-hero-quote{display:flex;align-items:center;justify-content:space-between;gap:16px}.hm-core-hero-quote strong{font-size:22px;margin:0}.hm-core-page{padding:24px 18px}.hm-core-page h1{font-size:26px}.hm-core-page-grid,.hm-core-metrics,.hm-core-page-environment .hm-core-section{grid-template-columns:minmax(0,1fr)}.hm-core-hero{padding:22px}.hm-core-page .hm-core-row{padding:18px}}
+/* Core owns only these content regions; DSH owns sidebar and main layout. */
+.hm-core-page{height:100%;overflow:auto;box-sizing:border-box;min-width:0;padding:18px 24px 32px;margin:auto;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-base,Canvas);font:14px/1.55 system-ui,sans-serif}.hm-core-page *{box-sizing:border-box}.hm-core-page h1{margin:0;font-size:19px}.hm-core-page h2{margin:0;font-size:15px}.hm-core-shell-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}.hm-core-page button,.hm-core-plugin-config button,.hm-core-page input,.hm-core-plugin-config input{font:inherit;border:1px solid var(--dsw-alias-border-l2,#8993a5);border-radius:10px;padding:6px 12px;background:var(--dsw-alias-bg-layer-2,Canvas);color:inherit;max-width:100%;cursor:pointer}.hm-core-page button:disabled{opacity:.5;cursor:default}.hm-core-page :focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#0891b2);outline-offset:2px}.hm-core-page-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--dsw-alias-border-l1,#8993a5);margin-bottom:16px}.hm-core-page-tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;padding:9px 14px;white-space:nowrap;color:var(--dsw-alias-label-secondary,CanvasText)}.hm-core-page-tabs [aria-selected=true]{border-bottom-color:var(--dsw-alias-brand-primary,#0891b2);color:var(--dsw-alias-label-primary,CanvasText);font-weight:600}.hm-core-home{display:flex;flex-direction:column;gap:16px}.hm-core-notice,.hm-core-bind-banner{padding:9px 14px;border:1px solid var(--dsw-alias-border-l2,#8993a5);border-radius:10px;background:var(--dsw-alias-bg-layer-2,Canvas);font-size:13px}.hm-core-bind-banner{display:flex;align-items:center;flex-wrap:wrap;gap:10px;border-color:var(--dsw-alias-state-warning-primary,#b45309)}.hm-core-bind-banner span{flex:1}.hm-core-section-head,.hm-core-home-item{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.hm-core-home-item{padding:8px 0}.hm-core-card{border:1px solid var(--dsw-alias-border-l1,#8993a5);border-radius:14px;padding:16px;background:var(--dsw-alias-bg-layer-2,Canvas);min-width:0}.hm-core-page .hm-core-row{display:block;border:1px solid var(--dsw-alias-border-l1,#8993a5);border-radius:14px;padding:16px;background:var(--dsw-alias-bg-layer-2,Canvas);margin-bottom:12px}.hm-core-page .hm-core-row>strong{display:block;margin-bottom:10px}.hm-core-copy{overflow-wrap:anywhere}.hm-core-plugin-config{color:var(--dsw-alias-label-primary,CanvasText)}
+@media(max-width:620px){.hm-core-page{padding:16px}.hm-core-bind-banner{align-items:flex-start}.hm-core-bind-banner span{flex-basis:100%}}
 
 .hm-core-section{display:flex;flex-direction:column;gap:0;color:var(--dsw-alias-label-primary,CanvasText);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-page{box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:100%;margin:0;border:0;padding:0;overflow:hidden;gap:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
-.hm-core-settings-content,.hm-core-settings-page>.hm-core-modal-content{display:flex;flex-direction:column;min-height:0;height:100%}
-.hm-core-settings-header{display:flex;align-items:center;gap:16px;position:sticky;top:0;padding:16px 24px;background:inherit;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8);z-index:1}
-.hm-core-settings-header h1{flex:1;font-size:22px;margin:0}.hm-core-settings-body{box-sizing:border-box;min-height:0;overflow:auto;flex:1;width:100%;max-width:880px;padding:24px;margin:0 auto}
-.hm-core-settings-header button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 .hm-core-section h2{font-size:20px;margin:0 0 8px}.hm-core-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8)}
 .hm-core-row>strong{font-weight:600}.hm-core-copy{display:flex;flex-direction:column;gap:8px;min-width:0}.hm-core-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.hm-core-section button,.hm-core-footer{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
-.hm-core-section button:hover,.hm-core-footer:hover{background:var(--dsw-alias-interactive-bg-hover,#f4f4f4)}.hm-core-muted{color:var(--dsw-alias-label-secondary,#6f6f6f);font-size:13px}
+.hm-core-section button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
+.hm-core-section button:hover{background:var(--dsw-alias-interactive-bg-hover,#f4f4f4)}.hm-core-muted{color:var(--dsw-alias-label-secondary,#6f6f6f);font-size:13px}
 .hm-core-switch{display:inline-flex;gap:9px;align-items:center}.hm-core-components{display:grid;gap:5px}.hm-core-error{color:var(--dsw-alias-state-error-primary,#b42318)}
-.hm-core-footer{width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hm-core-footer[data-wide=false]{width:36px;height:36px;padding:0;text-align:center;border-radius:50%}
 @media(max-width:620px){.hm-core-row{grid-template-columns:1fr;gap:6px}}
 .hm-core-points{display:grid;gap:10px}.hm-core-points b{font-weight:600}.hm-core-hana{display:grid;gap:3px;padding:8px 0;border-top:1px solid var(--dsw-alias-line-1,#e8e8e8)}
 .hm-core-events{display:grid;gap:5px}.hm-core-event{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:5px 0;border-top:1px solid var(--dsw-alias-line-1,#e8e8e8)}
@@ -410,7 +442,7 @@ function LocalUsageDialog({onClose}: {onClose: () => void; restoreFocus: () => v
     createElement('div', {className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'local-usage'},
       createElement('header', {className: 'hm-core-settings-header'},
         createElement('h1', {id: 'hm-core-local-usage-title'}, '本机使用记录'),
-        createElement('button', {type: 'button', onClick: onClose}, '返回 HanaMesh 设置')),
+        createElement('button', {type: 'button', onClick: onClose}, '返回账号')),
       createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', flex: 1, minHeight: 0, border: 0}})));
 }
 
@@ -439,7 +471,7 @@ function SuiteSourceSettings(_props:{'data-suite-source-section':boolean}):React
    createElement('div',{className:'hm-core-actions'},createElement('button',{type:'button',disabled:busy||!draft.trim(),onClick:()=>void save('custom')},'保存本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('disabled')},'停用本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('configured')},'使用插件配置'))));
 }
 
-function HanaMeshSection({page = 'settings', onOpenUsage}: {page?: CorePage; onOpenUsage?: () => void} = {}): ReactNode {
+export function HanaMeshSection({page, onOpenUsage}: {page?: CorePage; onOpenUsage?: () => void} = {}): ReactNode {
   const [state, setState] = useState<CoreState | null>(null);
   const [activity, setActivity] = useState<ActivityView | null>(null);
   const [activityBusy, setActivityBusy] = useState(false);
@@ -492,7 +524,7 @@ function HanaMeshSection({page = 'settings', onOpenUsage}: {page?: CorePage; onO
   };
   const load = async (refresh = false): Promise<void> => {
     if (consentWrite.current || configurationWrites.current > 0) return;
-    if (page !== 'environment') void loadLocalUsage();
+    if (page === undefined || page === 'account') void loadLocalUsage();
     const read = ++stateRead.current;
     try {
       const next = await jsonRequest<CoreState>(refresh ? '/api/hanamesh/core/refresh' : '/api/hanamesh/core/state', refresh ? {method: 'POST'} : undefined);
@@ -502,7 +534,7 @@ function HanaMeshSection({page = 'settings', onOpenUsage}: {page?: CorePage; onO
   };
   useEffect(() => {
     void load();
-    if (page === 'settings') void loadActivity();
+    if (page === undefined || page === 'diagnostics') void loadActivity();
     const timer = window.setInterval(() => void load(), state?.configuration?.clientPollIntervalMs ?? 10_000);
     // Returning from website binding must bypass the host's state/points caches,
     // even when the website stayed open longer than three minutes.
@@ -643,7 +675,7 @@ function HanaMeshSection({page = 'settings', onOpenUsage}: {page?: CorePage; onO
       // Turning consent on sends data at once (registration, then usage records): say where, before the switch is used.
       createElement('small', {className: 'hm-core-muted', 'data-hanamesh-core-consent-destination': state.serverOrigin ?? 'none'}, state.serverOrigin === null
         ? '没有设置服务端：开启后只在本机记录，不发送。'
-        : `开启后会立即向 ${state.serverOrigin}（${state.serverOriginSource === 'setting' ? '你设置的服务端' : '出厂默认服务端'}）注册本设备并上报使用记录；要换服务端，请先在上方「服务端」里改好再开启。`),
+        : `开启后会立即向 ${state.serverOrigin}（${state.serverOriginSource === 'setting' ? '你设置的服务端' : '出厂默认服务端'}）注册本设备并上报使用记录；要换服务端，请先在 DSH 插件页的 HanaMesh 包配置中改好再开启。`),
       consentError && createElement('p', {className: 'hm-core-error', role: 'alert'}, `授权保存未确认：${consentError}。请重新切换授权，或重新进入页面读取当前状态。`),
       createElement('small', {className: 'hm-core-muted'}, '撤回后本地缓冲清空并向服务端发起删除；服务端按其保留设置保存原始记录（默认 90 天）。')),
     createElement(Row, {label: '本机使用记录'}, createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-local-usage': localUsage.status},
@@ -697,70 +729,46 @@ function HanaMeshSection({page = 'settings', onOpenUsage}: {page?: CorePage; onO
         createElement('button', {type: 'button', disabled: consentBusy, onClick: () => {const requested = consentReview;setConsentReview(null);void saveConsent(requested);}}, consentReview === 'granted' ? '确认开启' : '确认撤回'))));
 }
 
-/** Core owns its settings content; the public DSH Modal owns its body portal,
- * stacking, Escape/Tab and focus restoration. A native showModal() here would
- * escape the shell root's inert state and cover a later host onboarding modal. */
-function HanaMeshSettingsPage({onClose}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
-  return createElement(CoreModal, {onClose, title: 'HanaMesh 设置', className: 'hm-core-settings-page'},
-    createElement('div', {className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'settings'},
-      createElement('header', {className: 'hm-core-settings-header'},
-        createElement('button', {type: 'button', onClick: onClose}, '返回'),
-        createElement('h1', {id: 'hm-core-settings-title'}, 'HanaMesh 设置'),
-        createElement('button', {type: 'button', onClick: onClose, 'aria-label': '关闭 HanaMesh 设置'}, '关闭')),
-      createElement('div', {className: 'hm-core-settings-body'}, createElement(HanaMeshSection))));
-}
-
-/** T2 one-time bind nudge. The host decides `prompt.show` (pending 分 > 0, device not bound, marker never stamped);
- *  the moment it is displayed we stamp the storage-domain marker, so a restart or reinstall never shows it again.
- *  Its surface uses the same admitted DSH Modal as every Core panel. */
-function PointsBindPrompt(): ReactNode {
+/** A homepage banner consumes the one-time marker only after it is visible,
+ * the document is foreground, and the public DSH modal stack has yielded. */
+export function PointsBindBanner({navigateTab}: {navigateTab: (id: string) => void}): ReactNode {
   const [pending, setPending] = useState<number | null>(null);
-  const [binding, setBinding] = useState<CoreState['websiteBinding']>(undefined);
-  const [bindError, setBindError] = useState<string | null>(null);
-  const active = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const anchor = useRef<HTMLDivElement | null>(null);
+  const marked = useRef(false);
+  const live = useRef(false);
   useEffect(() => {
-    let cancelled = false;
-    active.current = true;
-    let timer = 0;
-    let pointsRefreshMs = 60_000;
-    const poll = async (): Promise<void> => {
-      try {
-        const next = await jsonRequest<PointsState>('/api/hanamesh/core/points');
-        if (cancelled) return;
-        const configured = next.configuration?.pointsRefreshMs ?? 60_000;
-        if (configured !== pointsRefreshMs) {
-          pointsRefreshMs = configured;
-          window.clearInterval(timer);
-          timer = window.setInterval(() => void poll(), pointsRefreshMs);
-        }
-        if (!next.prompt.show) return;
-        window.clearInterval(timer);
-        const settings = await jsonRequest<CoreState>('/api/hanamesh/core/state');
-        if (cancelled) return;
-        setBinding(settings.websiteBinding ?? {ready: !!settings.websiteOrigin, reason: null, message: null});
-        setPending(next.pendingTotal);
-      } catch { /* the nudge is optional; a failed read simply waits for the next tick */ }
-    };
-    void poll();
-    timer = window.setInterval(() => void poll(), pointsRefreshMs);
-    return () => { cancelled = true; active.current = false; window.clearInterval(timer); };
+    let cancelled = false;live.current = true;
+    void jsonRequest<PointsState>('/api/hanamesh/core/points').then(next => {
+      if (cancelled) return;
+      if (!next.prompt.show) return;
+      setPending(next.pendingTotal);
+    }).catch(cause => {if (!cancelled) setError(`积分提醒读取失败：${actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')}`);});
+    return () => {cancelled = true;live.current = false;};
   }, []);
-  if (pending === null) return null;
-  const close = (): void => { setPending(null); };
   const displayed = (): void => {
-    void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => {
-      if (active.current) setBindError('提示记录未能保存，下次可能再次提示。请在 HanaMesh 设置中检查本机状态。');
-    });
+    if (marked.current || !live.current) return;
+    marked.current = true;
+    void jsonRequest('/api/hanamesh/core/points/prompt-shown', {method: 'POST'}).catch(() => {if (live.current) setError('提示记录未能保存，下次可能再次提示。请在 DSH 插件页中检查本机状态。');});
   };
-  return createElement(CoreModal, {className: 'hm-core-prompt', title: '绑定后这些分才归入你的账号', onClose: close, onDisplayed: displayed},
-    createElement('div', {'data-hanamesh-core-prompt': 'bind'},
-    createElement('h3', null, '绑定后这些分才归入你的账号'),
-    createElement('p', null, `你已累计 ${fen(pending)}（待绑定）。绑定 GitHub 账号后，这些分会全部归入账号；未绑定的分有上限。分不是代币。`),
-    createElement('div', {className: 'hm-core-actions'},
-      createElement('button', {type: 'button', disabled: !binding?.ready, onClick: () => {void openBindPage().then(close).catch(cause => setBindError(actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')));}}, '去网站绑定'),
-      createElement('button', {type: 'button', onClick: close}, '以后再说')),
-    !binding?.ready && createElement('p', {role: 'alert'}, binding?.message ?? '请先在 HanaMesh 设置中保存对应的网站地址。'),
-    bindError && createElement('p', {role: 'alert'}, bindError)));
+  useEffect(() => {
+    const node = anchor.current;
+    if (pending === null || dismissed || !node) return;
+    let visible = false;
+    const acknowledge = (): void => {if (node.isConnected && visible && document.visibilityState === 'visible' && !hostPrimitives().isBehindModal(node)) displayed();};
+    const intersection = new IntersectionObserver(entries => {visible = entries.some(entry => entry.target === node && entry.isIntersecting);acknowledge();});
+    const mutation = new MutationObserver(acknowledge);
+    intersection.observe(node);mutation.observe(node.ownerDocument.body, {childList: true, subtree: true});document.addEventListener('visibilitychange', acknowledge);
+    return () => {intersection.disconnect();mutation.disconnect();document.removeEventListener('visibilitychange', acknowledge);};
+  }, [pending, dismissed]);
+  if (dismissed) return null;
+  if (pending === null) return error ? createElement('p', {role: 'alert'}, error) : null;
+  return createElement('div', {ref: anchor, className: 'hm-core-bind-banner', 'data-hanamesh-core-prompt': 'bind', role: 'status'},
+    createElement('b', null, '积分提醒'), createElement('span', null, `你已累计 ${fen(pending)}（待绑定）。绑定后这些分才归入你的账号。分不是代币。`),
+    createElement('button', {type: 'button', onClick: () => navigateTab('account')}, '去绑定'),
+    createElement('button', {type: 'button', onClick: () => setDismissed(true)}, '以后再说'),
+    error && createElement('p', {role: 'alert'}, error));
 }
 
 // One queue per loaded Core client serializes StrictMode and duplicate sidebar mounts. Web Locks, when
@@ -825,38 +833,31 @@ export function FirstConsentPrompt({openSettings}: {openSettings: () => void}): 
     view && createElement(CoreModal, {className: 'hm-core-prompt', title: '开启 HanaMesh 使用记录？', onClose: close, onDisplayed: displayed, onDisplayError: displayFailed},
       createElement('div', {'data-hanamesh-core-prompt': 'consent'},
       createElement('h3', {id: 'hm-core-first-consent-title'}, '开启 HanaMesh 使用记录？'),
-      createElement('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；设置可随时关闭。'),
+      createElement('p', null, '开启后，符合规则的插件使用可计贡献积分并支持作者收入；仅记录时间、插件、功能、成败和渠道，不保存/上传对话、工具内容、文件或凭据；账号页可随时关闭。'),
       createElement('p', null, '只有你亲自点击开启才会记录；不选择或稍后均不记录。账号绑定另行确认，积分归属和作者收入按服务端规则处理。'),
-      createElement('p', null, view?.serverOrigin ? `记录将上报至 ${view.serverOrigin}。可先到 HanaMesh 设置修改服务端。` : '尚未配置服务端（CORE_SERVER_NOT_CONFIGURED）；请先到 HanaMesh 设置填写服务端。'),
-      view?.identity?.status === 'failed' && createElement('p', {role: 'alert'}, `本机设备身份不可用（${view.identity.reason ?? 'CORE_NOT_READY'}）；请到 HanaMesh 设置检查身份存储位置并重新读取。`),
+      createElement('p', null, view?.serverOrigin ? `记录将上报至 ${view.serverOrigin}。可先到 DSH 插件页的 HanaMesh 包配置修改服务端。` : '尚未配置服务端（CORE_SERVER_NOT_CONFIGURED）；请先到 DSH 插件页的 HanaMesh 包配置填写服务端。'),
+      view?.identity?.status === 'failed' && createElement('p', {role: 'alert'}, `本机设备身份不可用（${view.identity.reason ?? 'CORE_NOT_READY'}）；请到 HanaMesh 账号检查身份存储位置并重新读取。`),
       createElement('div', {className: 'hm-core-actions'},
         createElement('button', {type: 'button', disabled: busy || !shown, onClick: () => { void enable(); }}, '开启'),
         createElement('button', {type: 'button', disabled: busy, onClick: close}, '稍后'),
-        createElement('button', {type: 'button', disabled: busy, onClick: settings}, '打开设置')),
-      error && createElement('p', {role: 'alert'}, `未能确认：${error}。可打开 HanaMesh 设置读取当前状态并手动选择。`))),
-    error && !view && createElement('p', {role: 'alert'}, `HanaMesh 首次提示：${error}。`, createElement('button', {type: 'button', onClick: settings}, '打开设置')));
-}
-
-function FooterAction({wide}: {wide: boolean}): ReactNode {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const entry = useRef<HTMLButtonElement | null>(null);
-  const closeSettings = (): void => { setSettingsOpen(false); };
-  return createElement(Fragment, null,
-    createElement('button', {type: 'button', className: 'hm-core-footer', 'data-wide': String(wide), title: 'HanaMesh', 'aria-label': '打开 HanaMesh 设置', ref: entry, onClick: () => selectCorePage ? selectCorePage('hanamesh-account') : setSettingsOpen(true)}, wide ? (selectCorePage ? '设置与连接' : 'HanaMesh') : 'H'),
-    settingsOpen && createElement(HanaMeshSettingsPage, {onClose: closeSettings, restoreFocus: () => entry.current?.focus()}),
-    createElement(FirstConsentPrompt, {openSettings: () => setSettingsOpen(true)}),
-    createElement(PointsBindPrompt));
+        createElement('button', {type: 'button', disabled: busy, onClick: settings}, '打开账号')),
+      error && createElement('p', {role: 'alert'}, `未能确认：${error}。可打开 HanaMesh 账号读取当前状态并手动选择。`))),
+    error && !view && createElement('p', {role: 'alert'}, `HanaMesh 首次提示：${error}。`, createElement('button', {type: 'button', onClick: settings}, '打开账号')));
 }
 
 export const name = 'hanamesh-core-client';
 export const inject = ['slots', 'connection'];
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => startClientPeerLease(ctx.connection, window), 'hanamesh-core:client-peer-lease');
-  ctx.inject?.(['layout'], scoped => { scoped.effect(() => registerCorePages(scoped), 'hanamesh-core:pages'); });
+  ctx.inject?.(['layout'], scoped => {
+    scoped.effect(() => registerCorePages(scoped), 'hanamesh-core:pages');
+  });
   ctx.effect(() => {
     const style = document.createElement('style'); style.dataset['hanameshCore'] = 'client'; style.textContent = styleText; document.head.append(style);
-    const section = ctx.slots.inject('settings.section', () => ctx.slots.register({name: 'settings.section', id: 'hanamesh', order: 80, label: 'HanaMesh'}, HanaMeshSection));
-    const footer = ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({name: 'sidebar.footer.action', id: 'hanamesh', order: 80, label: 'HanaMesh'}, FooterAction));
-    return () => { footer(); section(); style.remove(); };
+    const configuration = registerCorePluginConfig(ctx);
+    const overlay = ctx.slots.inject('shell.overlay', () => ctx.slots.register({name: 'shell.overlay', id: 'hanamesh-core.consent'}, () => createElement(FirstConsentPrompt, {openSettings: () => {
+      openCoreAccount();
+    }})));
+    return () => {overlay();configuration();style.remove();};
   }, 'hanamesh-core:client');
 }

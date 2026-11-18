@@ -40,7 +40,7 @@ async function fixture(components, clipboard, release = command) {
   };
   vm.runInNewContext(ts.transpileModule(await readFile('src/client/index.ts', 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText, sandbox);
   sandbox.exports.apply({effect: run => run(), slots: {inject: (_name, run) => run(), register: (spec, section) => { slots.set(spec.name, section); return () => {}; }}});
-  const render = () => { cursor = 0; return slots.get('settings.section')(); };
+  const render = () => { cursor = 0; return sandbox.exports.HanaMeshSection(); };
   render(); effects.splice(0).forEach(run => run()); await settle();
   return {render, requests};
 }

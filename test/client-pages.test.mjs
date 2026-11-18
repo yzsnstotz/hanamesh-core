@@ -2,35 +2,30 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
-async function client(){let value;vm.runInNewContext(await readFile(process.env.CL1_BASELINE_CLIENT??'lib/client.js','utf8'),{window:{__ModuleLoader__:{load:r=>value=r.factory(()=>({}))}}});return value;}
-test('Core pages separate account consent from environment settings and assets remain on website',async()=>{
+async function client(react={}){let value;vm.runInNewContext(await readFile('lib/client.js','utf8'),{window:{__ModuleLoader__:{load:r=>value=r.factory(()=>react)}}});return value;}
+test('Core partitions account actions, package addresses and row diagnostics without losing facts',async()=>{
  const api=await client();
- assert.equal(api.corePageShowsRow('account','数据授权'),true);
- assert.equal(api.corePageShowsRow('account','服务端'),false);
- assert.equal(api.corePageShowsRow('environment','网站'),true);
- assert.equal(api.corePageShowsRow('environment','账号'),false);
- assert.equal(api.corePageShowsRow('settings','我的Hana'),false);
+ assert.equal(api.corePageShowsRow('account','数据授权'),true);assert.equal(api.corePageShowsRow('account','服务端'),false);
+ assert.equal(api.corePageShowsRow('configuration','网站'),true);assert.equal(api.corePageShowsRow('configuration','账号'),false);
+ assert.equal(api.corePageShowsRow('diagnostics','贡献事件'),true);assert.equal(api.corePageShowsRow(undefined,'我的Hana'),false);
 });
-test('Core uses additive keyed main navigation and disposes its own registrations',async()=>{
+test('Core declares one keyed main, self-owned tabs and disposes only its registrations',async()=>{
  const api=await client(),entries=[],released=[];
- // apply's initial style/peer effects are checked by the existing client tests.
- // A focused public registration helper makes the additive seats reviewable.
  const stop=api.registerCorePages({layout:{selectPanel(){}},slots:{inject(_slot,run){return run();},register(options,component){entries.push([options,component]);return()=>released.push(options.key??options.id);}}});
- for(const id of ['hanamesh-home','hanamesh-account','hanamesh-environment'])assert(entries.some(([spec])=>spec.name==='main'&&spec.key===id));
- assert(entries.some(([spec])=>spec.name==='sidebar.panellist'&&spec.id==='hanamesh-home'&&spec.order===-30));
- assert.equal(entries.some(([spec])=>['root','sidebar','conversation'].includes(spec.name)),false);
- assert.equal(entries.find(([spec])=>spec.key==='hanamesh-environment')[0].children['hanamesh.environment.content'].kind,'list');
+ assert.deepEqual(entries.filter(([s])=>s.name==='main').map(([s])=>s.key),['hanamesh-home']);
+ assert(entries.some(([s])=>s.name==='sidebar.panellist'&&s.id==='hanamesh-home'&&s.label==='HanaMesh'));
+ assert.equal(entries.some(([s])=>['root','sidebar','conversation'].includes(s.name)),false);
+ assert.equal(entries.find(([s])=>s.key==='hanamesh-home')[0].children['hanamesh.tab'].kind,'list');
  stop();assert.equal(released.length,4);
 });
-
-
-test('home reads only Core state and public local inventory; it does not fetch assets or enable recording',async()=>{
+test('home reads only Core state and exposes a contribution region instead of inventory',async()=>{
  let api;const effects=[],requests=[],entries=[];
- const react={createElement:(type,props,...children)=>({type,props:props??{},children}),useState:value=>[value,()=>{}],useRef:value=>({current:value}),useEffect:run=>effects.push(run)};
- vm.runInNewContext(await readFile('lib/client.js','utf8'),{window:{__ModuleLoader__:{load:record=>api=record.factory(()=>react)},addEventListener(){},removeEventListener(){}},fetch:async(path,init)=>{requests.push({path,init});return Response.json(path.includes('installedPlugins')?{apps:[],plugins:[]}:{consent:{state:'withheld'},session:{bound:false},components:[]});}});
+ const react={createElement:(type,props,...children)=>({type,props:props??{},children}),useState:value=>[typeof value==='function'?value():value,()=>{}],useRef:value=>({current:value}),useEffect:run=>effects.push(run)};
+ vm.runInNewContext(await readFile('lib/client.js','utf8'),{window:{__ModuleLoader__:{load:r=>api=r.factory(()=>react)},addEventListener(){},removeEventListener(){}},fetch:async(path,init)=>{requests.push({path,init});return Response.json({consent:{state:'withheld'},session:{bound:false},components:[]});}});
  const stop=api.registerCorePages({layout:{selectPanel(){}},slots:{inject(_name,run){return run();},register(spec,component){entries.push([spec,component]);return()=>{};}}});
- const frame=entries.find(([spec])=>spec.key==='hanamesh-home')[1]({});const home=frame.type(frame.props);home.type(home.props);
+ const home=entries.find(([spec])=>spec.name==='hanamesh.tab'&&spec.id==='home')[1];const rendered=[];
+ home({version:1,navigateTab(){},openPlugins(){},renderSlot:(key)=>{rendered.push(key);return null;}});
  const releases=effects.map(run=>run());await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(requests.map(row=>row.path).sort(),['/api/hanamesh/core/state','/hanamesh/library/installedPlugins']);assert(requests.every(row=>!row.init?.method));
+ assert.deepEqual(requests.map(row=>row.path),['/api/hanamesh/core/state']);assert(requests.every(row=>!row.init?.method));assert.deepEqual(rendered,['hanamesh.home.continue']);
  for(const release of releases)release?.();stop();
 });

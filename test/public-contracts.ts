@@ -30,3 +30,8 @@ declare const legacyFacts: LegacyInstallationFacts;
 const legacyResult: Promise<LegacyInstallationAssessment> = assessLegacyInstallation(legacyFacts);
 const optionalLegacyResult: Promise<LegacyInstallationAssessment> | undefined = core.assessLegacyInstallation?.(legacyFacts);
 void [legacyResult,optionalLegacyResult];
+
+import type {HanaMeshTabProps, CorePluginTabOwner} from '../lib/client/index.js';
+const tabOwner: HanaMeshTabProps = {version: 1, navigateTab(id: string) {void id;}, openPlugins() {}};
+const oldDshTabOwner: CorePluginTabOwner = {install() {}, openPackage() {}};
+void [tabOwner, oldDshTabOwner];

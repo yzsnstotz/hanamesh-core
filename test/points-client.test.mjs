@@ -9,8 +9,8 @@ function renderSettings(bound){
  let first=true,client,section;const calls=[];
  const react={Fragment:Symbol('Fragment'),createElement:(type,props,...children)=>typeof type==='function'?type({...props,children}):{type,props:props??{},children},useState:initial=>{const value=first?core:initial;first=false;return[value,()=>{}];},useRef:value=>({current:value}),useEffect:()=>{}};
  vm.runInNewContext(bundle,{URL,fetch:async(path,init)=>{calls.push({path,init});return Response.json({opened:true});},window:{__ModuleLoader__:{load:spec=>client=spec.factory(()=>react)}},document:{createElement:()=>({dataset:{},remove(){}}),head:{append(){}}}});
- client.apply({effect:run=>run(),slots:{inject:(_name,run)=>run(),register:(spec,component)=>{if(spec.name==='settings.section')section=component;return()=>{};}}});
- const tree=section();
+ client.apply({effect:run=>run(),slots:{inject:(_name,run)=>run(),register:(spec,component)=>{return()=>{};}}});
+ const tree=client.HanaMeshSection();
  const text=node=>node==null||typeof node==='boolean'?'':Array.isArray(node)?node.map(text).join(''):typeof node==='object'?(node.children??[]).map(text).join(''):String(node);
  const nodes=node=>!node||typeof node!=='object'?[]:Array.isArray(node)?node.flatMap(nodes):[node,...node.children.flatMap(nodes)];
  return {text:text(tree),nodes:nodes(tree),calls};

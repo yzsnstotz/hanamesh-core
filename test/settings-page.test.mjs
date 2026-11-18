@@ -59,39 +59,21 @@ async function clientFixture(fetcher) {
     const owner = {state: [], cursor: 0, effects: []};
     return {render() { current = owner; owner.cursor = 0; owner.effects = []; return component(props); }, effects: () => owner.effects};
   };
-  return {slots, mount, timers, clearedTimers, hostQueries: () => hostQueries,
+  return {slots, businessSection: plugin.HanaMeshSection, modal: plugin.CoreModal, mount, timers, clearedTimers, hostQueries: () => hostQueries,
     focus: () => windowEvents.dispatchEvent(new Event('focus')),
     visibility(value) { sandbox.document.visibilityState = value; documentEvents.dispatchEvent(new Event('visibilitychange')); },
   };
 }
 const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 
-test('HanaMesh footer opens complete Core-owned settings through DSH Modal without querying host navigation', async () => {
+test('Core configuration uses native plugin detail slots and never registers a settings/footer entry', async () => {
   const f = await clientFixture();
-  const footer = f.mount(f.slots.get('sidebar.footer.action'), {wide: true});
-  const trigger = elements(footer.render()).find(e => e.props['aria-label'] === '打开 HanaMesh 设置');
-  for (const action of ['返回', '关闭']) {
-    trigger.props.onClick();
-    const pageElement = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
-    const page = f.mount(pageElement.type, pageElement.props);
-    const tree = page.render();
-    const surface = elements(f.mount(tree.type, tree.props).render()).find(e => e.type === DSHModal);
-    assert.ok(surface);
-    assert.equal(surface.props.open, false, 'admission happens after host foreground yields');
-    assert.equal(tree.props.title, 'HanaMesh 设置');
-    assert.equal(surface.props.headless, true);
-    assert.ok(elements(tree).some(e => e.props['data-hanamesh-core-page'] === 'settings'));
-    assert.ok(elements(tree).some(e => e.type === 'h1' && e.children.includes('HanaMesh 设置')));
-    assert.ok(elements(tree).some(e => e.type === f.slots.get('settings.section')), 'reuse full business component');
-    assert.equal(page.effects().length, 0, 'Core installs no competing native top-layer/focus lifecycle');
-    elements(tree).find(e => e.type === 'button' && e.children.includes(action)).props.onClick();
-    assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0);
-  }
-  trigger.props.onClick();
-  const reopened = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
-  f.mount(reopened.type, reopened.props).render().props.onClose();
-  assert.equal(elements(footer.render()).filter(e => e.props.onClose).length, 0, 'DSH Escape/backdrop callback closes only Core state');
-  assert.equal(f.hostQueries(), 0, 'Core must not inspect/click host navigation or change inert');
+  assert.equal(f.slots.has('settings.section'), false);
+  assert.equal(f.slots.has('sidebar.footer.action'), false);
+  assert(f.slots.has('plugins.bundle.config'));
+  assert(f.slots.has('plugins.row.config'));
+  assert(f.slots.has('shell.overlay'));
+  assert.equal(f.hostQueries(), 0);
 });
 
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -120,7 +102,7 @@ async function consentSection(override = () => undefined) {
     if (overridden) return overridden;
     return handle(new Request(`http://127.0.0.1:41001${path}`, {...init, headers: {...init.headers, origin: 'http://127.0.0.1:41001', 'sec-fetch-site': 'same-origin'}}));
   });
-  const section = f.mount(f.slots.get('settings.section'));
+  const section = f.mount(f.businessSection);
   section.render();
   const cleanups = section.effects().map(run => run());
   await settle();
@@ -364,7 +346,7 @@ test('settings section shows a failed shared identity with its location and repa
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore(INITIAL_CORE_SNAPSHOT).store, {sharedDevice: fileSharedDeviceStore(root)});
   const handle = createRouteHandler(controller);
   const f = await clientFixture(async (path, init = {}) => handle(new Request(`http://127.0.0.1:41001${path}`, {...init, headers: {...init.headers, origin: 'http://127.0.0.1:41001', 'sec-fetch-site': 'same-origin'}})));
-  const section = f.mount(f.slots.get('settings.section'));
+  const section = f.mount(f.businessSection);
   section.render();
   section.effects().forEach(run => run());
   await settle();
@@ -402,7 +384,7 @@ test('settings section names a replaced identity after a conflict', async t => {
   const controller = await SessionController.create({serverOrigin: null, websiteOrigin: null}, memoryStore({...INITIAL_CORE_SNAPSHOT, device: own}).store, {sharedDevice: fileSharedDeviceStore(root)});
   const handle = createRouteHandler(controller);
   const f = await clientFixture(async (path, init = {}) => handle(new Request(`http://127.0.0.1:41001${path}`, init)));
-  const section = f.mount(f.slots.get('settings.section'));
+  const section = f.mount(f.businessSection);
   section.render();
   section.effects().forEach(run => run());
   await settle();
@@ -422,7 +404,7 @@ async function coreSection(t, config, snapshot = INITIAL_CORE_SNAPSHOT, fetcher 
     requests.push({path, method: init.method ?? 'GET', body: init.body});
     return handle(new Request(`http://127.0.0.1:41001${path}`, {...init, headers: {...init.headers, origin: 'http://127.0.0.1:41001', 'sec-fetch-site': 'same-origin'}}));
   });
-  const section = f.mount(f.slots.get('settings.section'));
+  const section = f.mount(f.businessSection);
   section.render();
   const cleanups = section.effects().map(run => run());
   t.after(() => cleanups.forEach(run => run?.()));
@@ -523,25 +505,15 @@ test('Core own page discovers the real source state and offers explicit preserve
 });
 
 
-test('Core settings and a host onboarding dialog share the DSH modal mechanism instead of competing with browser top layer', async () => {
+test('Core consent and a host onboarding dialog share the DSH modal mechanism', async () => {
   const f = await clientFixture();
-  const footer = f.mount(f.slots.get('sidebar.footer.action'), {wide: true});
-  elements(footer.render()).find(e => e.props['aria-label'] === '打开 HanaMesh 设置').props.onClick();
-  const pageElement = elements(footer.render()).find(e => typeof e.type === 'function' && e.props.onClose);
-  const page = f.mount(pageElement.type, pageElement.props);
-  const core = page.render();
+  let closed = 0;
+  const core = {type: f.modal, props: {title: '确认数据授权', className: 'hm-core-prompt', onClose: () => closed++}};
   const host = {type: DSHModal, props: {open: true, title: 'Add an API key to get started'}};
   const surface = elements(f.mount(core.type, core.props).render()).find(e => e.type === DSHModal);
-  assert.equal(surface.type, host.type, 'both dialogs use the DSH modal stack, with Core admission deferring to an existing host foreground');
+  assert.equal(surface.type, host.type);
   assert.equal(surface.props.open, false);
-  assert.equal(core.props.title, 'HanaMesh 设置');
-  assert.equal(surface.props.headless, true, 'Core retains its complete settings content inside host-owned modal chrome');
-  assert.equal(f.hostQueries(), 0, 'Core must not inspect, dismiss or mutate the host dialog/inert state');
-  let closed = 0;
-  // DSH owns Escape, backdrop and focus. Its public onClose delegates only the local Core close.
-  pageElement.props.onClose = () => { closed++; };
-  const other = f.mount(pageElement.type, pageElement.props).render();
-  other.props.onClose();
-  assert.equal(closed, 1);
-  assert.equal(host.props.open, true, 'closing Core does not dismiss the host dialog');
+  assert.equal(surface.props.headless, true);
+  assert.equal(f.hostQueries(), 0);
+  surface.props.onClose();assert.equal(closed, 1);
 });

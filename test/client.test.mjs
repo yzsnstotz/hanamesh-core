@@ -7,8 +7,8 @@ test('client distribution declares native slots and avoids forbidden layout/link
   assert.deepEqual(pkg.dsh.client.inject, ['@deepseek-ai/dsh-client-ui-settings', '@deepseek-ai/dsh-client-ui-sidebar', '@deepseek-ai/dsh-client-ui-primitives']);
   assert.ok(pkg.exports['./client']);
   const source = await readFile('src/client/index.ts', 'utf8');
-  assert.match(source, /settings\.section/);
-  assert.match(source, /sidebar\.footer\.action/);
+  assert.match(source, /plugins\.bundle\.config/);
+  assert.match(source, /shell\.overlay/);
   assert.match(source, /已安装.*服务未就绪/);
   assert.match(source, /检查未完成/);
   assert.match(source, /row\.requiredRange/);
@@ -40,7 +40,7 @@ test('B7: bound account row names the GitHub account from state.account and fall
 
 test('CL1: asset details remain on the website while Core keeps its original identity boundary', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
-  const section = source.slice(source.indexOf('function HanaMeshSection'), source.indexOf('/** Core owns its settings content'));
+  const section = source.slice(source.indexOf('function HanaMeshSection'), source.indexOf('/** A homepage banner'));
   assert.match(section, /label: '市场与资产'/);assert.match(section, /在网站查看/);
   assert.doesNotMatch(section, /loadPoints|setPoints|data-hanamesh-core-points|\/core\/points/);
   assert.doesNotMatch(source, /ctx\.get\(/);
@@ -68,18 +68,18 @@ test('use is a successful plugin command and open a presented plugin page; copy 
   assert.doesNotMatch(source, /5%|保留 90 天。/, 'no hardcoded server settings in copy');
 });
 
-test('T2: the bind nudge is a one-shot dialog that stamps the host marker the moment it shows', async () => {
+test('T2: bind reminder moves to the home banner and stamps only on actual visible display', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
   assert.match(source, /if \(cancelled\) return;/);
-  assert.match(source, /if \(!next\.prompt\.show\) return;/); // the host decides, the client obeys
+  assert.match(source, /if \(!next\.prompt\.show\) return;/);
   assert.match(source, /jsonRequest\('\/api\/hanamesh\/core\/points\/prompt-shown', \{method: 'POST'\}\)/);
   assert.match(source, /'data-hanamesh-core-prompt': 'bind'/);
   assert.match(source, /你已累计 \$\{fen\(pending\)\}（待绑定）/);
-  assert.match(source, /'去网站绑定'\),\n\s+createElement\('button', \{type: 'button', onClick: close\}, '以后再说'\)/);
-  assert.match(source, /createElement\(PointsBindPrompt\)/); // mounted from the always-present sidebar footer slot
-  assert.doesNotMatch(source, /className: 'hm-core-prompt'[^\n]*style:/); // no inline layout hacks; the dialog uses the browser top layer
-  const bundle = await readFile('lib/client.js', 'utf8');
-  assert.match(bundle, /points\/prompt-shown/);
+  assert.match(source, /createElement\(PointsBindBanner/);
+  assert.match(source, /entry\.isIntersecting/);
+  assert.match(source, /!hostPrimitives\(\)\.isBehindModal\(node\)/);
+  assert.doesNotMatch(source, /PointsBindPrompt|sidebar\.footer\.action/);
+  assert.match(await readFile('lib/client.js', 'utf8'), /points\/prompt-shown/);
 });
 
 test('T9: the 账号 row carries an email-binding entry that opens the website, and no email form lives in core', async () => {
@@ -100,6 +100,6 @@ test('Core explains required suite components without instructing duplicate remo
 test('the consent switch says which server it will register with and send to, and how to change it first', async () => {
   const source = await readFile('src/client/index.ts', 'utf8');
   assert.match(source, /开启后会立即向 \$\{state\.serverOrigin\}/);
-  assert.match(source, /要换服务端，请先在上方「服务端」里改好再开启/);
+  assert.match(source, /要换服务端，请先在 DSH 插件页的 HanaMesh 包配置中改好再开启/);
   assert.match(source, /没有设置服务端：开启后只在本机记录，不发送/);
 });

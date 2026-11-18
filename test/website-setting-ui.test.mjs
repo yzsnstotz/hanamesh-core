@@ -44,7 +44,7 @@ async function fixture(panelResponse = () => Response.json({total: 7, outbox: {p
   sandbox.window.__ModuleLoader__ = {load: spec => { sandbox.exports = spec.factory(sandbox.require); }};
   vm.runInNewContext(await readFile(process.env.HM_SETTINGS_CLIENT_FILE ?? 'lib/client.js', 'utf8'), sandbox);
   sandbox.exports.apply({effect: run => run(), slots: {inject: (_name, run) => run(), register: (spec, component) => { slots.set(spec.name, component); return () => {}; }}});
-  const section = mount(slots.get('settings.section'), sectionProps);
+  const section = mount(sandbox.exports.HanaMeshSection, sectionProps);
   section.render(); section.effects().forEach(run => run()); await settle();
   return {section, mount, requests, timers, opened};
 }
