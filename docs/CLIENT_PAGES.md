@@ -74,11 +74,18 @@ Account preserves binding/email website actions, identity and explicit consent
 review. Cancel/Escape never write consent. Confirm uses serialized save and
 readback. Local Usage counts remain independent of server contribution facts;
 the existing local record view remains a DSH Modal. Assets are website actions.
+The account owns this records overlay separately from its filtered rows. Its
+same-origin Usage iframe keeps a full-height flex layout; Return and native close
+both dismiss it through the DSH Modal stack.
 There is no invented account logout or model credit state.
 
 First consent is contributed to `shell.overlay`, retains the existing admitted
 DSH Modal and persists its marker only after visible display. The points bind
 reminder is now a homepage banner: it checks the host's `prompt.show`, and requires
+continued reads at the host's `configuration.pointsRefreshMs` cadence (60000ms
+until supplied), stopping when a reminder is offered or the home unmounts. Reads
+do not overlap; stale replies after unmount cannot rearm the timer or show a banner.
+Display still requires
 intersection, foreground document and the public DSH modal stack to yield before
 writing `points/prompt-shown`. Unseen/unmounted content cannot consume it; marker
 failure is visible and not retried. The bind action selects Account.

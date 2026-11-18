@@ -5,6 +5,8 @@ import {join, resolve} from 'node:path';
 const production = new Map();
 for (const file of ['agent.js', 'dsh.mjs', 'activation.js', 'bind-link.js', 'device.js', 'registration.js', 'controller.js', 'health/evaluate.js', 'suite/service.js', 'suite/compatibility.js', 'suite/legacy.js', 'suite/client-peers.js', 'suite/source.js', 'suite/source-package.js', 'suite/source-lifecycle.js', 'routes.js', 'client.js']) production.set(file, await readFile(join('lib', file), 'utf8'));
 export const cases = [
+ {id:'account-records-overlay-discarded',file:'lib/client.js',mutate:code=>code.replace("localUsageOpen && (page === undefined || page === 'account') &&", "false && (page === undefined || page === 'account') &&"),test:'test/r406-behavior.test.mjs'},
+ {id:'banner-discovery-timer-discarded',file:'lib/client.js',mutate:code=>code.replaceAll('timer = window.setInterval(() => void poll(), pointsRefreshMs);', 'timer = 0;'),test:'test/r406-behavior.test.mjs'},
  {id:'backlink-admitted-navigation-discarded',file:'lib/client.js',mutate:code=>code.replace("selectCorePage('hanamesh-home');", 'void 0;'),test:'test/core-backlink-admission.test.mjs'},
  {id:'shell-missing-plugin-page-selected',file:'lib/client.js',mutate:code=>code.replace('if (!pluginPageAvailable(slots))', 'if (false)'),test:'test/core-shell-behavior.test.mjs'},
  {id:'banner-ignores-host-modal',file:'lib/client.js',mutate:code=>code.replace('!hostPrimitives().isBehindModal(node)', 'true'),test:'test/points-prompt-display.test.mjs'},

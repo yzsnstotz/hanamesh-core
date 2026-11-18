@@ -122,7 +122,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.38';
+const CORE_VERSION = '0.3.39';
 type CorePage = 'account' | 'configuration' | 'diagnostics';
 /** Root-scoped, versioned owner contract. Modules declare their own id/label/order. */
 export interface HanaMeshTabProps {
@@ -412,6 +412,11 @@ const styleText = `
 .hm-core-prompt h3{margin:0 0 8px;font-size:16px}
 .hm-core-prompt p{margin:0 0 14px}
 .hm-core-prompt button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
+.hm-core-local-usage{box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:100%;margin:0;border:0;padding:0;overflow:hidden;gap:0;color:var(--dsw-alias-label-primary,CanvasText);background:var(--dsw-alias-bg-layer-2,Canvas);font:14px/1.55 system-ui,sans-serif}
+.hm-core-local-usage-content,.hm-core-local-usage>.hm-core-modal-content{display:flex;flex-direction:column;min-height:0;height:100%}
+.hm-core-local-usage-header{display:flex;align-items:center;flex-shrink:0;gap:16px;padding:16px 24px;background:inherit;border-bottom:1px solid var(--dsw-alias-line-1,#e8e8e8)}
+.hm-core-local-usage-header h1{flex:1;font-size:22px;margin:0}
+.hm-core-local-usage-header button{cursor:pointer;border:1px solid var(--dsw-alias-line-1,#d8d8d8);border-radius:10px;background:transparent;color:inherit;padding:7px 12px;font:inherit}
 `;
 
 async function jsonRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -449,9 +454,9 @@ function Row({label, children}: {label: string; children?: ReactNode}): ReactNod
 
 /** Public same-origin Usage view; opening it never navigates the host settings. */
 function LocalUsageDialog({onClose}: {onClose: () => void; restoreFocus: () => void}): ReactNode {
-  return createElement(CoreModal, {onClose, title: '本机使用记录', className: 'hm-core-settings-page'},
-    createElement('div', {className: 'hm-core-settings-content', 'data-hanamesh-core-page': 'local-usage'},
-      createElement('header', {className: 'hm-core-settings-header'},
+  return createElement(CoreModal, {onClose, title: '本机使用记录', className: 'hm-core-local-usage'},
+    createElement('div', {className: 'hm-core-local-usage-content', 'data-hanamesh-core-page': 'local-usage'},
+      createElement('header', {className: 'hm-core-local-usage-header'},
         createElement('h1', {id: 'hm-core-local-usage-title'}, '本机使用记录'),
         createElement('button', {type: 'button', onClick: onClose}, '返回账号')),
       createElement('iframe', {src: '/api/hanamesh/usage/panel/view', title: '本机使用记录详情', style: {width: '100%', flex: 1, minHeight: 0, border: 0}})));
@@ -697,7 +702,6 @@ export function HanaMeshSection({page, onOpenUsage}: {page?: CorePage; onOpenUsa
       createElement('div', {className: 'hm-core-actions'},
         createElement('button', {type: 'button', ref: localUsageEntry, disabled: localUsage.status !== 'ready', onClick: onOpenUsage ?? (() => setLocalUsageOpen(true))}, '查看本机记录'),
         createElement('button', {type: 'button', onClick: () => void loadLocalUsage()}, '刷新本机记录')))),
-    localUsageOpen && createElement(LocalUsageDialog, {onClose: () => setLocalUsageOpen(false), restoreFocus: () => localUsageEntry.current?.focus()}),
     createElement(Row, {label: '账号'}, createElement('div', {className: 'hm-core-actions'},
       bound === true
         ? createElement('span', {'data-hanamesh-core-bound': 'true', ...(state.account ? {'data-hanamesh-core-account': state.account.displayName} : {})}, state.account?.provider === 'github'
@@ -731,6 +735,7 @@ export function HanaMeshSection({page, onOpenUsage}: {page?: CorePage; onOpenUsa
     createElement(Row, {label: '关于'}, createElement('div', {className: 'hm-core-actions'}, createElement('span', null, `hanamesh-core ${CORE_VERSION} · 支持 DSH 0.2.x`), createElement('button', {type: 'button', disabled: !websiteReady, onClick: () => visit('/')}, '去网站'))),
   ];
   return createElement('section', {className: 'hm-core-section', 'data-hanamesh-core': 'ready'}, ...corePageContent(page, content),
+    localUsageOpen && (page === undefined || page === 'account') && createElement(LocalUsageDialog, {onClose: () => setLocalUsageOpen(false), restoreFocus: () => localUsageEntry.current?.focus()}),
     consentReview !== null && createElement(CoreModal, {title: '确认数据授权', className: 'hm-core-prompt hm-core-consent-review', onClose: () => setConsentReview(null)},
       createElement('h3', null, '确认数据授权'),
       createElement('p', null, consentReview === 'granted' ? '开启后记录本设备的安装、打开、使用与卸载摘要；不包含对话、文件或凭据。登录与设备绑定不会自动授权。' : '撤回后停止记录并清空本机缓冲；服务端删除结果单独核对。'),
@@ -751,12 +756,31 @@ export function PointsBindBanner({navigateTab}: {navigateTab: (id: string) => vo
   const live = useRef(false);
   useEffect(() => {
     let cancelled = false;live.current = true;
-    void jsonRequest<PointsState>('/api/hanamesh/core/points').then(next => {
-      if (cancelled) return;
-      if (!next.prompt.show) return;
-      setPending(next.pendingTotal);
-    }).catch(cause => {if (!cancelled) setError(`积分提醒读取失败：${actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')}`);});
-    return () => {cancelled = true;live.current = false;};
+    let timer = 0, pointsRefreshMs = 60_000, reading = false, offered = false;
+    const poll = async (): Promise<void> => {
+      if (cancelled || reading || offered) return;
+      reading = true;
+      try {
+        const next = await jsonRequest<PointsState>('/api/hanamesh/core/points');
+        if (cancelled) return;
+        const configured = next.configuration?.pointsRefreshMs ?? 60_000;
+        if (configured !== pointsRefreshMs) {
+          pointsRefreshMs = configured;
+          window.clearInterval(timer);
+          timer = window.setInterval(() => void poll(), pointsRefreshMs);
+        }
+        setError(null);
+        if (!next.prompt.show) return;
+        offered = true;
+        window.clearInterval(timer);
+        setPending(next.pendingTotal);
+      } catch (cause) {
+        if (!cancelled) setError(`积分提醒读取失败：${actionError(cause instanceof Error ? cause.message : 'CORE_INTERNAL_ERROR')}`);
+      } finally {reading = false;}
+    };
+    void poll();
+    timer = window.setInterval(() => void poll(), pointsRefreshMs);
+    return () => {cancelled = true;live.current = false;window.clearInterval(timer);};
   }, []);
   const displayed = (): void => {
     if (marked.current || !live.current) return;
