@@ -35,7 +35,9 @@ env.PX1_PINNED_PNPM=pnpm;
 const pm=(args,cwd=repo)=>command(process.execPath,[pnpm,...args],cwd);
 const nm=(args,cwd=repo)=>command(process.execPath,[npm,...args],cwd);
 const role=process.env.PX1_ROLE,phase=process.argv[2];
-const names={core:'hanamesh-core-0.3.37.tgz',usage:'hanamesh-usage-0.3.0-rc.19.tgz',apphost:'hanamesh-dsh-app-host-0.6.27.tgz'};
+const archiveName=({name,version})=>name.replace(/^@/,'').replaceAll('/','-')+'-'+version+'.tgz';
+const localManifest=JSON.parse(await readFile(join(repo,'package.json'),'utf8'));
+const localArchive=archiveName(localManifest);
 const artifacts=join(root,'artifacts'),host=join(root,'native');
 const receipt={phase,role,platform:process.platform,arch:process.arch,node:process.version,startedAt:new Date().toISOString()};
 try{
@@ -59,19 +61,25 @@ try{
   await mkdir(artifacts,{recursive:true});
   await pm(['pack','--pack-destination',artifacts]);
   if(role==='core')await nm(['pack','--pack-destination',artifacts],join(repo,'packages/hanamesh-theme'));
-  await stat(join(artifacts,names[role]));
+  await stat(join(artifacts,localArchive));
+  receipt.archive=localArchive;
  }else if(phase==='native'){
   const fixture=join(import.meta.dirname,'fixtures'),provenance=JSON.parse(await readFile(join(fixture,'provenance.json'),'utf8'));
+  const modules={core:'@hanamesh/core',usage:'@hanamesh/usage',apphost:'@hanamesh/dsh-app-host',theme:'@hanamesh/theme',suite:'@hanamesh/hanamesh'};
+  if(localManifest.name!==modules[role])throw Error('PX1_LOCAL_PACKAGE_ROLE_MISMATCH');
+  const fixtureNames=Object.fromEntries(Object.entries(modules).map(([role,name])=>[role,archiveName({name,version:provenance.versions[name]})]));
+  const names={...fixtureNames,[role]:localArchive};
   await mkdir(artifacts,{recursive:true});
   for(const row of provenance.archives){
    const bytes=await readFile(join(fixture,row.file));
    if(createHash('sha256').update(bytes).digest('hex')!==row.sha256)throw Error('FIXTURE_HASH_MISMATCH '+row.file);
-   if(row.file!==names[role]&&!(role==='core'&&row.file==='hanamesh-theme-0.1.0.tgz'))await copyFile(join(fixture,row.file),join(artifacts,row.file));
+   if(row.file!==names[role]&&!(role==='core'&&row.file===names.theme))await copyFile(join(fixture,row.file),join(artifacts,row.file));
   }
   // A failed local pack remains a failed candidate. Run the locked baseline only
   // as a separate diagnostic so a build failure cannot hide native OS failures.
   let candidate=true;
-  try{await stat(join(artifacts,names[role]));}catch{candidate=false;await copyFile(join(fixture,names[role]),join(artifacts,names[role]));}
+  try{await stat(join(artifacts,localArchive));}catch{candidate=false;names[role]=fixtureNames[role];await copyFile(join(fixture,names[role]),join(artifacts,names[role]));}
+  const versions={...provenance.versions,...(candidate?{[localManifest.name]:localManifest.version}:{})};
   receipt.localCandidate=candidate;
   await mkdir(host,{recursive:true});
   await copyFile(join(import.meta.dirname,'host-package.json'),join(host,'package.json'));
@@ -80,22 +88,25 @@ try{
   await nm(['ci','--ignore-scripts','--strict-peer-deps'],host);
   await nm(['rebuild','--foreground-scripts','node-pty','koffi','@deepseek-ai/dsh-subprocess-local'],host);
   const core=join(host,'node_modules/@hanamesh/core');await mkdir(core,{recursive:true});
-  await command('tar',['-xzf',join(fixture,names.core),'-C',core,'--strip-components=1']);
+  await command('tar',['-xzf',join(artifacts,names.core),'-C',core,'--strip-components=1']);
   const {createSuitePackageSource}=await import(pathToFileURL(join(core,'lib/suite/source.js')));
   // Repack the unchanged suite tuple/patch with the actual local archive hashes.
   // Tuple and patch come from PK4's normal four-package builder; the reviewed caret ranges remain unchanged.
   const suite=join(root,'suite');await mkdir(suite,{recursive:true});
-  await command('tar',['-xzf',join(fixture,'hanamesh-hanamesh-0.1.8.tgz'),'-C',suite]);
+  await command('tar',['-xzf',join(fixture,names.suite),'-C',suite]);
   const releasePath=join(suite,'package/release.json'),release=JSON.parse(await readFile(releasePath,'utf8'));
-  const files=[...Object.values(names),'hanamesh-theme-0.1.0.tgz'],archives=[];
+  const files=['core','usage','apphost','theme'].map(role=>names[role]),archives=[];
   for(const file of files){const path=join(artifacts,file),bytes=await readFile(path);archives.push({path,integrity:'sha512-'+createHash('sha512').update(bytes).digest('base64')});}
-  for(const [i,row]of release.sources.entries())row.sha256=createHash('sha256').update(await readFile(archives[i].path)).digest('hex');
+  for(const [i,row]of release.sources.entries()){row.version=versions[row.name];row.sha256=createHash('sha256').update(await readFile(archives[i].path)).digest('hex');}
+  const suiteManifest=JSON.parse(await readFile(join(suite,'package/package.json'),'utf8'));
+  // Preserve the reviewed suite caret ranges while verifying the candidate's actual installed version.
+  await writeFile(join(host,'native-input.json'),JSON.stringify({versions,suite:{name:suiteManifest.name,version:suiteManifest.version,dependencies:suiteManifest.dependencies}},null,2)+'\n');
   await writeFile(releasePath,JSON.stringify(release,null,2)+'\n');
   await nm(['pack','--ignore-scripts','--offline','--pack-destination',artifacts],join(suite,'package'));
-  const suiteFile=join(artifacts,'hanamesh-hanamesh-0.1.8.tgz');archives.push({path:suiteFile,integrity:'sha512-'+createHash('sha512').update(await readFile(suiteFile)).digest('base64')});
-  const source=await createSuitePackageSource({archives:archives.filter(row=>!row.path.endsWith('hanamesh-theme-0.1.0.tgz')),port:0,peerRegistry:'https://registry.npmjs.org/',maxArchiveBytes:32*1024*1024,maxExpandedBytes:128*1024*1024,maxEntries:10000,maxManifestBytes:2*1024*1024,maxResponseBytes:32*1024*1024,timeoutMs:10000});
+  const suiteFile=join(artifacts,names.suite);archives.push({path:suiteFile,integrity:'sha512-'+createHash('sha512').update(await readFile(suiteFile)).digest('base64')});
+  const source=await createSuitePackageSource({archives:archives.filter(row=>!row.path.endsWith(names.theme)),port:0,peerRegistry:'https://registry.npmjs.org/',maxArchiveBytes:32*1024*1024,maxExpandedBytes:128*1024*1024,maxEntries:10000,maxManifestBytes:2*1024*1024,maxResponseBytes:32*1024*1024,timeoutMs:10000});
   let themeSource;const results=[];
-  try{themeSource=await themeFixtureRegistry(source.registry,join(artifacts,'hanamesh-theme-0.1.0.tgz')); for(const kind of ['core','usage','apphost','theme','suite']){
+  try{themeSource=await themeFixtureRegistry(source.registry,join(artifacts,names.theme)); for(const kind of ['core','usage','apphost','theme','suite']){
    const home=join(root,'cases',kind,'home'),dsh=join(root,'cases',kind,'dsh'),appdata=join(home,'AppData','Roaming'),localappdata=join(home,'AppData','Local');await mkdir(home,{recursive:true});await mkdir(dsh,{recursive:true});await mkdir(appdata,{recursive:true});await mkdir(localappdata,{recursive:true});
    try{await command(process.execPath,[join(host,'native-case.mjs'),kind,themeSource.registry],host,{HOME:home,USERPROFILE:home,APPDATA:appdata,LOCALAPPDATA:localappdata,CFFIXED_USER_HOME:home,DSH_HOME:dsh});results.push({kind,status:'PASS'});}catch(error){results.push({kind,status:'FAIL',error:error.message});}
    try{await copyFile(join(dsh,'evidence/native-load.json'),join(evidence,'native-'+kind+'.json'));}catch{}
