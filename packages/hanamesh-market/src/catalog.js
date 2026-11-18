@@ -10,7 +10,7 @@ export async function readJson(fetchImpl,url,init,{maxBytes=2097152,timeoutMs=80
  if(!response.ok)throw new MarketError(typeof body?.error?.code==='string'&&/^[A-Z0-9_]+$/.test(body.error.code)?body.error.code:'UPSTREAM_UNAVAILABLE',response.status);
  return body;
 }
-const scalar=value=>typeof value==='string'&&value.length<=200&&!/[\u0000-\u001f\u007f]/.test(value);
+const scalar=(value,max=200)=>typeof value==='string'&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
 export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,timeoutMs=8000,maxBytes=2097152}){
  const website=publicOrigin(websiteOrigin),server=publicOrigin(serverOrigin),read=(path,options={})=>readJson(fetchImpl,new URL(path,website).href,{method:'GET',...options},{timeoutMs,maxBytes});
  return{
@@ -26,7 +26,7 @@ export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,
   },
   async detail(hanaId,options={}){ensure(typeof hanaId==='string'&&hanaId.length>0&&hanaId.length<=160&&!/[\u0000-\u001f]/.test(hanaId),'INVALID_QUERY');const item=await read('/api/v2/hanas/'+encodeURIComponent(hanaId),options);ensure(item?.hanaId===hanaId,'CATALOG_IDENTITY_CHANGED',502);return item;},
   async search(input,options={}){
-   ensure(input&&Object.keys(input).every(key=>['query'].includes(key))&&scalar(input.query)&&input.query.trim().length>0,'INVALID_QUERY');
+   ensure(input&&Object.keys(input).every(key=>['query'].includes(key))&&scalar(input.query,500)&&input.query.trim().length>0,'INVALID_QUERY');
    const value=await readJson(fetchImpl,new URL('/v1/capabilities/search',server).href,{method:'POST',headers:{'content-type':'application/json',Origin:website},body:JSON.stringify({query:input.query,topK:50,telemetry:false}),...options},{timeoutMs,maxBytes});
    ensure(Array.isArray(value?.candidates)&&value.candidates.length<=50&&value.candidates.every(row=>typeof row.hanaId==='string'&&typeof row.objectId==='string')&&value.retrieval,'SEMANTIC_RESPONSE_INVALID',502);return value;
   },

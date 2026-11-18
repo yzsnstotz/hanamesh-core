@@ -25,3 +25,5 @@ test('catalog failures and malformed pages are errors, never empty-success data 
  await assert.rejects(reader.list({}),/UPSTREAM_UNAVAILABLE/);assert.equal(calls,1);
  const invalid=createCatalogClient({websiteOrigin:'https://catalog.example',serverOrigin:'https://server.example',fetchImpl:async()=>Response.json({...page,items:Array.from({length:51},()=>item)})});await assert.rejects(invalid.list({}),/CATALOG_PAGE_INVALID/);
 });
+
+test('semantic input preserves the existing Host 500-character contract independently of catalog keyword bounds',async()=>{const{createCatalogClient}=await api();let calls=0;const client=createCatalogClient({websiteOrigin:'https://catalog.example',serverOrigin:'https://host.example',fetchImpl:async(_url,init)=>{calls++;assert.equal(JSON.parse(init.body).query.length,500);return Response.json({candidates:[],retrieval:{mode:'meaning'}});}});await client.search({query:'x'.repeat(500)});assert.equal(calls,1);await assert.rejects(client.search({query:'x'.repeat(501)}),/INVALID_QUERY/);assert.equal(calls,1);});
