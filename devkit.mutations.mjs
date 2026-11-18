@@ -27,7 +27,7 @@ export const cases = [
 
  {id:'range-member-key-unbound',file:'lib/suite/service.js',mutate:code=>code.replace('this.validRecord(row, installed[i].moduleName, chosenVersions[i], installed[i].repository)','this.validRecord(row, installed[i].moduleName, row.version, installed[i].repository)'),test:'test/suite-policy.test.mjs'},
  {id:'bundle-compatible-ranges',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("dependencies[pkg.name]='^'+pkg.version;","dependencies[pkg.name]=pkg.version;"),test:'test/dsh-bundle.test.mjs'},
- {id:'distribution-theme-range',file:'lib/suite/service.js',mutate:code=>code.replace("theme && (typeof dependencies['@hanamesh/theme'] !== 'string' || !semver.validRange(dependencies['@hanamesh/theme']))","false"),test:'test/suite-policy.test.mjs'},
+ {id:'distribution-theme-range',file:'lib/suite/service.js',mutate:code=>code.replace("distribution.some(name => typeof dependencies[name] !== 'string' || !semver.validRange(dependencies[name]))","false"),test:'test/suite-policy.test.mjs'},
  {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace(",['theme','@hanamesh/theme']", ""),test:'test/dsh-bundle.test.mjs'},
  {id:'bundle-peer-widened',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("const previous=peerDependencies[name];", "const previous=undefined;"),test:'test/dsh-bundle.test.mjs'},
 
