@@ -66,7 +66,7 @@ Both standalone and suite installation forms are supported. The configuration
 entries honor DSH `view: summary/page`; the DSH page owns its chrome and package
 management. Existing address save/reset, serialized writes, authoritative readback,
 identity repair, bounded contribution history and exact manual repair command remain.
-No configuration store is duplicated. `HanaMeshSection` is the shared composition
+The backlink uses the navigation callback captured by the layout-injected page fiber; configuration fibers never read an unadmitted layout service. A missing page or navigation failure is visible. No configuration store is duplicated. `HanaMeshSection` is the shared composition
 component; its optional page filter is used by the native wrappers and portable
 business tests. It is not registered in the host settings or footer.
 

@@ -255,13 +255,24 @@ function CorePluginConfig({page, view}: {page: CorePage; view?: 'page' | 'summar
   if (view === 'summary') return createElement('span', null, page === 'configuration' ? '服务地址与本机套件来源' : '诊断、贡献事件与关于');
   return createElement('div', {className: 'hm-core-plugin-config'}, createElement<{page?: CorePage; onOpenUsage?: () => void}>(HanaMeshSection, {page}));
 }
+function CoreBacklink(): ReactNode {
+  const [error, setError] = useState<string | null>(null);
+  const open = (): void => {
+    if (!selectCorePage) {setError('HanaMesh 页面尚未启用，请启用 Core 的页面入口。');return;}
+    try {selectCorePage('hanamesh-home');setError(null);}
+    catch {setError('HanaMesh 页面暂不可用，请确认页面入口已启用。');}
+  };
+  return createElement('section', {className: 'hm-core-section'},
+    createElement('button', {type: 'button', onClick: open}, '在 HanaMesh 中打开 →'),
+    error && createElement('p', {role: 'alert'}, error));
+}
 export function registerCorePluginConfig(ctx: Pick<ClientContext, 'slots' | 'layout'>): () => void {
   const releases: (() => void)[] = [];
   for (const key of ['@hanamesh/hanamesh', '@hanamesh/core']) releases.push(ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({name: 'plugins.bundle.config', key}, (props: {view?: 'page' | 'summary'}) => createElement(CorePluginConfig, {...props, page: 'configuration'}))));
   for (const key of ['@hanamesh/hanamesh#hanamesh-core', '@hanamesh/core#hanamesh-core']) releases.push(ctx.slots.inject('plugins.row.config', () => ctx.slots.register({name: 'plugins.row.config', key}, (props: {view?: 'page' | 'summary'}) => createElement(CorePluginConfig, {...props, page: 'diagnostics'}))));
   releases.push(ctx.slots.inject('plugins.detail.section', () => ctx.slots.register({name: 'plugins.detail.section', id: 'hanamesh-core.backlink'}, ({subject}: {subject?: {kind: string; pkg?: {name: string; rows?: readonly {moduleName: string}[]}}}) => {
     if (subject?.pkg?.name !== '@hanamesh/core' && !(subject?.pkg?.name === '@hanamesh/hanamesh' && subject.pkg.rows?.some(row => row.moduleName === '@hanamesh/core'))) return null;
-    return createElement('section', {className: 'hm-core-section'}, createElement('button', {type: 'button', onClick: () => {try {(ctx.layout ? (id: string) => ctx.layout!.selectPanel(id) : selectCorePage)?.('hanamesh-home');} catch { /* The shell exposes host availability through its own status. */ }}}, '在 HanaMesh 中打开 →'));
+    return createElement(CoreBacklink);
   })));
   return () => {for (const release of releases.reverse()) release();};
 }
