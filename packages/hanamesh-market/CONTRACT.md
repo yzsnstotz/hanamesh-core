@@ -26,4 +26,18 @@ The current directory contract is authoritative. The following are requested sem
 
 ## Provenance
 
-UI layout and interaction requirements follow dsh-market 0.4.22 and the approved client.html; no upstream dsh-market source was copied. Runtime installation, compatibility and Markdown components use the official DSH 0.2.2-rc.1+ packages declared as peers. Existing HanaMesh handoff and read-only observation code moved from AppHost; the custom CLI installer, recovery writer, catalog-source protocol and market-seat arbitration were retired. DSH source is unchanged.
+The current default UI is a provisional functional skeleton based on dsh-market 0.4.22 and the earlier client.html. The coordinator’s DS3 redesign supersedes its visual specification; final rating/discovery presentation waits for owner approval. No upstream dsh-market source was copied. Runtime installation, compatibility and Markdown components use the official DSH 0.2.2-rc.1+ packages declared as peers. Existing HanaMesh handoff and read-only observation code moved from AppHost; the custom CLI installer, recovery writer, catalog-source protocol and market-seat arbitration were retired. DSH source is unchanged.
+
+## Replaceable presentation (DS3 scope update)
+
+The functional skeleton/data layer is the current deliverable. Current colors, spacing, navigation and screenshots are provisional, not the final visual acceptance target. Ratings/discovery logic and optional fields remain platform-owned; a visual component must not compute a score or infer trust.
+
+The client exports `createMarketPage({Frame, Card, Results, Confirmation, ExternalActions})`, returning an independent React component for the existing `plugins.tab` entry. Omitted views use the existing defaults. The selection is captured per factory, without a global renderer registry, configuration-driven code loading, new backend DTO, or new plugin protocol. The default `MarketPage` and its existing native registration remain independent.
+
+- `Frame` receives title/tagline, labeled tab identities, activeTab/onNavigate, messages, suite and body React nodes. The controller keeps the stable plugin-tab mount and the confirmation lifecycle.
+- `Card` receives the unmodified server item, localized summaryText, bound onDetails/onCategory, actions and detail children. It owns markup, not identity, installed-state calculation, compatibility or transport.
+- `Results` receives the listing snapshot, card renderer, onRetry and onMore; retained data, stale response fencing, aborts and fixed 50-item pagination stay in client-state/service.
+- `Confirmation` receives the exact reviewed facts plus onConfirm/onClose; confirmation still rereads the server target, source and compatibility before invoking the native owner.
+- `ExternalActions` receives the exact command, website and bound copy action. Unsupported entries still expose only copy and website installation actions.
+
+These are internal React composition props, not API-contracts fields. DS3 may replace a view independently after owner approval, using the same controller. New discovery pages/data dimensions require their approved design and shared platform contracts; the factory does not invent their behavior.

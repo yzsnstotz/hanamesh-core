@@ -11,3 +11,7 @@ Application execution, runtime provisioning, processes, leases and model routes 
 Read [CONTRACT.md](CONTRACT.md) for endpoints, source binding and website handoff. Use Node 24.13.1, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`, `pnpm test:contract`, `pnpm test:mutations`, `pnpm pack`, then `pnpm verify:pack <archive>` in an isolated environment. The package's own lockfile declares its complete dependencies; it is not part of the root pnpm workspace.
 
 Candidate version 0.1.0 is assigned by the orchestrator; publication is coordinated after review and merge.
+
+## Current scope: functional skeleton
+
+Visual details are provisional pending the owner-approved DS3 ratings/discovery design. The independent plugin, native installation and installed facts, shared directory/semantic transport, compatibility, cancellation, retained errors/retry and 50-item pagination stay in this package. Replace the view components through `createMarketPage` rather than rewriting host/data or native-install logic; see CONTRACT.md. No client score/trust calculation is added.
