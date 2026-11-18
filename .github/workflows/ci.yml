@@ -27,3 +27,13 @@ jobs:
       - run: pnpm pack --pack-destination artifacts
       - run: pnpm verify:pack
       - run: pnpm preflight
+      - name: Verify independent Market package
+        working-directory: packages/hanamesh-market
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm test
+          pnpm test:contract
+          pnpm test:mutations
+          pnpm pack
+          pnpm verify:pack

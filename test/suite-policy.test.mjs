@@ -128,3 +128,19 @@ test('PK4 pins the independent distribution theme without adding a trusted busin
  const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies.usage='^1.0.0';data.usage['1.1.0']=record('usage','9.0.0');
  const declaration=await service({data}).read({registry});assert.deepEqual(declaration.upgrades,[]);assert(declaration.blocked.some(row=>row.code==='CORE_SUITE_SOURCE_MISMATCH'));
  });
+
+test('CL6 pins the independent distribution market without adding a trusted business member',async()=>{
+ const currentBundle={...installedBundle,dependencies:{...installedBundle.dependencies,'@hanamesh/market':'0.1.0'}};
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies['@hanamesh/market']='0.1.0';
+ const s=service({currentBundle,data}),reads=[];const read=s.options.registry.read;s.options.registry.read=async(...args)=>{reads.push(args[1]);return read(...args);};
+ const d=await s.read({registry});assert.equal(d.completeness,'complete');assert.equal(d.upgrades.length,1);
+ assert.equal(d.installed.length,3);assert.equal(d.upgrades[0].targets.length,3);assert(!reads.includes('@hanamesh/market'));
+ for(const value of ['latest','garbage',null]){
+  const current={...currentBundle,dependencies:{...currentBundle.dependencies,'@hanamesh/market':value}};
+  assert.notEqual((await service({currentBundle:current}).read()).completeness,'complete');
+  const changed=structuredClone(data);changed.bundle['1.1.0'].dependencies['@hanamesh/market']=value;
+  assert.deepEqual((await service({currentBundle,data:changed}).read({registry})).upgrades,[]);
+ }
+ const foreign=structuredClone(data);foreign.bundle['1.1.0'].dependencies.foreign='1.0.0';
+ assert.deepEqual((await service({currentBundle,data:foreign}).read({registry})).upgrades,[]);
+});

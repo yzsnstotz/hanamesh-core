@@ -8,7 +8,7 @@ import yaml from 'js-yaml';
 import semver from 'semver';
 import {createSuiteInstallRelease} from '../../lib/suite/install-command.js';
 
-export const components=[['core','@hanamesh/core'],['usage','@hanamesh/usage'],['appHost','@hanamesh/dsh-app-host'],['theme','@hanamesh/theme']];
+export const components=[['core','@hanamesh/core'],['usage','@hanamesh/usage'],['appHost','@hanamesh/dsh-app-host'],['theme','@hanamesh/theme'],['market','@hanamesh/market']];
 const exactVersion=/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const record=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -66,7 +66,7 @@ export function mergeBundles(version,sources){
  }
  const peers=Object.fromEntries(Object.entries(peerDependencies).sort(([a],[b])=>a.localeCompare(b))),peerDependenciesMeta=Object.fromEntries([...optional].filter(([,value])=>value).map(([name])=>[name,{optional:true}]));
  if(!Object.keys(peers).length)throw Error('SOURCE_PEERS_MISSING');
- return {manifest:{name:'@hanamesh/hanamesh',version,hanameshSuiteInstall:createSuiteInstallRelease(version),description:'HanaMesh Core, Usage, AppHost and Theme for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
+ return {manifest:{name:'@hanamesh/hanamesh',version,hanameshSuiteInstall:createSuiteInstallRelease(version),description:'HanaMesh Core, Usage, AppHost, Theme and Market for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
 }
 export async function buildHanaMesh(input,fetchPackage,packPackage=command){
  if(!record(input)||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');
@@ -99,8 +99,8 @@ export async function buildHanaMesh(input,fetchPackage,packPackage=command){
  await writeFile(join(input.outputDir,'SHA256SUMS'),sha256+'  '+packed[0].filename+'\n');await writeFile(join(input.outputDir,'result.json'),JSON.stringify(result,null,2)+'\n');return result;
 }
 export function parseArguments(args){
- const names={'--version':'version','--core':'core','--usage':'usage','--app-host':'appHost','--theme':'theme','--output':'outputDir'},input={};
- for(let i=0;i<args.length;i+=2){const name=names[args[i]];if(!name||input[name]!==undefined||!args[i+1])throw Error('USAGE: node packages/hanamesh/build.mjs --version 0.1.0 --core 0.3.30 --usage 0.3.0-rc.15 --app-host 0.6.25 --theme 0.1.0 --output /absolute/new-directory');input[name]=args[i+1];}
+ const names={'--version':'version','--core':'core','--usage':'usage','--app-host':'appHost','--theme':'theme','--market':'market','--output':'outputDir'},input={};
+ for(let i=0;i<args.length;i+=2){const name=names[args[i]];if(!name||input[name]!==undefined||!args[i+1])throw Error('USAGE: node packages/hanamesh/build.mjs --version 0.1.0 --core 0.3.30 --usage 0.3.0-rc.15 --app-host 0.6.25 --theme 0.1.0 --market <exact-version> --output /absolute/new-directory');input[name]=args[i+1];}
  return input;
 }
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url){

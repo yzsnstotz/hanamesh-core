@@ -1,0 +1,4 @@
+packages:
+  - '.'
+confirmModulesPurge: false
+useNodeVersion: 24.13.1

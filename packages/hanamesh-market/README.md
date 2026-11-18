@@ -1,0 +1,13 @@
+# @hanamesh/market
+
+Independent HanaMesh market plugin. It follows the Core repository's Theme subpackage convention; Core does not import it. The `@hanamesh/hanamesh` distribution composes its original Cordis patch.
+
+The client contributes **Plugins → HanaMesh** using `plugins.tab`, and probes the public slot before advertising the entry. Catalog search, existing category/channel/source facets, 50-item loading, semantic task search, favorites, details and settings belong here. Missing recommendation, pack, platform overview, assessment, trust and domain data remain explicit empty states.
+
+New installations use the native tab owner's `install()` after reviewing the exact version, author, source and trust notice. Installed/newer entries call `openPackage()`. Installed facts come only from the live plugin manager's `listBundles()`; compatibility uses the host SDK's `evaluatePluginCompatibility()` with current version exemptions. This package never runs a plugin installation command, installs through an AI agent, or offers a security audit. Non-DSH entries provide copy-command and website actions.
+
+Application execution, runtime provisioning, processes, leases and model routes remain in `@hanamesh/dsh-app-host`. Suite completeness and compatible upgrade tuples remain Core public protocol-1 facts. Native package details own suite updates.
+
+Read [CONTRACT.md](CONTRACT.md) for endpoints, source binding and website handoff. Use Node 24.13.1, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`, `pnpm test:contract`, `pnpm test:mutations`, `pnpm pack`, then `pnpm verify:pack <archive>` in an isolated environment. The package's own lockfile declares its complete dependencies; it is not part of the root pnpm workspace.
+
+Candidate version 0.1.0 is assigned by the orchestrator; publication is coordinated after review and merge.

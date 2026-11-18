@@ -14,7 +14,7 @@
       "@hanamesh/hanamesh@0.1.9"
     ]
   },
-  "description": "HanaMesh Core, Usage, AppHost and Theme for DSH in one installation.",
+  "description": "HanaMesh Core, Usage, AppHost, Theme and Market for DSH in one installation.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -30,7 +30,8 @@
     "@hanamesh/core": "^0.3.38",
     "@hanamesh/usage": "^0.3.0-rc.19",
     "@hanamesh/dsh-app-host": "^0.6.28",
-    "@hanamesh/theme": "^0.1.0"
+    "@hanamesh/theme": "^0.1.0",
+    "@hanamesh/market": "^0.1.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.1.0 <4.2.0-0",

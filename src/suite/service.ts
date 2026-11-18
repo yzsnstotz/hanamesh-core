@@ -12,9 +12,9 @@ import type {PackageMetadata, SuiteBlocked, SuiteDeclaration, SuiteDeclarationRe
  * Retain the three-member identity checks and reject all other dependency additions. */
 function distributionDependencies(dependencies: Readonly<Record<string, string>> | undefined, members: readonly string[]): boolean {
   if (!dependencies) return false;
-  const theme = Object.hasOwn(dependencies, '@hanamesh/theme');
-  if (theme && (typeof dependencies['@hanamesh/theme'] !== 'string' || !semver.validRange(dependencies['@hanamesh/theme']))) return false;
-  return Object.keys(dependencies).length === members.length + (theme ? 1 : 0) && members.every(name => Object.hasOwn(dependencies, name));
+  const distribution = ['@hanamesh/theme', '@hanamesh/market'].filter(name => Object.hasOwn(dependencies, name));
+  if (distribution.some(name => typeof dependencies[name] !== 'string' || !semver.validRange(dependencies[name]!))) return false;
+  return Object.keys(dependencies).length === members.length + distribution.length && members.every(name => Object.hasOwn(dependencies, name));
 }
 export const DEFAULT_SUITE_REGISTRY = 'https://registry.npmjs.org/';
 export class SuiteDeclarationService {

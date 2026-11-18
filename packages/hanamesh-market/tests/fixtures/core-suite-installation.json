@@ -1,0 +1,14 @@
+{
+  "name": "@hanamesh/hanamesh",
+  "version": "0.1.1",
+  "command": "dsh plugin --profile desktop add --save-exact --registry=https://registry.example.test/ @hanamesh/hanamesh@0.1.1",
+  "args": [
+    "plugin",
+    "--profile",
+    "desktop",
+    "add",
+    "--save-exact",
+    "--registry=https://registry.example.test/",
+    "@hanamesh/hanamesh@0.1.1"
+  ]
+}

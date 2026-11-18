@@ -19,3 +19,7 @@
 - insert:
     - id: hanamesh-theme
       name: '@hanamesh/theme'
+- insert:
+    - id: hanamesh-market
+      name: '@hanamesh/market'
+      config: {}
