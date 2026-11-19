@@ -18,11 +18,14 @@ test('CL7 score presentation uses provider displayTotal directly and never turns
  const sparse=m.NativeMarketScore({item:{...item,score:{...item.score,status:'insufficient',displayTotal:null}}});assert.match(text(sparse),/暂不评分/);assert.doesNotMatch(text(sparse),/0\.0/);
  const unknown=m.NativeMarketScore({item:{...item,score:undefined}});assert.match(text(unknown),/尚未评估/);
 });
-test('CL7 update confirmation names the current version and preserves the exact native target before any mutation',async()=>{
- const m=await loadClient(),calls=[],review={item,install:{spec:'fixture@1.0.0',version:'1.0.0',title:'Fixture',registry:'https://registry.example/'},operation:'update',installedVersion:'0.9.0',compatibility:{compatible:true,runtimeVersion:'0.2.2-rc.4'}};
- const tree=m.NativeMarketConfirmation({review,actions:{cancel:()=>calls.push('cancel')},Modal:()=>{},onConfirm:()=>calls.push('confirm')});
- assert.match(tree.props.title,/更新/);assert.match(text(tree),/0\.9\.0/);assert.match(text(tree),/fixture@1\.0\.0/);assert.match(text(tree),/0\.2\.2-rc\.4/);assert.deepEqual(calls,[]);
- find(tree.props.footer,n=>n.type==='button'&&text(n)==='确认更新').props.onClick();assert.deepEqual(calls,['confirm']);
+test('CL7 approved mapping calls update for Git and openPackage for registry without install or a Market confirmation',async()=>{
+ const m=await loadClient(),calls=[],actions=m.createNativeMarketActions({install:v=>calls.push(['install',v]),update:v=>calls.push(['update',v]),openPackage:v=>calls.push(['openPackage',v])});
+ const git={packageName:'git-fixture',version:'1.1.0',spec:'github:fixture/repo#'+'b'.repeat(40)};
+ assert.equal(typeof actions.updateAvailable,'function');actions.updateAvailable({action:'update',target:git});actions.updateAvailable({action:'openPackage',packageName:'registry-fixture'});
+ assert.deepEqual(calls,[['update',git],['openPackage','registry-fixture']]);
+ const view=m.NativeMarketDetailAction({item:{...item,nativeInstallation:{status:'update-available',installedVersion:'1.0.0'},nativeUpdate:{action:'openPackage',packageName:'registry-fixture'}},onUpdate(){},onOpen(){}});
+ assert.match(text(view),/在 DSH 中更新/);assert.match(text(view),/有新版本 · 更新/);assert.doesNotMatch(text(view),/确认更新/);
+ const absent=m.createNativeMarketActions({install:()=>assert.fail('no fallback install')});assert.throws(()=>absent.updateAvailable({action:'update',target:git}),/DSH_UPDATE_UNAVAILABLE/);
 });
 test('CL7 v7 starter display preserves the provider eleven identities, ranks and capability facts without sorting by a score',async()=>{
  const m=await loadClient();assert.equal(typeof m.NativeMarketDiscovery,'function');

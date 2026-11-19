@@ -32,5 +32,13 @@ export function createNativeMarketPolicy({anchor,pluginManager}){
     if(installedVersion===version)return{status:'installed',installedVersion};
     return{status:semver.valid(installedVersion)&&semver.valid(version)&&semver.gt(version,installedVersion)?'update-available':'different-version',installedVersion};
   }
-  return{compatibility,installation};
+  async function gitUpdate(bundle,spec,version){
+    if(bundle?.update!=='git'||typeof bundle.source!=='string'||!semver.valid(bundle.version??'')||!semver.valid(version)||!semver.gt(version,bundle.version))return null;
+    if(!anchor)throw new Error('DSH_UPDATE_UNAVAILABLE');
+    const sdk=await import(pathToFileURL(createRequire(anchor).resolve('@deepseek-ai/dsh-plugin-manager')).href);
+    if(typeof sdk.pinnedGitOrigin!=='function')return null; // Older hosts expose no public Git-update origin capability.
+    const origin=sdk.pinnedGitOrigin(bundle.source);
+    return origin!==undefined&&sdk.pinnedGitOrigin(spec)===origin?{packageName:bundle.name,version,spec}:null;
+  }
+  return{compatibility,installation,gitUpdate};
 }

@@ -21,6 +21,12 @@ export function createNativeMarketActions(owner={}){
         // A synchronous rejection is visible to the caller; no fallback CLI or retry.
         return owner.install(target);
       },
+      updateAvailable(choice){
+        if(choice?.action==='openPackage')return this.openInstalled(choice.packageName);
+        if(choice?.action!=='update'||typeof choice.target?.packageName!=='string'||typeof choice.target?.version!=='string'||typeof choice.target?.spec!=='string')throw new Error('NATIVE_UPDATE_TARGET_REQUIRED');
+        if(!capabilities.update)throw new Error('DSH_UPDATE_UNAVAILABLE');
+        return owner.update(Object.freeze({packageName:choice.target.packageName,version:choice.target.version,spec:choice.target.spec}));
+      },
       openInstalled(packageName){
         if(!capabilities.openPackage)throw new Error('DSH_PACKAGE_PAGE_UNAVAILABLE');
         return owner.openPackage(packageName);

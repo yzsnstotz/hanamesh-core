@@ -28,24 +28,23 @@ test('a native registry change invalidates a source confirmation even when the c
 test('installed Git entries remain installed when the catalog does not declare an npm version',()=>{assert.equal(nativeInstallation('fixture-git',null,[{name:'fixture-git',installed:true,availability:'profile',version:'1.0.0'}]).status,'installed');});
 
 
-test('CL7 explicit update reviews the installed baseline and invokes the same exact native install path only after confirmation', async t => {
- const f=await fixture();t.after(()=>f.service.close());
- f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);
- const review=await f.service.prepare({itemId:item.hanaId,update:true});
- assert.equal(review.action,'install');assert.equal(review.operation,'update');assert.equal(review.installedVersion,'0.9.0');assert.equal(review.install.spec,'fixture-native@1.0.0');
- const confirmed=await f.service.confirm({reviewId:review.reviewId});
- assert.equal(confirmed.action,'install');assert.equal(confirmed.operation,'update');assert.equal(confirmed.installedVersion,'0.9.0');assert.equal(confirmed.install.spec,'fixture-native@1.0.0');
- assert.equal(f.service.install,undefined);
+test('CL7 official discovery mapping: registry updates expose native package navigation and never a reinstall intent', async t => {
+ const f=await fixture();t.after(()=>f.service.close());f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile',update:'registry'}]);
+ f.manager.inspect=async()=>assert.fail('never inspect an installed registry bundle as a new install');
+ const detail=await f.service.detail(item.hanaId);assert.equal(detail.nativeInstallation.status,'update-available');
+ assert.deepEqual(detail.nativeUpdate,{action:'openPackage',packageName:target.name});
+ await assert.rejects(f.service.prepare({itemId:item.hanaId,update:true}),/INVALID_INPUT/);
 });
 
-test('CL7 an installed baseline change or non-update target invalidates explicit update confirmation', async t => {
- const f=await fixture();t.after(()=>f.service.close());
- f.setBundles([{name:target.name,version:'0.8.0',installed:true,availability:'profile'}]);
- const review=await f.service.prepare({itemId:item.hanaId,update:true});
- f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);
- await assert.rejects(f.service.confirm({reviewId:review.reviewId}),/NATIVE_INSTALLATION_CHANGED/);
- f.setBundles([{name:target.name,version:'1.0.0',installed:true,availability:'profile'}]);
- await assert.rejects(f.service.prepare({itemId:item.hanaId,update:true}),/NATIVE_UPDATE_UNAVAILABLE/);
- f.setBundles([]);await assert.rejects(f.service.prepare({itemId:item.hanaId,update:true}),/NATIVE_UPDATE_UNAVAILABLE/);
- await assert.rejects(f.service.prepare({itemId:item.hanaId,update:'true'}),/INVALID_INPUT/);
+test('CL7 official Git update mapping uses the immutable catalog target and the SDK repository-origin check',async t=>{
+ let state=initialState(),rows=[{name:'git-fixture',version:'1.0.0',installed:true,availability:'profile',update:'git',source:'github:fixture/repo#'+'a'.repeat(40)}];
+ const git={source:'github',repo:'fixture/repo',ref:'b'.repeat(40),path:null,packageName:'git-fixture',allowBuild:[]};
+ const data={...item,oneClickInstall:{allowed:true},installMethods:[{channel:'dsh',target:git}]};
+ const manager={listBundles:async()=>rows,listVersionExemptions:()=>({exemptions:{}})};
+ const f=createMarketService({domain:{global:{get:()=>state,set:async value=>state=value}},manager:()=>manager,anchor:new URL('../package.json',import.meta.url),fetchImpl:async url=>Response.json(String(url).includes('raw.githubusercontent.com')?{name:'git-fixture',version:'1.1.0',dsh:{bundle:{patch:'patch.yml'}},engines:{dsh:'>=0.2.2-rc.1 <0.3.0-0'}}:data)});await f.init();t.after(()=>f.close());
+ const detail=await f.detail(item.hanaId);assert.equal(detail.nativeInstallation.status,'update-available');
+ const sdk=await import('@deepseek-ai/dsh-plugin-manager');
+ assert.deepEqual(detail.nativeUpdate,typeof sdk.pinnedGitOrigin==='function'?{action:'update',target:{packageName:'git-fixture',version:'1.1.0',spec:'github:fixture/repo#'+'b'.repeat(40)}}:{action:'openPackage',packageName:'git-fixture'},'actual host capability decides; no copied origin parser or invented update support');
+ rows=[{...rows[0],source:'github:other/repo#'+'a'.repeat(40)}];
+ assert.deepEqual((await f.detail(item.hanaId)).nativeUpdate,{action:'openPackage',packageName:'git-fixture'},'a different repository never becomes an update target');
 });
