@@ -26,3 +26,26 @@ test('a bundle installed in another native window invalidates an older new-insta
 
 test('a native registry change invalidates a source confirmation even when the catalog tuple is unchanged',async t=>{const f=await fixture();t.after(()=>f.service.close());const review=await f.service.prepare({itemId:item.hanaId});f.manager.inspect=async()=>({status:'accepted',kind:'registry',bundle:true,registry:'https://different-registry.example/'});await assert.rejects(f.service.confirm({reviewId:review.reviewId}),/CATALOG_CHANGED/);});
 test('installed Git entries remain installed when the catalog does not declare an npm version',()=>{assert.equal(nativeInstallation('fixture-git',null,[{name:'fixture-git',installed:true,availability:'profile',version:'1.0.0'}]).status,'installed');});
+
+
+test('CL7 explicit update reviews the installed baseline and invokes the same exact native install path only after confirmation', async t => {
+ const f=await fixture();t.after(()=>f.service.close());
+ f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);
+ const review=await f.service.prepare({itemId:item.hanaId,update:true});
+ assert.equal(review.action,'install');assert.equal(review.operation,'update');assert.equal(review.installedVersion,'0.9.0');assert.equal(review.install.spec,'fixture-native@1.0.0');
+ const confirmed=await f.service.confirm({reviewId:review.reviewId});
+ assert.equal(confirmed.action,'install');assert.equal(confirmed.operation,'update');assert.equal(confirmed.installedVersion,'0.9.0');assert.equal(confirmed.install.spec,'fixture-native@1.0.0');
+ assert.equal(f.service.install,undefined);
+});
+
+test('CL7 an installed baseline change or non-update target invalidates explicit update confirmation', async t => {
+ const f=await fixture();t.after(()=>f.service.close());
+ f.setBundles([{name:target.name,version:'0.8.0',installed:true,availability:'profile'}]);
+ const review=await f.service.prepare({itemId:item.hanaId,update:true});
+ f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);
+ await assert.rejects(f.service.confirm({reviewId:review.reviewId}),/NATIVE_INSTALLATION_CHANGED/);
+ f.setBundles([{name:target.name,version:'1.0.0',installed:true,availability:'profile'}]);
+ await assert.rejects(f.service.prepare({itemId:item.hanaId,update:true}),/NATIVE_UPDATE_UNAVAILABLE/);
+ f.setBundles([]);await assert.rejects(f.service.prepare({itemId:item.hanaId,update:true}),/NATIVE_UPDATE_UNAVAILABLE/);
+ await assert.rejects(f.service.prepare({itemId:item.hanaId,update:'true'}),/INVALID_INPUT/);
+});

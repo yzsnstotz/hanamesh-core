@@ -53,7 +53,7 @@ export function createNativeMarketListing({readPage,listBundles}){
       const unique=new Map((request.more?state.items:[]).map(item=>[item.hanaId,item]));
       for(const item of page.items)unique.set(item.hanaId,item);
       const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):(!listBundles?'DSH_BUNDLES_UNAVAILABLE':'DSH_BUNDLES_INVALID'):null;
-      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:request.page,hasMore:request.page<page.totalPages,answered:request.query,facets:page.facets??state.facets});
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:request.page,hasMore:request.page<page.totalPages,answered:request.query,facets:page.facets??state.facets,...Object.fromEntries(['phase','domains','subdivisions','hiddenInsufficientCount'].map(key=>[key,page[key]]))});
     };
     return{
       snapshot:()=>state,
