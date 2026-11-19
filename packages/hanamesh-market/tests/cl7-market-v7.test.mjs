@@ -46,3 +46,17 @@ test('CL7 shared phase, domain/subdivision facets and insufficient count remain 
  const store=m.createNativeMarketListing({readPage:async()=>({items:[item],page:1,totalPages:1,nativeBundles:[],...facts})});await store.load({});
  for(const [key,value]of Object.entries(facts))assert.deepEqual(store.snapshot()[key],value,key);store.dispose();
 });
+
+test('CL7 detail never renders a score promotion for pending or insufficient facts',async()=>{
+ const m=await loadClient();assert.equal(typeof m.NativeMarketDetailTrust,'function');
+ for(const score of [undefined,{status:'insufficient',displayTotal:null,displayScale:10}])assert.equal(m.NativeMarketDetailTrust({item:{...item,score},onInspect(){}}),null);
+ const scored=m.NativeMarketDetailTrust({item,onInspect(){}});assert.match(text(scored),/了解评分与可信依据/);
+});
+
+test('CL7 missing overview exposes an unscored state and author document rather than an empty facts table',async()=>{
+ const m=await loadClient({React:{createElement:(type,props,...children)=>({type,props:props??{},children}),useState:value=>[typeof value==='function'?value():value,()=>{}]}});assert.equal(typeof m.NativeMarketOverview,'function');
+ for(const[score,label]of[[undefined,'尚未评估'],[{status:'insufficient',displayTotal:null},'资料不足，暂不评分']]){
+  const tree=m.NativeMarketOverview({item:{...item,overview:null,score},onInspect(){}});assert.match(text(tree),new RegExp(label));
+  assert(find(tree,n=>n.type==='button'&&text(n)==='查看作者原文'));
+ }
+});
