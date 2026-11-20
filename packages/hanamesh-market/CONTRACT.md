@@ -22,7 +22,7 @@ Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protoco
 
 ## Formal discovery fields (CL7b: fixture adoption stage)
 
-`@hanamesh/api-contracts/catalog/discovery` v0.27.0 is a declared direct dependency, pinned to the formal tag's full commit `967988fdda4ea7ebf414e16b55d8d4c4dad0736f` (the registry has not published 0.27.0). `src/discovery.js` consumes its public `DISCOVERY_SCHEMA` with directly declared Ajv 8.20.0, draft 2020-12. It validates page, item/detail, domain directory and stage responses without coercion, defaults, stripping, mutation or a second copy of the Schema. Invalid discovery responses fail as `DISCOVERY_RESPONSE_INVALID`/502 without logging payloads.
+`@hanamesh/api-contracts/catalog/discovery` v0.27.0 is a declared direct dependency, declared as the exact formal `#semver:0.27.0` tag and locked to commit `967988fdda4ea7ebf414e16b55d8d4c4dad0736f` (the registry has not published 0.27.0). `src/discovery.js` consumes its public `DISCOVERY_SCHEMA` with directly declared Ajv 8.20.0, draft 2020-12. It validates page, item/detail, domain directory and stage responses without coercion, defaults, stripping, mutation or a second copy of the Schema. Invalid discovery responses fail as `DISCOVERY_RESPONSE_INVALID`/502 without logging payloads.
 
 This stage does not activate a new HTTP endpoint: HD1 is blocked because Indexer 0.5.41 lacks module-owned discovery HTTP declarations. The current catalog and semantic transports above remain active until a formal provider HTTP contract is available. The decoder and cursor listing are exercised through exact formal fixtures; this is not proof of live Host integration.
 

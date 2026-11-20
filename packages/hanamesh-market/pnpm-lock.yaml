@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@hanamesh/api-contracts':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#967988fdda4ea7ebf414e16b55d8d4c4dad0736f
+        specifier: git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#semver:0.27.0
         version: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/967988fdda4ea7ebf414e16b55d8d4c4dad0736f
       ajv:
         specifier: 8.20.0
