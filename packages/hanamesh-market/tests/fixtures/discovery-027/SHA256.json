@@ -1,0 +1,26 @@
+{
+  "list.json": {
+    "sha256": "da966b64f7ba8078028b50cc1c469761aac28b61a4a679bee254558ecda5d9da",
+    "matchesHandoff": true
+  },
+  "search.json": {
+    "sha256": "0d14afddf4ed4d6c47574a87da717c4e538d3574ebee3d03381832a0e0096968",
+    "matchesHandoff": true
+  },
+  "detail.json": {
+    "sha256": "8e610448f126176ea2ec9ee3fbe90b868f47c3c3132d9722a8945505992474b3",
+    "matchesHandoff": true
+  },
+  "domain-directory.json": {
+    "sha256": "f7a14cdaf95054ce5ae7e12899f5d3f54ab1a96ede2fc3a434f71aee52366aae",
+    "matchesHandoff": true
+  },
+  "featured.json": {
+    "sha256": "51c111cfa9bf017dc58d33dfc6e970e582877075a8b58617e0cd1abb607d15f0",
+    "matchesHandoff": true
+  },
+  "stage-config.json": {
+    "sha256": "6fd6a205b9810b618a0ed315921d1b8cea6604e4f57deba2cc5181b3217f8938",
+    "matchesHandoff": true
+  }
+}

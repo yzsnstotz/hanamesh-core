@@ -1,0 +1,161 @@
+{
+  "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+  "domains": [
+    {
+      "id": "office",
+      "name": "办公写作",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "session",
+          "name": "会话管理",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "code",
+      "name": "编程开发",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "git",
+          "name": "代码版本管理",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "design",
+      "name": "设计与图像",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "design",
+          "name": "设计工具",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "data",
+      "name": "数据分析",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "database",
+          "name": "数据库",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "marketing",
+      "name": "营销运营",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "business-operations",
+          "name": "业务运营",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "research",
+      "name": "学习研究",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "agi",
+          "name": "智能体架构",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "finance",
+      "name": "金融与链上",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "finance",
+          "name": "金融资料",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "life",
+      "name": "生活效率",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "remote",
+          "name": "远程控制",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "automation",
+      "name": "自动化与集成",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "identity",
+          "name": "身份与通信",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    },
+    {
+      "id": "setup",
+      "name": "AI 工具与环境",
+      "count": 11,
+      "hiddenInsufficientCount": 1,
+      "subdivisions": [
+        {
+          "id": "model",
+          "name": "模型接入",
+          "count": 11,
+          "capped": false
+        }
+      ],
+      "capped": false
+    }
+  ],
+  "projection": {
+    "watermark": "1",
+    "assessedAt": "2026-11-19T00:00:00.000Z",
+    "rulesVersion": "hanamesh-initial-v1",
+    "projectionAt": "2026-11-19T00:00:01.000Z"
+  }
+}

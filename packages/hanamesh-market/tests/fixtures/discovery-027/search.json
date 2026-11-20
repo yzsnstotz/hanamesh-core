@@ -1,0 +1,3764 @@
+{
+  "items": [
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000101",
+      "displayName": "SC1 合成示例 code-01",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/101",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/101/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 100.0,
+        "scale": 100,
+        "displayTotal": 10.0,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 100.0,
+          "maintenance": 100.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 10.0,
+          "maintenance": 10.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 1,
+            "value": 100000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 1,
+            "value": "2026-11-09T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/101/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [
+        {
+          "kind": "recent-maintenance",
+          "sources": [
+            {
+              "sourceUrl": "https://example.invalid/sc1/synthetic/repository-pushed-at",
+              "observedAt": "2026-11-19T00:00:00.000Z"
+            }
+          ]
+        }
+      ],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 1
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000102",
+      "displayName": "SC1 合成示例 code-02",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/102",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/102/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.87,
+        "scale": 100,
+        "displayTotal": 8.6,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 99.64,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 10.0,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9936966605627563,
+            "value": 93000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/102/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 2
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000103",
+      "displayName": "SC1 合成示例 code-03",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/103",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/103/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.74,
+        "scale": 100,
+        "displayTotal": 8.6,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 99.25,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.9,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9868998430239827,
+            "value": 86000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/103/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 3
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000104",
+      "displayName": "SC1 合成示例 code-04",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/104",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/104/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.59,
+        "scale": 100,
+        "displayTotal": 8.6,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 98.83,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.9,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9795256669299004,
+            "value": 79000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/104/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 4
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000105",
+      "displayName": "SC1 合成示例 code-05",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/105",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/105/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.43,
+        "scale": 100,
+        "displayTotal": 8.5,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 98.37,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.8,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9714668618502611,
+            "value": 72000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/105/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 5
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000106",
+      "displayName": "SC1 合成示例 code-06",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/106",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/106/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.25,
+        "scale": 100,
+        "displayTotal": 8.5,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 97.86,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.8,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9625831715240664,
+            "value": 65000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/106/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 6
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000107",
+      "displayName": "SC1 合成示例 code-07",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/107",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/107/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 85.05,
+        "scale": 100,
+        "displayTotal": 8.5,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 97.3,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.7,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9526862687782149,
+            "value": 58000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/107/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 7
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000108",
+      "displayName": "SC1 合成示例 code-08",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/108",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/108/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 84.83,
+        "scale": 100,
+        "displayTotal": 8.5,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 96.66,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.7,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9415149205331252,
+            "value": 51000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/108/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 8
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000109",
+      "displayName": "SC1 合成示例 code-09",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/109",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/109/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 84.57,
+        "scale": 100,
+        "displayTotal": 8.5,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 95.93,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.6,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9286917026933016,
+            "value": 44000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/109/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 9
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000110",
+      "displayName": "SC1 合成示例 code-10",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/110",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/110/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 84.27,
+        "scale": 100,
+        "displayTotal": 8.4,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 95.07,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.5,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.9136418987441138,
+            "value": 37000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/110/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 10
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    },
+    {
+      "hanaId": "00000000-0000-4000-8000-000000000111",
+      "displayName": "SC1 合成示例 code-11",
+      "sourceId": "awesome",
+      "sourceRef": "sc1-fixture/111",
+      "githubRepo": null,
+      "homepage": null,
+      "indexedAt": "2026-11-19T00:00:00.000Z",
+      "ownerPrincipalId": null,
+      "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "summary": {
+        "zh": "仅供并行开发的合成样例，不是真实插件。",
+        "en": "Synthetic development fixture, not a real plugin."
+      },
+      "categories": [
+        "git"
+      ],
+      "keywords": [],
+      "channels": [
+        "dsh"
+      ],
+      "installMethods": [],
+      "oneClickInstall": {
+        "allowed": false,
+        "reason": "no-install-method"
+      },
+      "npmOwnership": null,
+      "browseOnlyReason": "no-install-method",
+      "npmPackageName": null,
+      "publisher": null,
+      "repoUrl": null,
+      "repoSubdirectory": null,
+      "updatedAt": "2026-11-19T00:00:00.000Z",
+      "sourceLinks": [],
+      "official": false,
+      "domainIds": [
+        "code"
+      ],
+      "subdivisions": [
+        "git"
+      ],
+      "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+      "overview": {
+        "does": {
+          "zh": "把演示文档整理成笔记和待办",
+          "en": "Turn sample documents into notes and tasks.",
+          "ja": "サンプル文書をノートとタスクに整理する。"
+        },
+        "facts": {
+          "audience": {
+            "value": {
+              "zh": "需要整理演示文档的人",
+              "en": "People organizing sample documents",
+              "ja": "サンプル文書を整理する人"
+            },
+            "evidence": [
+              {
+                "key": "audience",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/audience",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: audience"
+              }
+            ]
+          },
+          "difficulty": {
+            "value": "easy",
+            "evidence": [
+              {
+                "key": "difficulty",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/difficulty",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficulty"
+              }
+            ]
+          },
+          "difficultyReason": {
+            "value": {
+              "zh": "合成示例有安装说明和使用示例",
+              "en": "The synthetic fixture includes setup and usage examples.",
+              "ja": "合成サンプルに導入手順と使用例がある。"
+            },
+            "evidence": [
+              {
+                "key": "difficultyReason",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/difficultyReason",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: difficultyReason"
+              }
+            ]
+          },
+          "apiKey": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "apiKey",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/apiKey",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: apiKey"
+              }
+            ]
+          },
+          "commandLine": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "commandLine",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/commandLine",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: commandLine"
+              }
+            ]
+          },
+          "selfHostedService": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "selfHostedService",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/selfHostedService",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: selfHostedService"
+              }
+            ]
+          },
+          "installation": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "installation",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/installation",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: installation"
+              }
+            ]
+          },
+          "examples": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "examples",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/examples",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: examples"
+              }
+            ]
+          },
+          "localFileRead": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "localFileRead",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/localFileRead",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileRead"
+              }
+            ]
+          },
+          "localFileWrite": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "localFileWrite",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/localFileWrite",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: localFileWrite"
+              }
+            ]
+          },
+          "network": {
+            "value": true,
+            "evidence": [
+              {
+                "key": "network",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/network",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: network"
+              }
+            ]
+          },
+          "paidAccount": {
+            "value": false,
+            "evidence": [
+              {
+                "key": "paidAccount",
+                "sourceUrl": "https://example.invalid/sc1/synthetic/111/paidAccount",
+                "observedAt": "2026-11-19T00:00:00.000Z",
+                "quote": "Synthetic fixture fact: paidAccount"
+              }
+            ]
+          },
+          "scenarioTags": {
+            "value": null,
+            "evidence": []
+          }
+        },
+        "evidence": [
+          {
+            "key": "does",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/does",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture capability sentence"
+          }
+        ]
+      },
+      "score": {
+        "status": "scored",
+        "total": 83.91,
+        "scale": 100,
+        "displayTotal": 8.4,
+        "displayScale": 10,
+        "displayDecimals": 1,
+        "dimensions": {
+          "quality": 100.0,
+          "popularity": 94.02,
+          "maintenance": 60.0
+        },
+        "displayDimensions": {
+          "quality": 10.0,
+          "popularity": 9.4,
+          "maintenance": 6.0
+        },
+        "dimensionWeights": {
+          "quality": 30,
+          "popularity": 35,
+          "maintenance": 35
+        },
+        "coverage": 100,
+        "checks": [
+          {
+            "key": "readme",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "license",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": true,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "scorecard",
+            "dimension": "quality",
+            "weight": 10,
+            "normalized": 1,
+            "value": 10,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "npmDownloads7d",
+            "dimension": "popularity",
+            "weight": 20,
+            "normalized": 0.8954263684386519,
+            "value": 30000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "githubStars",
+            "dimension": "popularity",
+            "weight": 15,
+            "normalized": 1,
+            "value": 10000,
+            "state": "observed",
+            "reason": null
+          },
+          {
+            "key": "pushedAt",
+            "dimension": "maintenance",
+            "weight": 35,
+            "normalized": 0.6,
+            "value": "2026-07-22T00:00:00Z",
+            "state": "observed",
+            "reason": null
+          }
+        ],
+        "missing": [],
+        "evidence": [
+          {
+            "key": "readme",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/readme",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "license",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/license",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "scorecard",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/scorecard",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "npmDownloads7d",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/npmDownloads7d",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "githubStars",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/githubStars",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          },
+          {
+            "key": "pushedAt",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/111/pushedAt",
+            "observedAt": "2026-11-19T00:00:00.000Z"
+          }
+        ],
+        "rulesVersion": "hanamesh-initial-v1",
+        "assessedAt": "2026-11-19T00:00:00.000Z"
+      },
+      "trustBadges": [],
+      "featured": [
+        {
+          "domainId": "code",
+          "rank": 11
+        }
+      ],
+      "similarGroup": null,
+      "projection": {
+        "watermark": "1",
+        "assessedAt": "2026-11-19T00:00:00.000Z",
+        "rulesVersion": "hanamesh-initial-v1",
+        "projectionAt": "2026-11-19T00:00:01.000Z"
+      }
+    }
+  ],
+  "next": null,
+  "total": 1000,
+  "hiddenInsufficientCount": 1,
+  "domains": [
+    {
+      "id": "office",
+      "name": "办公写作",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "code",
+      "name": "编程开发",
+      "count": 11,
+      "capped": true
+    },
+    {
+      "id": "design",
+      "name": "设计与图像",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "data",
+      "name": "数据分析",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "marketing",
+      "name": "营销运营",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "research",
+      "name": "学习研究",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "finance",
+      "name": "金融与链上",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "life",
+      "name": "生活效率",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "automation",
+      "name": "自动化与集成",
+      "count": 0,
+      "capped": true
+    },
+    {
+      "id": "setup",
+      "name": "AI 工具与环境",
+      "count": 0,
+      "capped": true
+    }
+  ],
+  "subdivisions": [
+    {
+      "id": "git",
+      "name": "代码版本管理",
+      "count": 11,
+      "capped": true
+    }
+  ],
+  "phase": "early",
+  "window": {
+    "capped": true,
+    "countsCapped": true,
+    "indexReady": true
+  },
+  "projection": {
+    "watermark": "1",
+    "assessedAt": "2026-11-19T00:00:00.000Z",
+    "rulesVersion": "hanamesh-initial-v1",
+    "projectionAt": "2026-11-19T00:00:01.000Z"
+  },
+  "capped": true,
+  "hiddenInsufficientCountCapped": false
+}

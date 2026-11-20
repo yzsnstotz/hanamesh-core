@@ -1,0 +1,10 @@
+{
+  "early": {
+    "phase": "early",
+    "showPlatformData": false
+  },
+  "growth": {
+    "phase": "growth",
+    "showPlatformData": true
+  }
+}

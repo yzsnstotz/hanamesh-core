@@ -1,0 +1,403 @@
+{
+  "hanaId": "00000000-0000-4000-8000-000000000001",
+  "displayName": "SC1 合成示例 office-01",
+  "sourceId": "awesome",
+  "sourceRef": "sc1-fixture/1",
+  "githubRepo": null,
+  "homepage": null,
+  "indexedAt": "2026-11-19T00:00:00.000Z",
+  "ownerPrincipalId": null,
+  "contentHash": "awesome:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "summary": {
+    "zh": "仅供并行开发的合成样例，不是真实插件。",
+    "en": "Synthetic development fixture, not a real plugin."
+  },
+  "categories": [
+    "session"
+  ],
+  "keywords": [],
+  "channels": [
+    "dsh"
+  ],
+  "installMethods": [],
+  "oneClickInstall": {
+    "allowed": false,
+    "reason": "no-install-method"
+  },
+  "npmOwnership": null,
+  "browseOnlyReason": "no-install-method",
+  "npmPackageName": null,
+  "publisher": null,
+  "repoUrl": null,
+  "repoSubdirectory": null,
+  "updatedAt": "2026-11-19T00:00:00.000Z",
+  "sourceLinks": [],
+  "official": true,
+  "domainIds": [
+    "office"
+  ],
+  "subdivisions": [
+    "session"
+  ],
+  "taxonomyVersion": "hanamesh-discovery-taxonomy-v1",
+  "overview": {
+    "does": {
+      "zh": "把演示文档整理成笔记和待办",
+      "en": "Turn sample documents into notes and tasks.",
+      "ja": "サンプル文書をノートとタスクに整理する。"
+    },
+    "facts": {
+      "audience": {
+        "value": {
+          "zh": "需要整理演示文档的人",
+          "en": "People organizing sample documents",
+          "ja": "サンプル文書を整理する人"
+        },
+        "evidence": [
+          {
+            "key": "audience",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/audience",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: audience"
+          }
+        ]
+      },
+      "difficulty": {
+        "value": "easy",
+        "evidence": [
+          {
+            "key": "difficulty",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/difficulty",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: difficulty"
+          }
+        ]
+      },
+      "difficultyReason": {
+        "value": {
+          "zh": "合成示例有安装说明和使用示例",
+          "en": "The synthetic fixture includes setup and usage examples.",
+          "ja": "合成サンプルに導入手順と使用例がある。"
+        },
+        "evidence": [
+          {
+            "key": "difficultyReason",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/difficultyReason",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: difficultyReason"
+          }
+        ]
+      },
+      "apiKey": {
+        "value": false,
+        "evidence": [
+          {
+            "key": "apiKey",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/apiKey",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: apiKey"
+          }
+        ]
+      },
+      "commandLine": {
+        "value": false,
+        "evidence": [
+          {
+            "key": "commandLine",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/commandLine",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: commandLine"
+          }
+        ]
+      },
+      "selfHostedService": {
+        "value": false,
+        "evidence": [
+          {
+            "key": "selfHostedService",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/selfHostedService",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: selfHostedService"
+          }
+        ]
+      },
+      "installation": {
+        "value": true,
+        "evidence": [
+          {
+            "key": "installation",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/installation",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: installation"
+          }
+        ]
+      },
+      "examples": {
+        "value": true,
+        "evidence": [
+          {
+            "key": "examples",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/examples",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: examples"
+          }
+        ]
+      },
+      "localFileRead": {
+        "value": true,
+        "evidence": [
+          {
+            "key": "localFileRead",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/localFileRead",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: localFileRead"
+          }
+        ]
+      },
+      "localFileWrite": {
+        "value": false,
+        "evidence": [
+          {
+            "key": "localFileWrite",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/localFileWrite",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: localFileWrite"
+          }
+        ]
+      },
+      "network": {
+        "value": true,
+        "evidence": [
+          {
+            "key": "network",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/network",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: network"
+          }
+        ]
+      },
+      "paidAccount": {
+        "value": false,
+        "evidence": [
+          {
+            "key": "paidAccount",
+            "sourceUrl": "https://example.invalid/sc1/synthetic/1/paidAccount",
+            "observedAt": "2026-11-19T00:00:00.000Z",
+            "quote": "Synthetic fixture fact: paidAccount"
+          }
+        ]
+      },
+      "scenarioTags": {
+        "value": null,
+        "evidence": []
+      }
+    },
+    "evidence": [
+      {
+        "key": "does",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/does",
+        "observedAt": "2026-11-19T00:00:00.000Z",
+        "quote": "Synthetic fixture capability sentence"
+      }
+    ]
+  },
+  "score": {
+    "status": "scored",
+    "total": 86.0,
+    "scale": 100,
+    "displayTotal": 8.6,
+    "displayScale": 10,
+    "displayDecimals": 1,
+    "dimensions": {
+      "quality": 100.0,
+      "popularity": 100.0,
+      "maintenance": 60.0
+    },
+    "displayDimensions": {
+      "quality": 10.0,
+      "popularity": 10.0,
+      "maintenance": 6.0
+    },
+    "dimensionWeights": {
+      "quality": 30,
+      "popularity": 35,
+      "maintenance": 35
+    },
+    "coverage": 100,
+    "checks": [
+      {
+        "key": "readme",
+        "dimension": "quality",
+        "weight": 10,
+        "normalized": 1,
+        "value": true,
+        "state": "observed",
+        "reason": null
+      },
+      {
+        "key": "license",
+        "dimension": "quality",
+        "weight": 10,
+        "normalized": 1,
+        "value": true,
+        "state": "observed",
+        "reason": null
+      },
+      {
+        "key": "scorecard",
+        "dimension": "quality",
+        "weight": 10,
+        "normalized": 1,
+        "value": 10,
+        "state": "observed",
+        "reason": null
+      },
+      {
+        "key": "npmDownloads7d",
+        "dimension": "popularity",
+        "weight": 20,
+        "normalized": 1,
+        "value": 100000,
+        "state": "observed",
+        "reason": null
+      },
+      {
+        "key": "githubStars",
+        "dimension": "popularity",
+        "weight": 15,
+        "normalized": 1,
+        "value": 10000,
+        "state": "observed",
+        "reason": null
+      },
+      {
+        "key": "pushedAt",
+        "dimension": "maintenance",
+        "weight": 35,
+        "normalized": 0.6,
+        "value": "2026-07-22T00:00:00Z",
+        "state": "observed",
+        "reason": null
+      }
+    ],
+    "missing": [],
+    "evidence": [
+      {
+        "key": "readme",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/readme",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      },
+      {
+        "key": "license",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/license",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      },
+      {
+        "key": "scorecard",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/scorecard",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      },
+      {
+        "key": "npmDownloads7d",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/npmDownloads7d",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      },
+      {
+        "key": "githubStars",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/githubStars",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      },
+      {
+        "key": "pushedAt",
+        "sourceUrl": "https://example.invalid/sc1/synthetic/1/pushedAt",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      }
+    ],
+    "rulesVersion": "hanamesh-initial-v1",
+    "assessedAt": "2026-11-19T00:00:00.000Z"
+  },
+  "trustBadges": [
+    {
+      "kind": "official",
+      "sources": [
+        {
+          "sourceUrl": "https://example.invalid/sc1/synthetic/official-source",
+          "observedAt": "2026-11-19T00:00:00.000Z"
+        }
+      ]
+    }
+  ],
+  "featured": [
+    {
+      "domainId": "office",
+      "rank": 1
+    }
+  ],
+  "similarGroup": {
+    "id": "sc1-synthetic-manual-candidate",
+    "kind": "manual",
+    "members": [
+      "00000000-0000-4000-8000-000000000001",
+      "00000000-0000-4000-8000-000000000002"
+    ],
+    "sources": [
+      {
+        "sourceUrl": "https://example.invalid/sc1/synthetic/manual-candidate-record",
+        "observedAt": "2026-11-19T00:00:00.000Z"
+      }
+    ]
+  },
+  "reasons": [
+    {
+      "text": {
+        "zh": "无需 API key",
+        "en": "No API key required",
+        "ja": "APIキー不要"
+      },
+      "evidence": [
+        {
+          "key": "apiKey",
+          "sourceUrl": "https://example.invalid/sc1/synthetic/1/apiKey",
+          "observedAt": "2026-11-19T00:00:00.000Z",
+          "quote": "Synthetic fixture fact: apiKey"
+        }
+      ]
+    },
+    {
+      "text": {
+        "zh": "有安装说明",
+        "en": "Installation documented",
+        "ja": "インストール手順あり"
+      },
+      "evidence": [
+        {
+          "key": "installation",
+          "sourceUrl": "https://example.invalid/sc1/synthetic/1/installation",
+          "observedAt": "2026-11-19T00:00:00.000Z",
+          "quote": "Synthetic fixture fact: installation"
+        }
+      ]
+    },
+    {
+      "text": {
+        "zh": "有使用示例",
+        "en": "Usage examples available",
+        "ja": "使用例あり"
+      },
+      "evidence": [
+        {
+          "key": "examples",
+          "sourceUrl": "https://example.invalid/sc1/synthetic/1/examples",
+          "observedAt": "2026-11-19T00:00:00.000Z",
+          "quote": "Synthetic fixture fact: examples"
+        }
+      ]
+    }
+  ],
+  "projection": {
+    "watermark": "1",
+    "assessedAt": "2026-11-19T00:00:00.000Z",
+    "rulesVersion": "hanamesh-initial-v1",
+    "projectionAt": "2026-11-19T00:00:01.000Z"
+  }
+}
