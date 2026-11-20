@@ -95,6 +95,9 @@ export function formatDiscoveryCount(value,capped){return String(value)+(capped=
 
 // Discovery is a separately validated, same-ID decoration. Base/native/query facts stay authoritative.
 const discoveryListKeys=['projection','domainIds','subdivisions','taxonomyVersion','overview','score','trustBadges','featured','similarGroup'];
+export function withoutDiscoveryFields(item){
+ const base={...item};for(const key of [...discoveryListKeys,'reasons'])delete base[key];return base;
+}
 export function withDiscoveryFields(item,fields,detail=false){
  if(!fields||fields.hanaId!==item.hanaId)return item;
  return {...item,...Object.fromEntries([...discoveryListKeys,...(detail?['reasons']:[])].filter(key=>Object.hasOwn(fields,key)).map(key=>[key,fields[key]]))};
@@ -102,7 +105,8 @@ export function withDiscoveryFields(item,fields,detail=false){
 /** Independent read resources; this controller has no items/selected/search operation. */
 export function createMarketDiscoveryState({read}){
  const blank=()=>({domains:null,featured:null,detail:null,stage:null,fields:{},featuredDomain:null,detailId:null,errors:{},loading:{}});
- let state=blank(),epoch=0,alive=true,tail=Promise.resolve(),failedFields;
+ let state=blank(),epoch=0,alive=true,tail=Promise.resolve();
+ const failedFields=new Set();
  const listeners=new Set(),slots=new Map(),controllers=new Set(),attempts={};
  const publish=next=>{if(alive){state={...state,...next};for(const fn of listeners)fn(state);}};
  const status=(slot,loading,error)=>{const errors={...state.errors};if(error)errors[slot]=String(error.message??error);else delete errors[slot];publish({errors,loading:{...state.loading,[slot]:loading}});};
@@ -122,18 +126,24 @@ export function createMarketDiscoveryState({read}){
   return tail=tail.then(async()=>{
    if(!alive||generation!==epoch)return;const controller=new AbortController();controllers.add(controller);attempts.fields={hanaIds};
    publish({loading:{...state.loading,fields:true}});
+   let offset=0;
    try{
-    const incoming={};for(let offset=0;offset<hanaIds.length;offset+=200){const result=await read('fields',{hanaIds:hanaIds.slice(offset,offset+200)},{signal:controller.signal});for(const item of result.items)incoming[item.hanaId]=item;}
-    if(alive&&generation===epoch){publish({fields:{...state.fields,...incoming}});if(failedFields&&JSON.stringify(failedFields)===JSON.stringify(hanaIds)){failedFields=undefined;status('fields',false);}}
-   }catch(error){if(alive&&generation===epoch&&!controller.signal.aborted){failedFields=hanaIds;status('fields',false,error);}}
+    for(;offset<hanaIds.length;offset+=200){
+     const batch=hanaIds.slice(offset,offset+200),result=await read('fields',{hanaIds:batch},{signal:controller.signal});
+     if(!alive||generation!==epoch)return;
+     publish({fields:{...state.fields,...Object.fromEntries(result.items.map(item=>[item.hanaId,item]))}});
+     for(const id of batch)failedFields.delete(id);
+    }
+    if(!failedFields.size)status('fields',false);
+   }catch(error){if(alive&&generation===epoch&&!controller.signal.aborted){for(const id of hanaIds.slice(offset))failedFields.add(id);status('fields',false,error);}}
    finally{controllers.delete(controller);if(alive&&generation===epoch)publish({loading:{...state.loading,fields:false}});}
   });
  }
- function reset(){epoch++;for(const c of controllers)c.abort();controllers.clear();slots.clear();for(const k of Object.keys(attempts))delete attempts[k];failedFields=undefined;tail=Promise.resolve();publish(blank());}
+ function reset(){epoch++;for(const c of controllers)c.abort();controllers.clear();slots.clear();for(const k of Object.keys(attempts))delete attempts[k];failedFields.clear();tail=Promise.resolve();publish(blank());}
  return {
   snapshot:()=>state,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},
   domains:()=>run('domains',{}),stage:()=>run('stage',{}),featured:domain=>run('featured',{domain}),detail:hanaId=>run('detail',{hanaId}),fields,
-  retry(slot){if(slot==='fields')return fields(failedFields??attempts.fields?.hanaIds??[]);return attempts[slot]?run(slot,attempts[slot]):Promise.resolve();},
+  retry(slot){if(slot==='fields')return fields([...failedFields]);return attempts[slot]?run(slot,attempts[slot]):Promise.resolve();},
   reset,dispose(){reset();alive=false;listeners.clear();},
  };
 }
