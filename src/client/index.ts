@@ -122,7 +122,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.39';
+const CORE_VERSION = '0.3.40';
 type CorePage = 'account' | 'configuration' | 'diagnostics';
 /** Root-scoped, versioned owner contract. Modules declare their own id/label/order. */
 export interface HanaMeshTabProps {
