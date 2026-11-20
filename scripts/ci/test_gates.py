@@ -3,6 +3,7 @@ import pathlib
 import tempfile
 import unittest
 import run
+from test_reviewed_gates import GatesRegression
 
 G = run.gates
 
@@ -15,7 +16,7 @@ class GatesBite(unittest.TestCase):
             def git(repo, *args):
                 return G.git(str(repo), "-c", "user.name=CI fixture", "-c", "user.email=ci@example.invalid", *args)
             def commit(repo):
-                git(repo, "add", "package.json", "src")
+                git(repo, "add", "package.json", "src", *(["pnpm-lock.yaml"] if (repo / "pnpm-lock.yaml").exists() else []))
                 git(repo, "commit", "--allow-empty", "-qm", "fixture")
             for repo in [a, b]:
                 (repo / "src").mkdir(parents=True)
@@ -39,6 +40,7 @@ class GatesBite(unittest.TestCase):
             git(a, "tag", "v1.0.0")
             good = '{"name":"@hanamesh/b","dependencies":{"@hanamesh/a":"git+https://github.com/fixture/hanamesh-a.git#semver:^1.0.0"}}'
             (b / "package.json").write_text(good)
+            (b / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      '@hanamesh/a':\n        specifier: git+https://github.com/fixture/hanamesh-a.git#semver:^1.0.0\n        version: https://codeload.github.com/fixture/hanamesh-a/tar.gz/" + git(a, "rev-parse", "HEAD").stdout.strip() + "\n")
             commit(b)
             pins = lambda: G.gate_pins(rs, "HEAD", "main")
             self.assertEqual(pins(), [])
