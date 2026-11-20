@@ -37,3 +37,13 @@ jobs:
           pnpm test:mutations
           pnpm pack
           pnpm verify:pack
+      - name: Preserve local batch evidence and normal packages
+        if: ${{ always() && env.ACT == 'true' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, local act artifact server only
+        with:
+          name: core-local-batch
+          path: |
+            artifacts
+            packages/hanamesh-market/artifacts
+            packages/hanamesh-market/*.tgz
+          if-no-files-found: error
