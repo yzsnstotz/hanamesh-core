@@ -35,7 +35,9 @@ export function createNativeMarketActions(owner={}){
   }
   // A bounded public-catalog page and an independent native listBundles read.
   // Like official Discover, previous data stays mounted while a read runs or fails.
-export function createNativeMarketListing({readPage,listBundles}){
+export function createNativeMarketListing({readPage,listBundles,pagination='page'}){
+    if(!['page','cursor'].includes(pagination))throw new Error('CATALOG_PAGINATION_INVALID');
+    const cursor=pagination==='cursor';
     const listeners=new Set();let generation=0,disposed=false,controller=null,attempt=null;
     let state=Object.freeze({status:'idle',items:[],bundles:null,error:null,page:0,hasMore:false,query:null,answered:null});
     const publish=update=>{if(disposed)return;state=Object.freeze({...state,...update});for(const listener of listeners)listener(state);};
@@ -44,7 +46,7 @@ export function createNativeMarketListing({readPage,listBundles}){
       const epoch=++generation;controller?.abort();controller=new AbortController();const signal=controller.signal;
       attempt=request;publish({status:'loading',error:null,query:request.query});
       const [pageResult,bundleResult]=await Promise.allSettled([
-        Promise.resolve().then(()=>readPage({...request.query,page:request.page,limit:50},{signal})),
+        Promise.resolve().then(()=>readPage({...request.query,...(cursor?(request.after===undefined?{}:{after:request.after}):{page:request.page}),limit:50},{signal})),
         listBundles?Promise.resolve().then(()=>listBundles()):Promise.resolve(undefined),
       ]);
       if(disposed||epoch!==generation)return;
@@ -53,19 +55,22 @@ export function createNativeMarketListing({readPage,listBundles}){
         publish({status:'error',bundles,error:String(pageResult.reason?.message??pageResult.reason)});return;
       }
       const page=pageResult.value;
-      if(!page||!Array.isArray(page.items)||page.items.length>50||page.page!==request.page||!Number.isSafeInteger(page.totalPages)||page.totalPages<0||page.items.some(item=>typeof item?.hanaId!=='string'||!item.hanaId)){
+      const validPagination=cursor
+        ?page&&(page.next===null||typeof page.next==='string')&&Number.isSafeInteger(page.total)&&page.total>=0&&typeof page.capped==='boolean'
+        :page&&page.page===request.page&&Number.isSafeInteger(page.totalPages)&&page.totalPages>=0;
+      if(!validPagination||!Array.isArray(page.items)||page.items.length>50||page.items.some(item=>typeof item?.hanaId!=='string'||!item.hanaId)){
         publish({status:'error',bundles,error:'CATALOG_PAGE_INVALID'});return;
       }
       const unique=new Map((request.more?state.items:[]).map(item=>[item.hanaId,item]));
       for(const item of page.items)unique.set(item.hanaId,item);
       const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):(!listBundles?'DSH_BUNDLES_UNAVAILABLE':'DSH_BUNDLES_INVALID'):null;
-      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:request.page,hasMore:request.page<page.totalPages,answered:request.query,facets:page.facets??state.facets,...Object.fromEntries(['phase','domains','subdivisions','hiddenInsufficientCount'].map(key=>[key,page[key]]))});
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:cursor?undefined:request.page,hasMore:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig'].map(key=>[key,page[key]]))});
     };
     return{
       snapshot:()=>state,
       subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
-      load(query){return run({query:{...query},page:1,more:false});},
-      more(){if(!state.hasMore||state.status!=='ready')return Promise.resolve();return run({query:state.answered,page:state.page+1,more:true});},
+      load(query){const first={...query};if(cursor){delete first.after;delete first.page;}return run({query:first,...(cursor?{}:{page:1}),more:false});},
+      more(){if(!state.hasMore||state.status!=='ready')return Promise.resolve();return run({query:state.answered,...(cursor?{after:state.next}:{page:state.page+1}),more:true});},
       retry(){return attempt?run(attempt):Promise.resolve();},
       dispose(){disposed=true;generation++;controller?.abort();listeners.clear();},
     };
@@ -80,3 +85,10 @@ export async function readNativeMarketDetail(target,readers){
     }
     return{status:'none'};
   }
+
+/** Format provider display values only. Missing precision is never invented for optional legacy facts. */
+export function formatDiscoveryScore(score,value=score?.displayTotal){
+  if(!Number.isFinite(value))return '—';
+  return Number.isInteger(score?.displayDecimals)?value.toFixed(score.displayDecimals):String(value);
+}
+export function formatDiscoveryCount(value,capped){return String(value)+(capped===true?'+':'');}

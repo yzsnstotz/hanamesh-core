@@ -1,0 +1,13 @@
+import {DISCOVERY_SCHEMA,type DiscoveryPage,type DiscoveryDetailFields,type DiscoveryDomainDirectory,type DiscoveryStageConfig} from '@hanamesh/api-contracts/catalog/discovery';
+import {decodeDiscovery} from '../src/discovery.js';
+declare const input:unknown;
+const page:DiscoveryPage=decodeDiscovery('page',input);
+const detail:{readonly hanaId:string}&DiscoveryDetailFields=decodeDiscovery('detailItem',input);
+const directory:DiscoveryDomainDirectory=decodeDiscovery('domainDirectory',input);
+const stage:DiscoveryStageConfig=decodeDiscovery('stageConfig',input);
+const next:string|null=page.next;
+const projection:string|null=directory.projection.assessedAt;
+const precision:1=detail.score.displayDecimals;
+const display:number|null=detail.score.displayDimensions.quality;
+const enabled:boolean=stage.showPlatformData;
+void[DISCOVERY_SCHEMA,page,detail,directory,stage,next,projection,precision,display,enabled];
