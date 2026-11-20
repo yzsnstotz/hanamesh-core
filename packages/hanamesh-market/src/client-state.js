@@ -64,7 +64,7 @@ export function createNativeMarketListing({readPage,listBundles,pagination='page
       const unique=new Map((request.more?state.items:[]).map(item=>[item.hanaId,item]));
       for(const item of page.items)unique.set(item.hanaId,item);
       const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):(!listBundles?'DSH_BUNDLES_UNAVAILABLE':'DSH_BUNDLES_INVALID'):null;
-      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:cursor?undefined:request.page,hasMore:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig'].map(key=>[key,page[key]]))});
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:cursor?undefined:request.page,hasMore:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,acceptedBatch:page.items,acceptedRead:(state.acceptedRead??0)+1,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig'].map(key=>[key,page[key]]))});
     };
     return{
       snapshot:()=>state,
@@ -92,3 +92,48 @@ export function formatDiscoveryScore(score,value=score?.displayTotal){
   return Number.isInteger(score?.displayDecimals)?value.toFixed(score.displayDecimals):String(value);
 }
 export function formatDiscoveryCount(value,capped){return String(value)+(capped===true?'+':'');}
+
+// Discovery is a separately validated, same-ID decoration. Base/native/query facts stay authoritative.
+const discoveryListKeys=['projection','domainIds','subdivisions','taxonomyVersion','overview','score','trustBadges','featured','similarGroup'];
+export function withDiscoveryFields(item,fields,detail=false){
+ if(!fields||fields.hanaId!==item.hanaId)return item;
+ return {...item,...Object.fromEntries([...discoveryListKeys,...(detail?['reasons']:[])].filter(key=>Object.hasOwn(fields,key)).map(key=>[key,fields[key]]))};
+}
+/** Independent read resources; this controller has no items/selected/search operation. */
+export function createMarketDiscoveryState({read}){
+ const blank=()=>({domains:null,featured:null,detail:null,stage:null,fields:{},featuredDomain:null,detailId:null,errors:{},loading:{}});
+ let state=blank(),epoch=0,alive=true,tail=Promise.resolve(),failedFields;
+ const listeners=new Set(),slots=new Map(),controllers=new Set(),attempts={};
+ const publish=next=>{if(alive){state={...state,...next};for(const fn of listeners)fn(state);}};
+ const status=(slot,loading,error)=>{const errors={...state.errors};if(error)errors[slot]=String(error.message??error);else delete errors[slot];publish({errors,loading:{...state.loading,[slot]:loading}});};
+ async function run(slot,input){
+  if(!alive)return;const generation=epoch;slots.get(slot)?.abort();const controller=new AbortController();slots.set(slot,controller);controllers.add(controller);attempts[slot]=input;
+  if(slot==='featured')publish({featuredDomain:input.domain,featured:state.featuredDomain===input.domain?state.featured:null});
+  if(slot==='detail')publish({detailId:input.hanaId,detail:state.detailId===input.hanaId?state.detail:null});
+  status(slot,true);
+  try{const value=await read(slot,input,{signal:controller.signal});if(alive&&generation===epoch&&slots.get(slot)===controller)publish({[slot]:value});}
+  catch(error){if(alive&&generation===epoch&&slots.get(slot)===controller&&!controller.signal.aborted)status(slot,false,error);}
+  finally{controllers.delete(controller);if(alive&&generation===epoch&&slots.get(slot)===controller)publish({loading:{...state.loading,[slot]:false}});}
+ }
+ function fields(input){
+  const hanaIds=[...new Set(input)].filter(id=>typeof id==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id));
+  const generation=epoch;if(!alive||!hanaIds.length)return Promise.resolve();
+  // Only accepted UI batches enter this queue; it never enumerates the catalog.
+  return tail=tail.then(async()=>{
+   if(!alive||generation!==epoch)return;const controller=new AbortController();controllers.add(controller);attempts.fields={hanaIds};
+   publish({loading:{...state.loading,fields:true}});
+   try{
+    const incoming={};for(let offset=0;offset<hanaIds.length;offset+=200){const result=await read('fields',{hanaIds:hanaIds.slice(offset,offset+200)},{signal:controller.signal});for(const item of result.items)incoming[item.hanaId]=item;}
+    if(alive&&generation===epoch){publish({fields:{...state.fields,...incoming}});if(failedFields&&JSON.stringify(failedFields)===JSON.stringify(hanaIds)){failedFields=undefined;status('fields',false);}}
+   }catch(error){if(alive&&generation===epoch&&!controller.signal.aborted){failedFields=hanaIds;status('fields',false,error);}}
+   finally{controllers.delete(controller);if(alive&&generation===epoch)publish({loading:{...state.loading,fields:false}});}
+  });
+ }
+ function reset(){epoch++;for(const c of controllers)c.abort();controllers.clear();slots.clear();for(const k of Object.keys(attempts))delete attempts[k];failedFields=undefined;tail=Promise.resolve();publish(blank());}
+ return {
+  snapshot:()=>state,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);},
+  domains:()=>run('domains',{}),stage:()=>run('stage',{}),featured:domain=>run('featured',{domain}),detail:hanaId=>run('detail',{hanaId}),fields,
+  retry(slot){if(slot==='fields')return fields(failedFields??attempts.fields?.hanaIds??[]);return attempts[slot]?run(slot,attempts[slot]):Promise.resolve();},
+  reset,dispose(){reset();alive=false;listeners.clear();},
+ };
+}

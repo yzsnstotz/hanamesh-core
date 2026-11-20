@@ -1,7 +1,8 @@
 /** Authenticated same-origin read adapter. Remote data destinations are configured by the plugin, never the browser. */
 import {randomUUID} from 'node:crypto';
 import {MarketError,ensure} from './catalog.js';
-export const ROUTES=['/hanamesh/market/catalog','/hanamesh/market/item','/hanamesh/market/search','/hanamesh/market/prepare','/hanamesh/market/confirm','/hanamesh/market/cancel','/hanamesh/market/versions','/hanamesh/market/document','/hanamesh/market/image','/hanamesh/market/settings','/hanamesh/market/suite','/hanamesh/market/suite-plan','/hanamesh/market/handoffs','/hanamesh/market/handoff-state'];
+const DISCOVERY_READS={'/hanamesh/market/discovery/domains':['domains','GET'],'/hanamesh/market/discovery/featured':['featured','GET'],'/hanamesh/market/discovery/detail':['detail','GET'],'/hanamesh/market/discovery/stage-config':['stage','GET'],'/hanamesh/market/discovery/list-fields':['fields','POST']};
+export const ROUTES=[...Object.keys(DISCOVERY_READS),'/hanamesh/market/catalog','/hanamesh/market/item','/hanamesh/market/search','/hanamesh/market/prepare','/hanamesh/market/confirm','/hanamesh/market/cancel','/hanamesh/market/versions','/hanamesh/market/document','/hanamesh/market/image','/hanamesh/market/settings','/hanamesh/market/suite','/hanamesh/market/suite-plan','/hanamesh/market/handoffs','/hanamesh/market/handoff-state'];
 export function send(res,status,value){res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});res.end(JSON.stringify(value));}
 async function body(req,maxBytes){ensure(req.headers['content-type']?.split(';')[0]==='application/json','CONTENT_TYPE_REQUIRED',415);let total=0;const chunks=[];for await(const chunk of req){total+=chunk.length;ensure(total<=maxBytes,'BODY_TOO_LARGE',413);chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new MarketError('INVALID_JSON');}}
 export function createMarketHandler({service,connection,queue,listener,maxBodyBytes=65536}){
@@ -16,7 +17,8 @@ export function createMarketHandler({service,connection,queue,listener,maxBodyBy
   ensure(new Set(url.searchParams.keys()).size===[...url.searchParams.keys()].length,'DUPLICATE_QUERY');
   const input=read?Object.fromEntries(url.searchParams):await body(req,maxBodyBytes);let result;
   if(path.endsWith('/image')){ensure(read&&Object.keys(input).every(key=>['document','path'].includes(key)),'INVALID_INPUT');const image=await service.image(input.document,input.path,controller.signal);res.writeHead(200,{'content-type':image.mediaType,'cache-control':'private, max-age=3600','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; sandbox"});res.end(image.bytes);return;}
-  if(read&&path.endsWith('/catalog')){const query={...input,...(input.page!==undefined?{page:Number(input.page)}:{})};result=await service.list(query,{signal:controller.signal});}
+  if(Object.hasOwn(DISCOVERY_READS,path)){const [kind,method]=DISCOVERY_READS[path];ensure(req.method===method,'METHOD_NOT_ALLOWED',405);result=await service.discovery(kind,input,{signal:controller.signal});}
+  else if(read&&path.endsWith('/catalog')){const query={...input,...(input.page!==undefined?{page:Number(input.page)}:{})};result=await service.list(query,{signal:controller.signal});}
   else if(read&&path.endsWith('/item')){ensure(Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT');result=await service.detail(input.itemId,{signal:controller.signal});}
   else if(!read&&path.endsWith('/search'))result=await service.search(input,{signal:controller.signal});
   else if(!read&&path.endsWith('/prepare'))result=await service.prepare(input);

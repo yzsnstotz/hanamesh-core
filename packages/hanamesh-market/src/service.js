@@ -3,6 +3,7 @@ import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
 import semver from 'semver';
 import {createCatalogClient,readJson,publicOrigin,MarketError,ensure} from './catalog.js';
+import {createDiscoveryHttpClient} from './discovery.js';
 import {createNativeMarketPolicy} from './native-market-policy.js';
 import {createDocumentReader} from './documents.js';
 import {SerialQueue} from './errors.js';
@@ -29,6 +30,7 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
  const defaults={websiteOrigin:config.websiteOrigin??'https://market.hanamesh.com',serverOrigin:config.serverOrigin??'https://api.hanamesh.com',registry:config.registry||null,suiteSourceMode:'configured',handoff:handoffSettings(config.handoff??{})};
  const settings=()=>state.settings??defaults;
  const client=()=>createCatalogClient({...settings(),fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,maxBytes:config.maxResponseBytes??2097152});
+ const discoveryClient=()=>createDiscoveryHttpClient({...settings(),fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,maxBytes:config.maxResponseBytes??2097152});
  const policy=createNativeMarketPolicy({anchor,pluginManager:manager});
  const documents=createDocumentReader({fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,lifetime:lifetime.signal});
  let adapterRevision=-1,adapter;const suiteAdapter=()=>{if(adapterRevision!==state.revision){adapterRevision=state.revision;adapter=createCoreSuiteAdapter({core,registry:settings().registry??undefined,suiteSourceMode:()=>settings().suiteSourceMode,suiteSourceService:suiteSource,profileName:config.profileName});}return adapter;};
@@ -57,6 +59,23 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
   settings(){return structuredClone(settings());},
   handoffSettings(){return settings().handoff;},
   async saveSettings(input){return writer.run(async()=>{ensure(input&&Object.keys(input).every(key=>Object.hasOwn(defaults,key)),'INVALID_SETTINGS');const next={...settings(),...input};next.websiteOrigin=publicOrigin(next.websiteOrigin);next.serverOrigin=publicOrigin(next.serverOrigin);ensure(next.registry===null||typeof next.registry==='string','INVALID_REGISTRY');if(next.registry)publicOrigin(new URL(next.registry).origin);ensure(['configured','core'].includes(next.suiteSourceMode),'INVALID_SUITE_SOURCE_SETTINGS');next.handoff=handoffSettings(next.handoff);const record={schema:1,revision:state.revision+1,settings:next};await domain.global.set(record);state=record;reviews.clear();return this.settings();});},
+  async discovery(kind,input={},options={}){
+   const inputs={domains:[],stage:[],featured:['domain'],detail:['hanaId'],fields:['hanaIds']};
+   ensure(Object.hasOwn(inputs,kind),'DISCOVERY_READ_UNAVAILABLE',404);
+   ensure(input&&typeof input==='object'&&!Array.isArray(input)&&Object.keys(input).every(key=>inputs[kind].includes(key)),'INVALID_QUERY');
+   const revision=state.revision,source=discoveryClient();let value;
+   if(kind==='domains')value=await source.domains(options);
+   else if(kind==='stage')value=await source.stage(options);
+   else if(kind==='detail')value=await source.detail(input.hanaId,options);
+   else if(kind==='fields'){
+    value=await source.listFields(input.hanaIds,options);
+    ensure(value.items.length===input.hanaIds.length&&new Set(value.items.map(row=>row.hanaId)).size===value.items.length&&value.items.every(row=>input.hanaIds.includes(row.hanaId)),'DISCOVERY_RESPONSE_INVALID',502);
+   }else{
+    const [page,rows]=await Promise.all([source.featured(input.domain,options),bundles()]);
+    value={...page,items:page.items.map(item=>project(item,rows)),nativeBundles:rows};
+   }
+   ensure(revision===state.revision,'CATALOG_CHANGED',409);return value;
+  },
   async list(query,options){const revision=state.revision;const [page,rows]=await Promise.all([client().list(query,options),bundles()]);ensure(revision===state.revision,'CATALOG_CHANGED',409);return{...page,items:page.items.map(item=>project(item,rows)),nativeBundles:rows};},
   async search(input,options){const revision=state.revision,source=client(),value=await source.search(input,options),rows=await bundles(),hydrated=new Array(value.candidates.length);let cursor=0;await Promise.all(Array.from({length:Math.min(4,hydrated.length)},async()=>{while(cursor<hydrated.length){const index=cursor++,candidate=value.candidates[index];try{let item=await source.detail(candidate.hanaId,options);if(item.mergedInto)item=await source.detail(item.mergedInto,options);hydrated[index]=item;}catch(error){if(error.status!==404)throw error;}}}));ensure(revision===state.revision,'CATALOG_CHANGED',409);const items=[],seen=new Set();for(const item of hydrated){if(!item||item.listingStatus==='delisted'||seen.has(item.hanaId))continue;seen.add(item.hanaId);items.push({...project(item,rows),matchKind:'meaning'});}return{...value,items,nativeBundles:rows};},
   async detail(id,options){

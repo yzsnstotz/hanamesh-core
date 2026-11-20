@@ -17,7 +17,7 @@ async function serviceFixture(t){let saved=initialState();const calls=[],detail=
   if(u.hostname==='legacy.example')return Response.json(u.pathname==='/api/v2/hanas'?{items:[legacy],page:Number(u.searchParams.get('page')),totalPages:3,facets:{sources:[{id:'awesome',count:900}]}}:legacy);
   if(u.pathname.endsWith('/domains'))return Response.json(await fixture('domain-directory'));
   if(u.pathname.endsWith('/stage-config'))return Response.json((await fixture('stage-config')).early);
-  if(u.pathname.endsWith('/featured'))return Response.json({...page,items:[detail]});
+  if(u.pathname.endsWith('/featured'))return Response.json({...page,items:[Object.fromEntries(Object.entries(detail).filter(([key])=>key!=='reasons'))]});
   if(u.pathname.endsWith('/list-fields'))return Response.json({items:[pick(detail)]});
   if(u.pathname.includes('/hanas/'))return Response.json({...detail,displayName:'Cannot replace legacy identity'});
   assert.fail('unexpected upstream '+u.href);
@@ -30,6 +30,7 @@ test('NS27-01 only five non-search discovery reads are admitted; old list/search
  assert.equal((await s.discovery('domains',{})).domains.length,10);assert.equal((await s.discovery('stage',{})).showPlatformData,false);
  const featured=await s.discovery('featured',{domain:'office'});assert.equal(featured.items[0].hanaId,id);assert.equal(featured.items[0].nativeInstallation.status,'not-installed');
  assert.equal((await s.discovery('detail',{hanaId:id})).hanaId,id);assert.deepEqual((await s.discovery('fields',{hanaIds:[id]})).items.map(i=>i.hanaId),[id]);
+ await assert.rejects(s.discovery('fields',{hanaIds:['00000000-0000-4000-8000-000000000099']}),/DISCOVERY_RESPONSE_INVALID/);
  const count=calls.length;for(const kind of ['items','selected','search'])await assert.rejects(s.discovery(kind,{}),/DISCOVERY_READ_UNAVAILABLE/);
  await assert.rejects(s.discovery('domains',{search:'x'}),/INVALID_QUERY/);assert.equal(calls.length,count);assert(!calls.some(c=>/\/(items|selected)$/.test(c.url.pathname)));
 });
@@ -38,7 +39,7 @@ test('NS27-02 every new adapter uses existing auth/iframe/CSRF/method guards and
  for(const [path,kind]of [['domains','domains'],['stage-config','stage'],['featured?domain=office','featured'],['detail?hanaId='+id,'detail']]){
   assert.equal((await fetch(root+path)).status,403);assert.equal((await fetch(root+path,{headers:{...headers,'sec-fetch-dest':'iframe'}})).status,403);
   assert.equal((await fetch(root+path,{headers})).status,200,path);assert.equal(calls.at(-1)[0],kind);
-  assert.equal((await fetch(root+path,{method:'POST',headers:{...headers,'x-hanamesh-client':'market-v1','content-type':'application/json'},body:'{}'})).status,405);
+  assert.equal((await fetch(root+path.split('?')[0],{method:'POST',headers:{...headers,'x-hanamesh-client':'market-v1','content-type':'application/json'},body:'{}'})).status,405);
  }
  const post={method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify({hanaIds:[id]})};assert.equal((await fetch(root+'list-fields',post)).status,403);
  assert.equal((await fetch(root+'list-fields',{...post,headers:{...post.headers,'x-hanamesh-client':'market-v1'}})).status,200);assert.deepEqual(calls.at(-1),['fields',{hanaIds:[id]}]);
@@ -90,6 +91,7 @@ test('NS27-06 actual MarketPage wires approved home/detail/ID fields and stages 
  frame=find(tree,n=>n.type===Frame);frame.props.onNavigate('search');tree=ui.render(Page);frame=find(tree,n=>n.type===Frame);const form=find(frame.props.body,n=>n.type==='form');form.props.onSubmit({preventDefault(){}});
  for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);let results=find(frame.props.body,n=>n.type===Results);assert.equal(results.props.snapshot.page,1);assert.equal(results.props.snapshot.facets.sources[0].count,900);let card=results.props.card(results.props.snapshot.items[0]);assert.equal(card.props.item.displayName,'Original title');assert.equal(card.props.item.score.displayTotal,detail.score.displayTotal);assert.equal(card.props.item.nativeInstallation.status,'not-installed');
  const oldCalls=calls.filter(c=>c.path.endsWith('/catalog')).length;failFields=true;await results.props.onMore();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);assert.equal(results.props.snapshot.page,2);assert.equal(results.props.snapshot.items.length,1);assert.equal(calls.filter(c=>c.path.endsWith('/catalog')).length,oldCalls+1);assert(find(frame.props.messages,n=>n.props?.error?.message==='DISCOVERY_UNAVAILABLE'),'failed decoration remains visible, not silently an empty score');
- failFields=false;card=results.props.card(results.props.snapshot.items[0]);await card.props.onDetails();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);const detailCard=find(frame.props.body,n=>n.type===Card);assert.equal(detailCard.props.item.displayName,'Original title');assert.equal(detailCard.props.item.score.displayTotal,detail.score.displayTotal);assert.deepEqual(detailCard.props.item.reasons,detail.reasons);const signals=find(detailCard.children,n=>n.type===m.NativeMarketSignals);assert.equal(signals.props.stageConfig.showPlatformData,false);
+ const retry=find(frame.props.messages,n=>n.props?.error?.message==='DISCOVERY_UNAVAILABLE');const beforeRetry=calls.length;failFields=false;retry.props.retry();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}assert.equal(calls.length,beforeRetry+1);assert(calls.at(-1).path.endsWith('/discovery/list-fields'));
+ frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);card=results.props.card(results.props.snapshot.items[0]);await card.props.onDetails();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);const detailCard=find(frame.props.body,n=>n.type===Card);assert.equal(detailCard.props.item.displayName,'Original title');assert.equal(detailCard.props.item.score.displayTotal,detail.score.displayTotal);assert.deepEqual(detailCard.props.item.reasons,detail.reasons);const signals=find(detailCard.children,n=>n.type===m.NativeMarketSignals);assert.equal(signals.props.stageConfig.showPlatformData,false);
  assert(!calls.some(c=>/\/(items|selected)$/.test(c.path)));assert(!calls.some(c=>c.path.endsWith('/search')));assert.equal(calls.filter(c=>c.path.endsWith('/discovery/domains')).length,1);
 });
