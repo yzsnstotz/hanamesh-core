@@ -61,7 +61,7 @@ function renderMarketPage(owner,presentation){
  }});
  const[discovery,setDiscovery]=React.useState(discoveryRef.current.snapshot());
  const bootDiscovery=domain=>{void discoveryRef.current.domains();void discoveryRef.current.stage();void discoveryRef.current.featured(domain);};
- React.useEffect(()=>{const stop=discoveryRef.current.subscribe(setDiscovery);bootDiscovery('office');return()=>{stop();discoveryRef.current.dispose();};},[]);
+ React.useEffect(()=>{const stop=discoveryRef.current.subscribe(setDiscovery);bootDiscovery('office');return()=>{stop();discoveryRef.current.reset();};},[]);
 
  const[favorites,setFavorites]=React.useState(()=>{try{return JSON.parse(globalThis.localStorage?.getItem('hanamesh.market.favorites')??'{}');}catch{return{};}});
  const native=React.useRef(null);React.useEffect(()=>{native.current=createNativeMarketActions(owner);return()=>{native.current?.cancel();native.current=null;};},[owner.install,owner.openPackage,owner.update]);
