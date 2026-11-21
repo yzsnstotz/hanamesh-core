@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMarketService,nativeInstallation,initialState} from '../src/service.js';
+import {createNativeMarketActions} from '../src/client-state.js';
 const target={source:'npm',name:'fixture-native',version:'1.0.0',allowBuild:[]};
 const item={hanaId:'11111111-2222-4333-8444-555555555555',displayName:'Fixture native',publisher:{name:'Fixture author'},summary:{zh:'公开简介'},categories:[],channels:['dsh'],sourceLinks:[],githubRepo:null,oneClickInstall:{allowed:true,reason:null},installMethods:[{channel:'dsh',kind:'npm',spec:'fixture-native@1.0.0',command:'dsh plugin add fixture-native@1.0.0',target}]};
 async function fixture({engines='>=0.2.0 <0.3.0',application=false,appHost}={}){let state=initialState(),version='1.0.0',bundles=[],calls=[],inspectCalls=0;const manager={listBundles:async()=>bundles,listVersionExemptions:()=>({exemptions:{},warnings:[]}),inspect:async()=>{inspectCalls++;return{status:'accepted',kind:'registry',bundle:true,registry:'https://registry.example/',name:'fixture-native',version};}};const service=createMarketService({domain:{global:{get:async()=>state,set:async next=>{state=next;}}},manager:()=>manager,appHost,anchor:new URL('../package.json',import.meta.url),fetchImpl:async(url,init)=>{calls.push({url:String(url),init});if(new URL(url).hostname==='registry.example')return Response.json({name:'fixture-native',version,dsh:{bundle:{patch:'./patch.yml'}},engines:{dsh:engines},...(application?{hanamesh:{app:'./app.json'}}:{})});return Response.json({...item,installMethods:[{...item.installMethods[0],target:{...target,version}}]});}});await service.init();return{service,calls,manager,setVersion:value=>version=value,setBundles:value=>bundles=value,inspectCalls:()=>inspectCalls};}
@@ -91,12 +92,32 @@ test('R494 application confirmation uses AppHost once and waits for its terminal
  assert.equal(calls.length,1);
 });
 
-test('R494 application preview and confirmation refuse a missing or replaced AppHost',async t=>{
- let provider;
- const {service}=await fixture({application:true,appHost:()=>provider});t.after(()=>service.close());
- await assert.rejects(service.prepare({itemId:item.hanaId}),{code:'APPHOST_INSTALL_UNAVAILABLE'});
- provider={installApplication:()=>assert.fail('the original provider is gone')};
+test('an application with absent AppHost reaches DSH native install once after confirmation',async t=>{
+ const {service}=await fixture({application:true});t.after(()=>service.close());
+ const installs=[],native=createNativeMarketActions({install:input=>installs.push(input)});
  const review=await service.prepare({itemId:item.hanaId});
+ assert.equal(review.action,'install');
+ assert.deepEqual(installs,[]);
+ const confirmed=await service.confirm({reviewId:review.reviewId});
+ assert.equal(confirmed.action,'install');
+ assert.equal(confirmed.application,undefined);
+ native.confirm(native.review({entry:confirmed.item,install:confirmed.install,compatibility:confirmed.compatibility}));
+ assert.deepEqual(installs,[{spec:'fixture-native@1.0.0',title:item.displayName,version:'1.0.0',registry:'https://registry.example/'}]);
+ await assert.rejects(service.confirm({reviewId:review.reviewId}),{code:'CONFIRMATION_STALE'});
+ assert.equal(installs.length,1);
+});
+
+test('a change in the application installation provider requires a new review',async t=>{
+ let provider={installApplication:()=>assert.fail('the original provider is gone')};
+ const {service}=await fixture({application:true,appHost:()=>provider});t.after(()=>service.close());
+ const unavailable=await service.prepare({itemId:item.hanaId});
+ provider=undefined;
+ await assert.rejects(service.confirm({reviewId:unavailable.reviewId}),{code:'APPHOST_INSTALL_CHANGED'});
+ const native=await service.prepare({itemId:item.hanaId});
+ assert.equal(native.action,'install');
+ provider={installApplication:()=>assert.fail('the newly available provider was not reviewed')};
+ await assert.rejects(service.confirm({reviewId:native.reviewId}),{code:'APPHOST_INSTALL_CHANGED'});
+ const app=await service.prepare({itemId:item.hanaId});
  provider={installApplication:()=>assert.fail('confirmation cannot run on a replacement provider')};
- await assert.rejects(service.confirm({reviewId:review.reviewId}),{code:'APPHOST_INSTALL_CHANGED'});
+ await assert.rejects(service.confirm({reviewId:app.reviewId}),{code:'APPHOST_INSTALL_CHANGED'});
 });

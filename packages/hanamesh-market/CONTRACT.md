@@ -8,7 +8,7 @@ Configured origins must be HTTPS, or loopback HTTP for isolated verification. Re
 
 ## Native DSH integration
 
-`plugins.tab` receives the HanaMesh entry. The supplied `install` callback owns ordinary DSH bundle installations. The `openPackage` callback opens management for installed packages. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts. When the exact bundle declares `hanamesh.app`, confirmation delegates once to `hanameshApps.installApplication` and waits for its result. AppHost owns profile writes, exact version and definition readback, runtime provisioning and compensation. Market displays the settled result and any required restart. A missing or replaced AppHost blocks confirmation.
+`plugins.tab` receives the HanaMesh entry. The supplied `install` callback owns ordinary DSH bundle installations. The `openPackage` callback opens management for installed packages. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts. When the exact bundle declares `hanamesh.app`, confirmation delegates once to `hanameshApps.installApplication` and waits for its result. AppHost owns profile writes, exact version and definition readback, runtime provisioning and compensation. Market displays the settled result and any required restart. When the AppHost installation service is absent at preparation and confirmation, the application uses the native `install` callback after the same exact-target and compatibility checks. A change in service availability or replacement of the reviewed provider requires a new review. AppHost transaction failures are reported to the user.
 
 Details use official `@deepseek-ai/dsh-plugin-detail`: locale `meta.detail`, then package README; only absence proceeds to the repository README at a pinned commit. Read failures remain failures. Relative images use the official path resolver and a bounded same-origin image route. Markdown rendering uses official `DetailDocument` (raw HTML omitted).
 
@@ -18,7 +18,7 @@ The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` rout
 
 `GET /hanamesh/market/suite` reads the current client’s Core declaration on every request. It returns the bundle version, completeness, all declared components with observed versions and statuses, Core’s `checkedAt`, and any blockers. `GET /hanamesh/market/suite-plan` obtains the compatible tuple for the explicitly selected suite registry. Suite updates open DSH’s native package details.
 
-Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1), plus `hanameshApps` for application installation. A missing provider remains unknown/unavailable and never authorizes installation.
+Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1), plus `hanameshApps` for application installation. A missing Core provider leaves suite facts unknown and suite actions unavailable.
 
 ## Formal discovery fields (CL7b: fixture adoption stage)
 

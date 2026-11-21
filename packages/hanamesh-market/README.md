@@ -4,7 +4,7 @@ Independent HanaMesh market plugin. It follows the Core repository's Theme subpa
 
 The client contributes **Plugins → HanaMesh** using `plugins.tab`, and probes the public slot before advertising the entry. Catalog search, existing category/channel/source facets, 50-item loading, semantic task search, favorites, details and settings belong here. Missing recommendation, pack, platform overview, assessment, trust and domain data remain explicit empty states.
 
-Review the exact version, author, source and trust notice before confirming a new installation. Ordinary DSH bundles use the native tab owner's `install()` callback. For AppHost applications, Market calls the Cordis service `hanameshApps.installApplication` and displays its result. AppHost verifies the installed version and application definition, provisions the runtime in the same transaction, and handles recovery on failure.
+Review the exact version, author, source and trust notice before confirming a new installation. Ordinary DSH bundles use the native tab owner's `install()` callback. For AppHost applications, Market calls the Cordis service `hanameshApps.installApplication` when available and displays its result. Applications use the native `install()` callback when the AppHost installation service is absent. AppHost verifies the installed version and application definition, provisions the runtime in the same transaction, and handles recovery on failure.
 
 Installed facts come from the live plugin manager's `listBundles()`. Compatibility uses the host SDK's `evaluatePluginCompatibility()` with current version exemptions. The native tab owner's `openPackage()` opens package management. Non-DSH entries provide copy-command and website actions.
 
