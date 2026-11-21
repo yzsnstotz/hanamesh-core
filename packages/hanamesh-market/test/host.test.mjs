@@ -12,16 +12,13 @@ test('a directory read in flight cannot publish after a source setting change',a
 
 test('native default registry is resolved through public registries when inspect returns null',async t=>{const f=await fixture();t.after(()=>f.service.close());f.manager.inspect=async()=>({status:'accepted',kind:'registry',bundle:true,registry:null});f.manager.registries=async()=>({registry:null,resolved:'https://registry.example/',fallbackRegistries:[]});const review=await f.service.prepare({itemId:item.hanaId});assert.equal(review.install.registry,'https://registry.example/');});
 
-test('website completion requires the matched native operation and a fresh exact native installed version',async t=>{const{createHandoffQueue}=await import('../src/library/handoff.js'),f=await fixture();t.after(()=>f.service.close());const queue=createHandoffQueue(),review=await f.service.prepare({itemId:item.hanaId}),confirmed=await f.service.confirm({reviewId:review.reviewId}),record=queue.create({origin:'https://market.example',target:{itemId:item.hanaId},item:{id:item.hanaId,package:{name:target.name},installTarget:target},alreadyInstalled:false});queue.report({handoffId:record.handoffId,state:'shown'});f.service.trackHandoff(record.handoffId,confirmed,queue);assert.equal(queue.get(record.handoffId).state,'confirmed');await f.service.nativeOperation({id:'foreign',phase:'settled',reason:'install',target:'foreign',application:'applied'},queue);assert.equal(queue.get(record.handoffId).state,'confirmed');await f.service.nativeOperation({id:'native-1',phase:'started',reason:'install',target:target.name},queue);f.setBundles([{name:target.name,version:'1.0.0',installed:true,availability:'profile'}]);await f.service.nativeOperation({id:'native-1',phase:'settled',reason:'install',target:target.name,application:'restart-required'},queue);assert.equal(queue.get(record.handoffId).state,'installed');assert.equal(queue.get(record.handoffId).result.status,'restart-required');});
 
-test('missing native installed facts never turn an accepted native UI into website installation success',async t=>{const{createHandoffQueue}=await import('../src/library/handoff.js'),f=await fixture();t.after(()=>f.service.close());const queue=createHandoffQueue(),review=await f.service.prepare({itemId:item.hanaId}),confirmed=await f.service.confirm({reviewId:review.reviewId}),record=queue.create({origin:'https://market.example',target:{itemId:item.hanaId},item:{id:item.hanaId,package:{name:target.name},installTarget:target},alreadyInstalled:false});queue.report({handoffId:record.handoffId,state:'shown'});f.service.trackHandoff(record.handoffId,confirmed,queue);await f.service.nativeOperation({id:'native-2',phase:'started',reason:'install',target:target.name},queue);await f.service.nativeOperation({id:'native-2',phase:'settled',reason:'install',target:target.name,application:'applied'},queue);assert.equal(queue.get(record.handoffId).state,'failed');assert.equal(queue.get(record.handoffId).error.code,'INSTALL_RESULT_UNAVAILABLE');});
 
 test('an unexempted engines mismatch stops native prepare before a confirmation can be issued',async t=>{const f=await fixture({engines:'>=99'});t.after(()=>f.service.close());await assert.rejects(f.service.prepare({itemId:item.hanaId}),/DSH_INCOMPATIBLE/);});
 
-test('Market unload cancels an in-flight consented installation-status read',{timeout:2000},async t=>{let state=initialState();const entered=Promise.withResolvers(),core={protocolVersion:'1',getSuiteDeclaration:()=>{entered.resolve();return new Promise(()=>{});}};const service=createMarketService({domain:{global:{get:()=>state,set:async value=>state=value}},core:()=>core,runtime:()=>({getNodeBinary:()=>process.execPath}),anchor:new URL('../package.json',import.meta.url)});await service.init();t.after(()=>service.close());const pending=service.installationStatus();const cancelled=assert.rejects(pending,{code:'INSTALLATION_STATUS_CANCELLED'});await entered.promise;await service.close();await cancelled;});
 test('Market unload aborts an in-flight public directory transport',{timeout:2000},async t=>{let state=initialState();const entered=Promise.withResolvers(),manager={listBundles:async()=>[]};const service=createMarketService({domain:{global:{get:()=>state,set:async value=>state=value}},manager:()=>manager,anchor:new URL('../package.json',import.meta.url),fetchImpl:async(_url,{signal})=>{entered.resolve();return new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(new DOMException('Market disposed','AbortError')),{once:true}));}});await service.init();t.after(()=>service.close());const pending=service.list({});const cancelled=assert.rejects(pending,{name:'AbortError'});await entered.promise;await service.close();await cancelled;});
 
-test('website targets for an installed bundle hand off to native package management without re-inspecting it as a new install',async t=>{const f=await fixture();t.after(()=>f.service.close());f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);f.manager.inspect=async()=>assert.fail('an installed bundle must use native package management');f.manager.registries=async()=>({registry:'https://registry.example/',resolved:'https://registry.example/',fallbackRegistries:[]});const review=await f.service.prepare({itemId:item.hanaId});assert.equal(review.action,'openPackage');const confirmed=await f.service.confirm({reviewId:review.reviewId});assert.equal(confirmed.action,'openPackage');assert.equal(confirmed.target.name,target.name);});
+test('client targets for an installed bundle navigate to native package management without re-inspecting it as a new install',async t=>{const f=await fixture();t.after(()=>f.service.close());f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);f.manager.inspect=async()=>assert.fail('an installed bundle must use native package management');f.manager.registries=async()=>({registry:'https://registry.example/',resolved:'https://registry.example/',fallbackRegistries:[]});const review=await f.service.prepare({itemId:item.hanaId});assert.equal(review.action,'openPackage');const confirmed=await f.service.confirm({reviewId:review.reviewId});assert.equal(confirmed.action,'openPackage');assert.equal(confirmed.target.name,target.name);});
 test('a bundle installed in another native window invalidates an older new-install confirmation',async t=>{const f=await fixture();t.after(()=>f.service.close());const review=await f.service.prepare({itemId:item.hanaId});f.setBundles([{name:target.name,version:'0.9.0',installed:true,availability:'profile'}]);await assert.rejects(f.service.confirm({reviewId:review.reviewId}),/NATIVE_INSTALLATION_CHANGED/);});
 
 test('a native registry change invalidates a source confirmation even when the catalog tuple is unchanged',async t=>{const f=await fixture();t.after(()=>f.service.close());const review=await f.service.prepare({itemId:item.hanaId});f.manager.inspect=async()=>({status:'accepted',kind:'registry',bundle:true,registry:'https://different-registry.example/'});await assert.rejects(f.service.confirm({reviewId:review.reviewId}),/CATALOG_CHANGED/);});
@@ -47,4 +44,36 @@ test('CL7 official Git update mapping uses the immutable catalog target and the 
  assert.deepEqual(detail.nativeUpdate,typeof sdk.pinnedGitOrigin==='function'?{action:'update',target:{packageName:'git-fixture',version:'1.1.0',spec:'github:fixture/repo#'+'b'.repeat(40)}}:{action:'openPackage',packageName:'git-fixture'},'actual host capability decides; no copied origin parser or invented update support');
  rows=[{...rows[0],source:'github:other/repo#'+'a'.repeat(40)}];
  assert.deepEqual((await f.detail(item.hanaId)).nativeUpdate,{action:'openPackage',packageName:'git-fixture'},'a different repository never becomes an update target');
+});
+
+test('the client suite reads fresh Core declarations and refuses a removed provider',async t=>{
+ const {declaration}=await import('../tests/fixtures/core-suite-declaration.mjs');
+ const current=declaration();
+ let reads=0;
+ let core={protocolVersion:'1',getSuiteDeclaration:async()=>({
+  ...current,checkedAt:new Date(Date.UTC(2026,10,22,0,0,reads++)).toISOString(),
+ })};
+ const service=createMarketService({core:()=>core,domain:{global:{get:initialState}}});
+ await service.init();
+ t.after(()=>service.close());
+ const before=await service.suiteStatus();
+ const after=await service.suiteStatus();
+ assert.equal(before.status,'installed');
+ assert.equal(before.completeness,'complete');
+ assert.equal(before.version,current.bundleVersion);
+ assert.deepEqual(before.components.map(row=>[row.name,row.version,row.status]),current.installed.map(row=>[row.moduleName,row.actualVersion,'satisfied']));
+ assert.ok(Date.parse(after.checkedAt)>Date.parse(before.checkedAt));
+ assert.equal(reads,2);
+ core=undefined;
+ await assert.rejects(service.suiteStatus(),{code:'CORE_SUITE_DECLARATION_MISSING'});
+});
+
+test('native market settings preserve the active fields from an existing profile',async t=>{
+ let state={schema:1,revision:7,settings:{websiteOrigin:'https://old.example',serverOrigin:'https://host.example',registry:null,suiteSourceMode:'core',handoff:{enabled:true}}};
+ const service=createMarketService({domain:{global:{get:()=>state,set:async next=>{state=next;}}}});
+ await service.init();
+ t.after(()=>service.close());
+ assert.deepEqual(service.settings(),{websiteOrigin:'https://old.example',serverOrigin:'https://host.example',registry:null,suiteSourceMode:'core'});
+ await service.saveSettings({websiteOrigin:'https://new.example'});
+ assert.deepEqual(state,{schema:1,revision:8,settings:{websiteOrigin:'https://new.example',serverOrigin:'https://host.example',registry:null,suiteSourceMode:'core'}});
 });

@@ -8,17 +8,17 @@ Configured origins must be HTTPS, or loopback HTTP for isolated verification. Re
 
 ## Native DSH integration
 
-`plugins.tab` receives the HanaMesh entry. The supplied `install` and `openPackage` callbacks own all mutations. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts. Native result notifications and a fresh exact bundle observation determine website completion. Opening native UI is not installation success.
+`plugins.tab` receives the HanaMesh entry. The supplied `install` and `openPackage` callbacks own all mutations. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts.
 
 Details use official `@deepseek-ai/dsh-plugin-detail`: locale `meta.detail`, then package README; only absence proceeds to the repository README at a pinned commit. Read failures remain failures. Relative images use the official path resolver and a bounded same-origin image route. Markdown rendering uses official `DetailDocument` (raw HTML omitted).
 
 ## Plugin-owned authenticated adapter
 
-The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` route. Iframe callers are refused; JSON writes require `X-HanaMesh-Client: market-v1`, no query string and a 64KiB body bound. Read adapters: `catalog`, `item`, `versions`, `document`, `image`, `settings`, `suite`, `suite-plan`, `handoffs`. Writes: `search`, `prepare`, `confirm`, `cancel`, `settings`, `handoff-state`. Browser input cannot select arbitrary fetch destinations.
+The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` route. Iframe callers are refused; JSON writes require `X-HanaMesh-Client: market-v1`, no query string and a 64KiB body bound. Read adapters: `catalog`, `item`, `versions`, `document`, `image`, `settings`, `suite`, `suite-plan`. Writes: `search`, `prepare`, `confirm`, `cancel`, `settings`. Browser input cannot select arbitrary fetch destinations.
 
-The existing website protocols `/hanamesh/library/install-target`, `/hanamesh/library/handoff`, `/hanamesh/library/installation-status` move intact to this package; their established names identify the public website contract, not an AppHost-owned implementation. Consent, origin/Host checks, bounded bodies, per-origin handoff identity and read-only installation detection remain enforced. Configurable local listener defaults are 39317/39318/39319; no fixed DSH workspace port is assumed.
+`GET /hanamesh/market/suite` reads the current client’s Core declaration on every request. It returns the bundle version, completeness, all declared components with observed versions and statuses, Core’s `checkedAt`, and any blockers. `GET /hanamesh/market/suite-plan` obtains the compatible tuple for the explicitly selected suite registry. Suite updates open DSH’s native package details.
 
-Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1), `hanameshAppRuntime` (AppHost protocol 1, read-only `getNodeBinary`, `getProfileDir`, `getState`). A missing provider remains unknown/unavailable and never authorizes installation.
+Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1). A missing provider remains unknown/unavailable and never authorizes installation.
 
 ## Formal discovery fields (CL7b: fixture adoption stage)
 
@@ -62,7 +62,7 @@ Formal SC1 0.27.0 discovery fields are rendered without deriving facts: overview
 
 The coordinator-approved official Discover mapping owns updates. An installed registry package's “有新版本 · 更新” calls the slot owner's `openPackage(packageName)` directly, without a Market confirmation or another `install()` call; its state note is “在 DSH 中更新”. The native package page's version section owns the registry update. A supported Git update uses the actual host SDK's `pinnedGitOrigin` and the installed bundle's `update:git` fact, then calls the slot owner's `update({packageName,version,spec})` with the catalog's immutable target. The native owner opens its confirmation and validates the update. Older hosts without this public capability retain package management. No copied Git-origin parser, private store access, custom removal/reinstall, or native SDK patch is introduced.
 
-The rejected draft `prepare({update:true})`, installed-version reinstall review and Market update confirmation were removed. `prepare/confirm` keep the original new-install and website management semantics; an unknown input field remains rejected.
+The rejected draft `prepare({update:true})`, installed-version reinstall review and Market update confirmation were removed. `prepare/confirm` keep the new-install and native package management semantics; an unknown input field remains rejected.
 
 ## Host0.7.20 HTTP transport (CL7b adoption continuation)
 
