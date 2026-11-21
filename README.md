@@ -78,3 +78,5 @@ Binding links carry the original Identity expiry and clock domain as unsigned di
 `lib/` and `.build/` are generated locally and excluded from Git. `npm pack` runs the strict build through `prepack`; normal archives retain their public generated files.
 
 总包位于 [packages/hanamesh](packages/hanamesh/README.md)，精确锁三个子包并合并公开 patch。套件版本为总包版本；兼容判断见 [SUITE_DECLARATION](docs/SUITE_DECLARATION.md)，AppHost 只安装声明选中的总包。
+
+PKG1（2026-11-22）：`npm run verify:closure` 对正常 npm pack 的真实产物逐文件解析 JS/MJS/CJS 相对依赖，包外引用或缺文件即失败；发布入口与包验证入口执行此门。只解析，不执行包内代码。

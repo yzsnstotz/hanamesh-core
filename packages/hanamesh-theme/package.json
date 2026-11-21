@@ -29,8 +29,10 @@
     "build": "node scripts/build.mjs",
     "test": "node --test --test-reporter=tap test/*.test.mjs",
     "prepack": "npm run build",
-    "verify:pack": "npm run build && node scripts/verify-pack.mjs",
-    "test:mutations": "npm run build && node scripts/mutations.mjs"
+    "verify:pack": "npm run verify:closure && npm run build && node scripts/verify-pack.mjs",
+    "test:mutations": "npm run build && node scripts/mutations.mjs",
+    "verify:closure": "node ../../scripts/verify-pack-closure.mjs",
+    "prepublishOnly": "npm run verify:closure"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.1.0 <4.2.0-0",

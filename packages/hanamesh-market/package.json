@@ -41,8 +41,10 @@
     "test": "node --test --test-reporter=tap --test-concurrency=1 test/*.test.mjs tests/*.test.mjs",
     "test:contract": "node --test --test-reporter=tap test/host.test.mjs",
     "test:mutations": "node scripts/mutations.mjs",
-    "verify:pack": "node scripts/verify-pack.mjs",
-    "prepack": "npm run build"
+    "verify:pack": "npm run verify:closure && node scripts/verify-pack.mjs",
+    "prepack": "npm run build",
+    "verify:closure": "node ../../scripts/verify-pack-closure.mjs",
+    "prepublishOnly": "npm run verify:closure"
   },
   "dependencies": {
     "semver": "7.8.5",
