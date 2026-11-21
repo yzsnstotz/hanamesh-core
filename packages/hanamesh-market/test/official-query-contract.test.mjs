@@ -25,8 +25,9 @@ async function fixture(t){
  const client=createCatalogClient({websiteOrigin:'https://catalog.example',serverOrigin:'https://host.example',fetchImpl:async url=>{
   const parsed=new URL(url);outbound.push(parsed.href);return Response.json(page(Object.fromEntries(parsed.searchParams)));
  }});
+ const manager={listBundles:async()=>[]};
  const service=createMarketService({config:{websiteOrigin:'https://catalog.example',serverOrigin:'https://host.example'},
-  domain:{global:{get:async()=>initialState()}},manager:()=>({listBundles:async()=>[]}),
+  domain:{global:{get:async()=>initialState()}},manager:()=>manager,
   anchor:new URL('../package.json',import.meta.url),fetchImpl:async url=>{
    const parsed=new URL(url);outbound.push(parsed.href);return Response.json(page(Object.fromEntries(parsed.searchParams)));
   }});
