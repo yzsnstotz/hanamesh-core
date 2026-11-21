@@ -10,12 +10,13 @@ export const marketDomain=defineDomain({name:'hanamesh_market',version:1,layout:
 export async function apply(ctx,config={}){
  const releases=[];const own=dispose=>{let done=false;const once=async()=>{if(done)return;done=true;await dispose();};releases.push(once);return once;};
  const dispose=async()=>{let first;for(const release of [...releases].reverse())try{await release();}catch(error){first??=error;}if(first)throw first;};ctx.effect(()=>dispose,'hanamesh-market:cleanup');
- let manager,core,suiteSource;
+ let manager,core,suiteSource,appHost;
  const optional=(key,set)=>{const fiber=ctx.inject([key],child=>{set(child.get(key));return()=>set(undefined);});own(()=>fiber.dispose());};
  try{
   optional('pluginManager',value=>manager=value);optional('hanameshCore',value=>core=value);optional('hanameshSuiteSource',value=>suiteSource=value);
+  optional('hanameshApps',value=>appHost=value);
   const domain=await ctx.storageDomain.open(marketDomain);own(()=>domain.close());
-  const service=createMarketService({config,domain,manager:()=>manager,core:()=>core,suiteSource:()=>suiteSource,anchor:import.meta.url,logger:ctx.logger});own(()=>service.close());await service.init();
+  const service=createMarketService({config,domain,manager:()=>manager,core:()=>core,suiteSource:()=>suiteSource,appHost:()=>appHost,anchor:import.meta.url,logger:ctx.logger});own(()=>service.close());await service.init();
   const handler=createMarketHandler({service,connection:ctx.connection});
   for(const path of ROUTES)own(ctx.webServer.register({kind:'exact',path,handler}));
   own(ctx.provide('hanameshMarket',service));
