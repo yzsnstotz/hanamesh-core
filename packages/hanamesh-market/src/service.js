@@ -1,18 +1,12 @@
 import {randomUUID} from 'node:crypto';
-import {pathToFileURL} from 'node:url';
-import {createRequire} from 'node:module';
 import semver from 'semver';
 import {createCatalogClient,readJson,publicOrigin,MarketError,ensure} from './catalog.js';
 import {createDiscoveryHttpClient} from './discovery.js';
 import {createNativeMarketPolicy} from './native-market-policy.js';
 import {createDocumentReader} from './documents.js';
 import {SerialQueue} from './errors.js';
-import {handoffSettings} from './library/handoff.js';
 import {createCoreSuiteAdapter,prepareSuiteUpgrade,readSuiteSourceState,SUITE_TARGET} from './library/suite.js';
-import {packageInstallTarget,catalogPackageTargets,sameInstallTarget,pinnedGithubSpec} from './library/github-target.js';
-import {INSTALLATION_STATUS_CAPABILITY} from './installation-status.js';
-import {createInstallationStatusReader,officialDshDesktopProfile} from './library/installation-status.js';
-import {detectClient} from './library/client-identity.js';
+import {catalogPackageTargets,sameInstallTarget,pinnedGithubSpec} from './library/github-target.js';
 const empty={schema:1,revision:0,settings:null};
 export const initialState=()=>structuredClone(empty);
 const installName=target=>target.source==='npm'?target.name:target.packageName;
@@ -24,11 +18,11 @@ export function nativeInstallation(name,version,bundles){
  if(version===null||installedVersion===version)return{status:'installed',installedVersion};
  return{status:semver.valid(version??'')&&semver.valid(installedVersion??'')&&semver.gt(version,installedVersion)?'update-available':'different-version',installedVersion};
 }
-export function createMarketService({config={},domain,manager=()=>undefined,core=()=>undefined,suiteSource=()=>undefined,runtime=()=>undefined,fetchImpl=fetch,anchor,logger}){
- let state=initialState(),closed=false,identity={client:'dsh'};const pendingNative=new Map();const writer=new SerialQueue(),reviews=new Map(),lifetime=new AbortController();
+export function createMarketService({config={},domain,manager=()=>undefined,core=()=>undefined,suiteSource=()=>undefined,fetchImpl=fetch,anchor,logger}){
+ let state=initialState();const writer=new SerialQueue(),reviews=new Map(),lifetime=new AbortController();
  const transport=(url,init={})=>fetchImpl(url,{...init,signal:AbortSignal.any([lifetime.signal,...(init.signal?[init.signal]:[])])});
- const defaults={websiteOrigin:config.websiteOrigin??'https://market.hanamesh.com',serverOrigin:config.serverOrigin??'https://api.hanamesh.com',registry:config.registry||null,suiteSourceMode:'configured',handoff:handoffSettings(config.handoff??{})};
- const settings=()=>state.settings??defaults;
+ const defaults={websiteOrigin:config.websiteOrigin??'https://market.hanamesh.com',serverOrigin:config.serverOrigin??'https://api.hanamesh.com',registry:config.registry||null,suiteSourceMode:'configured'};
+ const settings=()=>state.settings===null?defaults:{...defaults,...Object.fromEntries(Object.keys(defaults).filter(key=>Object.hasOwn(state.settings,key)).map(key=>[key,state.settings[key]]))};
  const client=()=>createCatalogClient({...settings(),fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,maxBytes:config.maxResponseBytes??2097152});
  const discoveryClient=()=>createDiscoveryHttpClient({...settings(),fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,maxBytes:config.maxResponseBytes??2097152});
  const policy=createNativeMarketPolicy({anchor,pluginManager:manager});
@@ -37,11 +31,11 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
  async function bundles(){try{const native=manager();ensure(typeof native?.listBundles==='function','DSH_BUNDLES_UNAVAILABLE',503);const rows=await native.listBundles();ensure(manager()===native&&Array.isArray(rows),'DSH_BUNDLES_UNAVAILABLE',503);return rows;}catch(error){logger?.warn?.('hanamesh-market native installed facts unavailable: %s',error.code??'DSH_BUNDLES_UNAVAILABLE');return null;}}
  function project(item,rows){const targets=catalogPackageTargets(item),target=targets[0];return{...item,nativeInstallation:target?nativeInstallation(installName(target),target.source==='npm'?target.version:null,rows):{status:'not-installed'},...(target?{nativeUpdate:{action:'openPackage',packageName:installName(target)}}:{})};}
  async function resolveTarget(input){
-  ensure(input&&typeof input==='object'&&Object.keys(input).every(key=>['itemId','packageName','contractVersion','installTarget','version'].includes(key)),'INVALID_INPUT');ensure(input.contractVersion===undefined||input.contractVersion==='1','CONTRACT_VERSION_UNSUPPORTED');
+  ensure(input&&typeof input==='object'&&Object.keys(input).every(key=>['itemId','version'].includes(key)),'INVALID_INPUT');
   if(input.itemId===SUITE_TARGET){const plan=await prepareSuiteUpgrade({coreSuitePlan:suiteAdapter(),bundleVersion:input.version});return{item:{hanaId:SUITE_TARGET,id:SUITE_TARGET,displayName:'HanaMesh 套件',package:{name:plan.bundle.name},kind:'suite-upgrade',suiteUpgrade:plan},target:{source:'npm',name:plan.bundle.name,version:plan.bundle.to,allowBuild:[]},suite:plan};}
-  let item;if(input.itemId)item=await client().detail(input.itemId);else{ensure(typeof input.packageName==='string','INVALID_INPUT');const page=await client().list({q:input.packageName});const matches=page.items.filter(row=>catalogPackageTargets(row).some(target=>installName(target)===input.packageName));ensure(matches.length===1,matches.length?'CATALOG_TARGET_AMBIGUOUS':'CATALOG_ITEM_MISSING',404);item=matches[0];}
-  const expected=input.installTarget===undefined?null:packageInstallTarget(input.installTarget);
-  const targets=catalogPackageTargets(item);let target=targets.find(value=>(!input.packageName||installName(value)===input.packageName)&&(!expected||sameInstallTarget(value,expected)));
+  ensure(typeof input.itemId==='string','INVALID_INPUT');
+  const item=await client().detail(input.itemId);
+  let [target]=catalogPackageTargets(item);
   ensure(target,'NOT_INSTALLABLE',409);if(input.version!==undefined){ensure(target.source==='npm'&&semver.valid(input.version)===input.version,'INVALID_VERSION');target={...target,version:input.version};}
   return{item:{...item,id:item.hanaId,package:{name:installName(target)},kind:'plugin'},target};
  }
@@ -55,10 +49,9 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
   return{manifest,install:{spec:target.name+'@'+target.version,registry,title:'',version:target.version}};
  }
  return{
-  async init(){identity=await detectClient({desktop:{runtimeDir:process.execPath}});state=await domain.global.get();ensure(state?.schema===1&&Number.isSafeInteger(state.revision),'MARKET_STATE_INVALID',500);return this;},
+  async init(){state=await domain.global.get();ensure(state?.schema===1&&Number.isSafeInteger(state.revision),'MARKET_STATE_INVALID',500);return this;},
   settings(){return structuredClone(settings());},
-  handoffSettings(){return settings().handoff;},
-  async saveSettings(input){return writer.run(async()=>{ensure(input&&Object.keys(input).every(key=>Object.hasOwn(defaults,key)),'INVALID_SETTINGS');const next={...settings(),...input};next.websiteOrigin=publicOrigin(next.websiteOrigin);next.serverOrigin=publicOrigin(next.serverOrigin);ensure(next.registry===null||typeof next.registry==='string','INVALID_REGISTRY');if(next.registry)publicOrigin(new URL(next.registry).origin);ensure(['configured','core'].includes(next.suiteSourceMode),'INVALID_SUITE_SOURCE_SETTINGS');next.handoff=handoffSettings(next.handoff);const record={schema:1,revision:state.revision+1,settings:next};await domain.global.set(record);state=record;reviews.clear();return this.settings();});},
+  async saveSettings(input){return writer.run(async()=>{ensure(input&&Object.keys(input).every(key=>Object.hasOwn(defaults,key)),'INVALID_SETTINGS');const next={...settings(),...input};next.websiteOrigin=publicOrigin(next.websiteOrigin);next.serverOrigin=publicOrigin(next.serverOrigin);ensure(next.registry===null||typeof next.registry==='string','INVALID_REGISTRY');if(next.registry)publicOrigin(new URL(next.registry).origin);ensure(['configured','core'].includes(next.suiteSourceMode),'INVALID_SUITE_SOURCE_SETTINGS');const record={schema:1,revision:state.revision+1,settings:next};await domain.global.set(record);state=record;reviews.clear();return this.settings();});},
   async discovery(kind,input={},options={}){
    const inputs={domains:[],stage:[],featured:['domain'],detail:['hanaId'],fields:['hanaIds']};
    ensure(Object.hasOwn(inputs,kind),'DISCOVERY_READ_UNAVAILABLE',404);
@@ -99,13 +92,8 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
   async document({itemId,version,language},signal){const item=await client().detail(itemId,{signal});let target=catalogPackageTargets(item)[0];if(version){ensure(target?.source==='npm'&&semver.valid(version)===version,'INVALID_VERSION');target={...target,version};}return documents.read({item,target,version,language},signal);},
   image:(...args)=>documents.image(...args),
   async suitePlan({version}={}){return prepareSuiteUpgrade({coreSuitePlan:suiteAdapter(),...(version?{bundleVersion:version}:{})});},
-  trackHandoff(id,result,queue){const record=queue.get(id);ensure(record.state==='shown'&&(!record.installTarget||sameInstallTarget(record.installTarget,result.target)),'HANDOFF_TARGET_CHANGED',409);ensure(!pendingNative.has(result.install.spec),'NATIVE_INSTALL_BUSY',409);pendingNative.set(result.install.spec,{id,target:result.target,install:result.install,operation:null});queue.observe({type:'library.install-started',packageName:installName(result.target),installTarget:result.target});},
-  async nativeOperation(event,queue){for(const[spec,pending]of pendingNative){if(event.reason!=='install'||event.target!==installName(pending.target))continue;if(event.phase==='started'&&!pending.operation){pending.operation=event.id;continue;}if(pending.operation&&pending.operation!==event.id)continue;if(!['settled','unknown'].includes(event.phase))continue;pendingNative.delete(spec);const rows=await bundles(),row=rows?.find(row=>row.name===installName(pending.target));const exact=row?.installed&&row.version===pending.install.version&&(pending.target.source==='npm'||row.source===pending.install.spec);const ok=event.phase==='settled'&&!event.errorCode&&event.application!=='cancelled'&&exact;queue.observe({type:ok?'library.install-done':'library.install-failed',packageName:installName(pending.target),installTarget:pending.target,...(ok?{result:{status:event.application}}:{code:event.errorCode??(event.application==='cancelled'?'INSTALL_CANCELLED':'INSTALL_RESULT_UNAVAILABLE')})});}},
   async suiteStatus(){return suiteAdapter().readFacts();},
   suiteSource(){return readSuiteSourceState(suiteSource());},
-  installTarget(){const native=manager(),ready=typeof native?.inspect==='function';return{client:identity.client,ready,installationStatus:INSTALLATION_STATUS_CAPABILITY,installTarget:{contract:'hanamesh.install-target',contractVersion:'1',supported:['1'],fragmentPrefix:'#hanamesh-install?'},...(ready?{}:{error:{code:'INSTALL_TARGET_UNAVAILABLE',message:'Native DSH installation is unavailable.',need:[]}})};},
-  async resolveTarget(input){const{item,target}=await resolveTarget(input);const rows=await bundles();const row=rows?.find(row=>row.name===installName(target));const exact=row?.installed&&(target.source==='npm'?row.version===target.version:row.source===pinnedGithubSpec(target.repo,target.ref,target.path));return{item:{...item,installTarget:target,installed:exact?{state:'installed'}:null}};},
-  async installationStatus(options={}){const workerNode=runtime()?.getNodeBinary?.()??(!process.versions.electron?process.execPath:undefined);const reader=createInstallationStatusReader({core,workerNode,client:identity.client,otherProfileDir:identity.client==='hanamesh'?()=>officialDshDesktopProfile(runtime()?.getProfileDir?.()):null,logger});try{return await reader({...options,signal:AbortSignal.any([lifetime.signal,...(options.signal?[options.signal]:[])])});}finally{await reader.close?.();}},
-  async close(){closed=true;lifetime.abort();reviews.clear();documents.close();await writer.drained();},
+  async close(){lifetime.abort();reviews.clear();documents.close();await writer.drained();},
  };
 }
