@@ -10,7 +10,7 @@ Application execution, runtime provisioning, processes, leases and model routes 
 
 Read [CONTRACT.md](CONTRACT.md) for endpoints, source binding and website handoff. Use Node 24.13.1, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`, `pnpm test:contract`, `pnpm test:mutations`, `pnpm pack`, then `pnpm verify:pack <archive>` in an isolated environment. The package's own lockfile declares its complete dependencies; it is not part of the root pnpm workspace.
 
-Candidate version 0.1.0 is assigned by the orchestrator; publication is coordinated after review and merge.
+Version 0.1.1 uses the public npm ^0.27.0 API contracts range. Publication is coordinated after review and merge; Git/SHA dependency specifications are not distribution inputs.
 
 ## Current scope: functional skeleton
 
