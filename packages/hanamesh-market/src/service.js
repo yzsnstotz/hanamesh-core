@@ -51,11 +51,15 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
  function isApplication(item,manifest){
   return item.categories?.includes('hanamesh-app')||Object.hasOwn(manifest.hanamesh??{},'app');
  }
- function executionAction(item,manifest,nativeAction){
-  if(nativeAction!=='install'||!isApplication(item,manifest))return nativeAction;
+ function isApplicationTarget(item,manifest,nativeAction){
+  if(nativeAction!=='install'||!isApplication(item,manifest))return false;
   const declaration=manifest.hanamesh?.app;
   ensure(declaration===true||typeof declaration==='string'&&declaration.length>0,'APPHOST_DEFINITION_REQUIRED',409);
-  return 'installApplication';
+  return true;
+ }
+ function applicationInstaller(){
+  const provider=appHost();
+  return typeof provider?.installApplication==='function'?provider:undefined;
  }
  async function installApplication(provider,target,install){
   let result;
@@ -114,13 +118,13 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
    if(target.source==='npm')ensure(facts.manifest.version===target.version,'PACKAGE_IDENTITY_CHANGED',409);
    ensure(facts.manifest.dsh?.bundle?.patch,'DSH_BUNDLE_REQUIRED',409);
    const compatibility=await policy.compatibility(facts.manifest);ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);
-   const action=executionAction(item,facts.manifest,native.action);
-   const provider=action==='installApplication'?appHost():undefined;
-   if(action==='installApplication')ensure(typeof provider?.installApplication==='function','APPHOST_INSTALL_UNAVAILABLE',503);
+   const applicationTarget=isApplicationTarget(item,facts.manifest,native.action);
+   const provider=applicationTarget?applicationInstaller():undefined;
+   const action=provider?'installApplication':native.action;
    ensure(revision===state.revision,'CATALOG_CHANGED',409);
    const install={...facts.install,title:item.displayName,version:facts.manifest.version};
    const value={reviewId:randomUUID(),item,target,install,compatibility,action,...(suite?{suite}:{})};
-   reviews.set(value.reviewId,{...value,revision,input:structuredClone(input),nativeAction:native.action,provider});
+   reviews.set(value.reviewId,{...value,revision,input:structuredClone(input),nativeAction:native.action,applicationTarget,provider});
    return value;
   },
   async confirm({reviewId}){
@@ -140,10 +144,11 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
     fresh.manifest.dsh?.bundle?.patch,'PACKAGE_IDENTITY_CHANGED',409);
    const compatibility=await policy.compatibility(fresh.manifest);
    ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);
-   ensure(executionAction(current.item,fresh.manifest,native.action)===review.action,'CATALOG_CHANGED',409);
+   const applicationTarget=isApplicationTarget(current.item,fresh.manifest,native.action);
+   ensure(applicationTarget===review.applicationTarget,'CATALOG_CHANGED',409);
    ensure(review.revision===state.revision,'CATALOG_CHANGED',409);
+   if(applicationTarget)ensure(applicationInstaller()===review.provider,'APPHOST_INSTALL_CHANGED',409);
    if(review.action==='installApplication'){
-    ensure(appHost()===review.provider&&typeof review.provider.installApplication==='function','APPHOST_INSTALL_CHANGED',409);
     const application=await installApplication(review.provider,review.target,review.install);
     return{action:review.action,application};
    }
