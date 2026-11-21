@@ -1,5 +1,6 @@
 // Market native confirmation and catalog invariants.
 export const cases=[
+{id:'DT7-legacy-verdict-discarded',file:'src/library/suite.js',from:'if(declaration.legacy)return{...declaration.legacy,',to:'if(false)return{...declaration.legacy,',test:'tests/suite-legacy.test.mjs',pattern:'DT7 current runtime forwards Core legacy verdict installed',reason:/Expected values to be strictly equal/},
 {id:'MC01-exact-page-size',file:'src/catalog.js',from:"params.set('limit','50')",to:"params.set('limit','51')",test:'test/catalog.test.mjs',pattern:'.*',reason:/Expected values to be strictly equal/},
 {id:'MC02-confirmation-replay',file:'src/service.js',from:'reviews.delete(reviewId);ensure(review.revision',to:'void reviewId;ensure(review.revision',test:'test/host.test.mjs',pattern:'native prepare and confirm',reason:/Missing expected rejection/},
 {id:'MC04-compatibility-bypassed',file:'src/service.js',from:"const compatibility=await policy.compatibility(facts.manifest);ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409)",to:"const compatibility=await policy.compatibility(facts.manifest);ensure(true,'DSH_INCOMPATIBLE',409)",test:'test/host.test.mjs',pattern:'an unexempted engines mismatch',reason:/Missing expected rejection/},
