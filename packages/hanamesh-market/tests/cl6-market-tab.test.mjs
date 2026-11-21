@@ -5,7 +5,7 @@ import {loadClient,settle} from './fixtures/client-loader.mjs';
 // Exercise the normal Loader entry, with public root declarations already supplied
 // by DSH/Core. No source-text assertions, host/profile mutation, or installation.
 async function activated(t) {
-  const calls=[],entries=[],cleanups=[];const scope={fetch:async(path,init)=>{calls.push({path,method:init?.method??'GET'});return Response.json({handoffs:[],pollMs:1500});}};const h={module:await loadClient({scope}),unmount(){}};
+  const calls=[],entries=[],cleanups=[];const scope={fetch:async(path,init)=>{calls.push({path,method:init?.method??'GET'});return Response.json({});}};const h={module:await loadClient({scope}),unmount(){}};
   const slots={
     inject(_slot,run){return run();},
     register(options,component){const row={options,component};entries.push(row);return()=>{row.released=true;};},

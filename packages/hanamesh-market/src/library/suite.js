@@ -1,8 +1,4 @@
-import {readFile} from 'node:fs/promises';
-import {join} from 'node:path';
 import semver from 'semver';
-import {createRequire} from 'node:module';
-import {pathToFileURL} from 'node:url';
 import {randomUUID} from 'node:crypto';
 import {requireCondition} from '../errors.js';
 
@@ -13,25 +9,6 @@ export const SUITE_PACKAGES=Object.freeze([
   {name:'@hanamesh/usage',label:'使用记录',repo:'hanamesh-usage'},
   {name:'@hanamesh/dsh-app-host',label:'应用库',repo:'hanamesh-plugin-app-host'},
 ].map(Object.freeze));
-const json=async path=>JSON.parse(await readFile(path,'utf8'));
-/** Physical inventory only, never a compatibility declaration or permission to upgrade. */
-export async function readSuiteStatus(profileDir){
-  if(!profileDir)return{status:'unknown',version:null,components:[]};
-  try{
-    const profile=await json(join(profileDir,'package.json'));
-    if(!profile.dependencies||!Array.isArray(profile.dsh?.profile?.bundles))throw new Error('unreadable profile');
-    const resolver=createRequire(pathToFileURL(join(profileDir,'package.json')));
-    let bundle,bundlePath;try{bundlePath=resolver.resolve(`${SUITE_BUNDLE}/package.json`);bundle=await json(bundlePath);}catch{}
-    const memberResolver=bundlePath?createRequire(bundlePath):resolver;
-    const selected=profile.dsh.profile.bundles.includes(SUITE_BUNDLE)&&Object.hasOwn(profile.dependencies,SUITE_BUNDLE);
-    const components=await Promise.all(SUITE_PACKAGES.map(async({name,label})=>{
-      let pkg;try{pkg=await json(memberResolver.resolve(`${name}/package.json`));}catch{}
-      return{name,label,version:pkg?.name===name&&semver.valid(pkg.version)?pkg.version:null,active:selected};
-    }));
-    const version=bundle?.name===SUITE_BUNDLE&&semver.valid(bundle.version)?bundle.version:null;
-    return{status:version&&selected&&components.every(c=>c.version&&typeof bundle.dependencies?.[c.name]==='string'&&semver.validRange(bundle.dependencies[c.name])&&semver.satisfies(c.version,bundle.dependencies[c.name]))?'installed':'incomplete',version,components};
-  }catch{return{status:'unknown',version:null,components:[]};}
-}
 export const CORE_SUITE_DECLARATION_MISSING='Core 未提供套件声明';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const text=value=>typeof value==='string'&&value.length>0;
@@ -66,7 +43,7 @@ function validateDeclaration(value){
   if(value.legacy!==undefined){if(value.bundleVersion!==null)invalid();validateLegacyAssessment(value.legacy);}
   return structuredClone(value);
 }
-/** Validate a Core verdict as data; AppHost never recalculates its result. */
+/** Validate a Core verdict as data; Market never recalculates its result. */
 export function validateLegacyAssessment(value){
   const invalid=()=>requireCondition(false,'CORE_LEGACY_ASSESSMENT_INVALID','Core 旧组件判定返回格式无效。',{},503);
   if(!object(value)||!['installed','incomplete','not-installed','unknown'].includes(value.status)||!Array.isArray(value.components)||!Array.isArray(value.issues))invalid();
@@ -88,7 +65,7 @@ export function readSuiteSourceState(source){
 /** Consume only the optional protocol-1 Cordis method and the public C-CORE section D DTO. */
 export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceMode=()=>'configured',suiteSourceService=()=>undefined,profileName}={}){
   const current=()=>{const value=core();return value?.protocolVersion==='1'&&typeof value.getSuiteDeclaration==='function'?value:undefined;};
-  // AppHost-local service identity only: Core protocol 1 supplies no revision/generation.
+  // Market-local service identity only: Core protocol 1 supplies no revision/generation.
   const instances=new WeakMap();
   function sourceBinding(){
     const mode=suiteSourceMode();
@@ -117,31 +94,24 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     let expected;try{const url=new URL(binding.registry);url.pathname=url.pathname.replace(/\/$/,'')+'/';expected=url.href;}catch{}
     requireCondition(text(declaration.registry)&&(binding.registry===undefined||declaration.registry===expected),'CORE_SUITE_SOURCE_MISMATCH','Core 声明来源与执行 registry 不符。',{blocked:declaration.blocked},409);
     requireCondition(declaration.upgrades.length>0,'CORE_SUITE_NO_COMPATIBLE_TUPLE','Core 未提供可执行升级组合。',{blocked:declaration.blocked},409);
-    // The first displayed Core tuple is the presentation default; App-host never ranks versions.
+    // The first displayed Core tuple is the presentation default; Market never ranks versions.
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
     const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
     return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installation:selectedUpgrade.installation,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
-  get.assessLegacy=async facts=>{
-    const service=current();
-    requireCondition(service&&typeof service.assessLegacyInstallation==='function','CORE_LEGACY_ASSESSOR_MISSING','Core 未提供旧组件只读判定接口。',{},503);
-    const result=await service.assessLegacyInstallation(facts);
-    requireCondition(current()===service,'CORE_LEGACY_ASSESSOR_MISSING','Core 判定接口已变化。',{},503);
-    return validateLegacyAssessment(result);
-  };
   get.readFacts=async()=>{
     const declaration=await read();
-    if(declaration.legacy)return{...declaration.legacy,version:null,completeness:declaration.completeness,blocked:[...declaration.blocked.filter(row=>row.code.startsWith('CORE_SUITE_CLIENT_PEER_')),...declaration.legacy.issues.map(({code,moduleName})=>({code,moduleName}))]};
-    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.bundleVersion,
+    if(declaration.legacy)return{...declaration.legacy,version:null,checkedAt:declaration.checkedAt,completeness:declaration.completeness,blocked:[...declaration.blocked.filter(row=>row.code.startsWith('CORE_SUITE_CLIENT_PEER_')),...declaration.legacy.issues.map(({code,moduleName})=>({code,moduleName}))]};
+    return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.bundleVersion,checkedAt:declaration.checkedAt,
       components:declaration.installed.map(row=>({...row,name:row.moduleName,label:SUITE_PACKAGES.find(p=>p.name===row.moduleName).label,version:row.actualVersion})),blocked:declaration.blocked};
   };
   return get;
 }
 /**
- * Internal App-host execution port. The public adapter above supplies this plan in production;
- * injected normalized stand-ins remain useful for testing CLI/confirmation behavior in isolation.
+ * Internal Market planning port. The public adapter above supplies this plan in production;
+ * injected normalized stand-ins remain useful for testing confirmation behavior in isolation.
  * Core owns candidate selection, completeness, ranges and compatibility; this module only checks
  * that an exact execution plan is well formed and confined to our three protected packages.
  */

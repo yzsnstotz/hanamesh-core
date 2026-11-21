@@ -111,7 +111,9 @@ A published distribution obtains Theme from its configured registry. An unpublis
 
 ### Installed native idle regression
 
-After installing the candidate normal tarballs through the official CLI in an isolated signed Desktop profile, keep its actual workspace open and run `node test/native/installed-suite-idle.mjs http://127.0.0.1:<advertised-port> <approved-website-origin> <new-absolute-evidence-directory>`. It sends only the separately consented public installation-status reads, verifies current Core/bundle versions and satisfied components before and after 330000 ms without refreshing the renderer, and stores both responses. The caller owns the isolated HOME/DSH_HOME/shared/user-data, exact artifact identity and app cleanup. A synthetic stream test alone cannot close this native transport gate.
+Install the candidate normal tarballs through the official CLI in an isolated signed Desktop profile. Keep that same workspace open, and run `node test/native/installed-suite-idle.mjs http://127.0.0.1:<CDP-port> <absolute-expected-versions.json> <new-absolute-evidence-directory>` with the acceptance harness's `playwright-core` on Node's module resolution path. The expected JSON contains `bundle` and a `components` object keyed by the three npm package names with their exact fixture versions. Use the isolated Desktop debugger port.
+
+The script reads the authenticated `GET /hanamesh/market/suite` from inside the actual workspace, using the same adapter as Market's suite view. It retains both replies and verifies complete status, the exact bundle and three component versions, satisfied components, and a fresh Core `checkedAt` after 330000 ms without refreshing the renderer. The caller owns the isolated HOME/DSH_HOME/shared/user-data, exact artifact identity and app cleanup. A synthetic stream test does not establish elapsed native acceptance.
 
 ## Legacy component assessment (0.3.38)
 
