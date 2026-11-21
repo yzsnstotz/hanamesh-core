@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/market",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "HanaMesh market tab for the native DSH Plugins page.",
   "type": "module",
   "license": "MIT",

@@ -65,7 +65,11 @@ function renderMarketPage(owner,presentation){
 
  const[favorites,setFavorites]=React.useState(()=>{try{return Object.fromEntries(Object.entries(JSON.parse(globalThis.localStorage?.getItem('hanamesh.market.favorites')??'{}')).map(([id,item])=>[id,withoutDiscoveryFields(item)]));}catch{return{};}});
  const native=React.useRef(null);React.useEffect(()=>{native.current=createNativeMarketActions(owner);return()=>{native.current?.cancel();native.current=null;};},[owner.install,owner.openPackage,owner.update]);
- const storeRef=React.useRef(null);if(!storeRef.current)storeRef.current=createNativeMarketListing({readPage:async(input,{signal})=>{let value;if(input.ai){const found=await request('search',{query:input.q},signal);value={...found,items:found.items,page:1,totalPages:found.items.length?1:0};}else{const{ai,limit,...query}=input;value=await request('catalog?'+new URLSearchParams(query),undefined,signal);}return value;}});
+ const storeRef=React.useRef(null);if(!storeRef.current)storeRef.current=createNativeMarketListing({readPage:async(input,{signal})=>{let value;if(input.ai){const found=await request('search',{query:input.q},signal);value={...found,items:found.items,page:1,totalPages:found.items.length?1:0};}else{const{ai,limit,source,...query}=input;
+  // The existing official choice means the website's official attribute. Other
+  // source facet IDs retain their independent source-filter meaning.
+  if(source==='hanamesh-official')query.official=true;else if(source)query.source=source;
+  value=await request('catalog?'+new URLSearchParams(query),undefined,signal);}return value;}});
  const[snapshot,setSnapshot]=React.useState(storeRef.current.snapshot());
  React.useEffect(()=>{if(snapshot.acceptedBatch)void discoveryRef.current.fields(snapshot.acceptedBatch.map(item=>item.hanaId));},[snapshot.acceptedRead]);
  React.useEffect(()=>{if(sceneRows)void discoveryRef.current.fields(sceneRows.map(item=>item.hanaId));},[sceneRows]);

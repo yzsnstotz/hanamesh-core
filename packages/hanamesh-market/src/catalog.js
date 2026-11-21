@@ -16,8 +16,10 @@ export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,
  return{
   websiteOrigin:website,serverOrigin:server,
   async list(query={},options={}){
-   ensure(query&&typeof query==='object'&&!Array.isArray(query)&&Object.keys(query).every(key=>['q','category','channel','source','page'].includes(key)),'INVALID_QUERY');
+   ensure(query&&typeof query==='object'&&!Array.isArray(query)&&Object.keys(query).every(key=>['q','category','channel','source','official','page'].includes(key)),'INVALID_QUERY');
+   ensure(query.official===undefined||typeof query.official==='boolean','INVALID_QUERY');
    const params=new URLSearchParams();for(const key of ['q','category','channel','source'])if(query[key]!==undefined){ensure(scalar(query[key]),'INVALID_QUERY');if(query[key])params.set(key,query[key]);}
+   if(query.official===true)params.set('official','true');
    const page=query.page??1;ensure(Number.isSafeInteger(page)&&page>=1,'INVALID_QUERY');params.set('page',String(page));params.set('limit','50');
    const value=await read('/api/v2/hanas?'+params,options);
    ensure(value&&Array.isArray(value.items)&&value.items.length<=50&&value.page===page&&Number.isSafeInteger(value.totalPages)&&value.totalPages>=0&&value.items.every(item=>typeof item?.hanaId==='string'&&typeof item.displayName==='string'),'CATALOG_PAGE_INVALID',502);

@@ -18,7 +18,7 @@ export function createMarketHandler({service,connection,queue,listener,maxBodyBy
   const input=read?Object.fromEntries(url.searchParams):await body(req,maxBodyBytes);let result;
   if(path.endsWith('/image')){ensure(read&&Object.keys(input).every(key=>['document','path'].includes(key)),'INVALID_INPUT');const image=await service.image(input.document,input.path,controller.signal);res.writeHead(200,{'content-type':image.mediaType,'cache-control':'private, max-age=3600','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; sandbox"});res.end(image.bytes);return;}
   if(Object.hasOwn(DISCOVERY_READS,path)){const [kind,method]=DISCOVERY_READS[path];ensure(req.method===method,'METHOD_NOT_ALLOWED',405);result=await service.discovery(kind,input,{signal:controller.signal});}
-  else if(read&&path.endsWith('/catalog')){const query={...input,...(input.page!==undefined?{page:Number(input.page)}:{})};result=await service.list(query,{signal:controller.signal});}
+  else if(read&&path.endsWith('/catalog')){ensure(input.official===undefined||input.official==='true'||input.official==='false','INVALID_QUERY');const query={...input,...(input.page!==undefined?{page:Number(input.page)}:{}),...(input.official!==undefined?{official:input.official==='true'}:{})};result=await service.list(query,{signal:controller.signal});}
   else if(read&&path.endsWith('/item')){ensure(Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT');result=await service.detail(input.itemId,{signal:controller.signal});}
   else if(!read&&path.endsWith('/search'))result=await service.search(input,{signal:controller.signal});
   else if(!read&&path.endsWith('/prepare'))result=await service.prepare(input);

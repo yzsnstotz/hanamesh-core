@@ -12,6 +12,8 @@ Read [CONTRACT.md](CONTRACT.md) for endpoints, source binding and website handof
 
 Version 0.1.1 uses the public npm ^0.27.0 API contracts range. Publication is coordinated after review and merge; Git/SHA dependency specifications are not distribution inputs.
 
+Version 0.1.2 fixes the official catalog choice to use `official=true`, matching the website. Literal source-ID filters and the existing 50-item pagination remain unchanged.
+
 ## Current scope: functional skeleton
 
 Visual details are provisional pending the owner-approved DS3 ratings/discovery design. The independent plugin, native installation and installed facts, shared directory/semantic transport, compatibility, cancellation, retained errors/retry and 50-item pagination stay in this package. Replace the view components through `createMarketPage` rather than rewriting host/data or native-install logic; see CONTRACT.md. No client score/trust calculation is added.
