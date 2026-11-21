@@ -8,7 +8,7 @@ Configured origins must be HTTPS, or loopback HTTP for isolated verification. Re
 
 ## Native DSH integration
 
-`plugins.tab` receives the HanaMesh entry. The supplied `install` and `openPackage` callbacks own all mutations. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts.
+`plugins.tab` receives the HanaMesh entry. The supplied `install` callback owns ordinary DSH bundle installations. The `openPackage` callback opens management for installed packages. Host preparation resolves an exact public installation target, validates the DSH bundle manifest and invokes the actual host compatibility evaluator and live exemption list. Confirmations are one-use, re-read the current target and source, and cannot authorize changed facts. When the exact bundle declares `hanamesh.app`, confirmation delegates once to `hanameshApps.installApplication` and waits for its result. AppHost owns profile writes, exact version and definition readback, runtime provisioning and compensation. Market displays the settled result and any required restart. A missing or replaced AppHost blocks confirmation.
 
 Details use official `@deepseek-ai/dsh-plugin-detail`: locale `meta.detail`, then package README; only absence proceeds to the repository README at a pinned commit. Read failures remain failures. Relative images use the official path resolver and a bounded same-origin image route. Markdown rendering uses official `DetailDocument` (raw HTML omitted).
 
@@ -18,7 +18,7 @@ The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` rout
 
 `GET /hanamesh/market/suite` reads the current client’s Core declaration on every request. It returns the bundle version, completeness, all declared components with observed versions and statuses, Core’s `checkedAt`, and any blockers. `GET /hanamesh/market/suite-plan` obtains the compatible tuple for the explicitly selected suite registry. Suite updates open DSH’s native package details.
 
-Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1). A missing provider remains unknown/unavailable and never authorizes installation.
+Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1), plus `hanameshApps` for application installation. A missing provider remains unknown/unavailable and never authorizes installation.
 
 ## Formal discovery fields (CL7b: fixture adoption stage)
 
@@ -38,7 +38,7 @@ Author correction, feedback and same-domain actions remain **待接入（后续�
 
 ## Provenance
 
-The current default UI is a provisional functional skeleton based on dsh-market 0.4.22 and the earlier client.html. The coordinator’s DS3 redesign supersedes its visual specification; final rating/discovery presentation waits for owner approval. No upstream dsh-market source was copied. Runtime installation, compatibility and Markdown components use the official DSH 0.2.2-rc.1+ packages declared as peers. Existing HanaMesh handoff and read-only observation code moved from AppHost; the custom CLI installer, recovery writer, catalog-source protocol and market-seat arbitration were retired. DSH source is unchanged.
+The current default UI is a provisional functional skeleton based on dsh-market 0.4.22 and the earlier client.html. The coordinator’s DS3 redesign supersedes its visual specification; final rating/discovery presentation waits for owner approval. No upstream dsh-market source was copied. Runtime installation, compatibility and Markdown components use the official DSH 0.2.2-rc.1+ packages declared as peers. Market reads the public directory and the current DSH installation facts. AppHost retains the CLI installer and recovery writer for applications. DSH source is unchanged.
 
 ## Replaceable presentation (DS3 scope update)
 
@@ -49,7 +49,7 @@ The client exports `createMarketPage({Frame, Card, Results, Confirmation, Extern
 - `Frame` receives title/tagline, labeled tab identities, activeTab/onNavigate, messages, suite and body React nodes. The controller keeps the stable plugin-tab mount and the confirmation lifecycle.
 - `Card` receives the unmodified server item, localized summaryText, bound onDetails/onCategory, actions and detail children. It owns markup, not identity, installed-state calculation, compatibility or transport.
 - `Results` receives the listing snapshot, card renderer, onRetry and onMore; retained data, stale response fencing, aborts and fixed 50-item pagination stay in client-state/service.
-- `Confirmation` receives the exact reviewed facts plus onConfirm/onClose; confirmation still rereads the server target, source and compatibility before invoking the native owner.
+- `Confirmation` receives the exact reviewed facts plus onConfirm/onClose; confirmation still rereads the server target, source and compatibility before invoking the DSH or AppHost installer.
 - `ExternalActions` receives the exact command, website and bound copy action. Unsupported entries still expose only copy and website installation actions.
 
 These are internal React composition props, not API-contracts fields. DS3 may replace a view independently after owner approval, using the same controller. New discovery pages/data dimensions require their approved design and shared platform contracts; the factory does not invent their behavior.
