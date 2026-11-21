@@ -5,7 +5,6 @@ import {createServer} from 'node:http';
 import {createCatalogClient} from '../src/catalog.js';
 import {createMarketHandler} from '../src/routes.js';
 import {createMarketService,initialState} from '../src/service.js';
-import {settle} from '../tests/fixtures/client-loader.mjs';
 
 // Provider-owned examples: catalogPath at the recorded website commit. The gate
 // executes that exact provider function against these examples before this test.
@@ -38,12 +37,13 @@ async function fixture(t){
  return{client,outbound,base:'http://127.0.0.1:'+server.address().port};
 }
 function hooks(){
- const values=[],effects=[],cleanups=[];let cursor=0;
+ const values=[],effects=[],cleanups=[];let cursor=0,change=Promise.withResolvers();
+ const notify=()=>{const previous=change;change=Promise.withResolvers();previous.resolve();};
  return{React:{Fragment:Symbol.for('fragment'),createElement:(type,props,...children)=>({type,props:props??{},children}),
-  useState(value){const i=cursor++;if(!(i in values))values[i]=typeof value==='function'?value():value;return[values[i],next=>values[i]=typeof next==='function'?next(values[i]):next];},
+  useState(value){const i=cursor++;if(!(i in values))values[i]=typeof value==='function'?value():value;return[values[i],next=>{values[i]=typeof next==='function'?next(values[i]):next;notify();}];},
   useRef(value){const i=cursor++;return values[i]??(values[i]={current:value});},
   useEffect(fn,deps){const i=cursor++,old=values[i];if(!old||!deps||deps.some((value,n)=>!Object.is(value,old[n]))){values[i]=deps;effects.push(()=>{cleanups[i]?.();cleanups[i]=fn();});}}},
-  render(Component){cursor=0;const tree=Component({});while(effects.length)effects.shift()();return tree;},close(){for(const fn of cleanups)fn?.();}};
+  changed:()=>change.promise,render(Component){cursor=0;const tree=Component({});while(effects.length)effects.shift()();return tree;},close(){for(const fn of cleanups)fn?.();}};
 }
 function find(node,predicate){
  if(Array.isArray(node)){for(const child of node){const result=find(child,predicate);if(result)return result;}}
@@ -74,7 +74,15 @@ async function pageFixture(t,f){
  t.after(()=>{ui.close();assert.equal(timers.size,0,'client debounce is disposed');});
  const frame=()=>find(tree,node=>node.type===Frame);
  const render=()=>{tree=ui.render(Component);return frame();};
- async function finish(){await settle();await Promise.all(pending.splice(0));await settle();return render();}
+ async function finish(){
+  // A transport response is not a rendered listing. Subscribe before reading
+  // state so no completion can fall between the predicate and the next change.
+  for(;;){const changed=ui.changed(),current=render(),snapshot=find(current.props.body,node=>node.type===Results).props.snapshot;
+   if(snapshot.status==='error')assert.fail(snapshot.error);
+   if(snapshot.status==='ready'){await Promise.all(pending.splice(0));return current;}
+   await changed;
+  }
+ }
  frame().props.onNavigate('search');render();
  const submit=async()=>{find(frame().props.body,node=>node.type==='form').props.onSubmit({preventDefault(){}});return finish();};
  await submit();
@@ -82,7 +90,7 @@ async function pageFixture(t,f){
   choose(key,value){const label=find(frame().props.body,node=>node.type==='label'&&node.props.key===key);assert.ok(label,'actual filter '+key);find(label,node=>node.type==='select').props.onChange({target:{value}});render();},
   keyword(value){find(frame().props.body,node=>node.type==='input'&&node.props.type==='search').props.onChange({target:{value}});render();},
   async debounce(){const jobs=[...timers.values()];timers.clear();assert.equal(jobs.length,1);jobs[0]();return finish();},
-  async more(){find(frame().props.body,node=>node.type===Results).props.onMore();return finish();},
+  async more(){const results=find(frame().props.body,node=>node.type===Results);assert.equal(results.props.snapshot.status,'ready','more starts only after the actual listing is ready');results.props.onMore();return finish();},
   async clear(){find(frame().props.body,node=>node.type==='button'&&node.props.className==='textbtn').props.onClick();render();return this.debounce();},
  };
 }
