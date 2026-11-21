@@ -31,7 +31,7 @@ export function createMarketHandler({service,connection,maxBodyBytes=65536}){
   else if(read&&path.endsWith('/suite-plan')){ensure(Object.keys(input).every(key=>key==='version'),'INVALID_INPUT');result=await service.suitePlan(input);}
   else throw new MarketError('METHOD_NOT_ALLOWED',405);
   if(!controller.signal.aborted)send(res,200,{...result,traceId});
- }catch(error){if(!controller.signal.aborted){const trusted=error instanceof MarketError||typeof error.code==='string'&&Number.isInteger(error.status);send(res,trusted?error.status:500,{error:{code:trusted?error.code:'MARKET_READ_FAILED'},traceId});}}
+ }catch(error){if(!controller.signal.aborted){const trusted=error instanceof MarketError||typeof error.code==='string'&&Number.isInteger(error.status);send(res,trusted?error.status:500,{error:{code:trusted?error.code:'MARKET_READ_FAILED',...(error instanceof MarketError&&error.recovery?{recovery:error.recovery}:{})},traceId});}}
  finally{req.off('aborted',abort);res.off('close',abort);}
  };
 }

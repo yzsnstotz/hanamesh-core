@@ -18,7 +18,7 @@ export function nativeInstallation(name,version,bundles){
  if(version===null||installedVersion===version)return{status:'installed',installedVersion};
  return{status:semver.valid(version??'')&&semver.valid(installedVersion??'')&&semver.gt(version,installedVersion)?'update-available':'different-version',installedVersion};
 }
-export function createMarketService({config={},domain,manager=()=>undefined,core=()=>undefined,suiteSource=()=>undefined,fetchImpl=fetch,anchor,logger}){
+export function createMarketService({config={},domain,manager=()=>undefined,core=()=>undefined,suiteSource=()=>undefined,appHost=()=>undefined,fetchImpl=fetch,anchor,logger}){
  let state=initialState();const writer=new SerialQueue(),reviews=new Map(),lifetime=new AbortController();
  const transport=(url,init={})=>fetchImpl(url,{...init,signal:AbortSignal.any([lifetime.signal,...(init.signal?[init.signal]:[])])});
  const defaults={websiteOrigin:config.websiteOrigin??'https://market.hanamesh.com',serverOrigin:config.serverOrigin??'https://api.hanamesh.com',registry:config.registry||null,suiteSourceMode:'configured'};
@@ -47,6 +47,28 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
   const registry=result.registry??(await native.registries()).resolved;ensure(typeof registry==='string','DSH_REGISTRY_UNAVAILABLE',503);const origin=new URL(registry);ensure(!origin.username&&!origin.password&&!origin.search&&!origin.hash,'INVALID_REGISTRY');publicOrigin(origin.origin);
   const manifest=await readJson(transport,new URL(encodeURIComponent(target.name)+'/'+encodeURIComponent(target.version),registry.endsWith('/')?registry:registry+'/').href,{method:'GET'},{timeoutMs:config.readTimeoutMs??8000});
   return{manifest,install:{spec:target.name+'@'+target.version,registry,title:'',version:target.version}};
+ }
+ function isApplication(item,manifest){
+  return item.categories?.includes('hanamesh-app')||Object.hasOwn(manifest.hanamesh??{},'app');
+ }
+ function executionAction(item,manifest,nativeAction){
+  if(nativeAction!=='install'||!isApplication(item,manifest))return nativeAction;
+  const declaration=manifest.hanamesh?.app;
+  ensure(declaration===true||typeof declaration==='string'&&declaration.length>0,'APPHOST_DEFINITION_REQUIRED',409);
+  return 'installApplication';
+ }
+ async function installApplication(provider,target,install){
+  let result;
+  try{result=await provider.installApplication({target,version:install.version,...(target.source==='npm'?{registry:install.registry}:{})});}
+  catch(error){
+   const code=typeof error?.code==='string'&&/^[A-Z][A-Z0-9_]+$/u.test(error.code)?error.code:'APPHOST_INSTALL_FAILED';
+   const failure=new MarketError(code,Number.isInteger(error?.status)&&error.status>=400&&error.status<=599?error.status:502);
+   if(['not-needed','restored','failed'].includes(error?.recovery?.status))failure.recovery=error.recovery.status;
+   throw failure;
+  }
+  ensure(result?.status==='ready'&&result.packageName===installName(target)&&result.version===install.version&&
+    typeof result.restartRequired==='boolean'&&typeof result.appId==='string'&&result.appId,'APPHOST_INSTALL_READBACK_INVALID',502);
+  return{status:result.status,packageName:result.packageName,version:result.version,appId:result.appId,restartRequired:result.restartRequired};
  }
  return{
   async init(){state=await domain.global.get();ensure(state?.schema===1&&Number.isSafeInteger(state.revision),'MARKET_STATE_INVALID',500);return this;},
@@ -85,8 +107,48 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
    }
    ensure(revision===state.revision,'CATALOG_CHANGED',409);return value;
   },
-  async prepare(input){const revision=state.revision,{item,target,suite}=await resolveTarget(input),native=await nativePlan(target,suite),facts=await manifestFor(target,native.metadataPlan);ensure(facts.manifest.name===installName(target)&&semver.valid(facts.manifest.version),'PACKAGE_IDENTITY_CHANGED',409);if(target.source==='npm')ensure(facts.manifest.version===target.version,'PACKAGE_IDENTITY_CHANGED',409);ensure(facts.manifest.dsh?.bundle?.patch,'DSH_BUNDLE_REQUIRED',409);const compatibility=await policy.compatibility(facts.manifest);ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);ensure(revision===state.revision,'CATALOG_CHANGED',409);const install={...facts.install,title:item.displayName,version:facts.manifest.version};const reviewId=randomUUID(),review={reviewId,item,target,install,compatibility,action:native.action,revision,input:structuredClone(input),...(suite?{suite}:{})};reviews.set(reviewId,review);return{reviewId,item,target,install,compatibility,action:native.action,...(suite?{suite}:{})};},
-  async confirm({reviewId}){const review=reviews.get(reviewId);ensure(review,'CONFIRMATION_STALE',409);reviews.delete(reviewId);ensure(review.revision===state.revision,'CATALOG_CHANGED',409);const current=await resolveTarget(review.input);ensure(sameInstallTarget(current.target,review.target),'CATALOG_CHANGED',409);if(review.suite){const binding=plan=>({declarationId:plan.declarationId,sourceBinding:plan.sourceBinding,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});ensure(JSON.stringify(binding(current.suite))===JSON.stringify(binding(review.suite)),'SUITE_PLAN_CHANGED',409);}const native=await nativePlan(review.target,review.suite,review.action);ensure(native.action===review.action,'NATIVE_INSTALLATION_CHANGED',409);const fresh=await manifestFor(review.target,native.metadataPlan);ensure((fresh.install.registry??null)===(review.install.registry??null),'CATALOG_CHANGED',409);ensure(fresh.manifest.name===installName(review.target)&&fresh.manifest.version===review.install.version,'PACKAGE_IDENTITY_CHANGED',409);const compatibility=await policy.compatibility(fresh.manifest);ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);ensure(review.revision===state.revision,'CATALOG_CHANGED',409);return{install:review.install,target:review.target,item:review.item,compatibility,action:review.action,...(review.suite?{suite:review.suite}:{})};},
+  async prepare(input){
+   const revision=state.revision,{item,target,suite}=await resolveTarget(input);
+   const native=await nativePlan(target,suite),facts=await manifestFor(target,native.metadataPlan);
+   ensure(facts.manifest.name===installName(target)&&semver.valid(facts.manifest.version),'PACKAGE_IDENTITY_CHANGED',409);
+   if(target.source==='npm')ensure(facts.manifest.version===target.version,'PACKAGE_IDENTITY_CHANGED',409);
+   ensure(facts.manifest.dsh?.bundle?.patch,'DSH_BUNDLE_REQUIRED',409);
+   const compatibility=await policy.compatibility(facts.manifest);ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);
+   const action=executionAction(item,facts.manifest,native.action);
+   const provider=action==='installApplication'?appHost():undefined;
+   if(action==='installApplication')ensure(typeof provider?.installApplication==='function','APPHOST_INSTALL_UNAVAILABLE',503);
+   ensure(revision===state.revision,'CATALOG_CHANGED',409);
+   const install={...facts.install,title:item.displayName,version:facts.manifest.version};
+   const value={reviewId:randomUUID(),item,target,install,compatibility,action,...(suite?{suite}:{})};
+   reviews.set(value.reviewId,{...value,revision,input:structuredClone(input),nativeAction:native.action,provider});
+   return value;
+  },
+  async confirm({reviewId}){
+   const review=reviews.get(reviewId);
+   ensure(review,'CONFIRMATION_STALE',409);
+   reviews.delete(reviewId);ensure(review.revision===state.revision,'CATALOG_CHANGED',409);
+   const current=await resolveTarget(review.input);
+   ensure(sameInstallTarget(current.target,review.target),'CATALOG_CHANGED',409);
+   if(review.suite){
+    const binding=plan=>({declarationId:plan.declarationId,sourceBinding:plan.sourceBinding,selectedUpgrade:plan.selectedUpgrade,physicalBaseline:plan.physicalBaseline});
+    ensure(JSON.stringify(binding(current.suite))===JSON.stringify(binding(review.suite)),'SUITE_PLAN_CHANGED',409);
+   }
+   const native=await nativePlan(review.target,review.suite,review.nativeAction);
+   const fresh=await manifestFor(review.target,native.metadataPlan);
+   ensure((fresh.install.registry??null)===(review.install.registry??null),'CATALOG_CHANGED',409);
+   ensure(fresh.manifest.name===installName(review.target)&&fresh.manifest.version===review.install.version&&
+    fresh.manifest.dsh?.bundle?.patch,'PACKAGE_IDENTITY_CHANGED',409);
+   const compatibility=await policy.compatibility(fresh.manifest);
+   ensure(compatibility.compatible||compatibility.exempted,'DSH_INCOMPATIBLE',409);
+   ensure(executionAction(current.item,fresh.manifest,native.action)===review.action,'CATALOG_CHANGED',409);
+   ensure(review.revision===state.revision,'CATALOG_CHANGED',409);
+   if(review.action==='installApplication'){
+    ensure(appHost()===review.provider&&typeof review.provider.installApplication==='function','APPHOST_INSTALL_CHANGED',409);
+    const application=await installApplication(review.provider,review.target,review.install);
+    return{action:review.action,application};
+   }
+   return{install:review.install,target:review.target,item:review.item,compatibility,action:review.action,...(review.suite?{suite:review.suite}:{})};
+  },
   cancel({reviewId}){reviews.delete(reviewId);return{cancelled:true};},
   async versions({itemId}){const{target}=await resolveTarget({itemId});ensure(target.source==='npm','VERSIONS_UNAVAILABLE');const native=manager();ensure(typeof native?.registries==='function','DSH_REGISTRY_UNAVAILABLE',503);const plan=await native.registries(),registry=settings().registry??plan.registry??plan.resolved;ensure(typeof registry==='string','DSH_REGISTRY_UNAVAILABLE',503);const value=await readJson(transport,new URL(encodeURIComponent(target.name),registry.endsWith('/')?registry:registry+'/').href,{method:'GET'},{maxBytes:config.versionLookupMaxBytes??16777216,timeoutMs:config.readTimeoutMs??8000});ensure(value.name===target.name&&value.versions,'VERSIONS_INVALID',502);const versions=[];for(const version of Object.keys(value.versions).filter(v=>semver.valid(v)===v).sort(semver.rcompare)){const manifest=value.versions[version];if(manifest.name!==target.name||manifest.version!==version||!manifest.dsh?.bundle?.patch)continue;versions.push({version,publishedAt:value.time?.[version]??null,prerelease:semver.prerelease(version)!==null,compatibility:await policy.compatibility(manifest)});}return{versions};},
   async document({itemId,version,language},signal){const item=await client().detail(itemId,{signal});let target=catalogPackageTargets(item)[0];if(version){ensure(target?.source==='npm'&&semver.valid(version)===version,'INVALID_VERSION');target={...target,version};}return documents.read({item,target,version,language},signal);},
