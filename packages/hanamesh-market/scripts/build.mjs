@@ -1,9 +1,9 @@
-import {readFile,mkdir,cp,writeFile} from 'node:fs/promises';
+import {readFile,rm,cp,writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import ts from 'typescript';
 process.chdir(fileURLToPath(new URL('..',import.meta.url)));
-await mkdir('lib',{recursive:true});await cp('src','lib',{recursive:true});
+await rm('lib',{recursive:true,force:true});await cp('src','lib',{recursive:true});
 const state=await readFile('src/client-state.js','utf8'),client=await readFile('src/client.js','utf8');
 const visual=await readFile('src/client-visual.js','utf8');
 const source=state+'\n'+visual+'\n'+client.replace(/^import .*from ['\"]\.\/client-visual\.js['\"];?\s*$/m,'').replace(/^import .*from ['"]\.\/client-state\.js['"];?\s*$/m,'');

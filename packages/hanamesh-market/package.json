@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/market",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "HanaMesh market tab for the native DSH Plugins page.",
   "type": "module",
   "license": "MIT",
@@ -16,20 +16,14 @@
       "default": "./lib/index.js"
     },
     "./client": "./lib/client.js",
-    "./package.json": "./package.json",
-    "./installation-status": {
-      "types": "./lib/installation-status.d.ts",
-      "default": "./lib/installation-status.js"
-    }
+    "./package.json": "./package.json"
   },
   "files": [
     "lib",
     "cordis.patch.yml",
     "README.md",
     "CONTRACT.md",
-    "LICENSE",
-    "INSTALL_TARGET.md",
-    "INSTALLATION_STATUS.md"
+    "LICENSE"
   ],
   "engines": {
     "node": ">=24.13.1 <25",

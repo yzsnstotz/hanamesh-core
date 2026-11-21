@@ -99,6 +99,10 @@ An offline `getSuiteDeclaration()` intentionally reports `registry:null`, no upg
 
 The Core SDK formats exact upgrade commands only for compatible aggregate candidates. Candidate dependencies must match the current member list.
 
+### Historical installed native idle regression
+
+`test/native/installed-suite-idle.mjs` is the historical aggregate fixture check, not installation guidance or acceptance for the current direct desktop suite. In an isolated signed Desktop profile on the historical fixture, the harness reads authenticated `GET /hanamesh/market/suite` twice without refreshing the renderer, verifying the exact aggregate and three historical component versions, satisfied components, and a fresh Core `checkedAt` after 330000 ms. The harness owns profile isolation, artifact identity and cleanup. See `test/native/direct-suite.mjs` for the current direct desktop composition.
+
 ## Legacy component assessment (0.3.38)
 
 Core owns the only no-bundle compatibility assessor. `@hanamesh/core/suite` exports `assessLegacyInstallation(facts): Promise<LegacyInstallationAssessment>` and both DTO types; the optional protocol-1 Cordis method of the same name provides the same assessor. It takes no paths or commands, performs no I/O, and does not install, authorize, persist or change consent. Disposed Core rejects `CORE_DISPOSED`; malformed facts reject `CORE_LEGACY_FACTS_INVALID`.
