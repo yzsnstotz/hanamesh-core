@@ -4,7 +4,9 @@ Independent HanaMesh market plugin. It follows the Core repository's Theme subpa
 
 The client contributes **Plugins → HanaMesh** using `plugins.tab`, and probes the public slot before advertising the entry. Catalog search, existing category/channel/source facets, 50-item loading, semantic task search, favorites, details and settings belong here. Missing recommendation, pack, platform overview, assessment, trust and domain data remain explicit empty states.
 
-New installations use the native tab owner's `install()` after reviewing the exact version, author, source and trust notice. Installed/newer entries call `openPackage()`. Installed facts come only from the live plugin manager's `listBundles()`; compatibility uses the host SDK's `evaluatePluginCompatibility()` with current version exemptions. This package never runs a plugin installation command, installs through an AI agent, or offers a security audit. Non-DSH entries provide copy-command and website actions.
+Review the exact version, author, source and trust notice before confirming a new installation. Ordinary DSH bundles use the native tab owner's `install()` callback. For AppHost applications, Market calls the Cordis service `hanameshApps.installApplication` and displays its result. AppHost verifies the installed version and application definition, provisions the runtime in the same transaction, and handles recovery on failure.
+
+Installed facts come from the live plugin manager's `listBundles()`. Compatibility uses the host SDK's `evaluatePluginCompatibility()` with current version exemptions. The native tab owner's `openPackage()` opens package management. Non-DSH entries provide copy-command and website actions.
 
 Application execution, runtime provisioning, processes, leases and model routes remain in `@hanamesh/dsh-app-host`. Suite completeness and compatible upgrade tuples remain Core public protocol-1 facts. Native package details own suite updates.
 
@@ -16,4 +18,4 @@ Version 0.1.2 fixes the official catalog choice to use `official=true`, matching
 
 ## Current scope: functional skeleton
 
-Visual details are provisional pending the owner-approved DS3 ratings/discovery design. The independent plugin, native installation and installed facts, shared directory/semantic transport, compatibility, cancellation, retained errors/retry and 50-item pagination stay in this package. Replace the view components through `createMarketPage` rather than rewriting host/data or native-install logic; see CONTRACT.md. No client score/trust calculation is added.
+Visual details are provisional pending the owner-approved DS3 ratings/discovery design. The independent plugin keeps installation confirmation, installed facts, shared directory and semantic transport, compatibility, cancellation, retry and 50-item pagination. Replace view components through `createMarketPage` to reuse the same data and installation integrations. See CONTRACT.md.
