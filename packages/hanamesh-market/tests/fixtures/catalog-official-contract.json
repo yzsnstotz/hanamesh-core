@@ -1,0 +1,98 @@
+{
+  "contract": "public catalog official attribute, independent of source ID",
+  "provider": {
+    "repository": "hanamesh-web-market",
+    "sha": "76cf2b11aefba1cabd5369035b32c2d61bf0a727",
+    "path": "web/src/lib/hm-api.ts",
+    "function": "catalogPath",
+    "fileSha256": "8278cf0840d0b958556d6ff20281e962bf29d8f37464b85930ed5bbfe19147f8"
+  },
+  "cases": [
+    {
+      "name": "official",
+      "query": {
+        "official": true,
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?official=true&page=1&limit=50"
+    },
+    {
+      "name": "official-filtered",
+      "query": {
+        "official": true,
+        "q": "notes",
+        "category": "tools",
+        "channel": "dsh",
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?official=true&channel=dsh&q=notes&category=tools&page=1&limit=50"
+    },
+    {
+      "name": "official-more",
+      "query": {
+        "official": true,
+        "q": "notes",
+        "category": "tools",
+        "channel": "dsh",
+        "page": 2,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?official=true&channel=dsh&q=notes&category=tools&page=2&limit=50"
+    },
+    {
+      "name": "all",
+      "query": {
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?page=1&limit=50"
+    },
+    {
+      "name": "awesome",
+      "query": {
+        "source": "awesome",
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?source=awesome&page=1&limit=50"
+    },
+    {
+      "name": "github",
+      "query": {
+        "source": "github",
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?source=github&page=1&limit=50"
+    },
+    {
+      "name": "npm",
+      "query": {
+        "source": "npm",
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?source=npm&page=1&limit=50"
+    },
+    {
+      "name": "source-id",
+      "query": {
+        "source": "hanamesh-official",
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?source=hanamesh-official&page=1&limit=50"
+    },
+    {
+      "name": "official-false",
+      "query": {
+        "official": false,
+        "page": 1,
+        "limit": 50
+      },
+      "catalogPath": "/api/v2/hanas?page=1&limit=50"
+    }
+  ]
+}
