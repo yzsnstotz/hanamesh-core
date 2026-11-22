@@ -16,7 +16,7 @@ Details use official `@deepseek-ai/dsh-plugin-detail`: locale `meta.detail`, the
 
 The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` route. Iframe callers are refused; JSON writes require `X-HanaMesh-Client: market-v1`, no query string and a 64KiB body bound. Read adapters: `catalog`, `item`, `versions`, `document`, `image`, `settings`, `suite`, `suite-plan`. Writes: `search`, `prepare`, `confirm`, `cancel`, `settings`. Browser input cannot select arbitrary fetch destinations.
 
-`GET /hanamesh/market/suite` reads the current client’s Core declaration on every request. It returns the bundle version, completeness, all declared components with observed versions and statuses, Core’s `checkedAt`, and any blockers. `GET /hanamesh/market/suite-plan` obtains the compatible tuple for the explicitly selected suite registry. Suite updates open DSH’s native package details.
+`GET /hanamesh/market/suite` reads the current client’s Core declaration on every request. It returns the bundle version, completeness, all declared components with observed versions and statuses, Core’s `checkedAt`, and any blockers. Market checks installed rows and upgrade targets against the membership declared by Core. A complete suite installed as individual plugins has a null bundle version. `GET /hanamesh/market/suite-plan` obtains the compatible tuple for the explicitly selected suite registry. Suite updates open DSH’s native package details.
 
 Optional Cordis services: `hanameshCore` and `hanameshSuiteSource` (Core protocol 1), plus `hanameshApps` for application installation. A missing Core provider leaves suite facts unknown and suite actions unavailable.
 
