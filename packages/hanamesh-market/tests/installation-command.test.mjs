@@ -20,7 +20,7 @@ test('automatic manager environment carries only named path variables and reject
 });
 test('cancellation kills the exact owned read process and rejects without output',async t=>{
  const root=await scratch('installation-cancel-test-');t.after(()=>rm(root,{recursive:true,force:true}));const record=join(root,'pid');
- const{reader}=await setup(t,`(await import('node:fs')).writeFileSync(${JSON.stringify(record)},String(process.pid));setInterval(()=>{},1000)`);
+ const{reader}=await setup(t,`const{writeFileSync,renameSync}=await import('node:fs');const record=${JSON.stringify(record)};const staging=record+'.tmp';writeFileSync(staging,String(process.pid),{flag:'wx'});renameSync(staging,record);setInterval(()=>{},1000)`);
  const controller=new AbortController();const pending=invoke(reader,controller.signal);pending.catch(()=>{});t.after(()=>controller.abort());
  const pid=Number(await waitForFixtureFile(record,{timeoutMs:reader.timeoutMs}));
  assert.ok(pid);controller.abort();await assert.rejects(pending,{code:'INSTALLATION_STATUS_CANCELLED'});assert.throws(()=>process.kill(pid,0),{code:'ESRCH'});
