@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {formatSuiteInstallCommand} from '../lib/suite/index.js';
 import {SuiteDeclarationService} from '../lib/suite/service.js';
 import {loadCoreSchema, validateCoreValue} from '../lib/contract-suite.js';
 const registry='https://registry.invalid/';
@@ -13,12 +12,13 @@ const bundle=(version,dependencies)=>({...record('bundle',version),dependencies}
 const installedBundle=bundle('1.0.0',{core:'1.0.0',usage:'1.0.0',apps:'1.0.0'});
 const catalog={bundle:{'1.0.0':installedBundle,'1.1.0':bundle('1.1.0',{core:'1.1.0',usage:'1.1.0',apps:'1.1.0'})},core:{'1.0.0':{...record('core','1.0.0'),hanameshSuite:manifest('1.0.0')},'1.1.0':{...record('core','1.1.0'),hanameshSuite:manifest('1.1.0')}},usage:{'1.0.0':record('usage','1.0.0'),'1.1.0':record('usage','1.1.0')},apps:{'1.0.0':record('apps','1.0.0'),'1.1.0':record('apps','1.1.0')}};
 const observed=name=>({kind:'present',phase:'active',version:'1.0.0',repository:repo(name),metadata:catalog[name]['1.0.0']});
-function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null,repairRelease={name:'bundle',version:'1.0.0',command:formatSuiteInstallCommand('1.0.0')}}={}){
- return new SuiteDeclarationService({profile,core:{...catalog.core['1.0.0'],...(repairRelease?{hanameshSuiteInstall:repairRelease}:{})},manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{},...(name==='bundle'?{...(data.bundle['1.1.0']?{latestVersion:'1.1.0'}:{})}:{})})}});
+function service({data=structuredClone(catalog),observations,physical=observed('core'),currentBundle=installedBundle,peerVersion=async()=>null}={}){
+ return new SuiteDeclarationService({profile,core:catalog.core['1.0.0'],manifest:manifest('1.0.0'),bundleInventory:async()=>currentBundle,coreInventory:async()=>physical,inventory:{observe:async()=>observations??['usage','apps'].map(observed)},nodeVersion:'24.13.1',peerVersion,registry:{read:async(registry,name)=>({registry,name,versions:data[name]??{},...(name==='bundle'?{...(data.bundle['1.1.0']?{latestVersion:'1.1.0'}:{})}:{})})}});
 }
-test('current facts require the installed bundle and all active physical members, without network',async()=>{
+test('current facts require active physical members without network for aggregate and direct installs',async()=>{
  const s=service();s.options.registry.read=()=>assert.fail('no source means no network');const d=await s.read();assert.equal(d.completeness,'complete');assert.equal(d.bundleVersion,'1.0.0');assert.deepEqual(d.upgrades,[]);assert.equal(d.blocked[0].code,'CORE_SUITE_SOURCE_MISSING');assert.equal(d.installCommand,null);
- for(const currentBundle of [null,{...installedBundle,dependencies:{...installedBundle.dependencies,usage:'1.1.0'}}])assert.notEqual((await service({currentBundle}).read()).completeness,'complete');
+ const direct=await service({currentBundle:null}).read();assert.equal(direct.completeness,'complete');assert.equal(direct.bundleVersion,null);
+ assert.notEqual((await service({currentBundle:{...installedBundle,dependencies:{...installedBundle.dependencies,usage:'1.1.0'}}}).read()).completeness,'complete');
  for(const phase of ['disabled','failed','pending'])assert.equal((await service({observations:[{...observed('usage'),phase},observed('apps')]}).read()).completeness,'incomplete');
 });
 test('upgrade selects one bundle version and its exact three locked versions',async()=>{
@@ -58,18 +58,18 @@ test('malformed future manifests and engine declarations never produce ready bun
  for(const engines of [null,[],'node>=24',{node:24},{node:''},{node:'not-a-range'}]){const data=structuredClone(catalog);data.core['1.1.0'].engines=engines;assert.deepEqual((await service({data}).read({registry})).upgrades,[]);}
 });
 
-test('A2 repair uses the Core release pin even when registry tags and compatible candidates move',async()=>{
- const s=service();
- assert.equal((await s.read({registry})).installCommand,formatSuiteInstallCommand('1.0.0'));
- for(const repairRelease of [null,{name:'foreign',version:'1.0.0',command:formatSuiteInstallCommand('1.0.0')},{name:'bundle',version:'^1.0.0',command:'unreviewed'},{name:'bundle',version:'1.0.0',command:'unreviewed'},{name:'bundle',version:'9.0.0',command:formatSuiteInstallCommand('9.0.0')}]){
-  const d=await service({repairRelease}).read({registry});assert.equal(d.installCommand,null,'missing or unavailable exact Core pin never uses a registry tag');
- }
+test('compatible aggregate candidates do not supply a repair command for direct installations',async()=>{
+ const s=service({currentBundle:null});
+ const read=s.options.registry.read;
+ s.options.registry.read=(source,name)=>{assert.notEqual(name,'bundle');return read(source,name);};
+ const d=await s.read({registry});
+ assert.equal(d.installCommand,null);
+ assert.deepEqual(d.upgrades,[]);
 });
-
-test('candidate source remains checked independently of the exact Core repair pin',async()=>{
+test('candidate source is still verified when no root install command is advertised',async()=>{
  const data=structuredClone(catalog);data.bundle['1.1.0'].repository=repo('foreign');
  const d=await service({data}).read({registry});assert.deepEqual(d.upgrades,[]);assert.ok(d.blocked.some(row=>row.bundleVersion==='1.1.0'&&row.code==='CORE_SUITE_SOURCE_MISMATCH'));
- assert.equal(d.installCommand,formatSuiteInstallCommand('1.0.0'));
+ assert.equal(d.installCommand,null);
 });
 
 test('DSH prerelease runtime remains complete without opting other peers into prereleases',async()=>{
@@ -96,25 +96,17 @@ test('Core emits the selected exact upgrade definition for the actual profile an
  const bad=await service().read({registry,profile:'../owner'});assert.deepEqual(bad.upgrades,[]);
 });
 
-test('PK4 pins the independent distribution theme without adding a trusted business member',async()=>{
- const currentBundle={...installedBundle,dependencies:{...installedBundle.dependencies,'@hanamesh/theme':'0.1.0'}};
- const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies['@hanamesh/theme']='0.1.0';
- const s=service({currentBundle,data}),reads=[];const read=s.options.registry.read;s.options.registry.read=async(...args)=>{reads.push(args[1]);return read(...args);};
- const d=await s.read({registry});assert.equal(d.completeness,'complete');assert.equal(d.upgrades.length,1);
- assert.equal(d.installed.length,3);assert.equal(d.upgrades[0].targets.length,3);assert(!reads.includes('@hanamesh/theme'));
- for(const value of ['latest','garbage',null]){
-  const current={...currentBundle,dependencies:{...currentBundle.dependencies,'@hanamesh/theme':value}};
-  assert.notEqual((await service({currentBundle:current}).read()).completeness,'complete');
-  const changed=structuredClone(data);changed.bundle['1.1.0'].dependencies['@hanamesh/theme']=value;
-  assert.deepEqual((await service({currentBundle,data:changed}).read({registry})).upgrades,[]);
- }
- const foreign=structuredClone(data);foreign.bundle['1.1.0'].dependencies.foreign='1.0.0';
- assert.deepEqual((await service({currentBundle,data:foreign}).read({registry})).upgrades,[]);
+test('aggregate upgrade candidates cannot introduce a component outside the declaration',async()=>{
+ const data=structuredClone(catalog);
+ data.bundle['1.1.0'].dependencies['@hanamesh/dsh-app-host']='0.6.30';
+ const d=await service({data}).read({registry});
+ assert.deepEqual(d.upgrades,[]);
+ assert.ok(d.blocked.some(row=>row.code==='CORE_SUITE_MANIFEST_MISMATCH'&&row.bundleVersion==='1.1.0'));
 });
 
  test('VR1 installed compatible dependencies remain complete and select the latest satisfying release',async()=>{
- const currentBundle={...installedBundle,dependencies:{core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0','@hanamesh/theme':'^0.1.0'}};
- const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies={core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0','@hanamesh/theme':'^0.1.0'};
+ const currentBundle={...installedBundle,dependencies:{core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0'}};
+ const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies={core:'^1.0.0',usage:'^1.0.0',apps:'^1.0.0'};
  data.usage['1.9.0']=record('usage','1.9.0');
  const d=await service({currentBundle,data}).read({registry});assert.equal(d.completeness,'complete');assert.deepEqual(d.upgrades[0].targets.map(r=>r.version),['1.1.0','1.9.0','1.1.0']);
  });
@@ -128,19 +120,3 @@ test('PK4 pins the independent distribution theme without adding a trusted busin
  const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies.usage='^1.0.0';data.usage['1.1.0']=record('usage','9.0.0');
  const declaration=await service({data}).read({registry});assert.deepEqual(declaration.upgrades,[]);assert(declaration.blocked.some(row=>row.code==='CORE_SUITE_SOURCE_MISMATCH'));
  });
-
-test('CL6 pins the independent distribution market without adding a trusted business member',async()=>{
- const currentBundle={...installedBundle,dependencies:{...installedBundle.dependencies,'@hanamesh/market':'0.1.0'}};
- const data=structuredClone(catalog);data.bundle['1.1.0'].dependencies['@hanamesh/market']='0.1.0';
- const s=service({currentBundle,data}),reads=[];const read=s.options.registry.read;s.options.registry.read=async(...args)=>{reads.push(args[1]);return read(...args);};
- const d=await s.read({registry});assert.equal(d.completeness,'complete');assert.equal(d.upgrades.length,1);
- assert.equal(d.installed.length,3);assert.equal(d.upgrades[0].targets.length,3);assert(!reads.includes('@hanamesh/market'));
- for(const value of ['latest','garbage',null]){
-  const current={...currentBundle,dependencies:{...currentBundle.dependencies,'@hanamesh/market':value}};
-  assert.notEqual((await service({currentBundle:current}).read()).completeness,'complete');
-  const changed=structuredClone(data);changed.bundle['1.1.0'].dependencies['@hanamesh/market']=value;
-  assert.deepEqual((await service({currentBundle,data:changed}).read({registry})).upgrades,[]);
- }
- const foreign=structuredClone(data);foreign.bundle['1.1.0'].dependencies.foreign='1.0.0';
- assert.deepEqual((await service({currentBundle,data:foreign}).read({registry})).upgrades,[]);
-});

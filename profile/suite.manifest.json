@@ -7,7 +7,7 @@
   },
   "core": {
     "name": "@hanamesh/core",
-    "version": "0.3.40",
+    "version": "0.3.41",
     "repository": "https://github.com/yzsnstotz/hanamesh-core"
   },
   "components": [
@@ -18,10 +18,16 @@
       "repository": "https://github.com/yzsnstotz/hanamesh-usage"
     },
     {
-      "id": "app-host",
-      "moduleName": "@hanamesh/dsh-app-host",
-      "versionRange": ">=0.5.9 <0.7.0",
-      "repository": "https://github.com/yzsnstotz/hanamesh-plugin-app-host"
+      "id": "market",
+      "moduleName": "@hanamesh/market",
+      "versionRange": ">=0.1.2 <0.2.0",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core"
+    },
+    {
+      "id": "theme",
+      "moduleName": "@hanamesh/theme",
+      "versionRange": ">=0.1.0 <0.2.0",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core"
     }
   ]
 }

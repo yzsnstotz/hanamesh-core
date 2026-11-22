@@ -4,7 +4,7 @@ import type {ComponentHealth, ComponentObservation, ComponentStatus, CoreHealthS
 
 const reasons: Record<ComponentStatus, string> = {
   satisfied: '必需组件已加载，版本符合当前 profile。',
-  missing: '当前加载配置中找不到此必需组件。',
+  missing: '当前加载配置中找不到套件清单要求的组件。',
   incompatible: '实际组件版本不在 profile 要求的范围内。',
   damaged: '必需组件的入口文件缺失。',
   unreadable: '当前无法读取或确认此组件的包元数据。',

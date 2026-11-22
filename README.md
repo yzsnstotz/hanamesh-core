@@ -1,33 +1,21 @@
-## DSH 桌面安装（推荐） / DSH Desktop (recommended) / DSH デスクトップ（推奨）
+# HanaMesh Core 0.3.41
 
-**中文**
-1. 打开 DSH「插件 → 添加插件」（Plugins → Add plugin）。
-2. 到 [HanaMesh 安装页](https://market.hanamesh.com/connect#install)，选择 DSH，点击「复制精确包名」。将完整的 `@hanamesh/hanamesh` **带精确版本的包规格**粘贴到「包名或地址」。网页从 Core 的公开发布数据读取版本，不使用本仓未发布的版本号。
-3. 核对来源，点击「安装」，完成后点击「立即启用」；仅在 DSH 提示时重启。总包包含 Core、Usage、AppHost、Theme，无需逐个安装。数据授权与账号绑定仍由本人完成。
+HanaMesh Desktop 使用 Core、Usage、Market 和 Theme 四个独立 DSH 插件。为自己的 desktop profile 安装或补齐组件时，在 DSH「插件 → 添加插件」输入对应的精确发行包规格，再在插件页启用。版本与来源由所用发行渠道提供。用户在工作台完成数据同意和账号绑定。
 
-**English**
-1. Open **Plugins → Add plugin** in DSH Desktop.
-2. Choose DSH on the [HanaMesh installation page](https://market.hanamesh.com/connect#install) and **Copy exact package name**. Paste the complete **versioned** `@hanamesh/hanamesh` spec into **Package name or address**. The page reads Core's public release metadata; an unpublished repository version is not an installation target.
-3. Confirm the source, choose **Install**, then **Enable now**. Restart only if DSH requests it. The bundle includes Core, Usage, AppHost and Theme; no separate component installation is needed. Review data consent and bind your account yourself.
+| 组件 | 包 |
+| --- | --- |
+| Core | `@hanamesh/core` |
+| 使用记录 | `@hanamesh/usage` |
+| 市场 | `@hanamesh/market` |
+| 主题 | `@hanamesh/theme` |
 
-**日本語**
-1. DSH の「プラグイン → プラグインを追加」（Plugins → Add plugin）を開きます。
-2. [HanaMesh 導入ページ](https://market.hanamesh.com/connect#install)で DSH を選び、「固定版のパッケージ名をコピー」を押します。`@hanamesh/hanamesh` の**固定版を含む完全な指定**を「パッケージ名またはアドレス」に貼り付けます。公開版は Core のリリース情報から取得し、リポジトリ内の未公開版を使いません。
-3. 出所を確認し、「インストール」、完了後に「今すぐ有効化」を選びます。DSH が求めた場合だけ再起動します。Core、Usage、AppHost、Theme は総合パッケージに含まれ、個別導入は不要です。同意とアカウント連携はご本人が行います。
-
-CLI 和交给 AI 是备选 / CLI and agent installation are alternatives / CLI とエージェントによる導入も選べます：[安装页 / Installation page / 導入ページ](https://market.hanamesh.com/connect#install)。CLI 必须操作自己的 desktop profile，不在项目目录执行 npm install。
-
-界面用语依据 / Interface reference：[DSH Plugin Manager](https://github.com/deepseek-ai/DeepSeek-Harness/tree/39163dd30f703a79079e2d2446545cff3c453738/packages/client/ui-plugin-manager)。
-
-DT7 候选（0.3.38 / 总包 0.1.9）：Core 通过可选 protocol 1 `assessLegacyInstallation(facts)` 统一评估无总包的单独组件；已安装可用旧组件仅建议升级，缺必需成员、低于现有范围或格式不符给出具名原因。磁盘清单与 runtime 的观察范围保持区分。owner 已追认：Core 没有独立数值最低版本，只校验已有元数据、格式和自身约束。见 [公开接口](docs/SUITE_DECLARATION.md#legacy-component-assessment-0338)。
+Core 从当前 Loader 读取组件的来源、版本、启用状态和相容性。可在 HanaMesh 设置中查看健康状态及缺失组件的处理提示。详见 [套件声明](docs/SUITE_DECLARATION.md)。
 
 CD2 候选（0.3.36）：client peer 租约流响应带 `cache-control: no-store, no-transform` 并每 30 秒重复同一定长帧。根因是 DSH Host gzip 把 `application/octet-stream` 当可压缩、把小帧全部留在 zlib 缓冲里，原生转发 300 秒收不到正文字节即断流，已安装套件随之降为 Unknown。心跳不改变 peer context、完整性准则、安装状态或采集同意；只接受协议 2。见 [套件声明](docs/SUITE_DECLARATION.md)。
 
 PK1 兼容候选：开发输入更新为 DSH 0.2.2-rc.1 / Cordis 4.1.0 / Schemastery 3.19.0（适用者）。公开 peer 保留兼容范围，并显式包含 0.2.2 预发布；不锁定用户宿主版本。本分支尚未发布，安装和原生加载结果以 PK1 交件为准。
 
-# hanamesh-core · 0.3.31
-
-Core提供设备身份、同意/撤回、HanaMesh设置段、套件入口和健康观察；DSH 通过 `@hanamesh/hanamesh` 总包一次安装 Core/Usage/AppHost，缺少或版本不匹配时有明确提示，身份和同意仍可用。绑定回跳由focus/visibility刷新，不依赖深链。Core不采集事件、不实现应用容器或钱包奖励。
+Core 提供设备身份、同意与撤回、HanaMesh 设置和套件健康观察。绑定回跳在 focus 或 visibility 变化时刷新。
 
 组件启动失败时，健康行显示白名单错误码、已识别的数据域、原因与处理建议；读取失败原因最多等待250ms，未知错误安全降级。不保存或展示原始错误、路径、堆栈或记录内容。数据格式不兼容时先备份并安装支持该格式的组件版本，保留原数据后重新检查；Core不迁移其他组件的数据。修复前仍保持repair并拒绝新的受保护操作，重新检查确认组件健康后恢复normal。
 
@@ -77,4 +65,4 @@ Binding links carry the original Identity expiry and clock domain as unsigned di
 
 `lib/` and `.build/` are generated locally and excluded from Git. `npm pack` runs the strict build through `prepack`; normal archives retain their public generated files.
 
-总包位于 [packages/hanamesh](packages/hanamesh/README.md)，精确锁三个子包并合并公开 patch。套件版本为总包版本；兼容判断见 [SUITE_DECLARATION](docs/SUITE_DECLARATION.md)，AppHost 只安装声明选中的总包。
+桌面发行组合使用各插件的公开 DSH patch。套件声明返回当前组件的精确版本。

@@ -14,8 +14,8 @@ export const packConfig = {
     assert.equal(read('lib/dsh.mjs').toString(), await readFile('src/dsh.mjs', 'utf8'));
     const packed = JSON.parse(read('package.json'));
     assert.equal(packed.version, source.version);
-    // Packed UI obtains the provider-owned exact command; no static unversioned fallback.
-    assert.ok(read('lib/client.js').toString().includes('/api/hanamesh/core/suite-declaration'), 'PACKED_SUITE_REPAIR_ROUTE_MISSING');
+    // Published Core guides the user to the direct component installation path.
+    assert.ok(read('lib/client.js').toString().includes('请在 DSH 插件页安装缺少的组件'), 'PACKED_DIRECT_SUITE_GUIDE_MISSING');
     assert.ok(!read('lib/client.js').toString().includes('add --save-exact @hanamesh/hanamesh'), 'PACKED_STATIC_SUITE_COMMAND');
     const patch = load(read(packed.dsh.bundle.patch.replace(/^\.\//, '')).toString());
     assert.equal(patch[0].insert.length, 1);
@@ -23,6 +23,7 @@ export const packConfig = {
     assert.equal(patch[0].insert[0].name, packed.name);
     assert.deepEqual(packed.hanameshSuite, JSON.parse(read('profile/suite.manifest.json')));
     assert.deepEqual(packed.hanameshSuite, source.hanameshSuite);
+    assert.equal(Object.hasOwn(packed, 'hanameshSuiteInstall'), false);
     assert.deepEqual(packed.dependencies, {semver: '7.7.2', tar: '7.5.22'});
     assert.equal(packed.peerDependencies['@hanamesh/devkit'], undefined);
     assert.equal(packed.peerDependenciesMeta?.['@hanamesh/devkit'], undefined);

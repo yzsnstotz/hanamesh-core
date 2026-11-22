@@ -93,7 +93,7 @@ export async function createSuitePackageSource(options: SuitePackageSourceOption
     if (versions.has(version)) fail('CORE_SUITE_ARCHIVE_DUPLICATE');
     versions.set(version, {...value, integrity: item.integrity});
   }
-  if (members.some(row => !records.has(row.name))) fail('CORE_SUITE_ARCHIVE_MEMBERS');
+  if (members.some(row => row.name !== SUITE_MANIFEST.bundle.name && !records.has(row.name))) fail('CORE_SUITE_ARCHIVE_MEMBERS');
   const sockets = new Set<Socket>(), pending = new Set<AbortController>();
   let registry = '', closed = false;
   const server = createServer((request, response) => {
