@@ -3,12 +3,13 @@ import {resolve,join,isAbsolute,posix} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
+import {isDeepStrictEqual} from 'node:util';
 import {nodeToolCommand} from '../../scripts/node-tool.mjs';
 import yaml from 'js-yaml';
 import semver from 'semver';
-import {createSuiteInstallRelease} from '../../lib/suite/install-command.js';
+import suite from '../../profile/suite.manifest.json' with {type:'json'};
 
-export const components=[['core','@hanamesh/core'],['usage','@hanamesh/usage'],['appHost','@hanamesh/dsh-app-host'],['theme','@hanamesh/theme'],['market','@hanamesh/market']];
+export const components=[['core',suite.core.name],...suite.components.map(({id,moduleName})=>[id,moduleName])];
 const exactVersion=/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const record=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -41,6 +42,10 @@ export function mergeBundles(version,sources){
  const dependencies={},peerDependencies={},optional=new Map(),patch=[],ids=new Set();
  for(const [index,{pkg,patch:rows}] of sources.entries()){
   if(pkg.name!==components[index][1]||!exactVersion.test(pkg.version))throw Error('SOURCE_ORDER_OR_VERSION_INVALID');
+  if(index===0){
+   const expected={...suite,core:{...suite.core,version:pkg.version}};
+   if(!isDeepStrictEqual(pkg.hanameshSuite,expected))throw Error('CORE_SUITE_SOURCE_MANIFEST_MISMATCH');
+  }else if(!semver.satisfies(pkg.version,suite.components[index-1].versionRange))throw Error('SOURCE_MEMBER_VERSION_MISMATCH');
   dependencies[pkg.name]='^'+pkg.version;
   if(!record(pkg.peerDependencies))throw Error(`SOURCE_PEERS_MISSING: ${pkg.name}`);
   for(const [name,range] of Object.entries(pkg.peerDependencies)){
@@ -66,10 +71,11 @@ export function mergeBundles(version,sources){
  }
  const peers=Object.fromEntries(Object.entries(peerDependencies).sort(([a],[b])=>a.localeCompare(b))),peerDependenciesMeta=Object.fromEntries([...optional].filter(([,value])=>value).map(([name])=>[name,{optional:true}]));
  if(!Object.keys(peers).length)throw Error('SOURCE_PEERS_MISSING');
- return {manifest:{name:'@hanamesh/hanamesh',version,hanameshSuiteInstall:createSuiteInstallRelease(version),description:'HanaMesh Core, Usage, AppHost, Theme and Market for DSH in one installation.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
+ return {manifest:{name:'@hanamesh/hanamesh',version,description:'HanaMesh suite components for DSH.',license:'MIT',repository:{type:'git',url:'https://github.com/yzsnstotz/hanamesh-core.git',directory:'packages/hanamesh'},files:['cordis.patch.yml','release.json','LICENSE'],dependencies,peerDependencies:peers,...(Object.keys(peerDependenciesMeta).length?{peerDependenciesMeta}:{}),dsh:{bundle:{patch:'./cordis.patch.yml'}},publishConfig:{access:'public'}},patch};
 }
 export async function buildHanaMesh(input,fetchPackage,packPackage=command){
- if(!record(input)||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');
+ const keys=new Set(['version','outputDir',...components.map(([role])=>role)]);
+ if(!record(input)||Object.keys(input).some(key=>!keys.has(key))||!exactVersion.test(input.version)||!isAbsolute(input.outputDir??'')||components.some(([role])=>!exactVersion.test(input[role]??'')))throw Error('RELEASE_INPUT_REQUIRES_EXACT_VERSIONS_AND_ABSOLUTE_OUTPUT');
  // A fresh directory prevents a failed build from leaving a previous release looking current.
  await mkdir(input.outputDir,{mode:0o700});
  const npmDir=join(input.outputDir,'npm');await mkdir(npmDir);
@@ -86,8 +92,6 @@ export async function buildHanaMesh(input,fetchPackage,packPackage=command){
   const file=await fetch(name,input[role],destination);
   sources.push(await readBundle(file,name,input[role]));
  }
- const coreRelease=sources[0].pkg.hanameshSuiteInstall,expectedRelease=createSuiteInstallRelease(input.version);
- if(!coreRelease||coreRelease.name!==expectedRelease.name||coreRelease.version!==expectedRelease.version||coreRelease.command!==expectedRelease.command||JSON.stringify(coreRelease.args)!==JSON.stringify(expectedRelease.args))throw Error('CORE_RELEASE_PIN_MISMATCH');
  const {manifest,patch}=mergeBundles(input.version,sources),packageDir=join(input.outputDir,'package');await mkdir(packageDir);
  const release={version:input.version,sources:sources.map(({pkg,sha256})=>({name:pkg.name,version:pkg.version,sha256})),entryIds:patch.flatMap(row=>row.insert.map(entry=>entry.id))};
  await writeFile(join(packageDir,'package.json'),JSON.stringify(manifest,null,2)+'\n');await writeFile(join(packageDir,'cordis.patch.yml'),yaml.dump(patch,{noRefs:true,lineWidth:-1}));await writeFile(join(packageDir,'release.json'),JSON.stringify(release,null,2)+'\n');
@@ -99,8 +103,8 @@ export async function buildHanaMesh(input,fetchPackage,packPackage=command){
  await writeFile(join(input.outputDir,'SHA256SUMS'),sha256+'  '+packed[0].filename+'\n');await writeFile(join(input.outputDir,'result.json'),JSON.stringify(result,null,2)+'\n');return result;
 }
 export function parseArguments(args){
- const names={'--version':'version','--core':'core','--usage':'usage','--app-host':'appHost','--theme':'theme','--market':'market','--output':'outputDir'},input={};
- for(let i=0;i<args.length;i+=2){const name=names[args[i]];if(!name||input[name]!==undefined||!args[i+1])throw Error('USAGE: node packages/hanamesh/build.mjs --version 0.1.0 --core 0.3.30 --usage 0.3.0-rc.15 --app-host 0.6.25 --theme 0.1.0 --market <exact-version> --output /absolute/new-directory');input[name]=args[i+1];}
+ const names=new Map([['--version','version'],['--output','outputDir'],...components.map(([role])=>['--'+role,role])]),input={};
+ for(let i=0;i<args.length;i+=2){const name=names.get(args[i]);if(!name||input[name]!==undefined||!args[i+1])throw Error('USAGE: node packages/hanamesh/build.mjs --version <exact> '+components.map(([role])=>'--'+role+' <exact>').join(' ')+' --output /absolute/new-directory');input[name]=args[i+1];}
  return input;
 }
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url){

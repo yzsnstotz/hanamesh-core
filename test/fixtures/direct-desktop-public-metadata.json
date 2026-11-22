@@ -1,0 +1,236 @@
+{
+  "source": "Core and Market normal candidate archives, official Usage and Theme npm metadata, and resolved peer facts from isolated DSH Desktop 0.2.2-rc.5.",
+  "components": [
+    {
+      "moduleName": "@hanamesh/core",
+      "observation": {
+        "kind": "present",
+        "version": "0.3.41",
+        "phase": "active",
+        "metadata": {
+          "name": "@hanamesh/core",
+          "version": "0.3.41",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/yzsnstotz/hanamesh-core.git"
+          },
+          "engines": {
+            "node": ">=24.13.1 <25"
+          },
+          "dsh": {
+            "bundle": {
+              "patch": "./profile/cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-ui-settings",
+                "@deepseek-ai/dsh-client-ui-sidebar",
+                "@deepseek-ai/dsh-client-ui-primitives"
+              ],
+              "platform": "web",
+              "external": [
+                "react"
+              ]
+            }
+          },
+          "peerDependencies": {
+            "@deepseek-ai/cordis": ">=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0",
+            "@deepseek-ai/dsh-client-connection": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-client-ui-settings": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-scope": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-storage": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-storage-domain": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-typert-protocol": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "react": "^18.3.1",
+            "zod": "^4.4.3",
+            "@deepseek-ai/dsh-app-boot": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0"
+          }
+        }
+      },
+      "peers": {
+        "@deepseek-ai/cordis": "4.1.0",
+        "@deepseek-ai/dsh-client-connection": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-ui-settings": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-ui-sidebar": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-scope": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-storage": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-storage-domain": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.5",
+        "react": "18.3.1",
+        "zod": "4.4.3",
+        "@deepseek-ai/dsh-app-boot": "0.2.2-rc.5"
+      }
+    },
+    {
+      "moduleName": "@hanamesh/usage",
+      "observation": {
+        "kind": "present",
+        "version": "0.3.0-rc.20",
+        "phase": "active",
+        "metadata": {
+          "name": "@hanamesh/usage",
+          "version": "0.3.0-rc.20",
+          "repository": {
+            "url": "git+https://github.com/yzsnstotz/hanamesh-usage.git",
+            "type": "git"
+          },
+          "engines": {
+            "node": ">=24.13.1 <25"
+          },
+          "dsh": {
+            "bundle": {
+              "patch": "./profile/cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-ui-renderer",
+                "@deepseek-ai/dsh-api-gateway"
+              ],
+              "external": [
+                "react"
+              ],
+              "platform": "web",
+              "immediately": true
+            }
+          },
+          "peerDependencies": {
+            "zod": "^4.4.3",
+            "@deepseek-ai/cordis": ">=4.0.4 <4.2.0-0 || >=4.0.5-alpha.1 <4.2.0-0",
+            "@deepseek-ai/dsh-agent": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-session": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-storage": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-attachment": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-storage-domain": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-typert-protocol": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-client-connection": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0",
+            "@deepseek-ai/dsh-session-persistence": ">=0.2.0-rc.2 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0"
+          },
+          "peerDependenciesMeta": {
+            "@deepseek-ai/dsh-client-connection": {
+              "optional": true
+            }
+          }
+        }
+      },
+      "peers": {
+        "zod": "4.4.3",
+        "@deepseek-ai/cordis": "4.1.0",
+        "@deepseek-ai/dsh-agent": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-session": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-storage": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-attachment": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-storage-domain": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-connection": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-session-persistence": "0.2.2-rc.5"
+      }
+    },
+    {
+      "moduleName": "@hanamesh/market",
+      "observation": {
+        "kind": "present",
+        "version": "0.1.3",
+        "phase": "active",
+        "metadata": {
+          "name": "@hanamesh/market",
+          "version": "0.1.3",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/yzsnstotz/hanamesh-core.git",
+            "directory": "packages/hanamesh-market"
+          },
+          "engines": {
+            "node": ">=24.13.1 <25",
+            "dsh": ">=0.2.2-rc.1 <0.3.0-0"
+          },
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "platform": "web",
+              "external": [
+                "react"
+              ],
+              "inject": [
+                "@deepseek-ai/dsh-client-ui-renderer",
+                "@deepseek-ai/dsh-client-ui-primitives",
+                "@deepseek-ai/dsh-client-locale"
+              ]
+            }
+          },
+          "peerDependencies": {
+            "@deepseek-ai/cordis": ">=4.1.0 <4.2.0-0",
+            "@deepseek-ai/schemastery": ">=3.19.0 <3.20.0-0",
+            "react": "^18.3.1",
+            "@deepseek-ai/dsh-host-webserver": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-client-connection": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-storage-domain": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-app-boot": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-plugin-manager": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-plugin-detail": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0-0",
+            "@deepseek-ai/dsh-client-locale": ">=0.2.2-rc.1 <0.3.0-0"
+          }
+        }
+      },
+      "peers": {
+        "@deepseek-ai/cordis": "4.1.0",
+        "@deepseek-ai/schemastery": "3.19.0",
+        "react": "18.3.1",
+        "@deepseek-ai/dsh-host-webserver": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-connection": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-storage-domain": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-app-boot": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-plugin-manager": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-plugin-detail": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-ui-renderer": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.5",
+        "@deepseek-ai/dsh-client-locale": "0.2.2-rc.5"
+      }
+    },
+    {
+      "moduleName": "@hanamesh/theme",
+      "observation": {
+        "kind": "present",
+        "version": "0.1.0",
+        "phase": "active",
+        "metadata": {
+          "name": "@hanamesh/theme",
+          "version": "0.1.0",
+          "repository": {
+            "url": "git+https://github.com/yzsnstotz/hanamesh-core.git",
+            "type": "git",
+            "directory": "packages/hanamesh-theme"
+          },
+          "engines": {
+            "node": ">=24.13.1 <25"
+          },
+          "dsh": {
+            "bundle": {
+              "patch": "./cordis.patch.yml"
+            },
+            "client": {
+              "inject": [
+                "@deepseek-ai/dsh-client-ui-theme"
+              ],
+              "platform": "web"
+            }
+          },
+          "peerDependencies": {
+            "@deepseek-ai/cordis": ">=4.1.0 <4.2.0-0",
+            "@deepseek-ai/dsh-client-ui-theme": ">=0.2.2-rc.1 <0.3.0-0"
+          }
+        }
+      },
+      "peers": {
+        "@deepseek-ai/cordis": "4.1.0",
+        "@deepseek-ai/dsh-client-ui-theme": "0.2.2-rc.5"
+      }
+    }
+  ]
+}
