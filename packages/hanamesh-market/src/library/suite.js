@@ -4,11 +4,6 @@ import {requireCondition} from '../errors.js';
 
 export const SUITE_BUNDLE='@hanamesh/hanamesh';
 export const SUITE_TARGET='hanamesh:suite-upgrade';
-export const SUITE_PACKAGES=Object.freeze([
-  {name:'@hanamesh/core',label:'Core',repo:'hanamesh-core'},
-  {name:'@hanamesh/usage',label:'使用记录',repo:'hanamesh-usage'},
-  {name:'@hanamesh/dsh-app-host',label:'应用库',repo:'hanamesh-plugin-app-host'},
-].map(Object.freeze));
 export const CORE_SUITE_DECLARATION_MISSING='Core 未提供套件声明';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const text=value=>typeof value==='string'&&value.length>0;
@@ -19,39 +14,53 @@ const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 
 function validInstallation(value,version){
   return object(value)&&value.name===SUITE_BUNDLE&&value.version===version&&text(value.command)&&Array.isArray(value.args)&&value.args.length>0&&value.args.every(text);
 }
+function matchesMembers(rows,members,key,validRow){
+  if(!Array.isArray(rows)||rows.length!==members.size)return false;
+  const seen=new Set();
+  for(const row of rows){
+    if(!object(row))return false;
+    const name=row[key],member=members.get(name);
+    if(!member||seen.has(name)||!validRow(row,member))return false;
+    seen.add(name);
+  }
+  return true;
+}
+const memberIdentity=(row,member)=>row.id===member.id&&row.repository===member.repository;
 function validateDeclaration(value){
   if(!object(value)||value.schemaVersion!==1||!text(value.checkedAt)||!nullableText(value.installCommand)||!digest(value.declarationId)||!text(value.nodeVersion)||!nullableText(value.registry)||!(value.bundleVersion===null||exact(value.bundleVersion))||!['complete','incomplete','unknown'].includes(value.completeness))invalid();
-  if(value.completeness==='complete'&&!exact(value.bundleVersion))invalid();
   const manifest=value.manifest;
-  if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.bundle)||manifest.bundle.name!==SUITE_BUNDLE||!text(manifest.bundle.repository)||!object(manifest.core)||manifest.core.name!==SUITE_PACKAGES[0].name||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components)||manifest.components.length!==2)invalid();
-  const members=new Map();
-  for(const row of manifest.components){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.slice(1).some(p=>p.name===row.moduleName)||members.has(row.moduleName)||!text(row.versionRange)||!text(row.repository))invalid();members.set(row.moduleName,row.id);}
-  if(!Array.isArray(value.installed)||value.installed.length!==3||!Array.isArray(value.upgrades)||!Array.isArray(value.blocked)||!object(value.peerFacts)||!object(value.metadataDigests))invalid();
-  const installed=new Map();
-  for(const row of value.installed){
-    if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||installed.has(row.moduleName)||!text(row.requiredRange)||!text(row.repository)||!(row.actualVersion===null||exact(row.actualVersion))||!nullableText(row.actualRepository)||!text(row.status)||(row.runningVersion!==undefined&&!exact(row.runningVersion)))invalid();
-    installed.set(row.moduleName,row);
+  if(!object(manifest)||manifest.schemaVersion!==1||!text(manifest.id)||!object(manifest.bundle)||manifest.bundle.name!==SUITE_BUNDLE||!text(manifest.bundle.repository)||!object(manifest.core)||!text(manifest.core.name)||!exact(manifest.core.version)||!text(manifest.core.repository)||!Array.isArray(manifest.components))invalid();
+  const members=new Map([[manifest.core.name,{id:'core',repository:manifest.core.repository}]]);
+  const ids=new Set(['core']);
+  for(const row of manifest.components){
+    if(!object(row)||!text(row.id)||ids.has(row.id)||!text(row.moduleName)||members.has(row.moduleName)||!text(row.versionRange)||!text(row.repository))invalid();
+    members.set(row.moduleName,row);
+    ids.add(row.id);
   }
+  if(!matchesMembers(value.installed,members,'moduleName',(row,member)=>memberIdentity(row,member)&&text(row.requiredRange)&&(row.actualVersion===null||exact(row.actualVersion))&&nullableText(row.actualRepository)&&text(row.status)&&(row.runningVersion===undefined||exact(row.runningVersion))))invalid();
+  if(!Array.isArray(value.upgrades)||!Array.isArray(value.blocked)||!object(value.peerFacts)||!object(value.metadataDigests))invalid();
+  if(value.bundleVersion===null&&value.upgrades.length>0)invalid();
   for(const row of value.blocked)if(!object(row)||!text(row.code)||(row.bundleVersion!==undefined&&!exact(row.bundleVersion))||(row.moduleName!==undefined&&!text(row.moduleName)))invalid();
   if(!Object.values(value.peerFacts).every(nullableText)||!Object.values(value.metadataDigests).every(text))invalid();
   for(const upgrade of value.upgrades){
-    if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==SUITE_BUNDLE||!exact(upgrade.bundle.version)||!text(upgrade.bundle.repository)||!digest(upgrade.bundle.metadataDigest)||!text(upgrade.registry)||!Array.isArray(upgrade.targets)||upgrade.targets.length!==3)invalid();
+    if(!object(upgrade)||!object(upgrade.bundle)||!text(upgrade.bundle.id)||upgrade.bundle.moduleName!==manifest.bundle.name||!exact(upgrade.bundle.version)||upgrade.bundle.repository!==manifest.bundle.repository||!digest(upgrade.bundle.metadataDigest)||!text(upgrade.registry))invalid();
     if(!validInstallation(upgrade.installation,upgrade.bundle.version))invalid();
-    const targets=new Set();
-    for(const row of upgrade.targets){if(!object(row)||!text(row.id)||!SUITE_PACKAGES.some(p=>p.name===row.moduleName)||targets.has(row.moduleName)||!exact(row.version)||!text(row.repository)||!digest(row.metadataDigest))invalid();targets.add(row.moduleName);}
+    if(!matchesMembers(upgrade.targets,members,'moduleName',(row,member)=>memberIdentity(row,member)&&exact(row.version)&&digest(row.metadataDigest)))invalid();
   }
-  if(value.legacy!==undefined){if(value.bundleVersion!==null)invalid();validateLegacyAssessment(value.legacy);}
+  if(value.legacy!==undefined){
+    if(value.bundleVersion!==null)invalid();
+    validateLegacyAssessment(value.legacy,members);
+  }
   return structuredClone(value);
 }
-/** Validate a Core verdict as data; Market never recalculates its result. */
-export function validateLegacyAssessment(value){
+/** Validate the format of Core's verdict and forward it unchanged. */
+function validateLegacyAssessment(value,members){
   const invalid=()=>requireCondition(false,'CORE_LEGACY_ASSESSMENT_INVALID','Core 旧组件判定返回格式无效。',{},503);
-  if(!object(value)||!['installed','incomplete','not-installed','unknown'].includes(value.status)||!Array.isArray(value.components)||!Array.isArray(value.issues))invalid();
-  if(value.components.length!==3||new Set(value.components.map(row=>row?.name)).size!==3||!value.components.every(row=>object(row)&&SUITE_PACKAGES.some(p=>p.name===row.name)&&nullableText(row.version)&&text(row.status)&&(row.active===undefined||typeof row.active==='boolean')))invalid();
+  if(!object(value)||!['installed','incomplete','not-installed','unknown'].includes(value.status)||!Array.isArray(value.issues))invalid();
+  if(!matchesMembers(value.components,members,'name',row=>nullableText(row.version)&&text(row.status)&&(row.active===undefined||typeof row.active==='boolean')))invalid();
   if(!value.issues.every(row=>object(row)&&text(row.code)&&text(row.moduleName)&&text(row.message)))invalid();
   if(value.reason!==null&&(!object(value.reason)||!text(value.reason.code)||!text(value.reason.message)||!text(value.reason.action)))invalid();
   if(value.status!=='not-installed'&&value.reason===null)invalid();
-  return structuredClone(value);
 }
 /** Read only the optional protocol-1 public state; absence is unobservable, never starting/ready. */
 export function readSuiteSourceState(source){
@@ -97,7 +106,11 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     // The first displayed Core tuple is the presentation default; Market never ranks versions.
     const selectedUpgrade=declaration.upgrades[0];
     requireCondition(selectedUpgrade.registry===declaration.registry,'CORE_SUITE_SOURCE_MISMATCH','Core 升级组合来源与执行 registry 不符。',{},409);
-    const components=SUITE_PACKAGES.map(({name,label})=>{const from=declaration.installed.find(row=>row.moduleName===name).actualVersion;if(!exact(from))invalid();return{name,label,from,to:selectedUpgrade.targets.find(row=>row.moduleName===name).version};});
+    const targets=new Map(selectedUpgrade.targets.map(row=>[row.moduleName,row.version]));
+    const components=declaration.installed.map(({moduleName,actualVersion})=>{
+      if(!exact(actualVersion))invalid();
+      return{name:moduleName,label:moduleName,from:actualVersion,to:targets.get(moduleName)};
+    });
     return{available:true,bundle:{name:SUITE_BUNDLE,from:declaration.bundleVersion,to:selectedUpgrade.bundle.version},components,installation:selectedUpgrade.installation,installCommand:declaration.installCommand,sourceBinding:binding,declarationId:declaration.declarationId,registry:declaration.registry,selectedUpgrade,physicalBaseline:declaration.installed,upgrades:declaration.upgrades,blocked:declaration.blocked};
   };
   Object.defineProperty(get,'unavailable',{get:()=>current()?null:CORE_SUITE_DECLARATION_MISSING});
@@ -105,26 +118,20 @@ export function createCoreSuiteAdapter({core=()=>undefined,registry,suiteSourceM
     const declaration=await read();
     if(declaration.legacy)return{...declaration.legacy,version:null,checkedAt:declaration.checkedAt,completeness:declaration.completeness,blocked:[...declaration.blocked.filter(row=>row.code.startsWith('CORE_SUITE_CLIENT_PEER_')),...declaration.legacy.issues.map(({code,moduleName})=>({code,moduleName}))]};
     return{status:declaration.completeness==='complete'?'installed':declaration.completeness,completeness:declaration.completeness,version:declaration.bundleVersion,checkedAt:declaration.checkedAt,
-      components:declaration.installed.map(row=>({...row,name:row.moduleName,label:SUITE_PACKAGES.find(p=>p.name===row.moduleName).label,version:row.actualVersion})),blocked:declaration.blocked};
+      components:declaration.installed.map(row=>({...row,name:row.moduleName,label:row.moduleName,version:row.actualVersion})),blocked:declaration.blocked};
   };
   return get;
 }
-/**
- * Internal Market planning port. The public adapter above supplies this plan in production;
- * injected normalized stand-ins remain useful for testing confirmation behavior in isolation.
- * Core owns candidate selection, completeness, ranges and compatibility; this module only checks
- * that an exact execution plan is well formed and confined to our three protected packages.
- */
+/** Validate the normalized exact plan at the Market execution boundary. */
 export async function prepareSuiteUpgrade({coreSuitePlan,bundleVersion}={}){
   requireCondition(typeof coreSuitePlan==='function','CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
   const plan=await coreSuitePlan(bundleVersion===undefined?undefined:{bundleVersion});
   requireCondition(plan!==undefined&&plan!==null,'CORE_SUITE_DECLARATION_MISSING',CORE_SUITE_DECLARATION_MISSING,{},503);
-  const invalid=()=>requireCondition(false,'CORE_SUITE_DECLARATION_INVALID','Core 套件声明无法用于精确安装。',{},503);
-  if(typeof plan!=='object'||Array.isArray(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!nullableText(plan.installCommand)||!validInstallation(plan.installation,plan.bundle.to)||!Array.isArray(plan.components)||plan.components.length!==SUITE_PACKAGES.length)invalid();
-  const rows=new Map();
+  if(!object(plan)||typeof plan.available!=='boolean'||!object(plan.bundle)||plan.bundle.name!==SUITE_BUNDLE||!exact(plan.bundle.from)||!exact(plan.bundle.to)||!nullableText(plan.installCommand)||!validInstallation(plan.installation,plan.bundle.to)||!Array.isArray(plan.components)||plan.components.length===0)invalid();
+  const names=new Set();
   for(const row of plan.components){
-    if(!row||typeof row!=='object'||!SUITE_PACKAGES.some(p=>p.name===row.name)||rows.has(row.name)||typeof row.from!=='string'||semver.valid(row.from)!==row.from||typeof row.to!=='string'||semver.valid(row.to)!==row.to)invalid();
-    rows.set(row.name,row);
+    if(!object(row)||!text(row.name)||!text(row.label)||names.has(row.name)||!exact(row.from)||!exact(row.to))invalid();
+    names.add(row.name);
   }
-  return{...structuredClone(plan),available:plan.available,components:SUITE_PACKAGES.map(({name,label})=>({name,label,from:rows.get(name).from,to:rows.get(name).to}))};
+  return structuredClone(plan);
 }
