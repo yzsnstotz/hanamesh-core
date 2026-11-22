@@ -33,11 +33,17 @@ export class SuiteDeclarationService {
       blocked.push({code: row.actualRepository ? 'CORE_SUITE_SOURCE_MISMATCH' : 'CORE_SUITE_INSTALLED_SOURCE_UNKNOWN', moduleName: row.moduleName});
       if (completeness === 'complete') completeness = 'unknown';
     }
+    const memberNames = installed.map(row => row.moduleName);
     let physicalBundle: PackageMetadata | null = null;
     let bundleReadFailed = false;
     try {physicalBundle = await this.options.bundleInventory();} catch { bundleReadFailed = true; /* unreadable is not authoritative absence */ }
     const bundleVersion = physicalBundle && semver.valid(physicalBundle.version) ? physicalBundle.version : null;
-    if (bundleReadFailed || physicalBundle && (!bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || installed.some(row => !row.actualVersion || !semver.satisfies(row.actualVersion, physicalBundle.dependencies?.[row.moduleName] ?? '')))) {
+    if (bundleReadFailed || physicalBundle && (
+      !bundleVersion ||
+      !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) ||
+      !distributionDependencies(physicalBundle.dependencies, memberNames) ||
+      installed.some(row => !row.actualVersion || !semver.satisfies(row.actualVersion, physicalBundle.dependencies?.[row.moduleName] ?? ''))
+    )) {
       if (completeness === 'complete') completeness = 'unknown';
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH', moduleName: manifest.bundle.name});
     }
@@ -72,9 +78,9 @@ export class SuiteDeclarationService {
         if (request.registry !== undefined && typeof request.registry !== 'string') throw new CoreError('CORE_SUITE_SOURCE_UNSUPPORTED', 400);
         registry = this.options.registry.normalize ? this.options.registry.normalize(request.registry ?? DEFAULT_SUITE_REGISTRY) : registryUrl(request.registry ?? DEFAULT_SUITE_REGISTRY);
         if (request.bundleVersion !== undefined && !semver.valid(request.bundleVersion)) throw new CoreError('CORE_SUITE_CANDIDATE_INVALID', 400);
-        const names = [manifest.bundle.name, core.name, ...manifest.components.map(row => row.moduleName)];
+        const names = bundleVersion ? [manifest.bundle.name, ...memberNames] : memberNames;
         const catalogs = new Map<string, Readonly<Record<string, PackageMetadata>>>();
-        for (const name of bundleVersion ? names : names.slice(1)) {
+        for (const name of names) {
           const data = await this.options.registry.read(registry, name);
           if (data.registry !== registry || data.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
           catalogs.set(name, data.versions); metadataDigests[`registry:${name}`] = digest(data.versions);
@@ -88,7 +94,6 @@ export class SuiteDeclarationService {
           const bundleReason = bundleFailure(bundle);
           if (bundleReason) {reject(bundleReason); continue;}
           const dependencies = bundle.dependencies;
-          const memberNames = names.slice(1);
           if (!dependencies || !distributionDependencies(dependencies, memberNames)) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
           const chosenVersions = memberNames.map(name => semver.maxSatisfying(Object.keys(catalogs.get(name)!), dependencies[name]!));
           const chosen = memberNames.map((name, i) => chosenVersions[i] ? catalogs.get(name)![chosenVersions[i]!] : undefined);

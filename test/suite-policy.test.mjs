@@ -88,8 +88,8 @@ test('DSH prerelease runtime remains complete without opting other peers into pr
 test('Core emits the selected exact upgrade definition for the actual profile and verified registry',async()=>{
  const d=await service().read({registry,profile:'work'});
  assert.equal(d.upgrades.length,1);
- const {createSuiteInstallRelease}=await import('../lib/suite/index.js');
- assert.deepEqual(d.upgrades[0].installation,createSuiteInstallRelease('1.1.0',{profile:'work',registry}));
+ const args=['plugin','--profile','work','add','--save-exact','--registry='+registry,'@hanamesh/hanamesh@1.1.0'];
+ assert.deepEqual(d.upgrades[0].installation,{name:'@hanamesh/hanamesh',version:'1.1.0',args,command:['dsh',...args].join(' ')});
  const declared=await service().read({profile:'desktop'});
  assert.equal(declared.registry,'https://registry.npmjs.org/');
  assert.equal((await service().read()).registry,null,'passive facts stay offline');
