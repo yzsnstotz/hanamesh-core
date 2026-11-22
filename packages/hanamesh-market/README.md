@@ -12,6 +12,8 @@ Application execution, runtime provisioning, processes, leases and model routes 
 
 Read [CONTRACT.md](CONTRACT.md) for endpoints, source binding and suite status. Use Node 24.13.1, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`, `pnpm test:contract`, `pnpm test:mutations`, `pnpm pack`, then `pnpm verify:pack <archive>` in an isolated environment. The package's own lockfile declares its complete dependencies; it is not part of the root pnpm workspace.
 
+Version 0.1.4 refreshes the install button in an open detail when DSH reports an installation change, using the host's current installed state instead of polling.
+
 Version 0.1.3 uses the public npm ^0.27.0 API contracts range. Publication is coordinated after review and merge; Git/SHA dependency specifications are not distribution inputs.
 
 Version 0.1.2 fixes the official catalog choice to use `official=true`, matching the website. Literal source-ID filters and the existing 50-item pagination remain unchanged.
