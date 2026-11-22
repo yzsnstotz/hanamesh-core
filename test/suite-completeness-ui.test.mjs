@@ -4,13 +4,11 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const command = 'dsh plugin --profile desktop add --save-exact @hanamesh/hanamesh@0.1.0';
-const elements = tree => tree && typeof tree === 'object' ? [tree, ...tree.children.flatMap(elements)] : [];
 const textIn = tree => typeof tree === 'string' ? tree : tree && typeof tree === 'object' ? tree.children.map(textIn).join(' ') : '';
 const settle = () => new Promise(resolve => setImmediate(resolve));
-const component = (id, status, extra = {}) => ({id, label: id === 'usage' ? '使用记录（Usage）' : '应用容器（App Host）', status, version: null, requiredRange: '>=0.1.0 <1.0.0', reason: null, nextStep: null, ...extra});
+const component = (id, status, extra = {}) => ({id, label: id === 'usage' ? '使用记录（Usage）' : '市场（Market）', status, version: null, requiredRange: '>=0.1.0 <1.0.0', reason: null, nextStep: null, ...extra});
 
-async function fixture(components, clipboard, release = command) {
+async function fixture(components) {
   const state = {
     deviceId: 'fixture-device', identity: {status: 'local-only', source: null, location: null, replacedDeviceIds: []},
     consent: {state: 'withheld'}, registration: {status: 'unregistered', lastError: null}, session: {bound: false}, account: null,
@@ -25,12 +23,11 @@ async function fixture(components, clipboard, release = command) {
     useEffect(run) { effects.push(run); },
   };
   const sandbox = {
-    exports: {}, require: name => { assert.equal(name, 'react'); return React; }, URLSearchParams, navigator: {clipboard},
+    exports: {}, require: name => { assert.equal(name, 'react'); return React; }, URLSearchParams,
     document: {visibilityState: 'visible', addEventListener() {}, removeEventListener() {}, createElement: () => ({dataset: {}, remove() {}}), head: {append() {}}},
     window: {addEventListener() {}, removeEventListener() {}, setInterval: () => 1, clearInterval() {}, open() { assert.fail('suite hint must never open or run anything'); }},
     fetch: async (path, init) => {
       requests.push({path, method: init?.method ?? 'GET'});
-      if (path === '/api/hanamesh/core/suite-declaration') return Response.json({installCommand: release});
       if (path === '/api/hanamesh/core/state') return Response.json(state);
       if (path === '/api/hanamesh/core/points') return Response.json({status: 'unavailable', reason: 'CONSENT_WITHHELD', totalPoints: 0, pendingTotal: 0, hanas: [], prompt: {show: false, shownAt: null}});
       if (path === '/api/hanamesh/core/activity') return Response.json({status: 'unavailable', reason: 'CONSENT_WITHHELD', items: [], nextAfter: null, window: null});
@@ -45,88 +42,47 @@ async function fixture(components, clipboard, release = command) {
   return {render, requests};
 }
 
-test('missing required suite components have an exact manual repair command and copy action', async () => {
-  const copied = [];
-  const f = await fixture([component('usage', 'missing'), component('app-host', 'missing')], {writeText: async value => copied.push(value)});
-  const tree = f.render(), text = textIn(tree);
-  assert.match(text, /套件不完整，缺 使用记录（Usage）、应用容器（App Host）/);
-  assert.match(text, /未安装或未加入当前加载配置/);
-  assert.match(text, /官方命令.*启用套件/);
-  assert.match(text, /仅用于手动安装\/修复，不是兼容升级计划/);
-  assert.doesNotMatch(text, /可分别安装|optional|品牌/);
-  assert.equal(elements(tree).find(e => e.type === 'code'), undefined);
-  assert.deepEqual(copied, [], 'rendering never copies or executes the command');
-  const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
-  assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
-  assert.deepEqual(copied, [command]);
-  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
-  assert.match(textIn(f.render()), /已复制安装\/修复命令/);
-  assert.ok(f.requests.every(r => r.method === 'GET'), 'hint and copy cannot mutate settings, health, or install plugins');
-});
-
-test('manual repair offers the exact bundle while retaining the observed AppHost version display', async () => {
-  const copied = [];
-  const f = await fixture([component('usage', 'missing'), component('app-host', 'satisfied', {version: '0.6.16'})], {writeText: async value => copied.push(value)});
-  const tree = f.render();
-  assert.match(textIn(tree), /套件不完整，缺 使用记录（Usage）/);
-  assert.match(textIn(tree), /应用容器（App Host）：版本 0\.6\.16 · 已安装/);
-  assert.equal(elements(tree).find(e => e.type === 'code'), undefined);
-  const copy = elements(tree).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
-  await copy.props.onClick();
-  assert.deepEqual(copied, [command]);
-  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
-  assert.ok(f.requests.every(r => r.method === 'GET'), 'repair remains manual and cannot install or mutate settings');
+test('missing members name the direct installation path without showing a retired bundle command',async()=>{
+  const f=await fixture([component('usage','missing'),component('market','missing')]);
+  const text=textIn(f.render());
+  assert.match(text,/套件不完整，缺 使用记录（Usage）、市场（Market）/);
+  assert.match(text,/未安装或未加入当前加载配置/);
+  assert.match(text,/请在 DSH 插件页安装缺少的组件，或启用已安装的组件，然后重新检查/);
+  assert.doesNotMatch(text,/hanamesh@|复制安装\/修复命令|App Host/);
+  assert.ok(f.requests.every(r=>r.method==='GET'));
+  assert.ok(f.requests.every(r=>r.path!=='/api/hanamesh/core/suite-declaration'));
 });
 
 test('only missing rows are named missing; disabled components keep installed versions and enable guidance', async () => {
-  const f = await fixture([component('usage', 'missing'), component('app-host', 'inactive', {version: '0.6.0'})]);
+  const f = await fixture([component('usage', 'missing'), component('market', 'inactive', {version: '0.1.2'})]);
   const text = textIn(f.render());
   assert.match(text, /套件不完整，缺 使用记录（Usage）/);
-  assert.doesNotMatch(text, /套件不完整，缺 [^。]*应用容器/);
-  assert.match(text, /已安装但未启用：应用容器（App Host）/);
-  assert.match(text, /应用容器（App Host）：版本 0\.6\.0 · 已安装但未启用/);
-  assert.match(text, /官方命令.*启用套件/);
+  assert.doesNotMatch(text, /套件不完整，缺 [^。]*市场/);
+  assert.match(text, /已安装但未启用：市场（Market）/);
+  assert.match(text, /市场（Market）：版本 0\.1\.2 · 已安装但未启用/);
+  assert.match(text, /启用已安装的组件/);
 });
 
 test('disabled-only suite offers enable guidance without claiming a missing package', async () => {
-  const f = await fixture([component('usage', 'inactive', {version: '0.2.0-rc.27'}), component('app-host', 'satisfied', {version: '0.6.0'})]);
+  const f = await fixture([component('usage', 'inactive', {version: '0.2.0-rc.27'}), component('market', 'satisfied', {version: '0.1.2'})]);
   const text = textIn(f.render());
   assert.match(text, /已安装但未启用：使用记录（Usage）/);
   assert.doesNotMatch(text, /套件不完整，缺/);
-  await elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令')).props.onClick();
-  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
+  assert.match(text,/请在 DSH 插件页.*启用已安装的组件/);
 });
 
 test('failed and incompatible rows retain reasons and versions without being relabelled missing', async () => {
-  const f = await fixture([component('usage', 'failed', {version: '0.2.0-rc.27', reason: 'startup-failed', nextStep: '检查存储配置'}), component('app-host', 'incompatible', {version: '0.7.0'})]);
+  const f = await fixture([component('usage', 'failed', {version: '0.2.0-rc.27', reason: 'startup-failed', nextStep: '检查存储配置'}), component('market', 'incompatible', {version: '0.2.0'})]);
   const text = textIn(f.render());
   assert.doesNotMatch(text, /套件不完整，缺|已安装但未启用/);
   assert.match(text, /使用记录（Usage）：版本 0\.2\.0-rc\.27 · 需修复：startup-failed 检查存储配置/);
-  assert.match(text, /应用容器（App Host）：版本 0\.7\.0 · 版本不匹配（要求 >=0\.1\.0 <1\.0\.0）/);
+  assert.match(text, /市场（Market）：版本 0\.2\.0 · 版本不匹配（要求 >=0\.1\.0 <1\.0\.0）/);
 });
 
 test('healthy components show their installed versions and no missing or enable warning', async () => {
-  const f = await fixture([component('usage', 'satisfied', {version: '0.2.0-rc.27'}), component('app-host', 'satisfied', {version: '0.6.0'})]);
+  const f = await fixture([component('usage', 'satisfied', {version: '0.2.0-rc.27'}), component('market', 'satisfied', {version: '0.1.2'})]);
   const text = textIn(f.render());
   assert.doesNotMatch(text, /套件不完整，缺|已安装但未启用|可分别安装/);
   assert.match(text, /使用记录（Usage）：版本 0\.2\.0-rc\.27 · 已安装/);
-  assert.match(text, /应用容器（App Host）：版本 0\.6\.0 · 已安装/);
-});
-
-test('clipboard denial or absence preserves the selectable command and offers manual copy', async () => {
-  for (const clipboard of [undefined, {writeText: async () => { throw new Error('denied'); }}]) {
-    const f = await fixture([component('usage', 'missing')], clipboard);
-    const copy = elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令'));
-    assert.ok(copy);assert.match(textIn(f.render()),/macOS \/ Linux/);assert.match(textIn(f.render()),/Windows 安全命令暂未提供/); await copy.props.onClick();
-    assert.match(textIn(f.render()), /复制失败，请手动选择并复制上方命令/);
-    await elements(f.render()).find(e => e.type === 'button' && e.children.includes('复制安装/修复命令')).props.onClick();
-  assert.equal(textIn(elements(f.render()).find(e => e.type === 'code')), command);
-  }
-});
-
-test('unpublished bundle never exposes or copies an unversioned repair command', async () => {
- const copied=[];const f=await fixture([component('usage','missing')],{writeText:async value=>copied.push(value)},null);
- await elements(f.render()).find(e=>e.type==='button'&&e.children.includes('复制安装/修复命令')).props.onClick();
- assert.equal(elements(f.render()).find(e=>e.type==='code'),undefined);assert.deepEqual(copied,[]);
- assert.match(textIn(f.render()),/暂时无法读取总包的已发布版本/);
+  assert.match(text, /市场（Market）：版本 0\.1\.2 · 已安装/);
 });

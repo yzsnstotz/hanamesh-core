@@ -2,10 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {formatSuiteInstallCommand, suiteInstallArgs, createSuiteInstallRelease} from '../lib/suite/index.js';
-test('A2 public npm metadata carries the Core command for this exact bundle release',async()=>{
+test('Core metadata does not advertise the retired aggregate install command',async()=>{
  const core=JSON.parse(await readFile(new URL('../package.json',import.meta.url)));
- const bundle=JSON.parse(await readFile(new URL('../packages/hanamesh/package.json',import.meta.url)));
- assert.deepEqual(core.hanameshSuiteInstall,createSuiteInstallRelease(bundle.version));
+ assert.equal(Object.hasOwn(core,'hanameshSuiteInstall'),false);
 });
 
 test('one public definition owns rendered command and executable argv, including the chosen source and profile',()=>{

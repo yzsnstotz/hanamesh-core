@@ -18,7 +18,6 @@ export interface PackageMetadata {
   readonly peerDependenciesMeta?: Readonly<Record<string, {readonly optional?: boolean}>>;
   readonly dsh?: {readonly bundle?: {readonly patch?: string}};
   readonly hanameshSuite?: SuiteManifest;
-  readonly hanameshSuiteInstall?: SuiteInstallRelease;
 }
 export interface RegistryMetadata {
   readonly registry: string;

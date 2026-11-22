@@ -16,20 +16,21 @@ const profile = JSON.parse(await readFile('profile/suite.profile.json', 'utf8'))
 const seeds = [
   ['@hanamesh/core', profile.version, 'hanamesh-core'],
   ['@hanamesh/usage', '0.2.0-rc.27', 'hanamesh-usage'],
-  ['@hanamesh/dsh-app-host', '0.5.9', 'hanamesh-app-host'],
+  ['@hanamesh/market', '0.1.2', 'hanamesh-market'],
+  ['@hanamesh/theme', '0.1.0', 'hanamesh-theme'],
   ['@hanamesh/app-vibe-trading', '0.2.0-rc.1', 'hanamesh-vibe'],
   ['dsh-codex-subscription', '2.5.2', 'dsh-codex-subscription'],
 ];
 
 for (const [name, version, omittedEntry, expected] of [
-  ['current five seeds', '0.5.9', false, 'satisfied'],
-  ['app-host 0.6.0 (current main)', '0.6.0', false, 'satisfied'],
-  ['next line', '0.7.0', false, 'incompatible'],
-  ['stale rc.2 pin', '0.2.0-rc.2', false, 'incompatible'],
-  ['legacy pin is rejected', '0.1.0-rc.41', false, 'incompatible'],
+  ['current seeds without an AppHost package', '0.1.2', false, 'satisfied'],
+  ['compatible Market release', '0.1.3', false, 'satisfied'],
+  ['next line', '0.2.0', false, 'incompatible'],
+  ['stale stable pin', '0.1.1', false, 'incompatible'],
+  ['older prerelease is rejected', '0.1.0-rc.1', false, 'incompatible'],
   ['missing version', undefined, false, 'unreadable'],
   ['invalid version', 'unknown', false, 'unreadable'],
-  ['missing loader entry', '0.5.9', true, 'missing'],
+  ['missing loader entry', '0.1.2', true, 'missing'],
 ]) {
   test(`fixed suite health through package inspection and HTTP: ${name}`, async t => {
     const root = await mkdtemp(join(tmpdir(), 'hm-suite-health-f2-'));
@@ -39,11 +40,11 @@ for (const [name, version, omittedEntry, expected] of [
       const packageRoot = join(root, 'node_modules', moduleName);
       await mkdir(join(packageRoot, 'lib'), {recursive: true});
       await writeFile(join(packageRoot, 'package.json'), JSON.stringify({
-        name: moduleName, version: id === 'hanamesh-app-host' ? version : seedVersion,
+        name: moduleName, version: id === 'hanamesh-market' ? version : seedVersion,
         type: 'module', exports: {'./dsh': './lib/dsh.mjs'},
       }));
       await writeFile(join(packageRoot, 'lib/dsh.mjs'), 'export default {}\n');
-      if (id !== 'hanamesh-app-host' || !omittedEntry) {
+      if (id !== 'hanamesh-market' || !omittedEntry) {
         entries.push({id: `include:${id}`, options: {name: `${moduleName}/dsh`}, fiber: {state: 2}});
       }
     }
@@ -60,14 +61,14 @@ for (const [name, version, omittedEntry, expected] of [
     }));
     assert.equal(response.status, 200);
     const health = await response.json();
-    assert.deepEqual(health.components.map(row => row.id), ['usage', 'app-host']);
+    assert.deepEqual(health.components.map(row => row.id), ['usage', 'market', 'theme']);
     assert.equal(health.components[0].status, 'satisfied');
-    const appHost = health.components[1];
-    assert.equal(appHost.requiredRange, '>=0.5.9 <0.7.0');
-    assert.equal(appHost.status, expected);
-    assert.equal(appHost.nextStep, expected === 'satisfied' ? null : 'restore-pinned-component');
+    const market = health.components[1];
+    assert.equal(market.requiredRange, '>=0.1.2 <0.2.0');
+    assert.equal(market.status, expected);
+    assert.equal(market.nextStep, expected === 'satisfied' ? null : 'restore-pinned-component');
     const state = await (await handle(new Request(`${origin}${ROUTES.state}`))).json();
     assert.equal(state.components[1].status, expected);
-    assert.equal(state.components[1].requiredRange, '>=0.5.9 <0.7.0');
+    assert.equal(state.components[1].requiredRange, '>=0.1.2 <0.2.0');
   });
 }

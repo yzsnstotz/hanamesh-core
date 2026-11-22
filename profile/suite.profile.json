@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hanamesh-suite",
-  "version": "0.3.40",
+  "version": "0.3.41",
   "label": "HanaMesh 套件",
   "runningTaskPolicy": "preserve-and-pause",
   "components": [
@@ -16,14 +16,24 @@
       "repository": "https://github.com/yzsnstotz/hanamesh-usage"
     },
     {
-      "id": "app-host",
-      "moduleName": "@hanamesh/dsh-app-host",
-      "loaderEntryId": "hanamesh-app-host",
-      "label": "应用容器",
-      "versionRange": ">=0.5.9 <0.7.0",
+      "id": "market",
+      "moduleName": "@hanamesh/market",
+      "loaderEntryId": "hanamesh-market",
+      "label": "市场（Market）",
+      "versionRange": ">=0.1.2 <0.2.0",
       "onFailure": "notice",
-      "impact": "无法打开 HanaMesh 应用；设备身份与同意开关不受影响",
-      "repository": "https://github.com/yzsnstotz/hanamesh-plugin-app-host"
+      "impact": "无法浏览或安装市场插件；设备身份与同意开关不受影响",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core"
+    },
+    {
+      "id": "theme",
+      "moduleName": "@hanamesh/theme",
+      "loaderEntryId": "hanamesh-theme",
+      "label": "主题（Theme）",
+      "versionRange": ">=0.1.0 <0.2.0",
+      "onFailure": "notice",
+      "impact": "HanaMesh 主题不可用；设备身份与同意开关不受影响",
+      "repository": "https://github.com/yzsnstotz/hanamesh-core"
     }
   ]
 }

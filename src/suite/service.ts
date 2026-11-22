@@ -1,6 +1,6 @@
 import {bundleFailure, compatibilityIssues} from './compatibility.js';
 import {assessLegacyInstallationWithManifest} from './legacy.js';
-import {formatSuiteInstallCommand, createSuiteInstallRelease, suiteInstallArgs} from './install-command.js';
+import {createSuiteInstallRelease, suiteInstallArgs} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
 import type {ComponentObservation} from '../health/types.js';
@@ -8,13 +8,9 @@ import {CoreError} from '../errors.js';
 import {digest, frozen, repositoryIdentity, isPackageName, registryUrl} from './facts.js';
 import type {PackageMetadata, SuiteBlocked, SuiteDeclaration, SuiteDeclarationRequest, SuiteManifest, SuiteServiceOptions, SuiteUpgrade} from './types.js';
 
-/** A fixed distribution asset is not an authoritative business member or archive-source member.
- * Retain the three-member identity checks and reject all other dependency additions. */
 function distributionDependencies(dependencies: Readonly<Record<string, string>> | undefined, members: readonly string[]): boolean {
-  if (!dependencies) return false;
-  const distribution = ['@hanamesh/theme', '@hanamesh/market'].filter(name => Object.hasOwn(dependencies, name));
-  if (distribution.some(name => typeof dependencies[name] !== 'string' || !semver.validRange(dependencies[name]!))) return false;
-  return Object.keys(dependencies).length === members.length + distribution.length && members.every(name => Object.hasOwn(dependencies, name));
+  return !!dependencies && Object.keys(dependencies).length === members.length &&
+    members.every(name => typeof dependencies[name] === 'string' && !!semver.validRange(dependencies[name]!));
 }
 export const DEFAULT_SUITE_REGISTRY = 'https://registry.npmjs.org/';
 export class SuiteDeclarationService {
@@ -41,7 +37,7 @@ export class SuiteDeclarationService {
     let bundleReadFailed = false;
     try {physicalBundle = await this.options.bundleInventory();} catch { bundleReadFailed = true; /* unreadable is not authoritative absence */ }
     const bundleVersion = physicalBundle && semver.valid(physicalBundle.version) ? physicalBundle.version : null;
-    if (!physicalBundle || !bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || !distributionDependencies(physicalBundle.dependencies, installed.map(row => row.moduleName)) || installed.some(row => !row.actualVersion || !semver.satisfies(row.actualVersion, physicalBundle.dependencies?.[row.moduleName] ?? ''))) {
+    if (bundleReadFailed || physicalBundle && (!bundleVersion || !this.validRecord(physicalBundle, manifest.bundle.name, bundleVersion, manifest.bundle.repository) || installed.some(row => !row.actualVersion || !semver.satisfies(row.actualVersion, physicalBundle.dependencies?.[row.moduleName] ?? '')))) {
       if (completeness === 'complete') completeness = 'unknown';
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH', moduleName: manifest.bundle.name});
     }
@@ -67,7 +63,6 @@ export class SuiteDeclarationService {
       if (reason) {blocked.push({code: reason}); if (completeness === 'complete') completeness = reason === 'CORE_SUITE_PEER_UNKNOWN' ? 'unknown' : 'incomplete';}
     }
     let registry: string | null = null;
-    let installCommand: string | null = null;
     if (request === undefined) blocked.push({code: 'CORE_SUITE_SOURCE_MISSING'});
     else {
       try {
@@ -79,23 +74,12 @@ export class SuiteDeclarationService {
         if (request.bundleVersion !== undefined && !semver.valid(request.bundleVersion)) throw new CoreError('CORE_SUITE_CANDIDATE_INVALID', 400);
         const names = [manifest.bundle.name, core.name, ...manifest.components.map(row => row.moduleName)];
         const catalogs = new Map<string, Readonly<Record<string, PackageMetadata>>>();
-        for (const name of names) {
+        for (const name of bundleVersion ? names : names.slice(1)) {
           const data = await this.options.registry.read(registry, name);
           if (data.registry !== registry || data.name !== name) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH', 502);
-          if (name === manifest.bundle.name) {
-            const release=core.hanameshSuiteInstall;
-            if (release && release.name===name && typeof release.version==='string' && semver.valid(release.version)===release.version && release.command===formatSuiteInstallCommand(release.version)) {
-              const pinned=data.versions[release.version];
-              if (pinned) {
-                if (!this.validRecord(pinned,name,release.version,manifest.bundle.repository)) throw new CoreError('CORE_SUITE_SOURCE_MISMATCH',502);
-                installCommand=release.command;
-              }
-            }
-            if (!installCommand) blocked.push({code:'CORE_SUITE_CANDIDATE_UNAVAILABLE',moduleName:name});
-          }
           catalogs.set(name, data.versions); metadataDigests[`registry:${name}`] = digest(data.versions);
         }
-        const versions = Object.keys(catalogs.get(manifest.bundle.name)!).filter(version => semver.valid(version) && bundleVersion && (request.bundleVersion ? version === request.bundleVersion && version !== bundleVersion : semver.gt(version, bundleVersion))).sort(semver.rcompare);
+        const versions = Object.keys(catalogs.get(manifest.bundle.name) ?? {}).filter(version => semver.valid(version) && bundleVersion && (request.bundleVersion ? version === request.bundleVersion && version !== bundleVersion : semver.gt(version, bundleVersion))).sort(semver.rcompare);
         if (!versions.length) blocked.push({code: 'CORE_SUITE_CANDIDATE_UNAVAILABLE', ...(request.bundleVersion ? {bundleVersion: request.bundleVersion} : {})});
         for (const version of versions) {
           const bundle = catalogs.get(manifest.bundle.name)![version]!;
@@ -105,7 +89,7 @@ export class SuiteDeclarationService {
           if (bundleReason) {reject(bundleReason); continue;}
           const dependencies = bundle.dependencies;
           const memberNames = names.slice(1);
-          if (!dependencies || !distributionDependencies(dependencies, memberNames) || memberNames.some(name => typeof dependencies[name] !== 'string' || !semver.validRange(dependencies[name]))) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
+          if (!dependencies || !distributionDependencies(dependencies, memberNames)) {reject('CORE_SUITE_MANIFEST_MISMATCH'); continue;}
           const chosenVersions = memberNames.map(name => semver.maxSatisfying(Object.keys(catalogs.get(name)!), dependencies[name]!));
           const chosen = memberNames.map((name, i) => chosenVersions[i] ? catalogs.get(name)![chosenVersions[i]!] : undefined);
           const record = chosen[0], candidate = record?.hanameshSuite;
@@ -126,7 +110,7 @@ export class SuiteDeclarationService {
         const peers: Record<string, string | null | 'unknown'> = {};
         for (const name of Object.keys(observation.metadata?.peerDependencies ?? {})) if (isPackageName(name)) peers[name] = await peer(name);
         return {moduleName: installed[i]!.moduleName, observation, peers, ...(i === 0 ? {runningVersion: manifest.core.version} : {})};
-      }))}, manifest, core.hanameshSuiteInstall?.command ?? null) : undefined;
+      }))}, manifest) : undefined;
     const clientPeerFacts = this.options.clientPeerFacts?.();
     if (clientPeerFacts && (clientPeerFacts.status !== 'known' || clientPeerFacts.contextId !== clientAtStart?.contextId)) {
       completeness = 'unknown'; upgrades.length = 0;
@@ -136,7 +120,7 @@ export class SuiteDeclarationService {
     if (legacy && clientPeerFacts && (clientPeerFacts.status !== 'known' || clientPeerFacts.contextId !== clientAtStart?.contextId)) {
       legacy = {...legacy, status: 'unknown', reason: {code:'CORE_LEGACY_COMPONENTS_UNKNOWN', message:'当前客户端的依赖观察尚未确认或已变化，请重新检测。', action:legacy.reason?.action ?? '重新检测。'}};
     }
-    const facts = {...(legacy ? {legacy} : {}), schemaVersion: 1 as const, bundleVersion, installCommand, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
+    const facts = {...(legacy ? {legacy} : {}), schemaVersion: 1 as const, bundleVersion, installCommand: null, manifest, nodeVersion, registry, completeness, installed, upgrades, blocked, peerFacts, metadataDigests, ...(clientPeerFacts ? {clientPeerFacts} : {})};
     return frozen({...facts, checkedAt: new Date().toISOString(), declarationId: digest(facts)});
   }
   private validRecord(record: PackageMetadata, name: string, version: string, repository: string): boolean {
@@ -144,6 +128,6 @@ export class SuiteDeclarationService {
   }
   private validManifest(value: SuiteManifest, record: PackageMetadata, version: string): boolean {
     const expected = this.options.manifest;
-    return value.schemaVersion === 1 && value.id === expected.id && value.bundle?.name === expected.bundle.name && typeof value.bundle.repository === 'string' && repositoryIdentity(value.bundle.repository) === repositoryIdentity(expected.bundle.repository) && value.core?.name === expected.core.name && value.core.version === version && record.version === version && typeof value.core.repository === 'string' && repositoryIdentity(value.core.repository) === repositoryIdentity(expected.core.repository) && Array.isArray(value.components) && value.components.length === 2 && value.components.every((row, i) => !!row && typeof row === 'object' && row.id === expected.components[i]!.id && isPackageName(row.moduleName) && row.moduleName === expected.components[i]!.moduleName && typeof row.versionRange === 'string' && !!row.versionRange.trim() && !!semver.validRange(row.versionRange) && typeof row.repository === 'string' && repositoryIdentity(row.repository) === repositoryIdentity(expected.components[i]!.repository));
+    return value.schemaVersion === 1 && value.id === expected.id && value.bundle?.name === expected.bundle.name && typeof value.bundle.repository === 'string' && repositoryIdentity(value.bundle.repository) === repositoryIdentity(expected.bundle.repository) && value.core?.name === expected.core.name && value.core.version === version && record.version === version && typeof value.core.repository === 'string' && repositoryIdentity(value.core.repository) === repositoryIdentity(expected.core.repository) && Array.isArray(value.components) && value.components.length === expected.components.length && value.components.every((row, i) => !!row && typeof row === 'object' && row.id === expected.components[i]!.id && isPackageName(row.moduleName) && row.moduleName === expected.components[i]!.moduleName && typeof row.versionRange === 'string' && !!row.versionRange.trim() && !!semver.validRange(row.versionRange) && typeof row.repository === 'string' && repositoryIdentity(row.repository) === repositoryIdentity(expected.components[i]!.repository));
   }
 }

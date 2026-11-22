@@ -2,15 +2,14 @@ import semver from 'semver';
 import {CoreError} from '../errors.js';
 import {frozen, repositoryIdentity, isPackageName} from './facts.js';
 import {compatibilityIssues} from './compatibility.js';
-import {OWN_PACKAGE} from './own.js';
-import {formatSuiteInstallCommand} from './install-command.js';
+import {SUITE_MANIFEST} from './own.js';
 import type {LegacyInstallationFacts, LegacyInstallationAssessment, SuiteManifest, PackageMetadata} from './types.js';
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 /** Public, read-only Core assessor. Core has no independent numeric version floor (owner ratified). */
 export async function assessLegacyInstallation(facts: LegacyInstallationFacts): Promise<LegacyInstallationAssessment> {
-  return assessLegacyInstallationWithManifest(facts, OWN_PACKAGE.hanameshSuite!, OWN_PACKAGE.hanameshSuiteInstall?.command ?? null);
+  return assessLegacyInstallationWithManifest(facts, SUITE_MANIFEST);
 }
-export async function assessLegacyInstallationWithManifest(facts: LegacyInstallationFacts, manifest: SuiteManifest, command: string | null): Promise<LegacyInstallationAssessment> {
+export async function assessLegacyInstallationWithManifest(facts: LegacyInstallationFacts, manifest: SuiteManifest): Promise<LegacyInstallationAssessment> {
   const required = [{moduleName: manifest.core.name, repository: manifest.core.repository, versionRange: null}, ...manifest.components];
   if (!object(facts) || (facts.scope !== undefined && facts.scope !== 'profile') || !semver.valid(facts.nodeVersion) || !Array.isArray(facts.components) || facts.components.length !== required.length
     || !facts.components.every(row => object(row) && required.some(r => r.moduleName === row.moduleName) && object(row.observation) && object(row.peers))
@@ -57,11 +56,10 @@ export async function assessLegacyInstallationWithManifest(facts: LegacyInstalla
   const absent = facts.components.every(row => row.observation.kind === 'missing');
   const uncertain = (code: string) => ['CORE_LEGACY_COMPONENT_UNKNOWN', 'CORE_SUITE_PEER_UNKNOWN'].includes(code);
   const status = absent ? 'not-installed' : issues.some(i => !uncertain(i.code)) ? 'incomplete' : issues.length ? 'unknown' : 'installed';
-  const release = OWN_PACKAGE.hanameshSuiteInstall;
-  const action = command && release && semver.valid(release.version) && command === formatSuiteInstallCommand(release.version) ? command : '按本渠道的 HanaMesh 安装说明升级。';
   const reason = status === 'not-installed' ? null : {
     code: status === 'installed' ? 'CORE_LEGACY_COMPONENTS_INSTALLED' : status === 'incomplete' ? 'CORE_LEGACY_COMPONENTS_UNUSABLE' : 'CORE_LEGACY_COMPONENTS_UNKNOWN',
-    message: status === 'installed' ? '已安装（旧版组件），建议升级。' : issues.map(i => i.message).join(' ').slice(0, 500), action,
+    message: status === 'installed' ? '套件组件已安装。' : issues.map(i => i.message).join(' ').slice(0, 500),
+    action: '在 DSH 插件页安装或启用套件清单要求的组件。',
   };
   return frozen({status, components, issues, reason});
 }
