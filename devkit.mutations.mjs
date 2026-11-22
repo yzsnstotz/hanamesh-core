@@ -23,12 +23,12 @@ export const cases = [
  {id:'peer-heartbeat-client-rejected',file:'lib/client.js',mutate:code=>code.replace(/if \(offset === frame\.length\)\s+offset = 0;/, ''),test:'test/suite-peer-heartbeat.test.mjs'},
  {id:'settings-consent-review-bypassed',file:'lib/client.js',mutate:code=>code.replace('setConsentReview(requested);',"if (page === 'account') setConsentReview(requested); else void saveConsent(requested);"),test:'test/website-setting-ui.test.mjs'},
 
- {id:'bundle-stale-core-release',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("throw Error('CORE_RELEASE_PIN_MISMATCH');", "void 0;"),test:'test/dsh-bundle.test.mjs'},
+ {id:'bundle-stale-core-release',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("throw Error('CORE_SUITE_SOURCE_MANIFEST_MISMATCH');", "void 0;"),test:'test/dsh-bundle.test.mjs'},
 
  {id:'range-member-key-unbound',file:'lib/suite/service.js',mutate:code=>code.replace('this.validRecord(row, installed[i].moduleName, chosenVersions[i], installed[i].repository)','this.validRecord(row, installed[i].moduleName, row.version, installed[i].repository)'),test:'test/suite-policy.test.mjs'},
  {id:'bundle-compatible-ranges',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("dependencies[pkg.name]='^'+pkg.version;","dependencies[pkg.name]=pkg.version;"),test:'test/dsh-bundle.test.mjs'},
- {id:'distribution-theme-range',file:'lib/suite/service.js',mutate:code=>code.replace("distribution.some(name => typeof dependencies[name] !== 'string' || !semver.validRange(dependencies[name]))","false"),test:'test/suite-policy.test.mjs'},
- {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace(",['theme','@hanamesh/theme']", ""),test:'test/dsh-bundle.test.mjs'},
+ {id:'distribution-installed-members',file:'lib/suite/service.js',mutate:code=>code.replace('!distributionDependencies(physicalBundle.dependencies, memberNames)', 'false'),test:'test/core-no-apphost.test.mjs'},
+ {id:'bundle-theme-missing',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("suite.components.map(({id,moduleName})", "suite.components.filter(row=>row.id!=='theme').map(({id,moduleName})"),test:'test/dsh-bundle.test.mjs'},
  {id:'bundle-peer-widened',file:'packages/hanamesh/build.mjs',mutate:code=>code.replace("const previous=peerDependencies[name];", "const previous=undefined;"),test:'test/dsh-bundle.test.mjs'},
 
  {id:'agent-model-grant-rejected',file:'lib/agent.js',mutate:code=>code.replace("fail('CORE_AGENT_WEB_CONSENT_REQUIRED');","void 0;"),test:'test/agent-onboarding.test.mjs'},

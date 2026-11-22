@@ -17,7 +17,7 @@ const members=[
   ['@hanamesh/theme','0.1.0','hanamesh-theme',coreRepository],
 ];
 
-function fixture(omitted){
+function fixture(omitted,bundleInventory=async()=>null){
   const observed=new Map(members.map(([name,version,_id,repository])=>[name,{
     kind:'present',phase:'active',version,repository,
     metadata:{name,version,repository,dsh:{bundle:{patch:'./cordis.patch.yml'}}},
@@ -27,7 +27,7 @@ function fixture(omitted){
   const inventory=new LoaderObservationSource({entries:()=>entries},import.meta.url,async name=>observed.get(name));
   const service=new SuiteDeclarationService({
     profile,core,manifest:SUITE_MANIFEST,inventory,coreInventory:async()=>observed.get(core.name),
-    bundleInventory:async()=>null,nodeVersion:'24.13.1',peerVersion:async()=>null,
+    bundleInventory,nodeVersion:'24.13.1',peerVersion:async()=>null,
     registry:{read:()=>assert.fail('passive suite reads must stay offline')},
   });
   return{inventory,service};
@@ -57,5 +57,28 @@ test('direct suite health and completeness still name each missing required comp
     const suite=await service.read();
     assert.equal(suite.completeness,'incomplete');
     assert.ok(suite.legacy?.issues.some(row=>row.moduleName===name&&row.code==='CORE_LEGACY_COMPONENT_MISSING'));
+  }
+});
+
+test('the installed aggregate must contain exactly the current suite members',async()=>{
+  const dependencies=Object.fromEntries(members.map(([name,version])=>[name,version]));
+  const installed={...SUITE_MANIFEST.bundle,version:'1.0.0',dependencies,dsh:{bundle:{patch:'./cordis.patch.yml'}}};
+  const physical=await fixture(undefined,async()=>installed).service.read();
+  assert.equal(physical.completeness,'complete');
+  assert.equal(physical.bundleVersion,installed.version);
+  assert.equal(physical.legacy,undefined);
+
+  const missingMember={...dependencies};
+  delete missingMember['@hanamesh/theme'];
+  const extraMember={...dependencies,'@hanamesh/dsh-app-host':'0.6.30'};
+  const replaceMember={...missingMember,'@hanamesh/dsh-app-host':'0.6.30'};
+  for(const readBundle of [
+    async()=>{throw Error('unreadable');},
+    ...[missingMember,extraMember,replaceMember].map(dependencies=>async()=>({...installed,dependencies})),
+  ]){
+    const invalid=await fixture(undefined,readBundle).service.read();
+    assert.notEqual(invalid.completeness,'complete');
+    assert.equal(invalid.legacy,undefined);
+    assert.ok(invalid.blocked.some(row=>row.code==='CORE_SUITE_INSTALLED_METADATA_MISMATCH'));
   }
 });
