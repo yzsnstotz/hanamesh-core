@@ -122,7 +122,7 @@ export function startClientPeerLease(connection: PeerConnection | undefined, pag
   return () => {disposed = true; withdraw(); unsubscribe(); page.removeEventListener('pagehide', hide); page.removeEventListener('pageshow', show);};
 }
 
-const CORE_VERSION = '0.3.40';
+const CORE_VERSION = '0.3.41';
 type CorePage = 'account' | 'configuration' | 'diagnostics';
 /** Root-scoped, versioned owner contract. Modules declare their own id/label/order. */
 export interface HanaMeshTabProps {
@@ -482,7 +482,7 @@ function SuiteSourceSettings(_props:{'data-suite-source-section':boolean}):React
   (error||value?.lastError)&&createElement('p',{role:'alert',className:'hm-core-error'},`来源操作未完成：${error??value?.lastError}。请核对归档与配置；不会自动重试。`),
   createElement('button',{type:'button',disabled:busy,onClick:()=>{setError(null);void load().catch(cause=>setError(cause instanceof Error?cause.message:'CORE_INTERNAL_ERROR'))}},'读取来源状态'),
   createElement('details',null,createElement('summary',null,'本机来源高级设置'),
-   createElement('p',{className:'hm-core-muted'},'指定已交付的正常 Core、Usage、App Host 归档绝对路径与 SHA512 完整性；监听端口、上游元数据来源与所有资源预算必须明确配置。未填写不会猜地址或自动补包。'),
+   createElement('p',{className:'hm-core-muted'},'填写 Core、Usage、Market 和 Theme 正常归档的绝对路径与 SHA-512 完整性，以及监听端口、上游元数据来源和资源预算。'),
    createElement('textarea',{'aria-label':'本机来源配置',value:draft,rows:12,disabled:busy,onChange:(event:{currentTarget:{value:string}})=>setDraft(event.currentTarget.value),style:{width:'100%',boxSizing:'border-box'}}),
    createElement('div',{className:'hm-core-actions'},createElement('button',{type:'button',disabled:busy||!draft.trim(),onClick:()=>void save('custom')},'保存本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('disabled')},'停用本机来源'),createElement('button',{type:'button',disabled:busy,onClick:()=>void save('configured')},'使用插件配置'))));
 }
@@ -503,8 +503,6 @@ export function HanaMeshSection({page, onOpenUsage}: {page?: CorePage; onOpenUsa
   const [serverError, setServerError] = useState<string | null>(null);
   const [localUsage, setLocalUsage] = useState<LocalUsageSummary>({status: 'loading'});
   const [localUsageOpen, setLocalUsageOpen] = useState(false);
-  const [suiteCopyStatus, setSuiteCopyStatus] = useState<string | null>(null);
-  const [suiteInstallCommand, setSuiteInstallCommand] = useState<string | null>(null);
   const localUsageEntry = useRef<HTMLButtonElement | null>(null);
   const localUsageRead = useRef(0);
   const consentWrite = useRef(false);
@@ -639,25 +637,13 @@ export function HanaMeshSection({page, onOpenUsage}: {page?: CorePage; onOpenUsa
       : state.contributions.availability === 'available' ? null : '服务端未说明这个窗口的记录是否完整';
   const missingComponents = state.components.filter(row => row.status === 'missing');
   const inactiveComponents = state.components.filter(row => row.status === 'inactive');
-  const copySuiteCommand = async (): Promise<void> => {
-    setSuiteInstallCommand(null);
-    let command: string | null;
-    try {command = (await jsonRequest<{installCommand: string | null}>('/api/hanamesh/core/suite-declaration')).installCommand;}
-    catch {setSuiteCopyStatus('暂时无法读取总包的已发布版本，请稍后重新读取。');return;}
-    if (!command) {setSuiteCopyStatus('暂时无法读取总包的已发布版本，请稍后重新读取。');return;}
-    setSuiteInstallCommand(command);
-    try {await navigator.clipboard.writeText(command);setSuiteCopyStatus('已复制安装/修复命令');}
-    catch {setSuiteCopyStatus('复制失败，请手动选择并复制上方命令。');}
-  };
   const content: ReactNode[] = [
     createElement('h2', null, 'HanaMesh'),
-    createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'suite-components'}, 'HanaMesh 套件由 Core、使用记录（Usage）和应用容器（App Host）组成。'),
+    createElement('p', {className: 'hm-core-muted', 'data-hanamesh-core-hint': 'suite-components'}, 'HanaMesh 套件包含 Core、使用记录（Usage）、市场（Market）和主题（Theme）。'),
     (missingComponents.length > 0 || inactiveComponents.length > 0) && createElement('div', {className: 'hm-core-copy', 'data-hanamesh-core-hint': 'suite-repair'},
       missingComponents.length > 0 && createElement('p', {className: 'hm-core-error'}, `套件不完整，缺 ${missingComponents.map(row => row.label).join('、')}。组件未安装或未加入当前加载配置。`),
       inactiveComponents.length > 0 && createElement('p', null, `已安装但未启用：${inactiveComponents.map(row => row.label).join('、')}。`),
-      createElement('p', {className: 'hm-core-muted'}, '下方官方命令仅适用于 macOS / Linux 终端；Windows 安全命令暂未提供。此命令仅用于手动安装/修复，不是兼容升级计划。请手动安装/修复并启用套件；此页面不会自动执行。'),
-      suiteInstallCommand && createElement('code', {style: {overflowWrap: 'anywhere', userSelect: 'text'}}, suiteInstallCommand),
-      createElement('div', {className: 'hm-core-actions'}, createElement('button', {type: 'button', onClick: copySuiteCommand}, '复制安装/修复命令'), suiteCopyStatus && createElement('span', {role: 'status'}, suiteCopyStatus))),
+      createElement('p', {className: 'hm-core-muted'}, '请在 DSH 插件页安装缺少的组件，或启用已安装的组件，然后重新检查。')),
     error && createElement('p', {className: 'hm-core-error', role: 'alert'}, `读取或保存失败：${actionError(error)}`, createElement('button', {type: 'button', onClick: () => void load()}, '重新读取')),
     createElement(SuiteSourceSettings,{'data-suite-source-section':true}),
     createElement(Row, {label: '设备身份'}, identityRow),

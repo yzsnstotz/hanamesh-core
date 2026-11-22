@@ -1,6 +1,5 @@
 import {createActivationGate} from './activation.js';
 import {createManagedSuitePackageSource,suiteSourceSnapshot} from './suite/source.js';
-import {readFile} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {SessionController} from './controller.js';
 import {createRouteHandler, ROUTES} from './routes.js';
@@ -9,8 +8,7 @@ import {LoaderObservationSource} from './health/loader.js';
 import {SuiteDeclarationService} from './suite/service.js';
 import {RegistryMetadataReader} from './suite/registry.js';
 import {suiteInspector, packageMetadata, bundleMetadata} from './suite/local.js';
-import {SUITE_MANIFEST} from './suite/index.js';
-import {OWN_PACKAGE} from './suite/own.js';
+import {OWN_PACKAGE, OWN_PROFILE, SUITE_MANIFEST} from './suite/own.js';
 import {ClientPeerLeases} from './suite/client-peers.js';
 import {INITIAL_CORE_SNAPSHOT, snapshotOf, configOf} from './validation.js';
 import {fileSharedDeviceStore, sharedIdentityRoot} from './shared-device.js';
@@ -100,7 +98,7 @@ export async function apply(ctx, config) {
       publish: async value => { await domain.global.set(snapshotOf(value)); },
       close: () => domain.close(),
     }, {sharedDevice});
-    const suiteProfile = JSON.parse(await readFile(new URL('../profile/suite.profile.json', import.meta.url), 'utf8'));
+    const suiteProfile = OWN_PROFILE;
     healthService = new HealthService(suiteProfile, new LoaderObservationSource(/** @type {any} */ (ctx).loader, import.meta.url), {
       publish: async value => { await healthDomain.global.set(value); },
       close: () => healthDomain.close(),

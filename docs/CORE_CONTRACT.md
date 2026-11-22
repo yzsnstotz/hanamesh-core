@@ -210,6 +210,6 @@ These URL values are editable, unsigned display hints. They are not a fresh chal
 Portable Agent process capability2 (Core0.3.25): state declares agentProtocolVersion:2; prepareOnboarding/syncOnboarding use only fixed device-generation endpoints and verified website audits. New model/terminal booleans cannot grant. Existing old grants remain legacy-terminal; explicit local close dominates late responses. Cordis service protocolVersion remains1, DSH consent unchanged. Exact inputs, state shape, origins and error codes: [AGENT.md](AGENT.md).
 
 
-手动补齐：`SuiteDeclaration.installCommand: string | null` 从公开总包发布元数据的精确版本生成，读取失败或无发布版本时为空，禁止无版本命令。设置页点击复制时读取已鉴权的只读 `GET /api/hanamesh/core/suite-declaration`（固定公开 npm，返回完整声明）；升级仍执行声明中所选兼容总包的精确版本。
+手动补齐在 DSH 插件页分别安装或启用套件清单要求的组件。直接安装组合仍可完整，`bundleVersion` 和 `installCommand` 均为 `null`。已安装聚合包的可执行候选继续由套件声明验证。
 
 DSH peer observations use the public `pluginPackages.packageOf` service and the public `@deepseek-ai/dsh-app-boot` runtime/compatibility exports. `pluginPackages` is a required host injection. Core does not inspect private Loader internals or reproduce DSH peer compatibility rules.

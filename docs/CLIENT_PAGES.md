@@ -40,9 +40,9 @@ and joint acceptance belong to the owning module's follow-up task.
 
 ## Market and host compatibility
 
-Market belongs to the DSH Plugins page (`plugins.tab`), implemented by AppHost.
+The independent Market provides its tab through DSH `plugins.tab`.
 `openPlugins()` selects the public host panel `plugins`; the user then chooses the
-HanaMesh tab. There is no extra AppHost navigation contract or private store write.
+HanaMesh tab. The navigation uses the host’s public panel API.
 Core observes the public declaration snapshot/subscription for `plugins.tab`.
 When unavailable it shows a message and keeps the HanaMesh tabs usable instead of
 selecting a missing host page or restoring retired entries.
@@ -95,7 +95,7 @@ failure is visible and not retried. The bind action selects Account.
 | # | Previous seat | B destination / owner |
 | --- | --- | --- |
 | 1,4 | Core sidebar/home | HanaMesh shell / home tab, Core |
-| 2,7 | AppHost sidebar/market main | DSH market tab, AppHost |
+| 2,7 | Market entry | DSH market tab, independent Market |
 | 3,9 | Usage sidebar/main | `hanamesh.tab`, Usage |
 | 5 | Account/device main | Account tab, Core |
 | 6 | Environment/source main | Native package/Core row config; other module settings stay with their owner |
