@@ -2,7 +2,7 @@
 import {randomUUID} from 'node:crypto';
 import {MarketError,ensure} from './catalog.js';
 const DISCOVERY_READS={'/hanamesh/market/discovery/domains':['domains','GET'],'/hanamesh/market/discovery/featured':['featured','GET'],'/hanamesh/market/discovery/detail':['detail','GET'],'/hanamesh/market/discovery/stage-config':['stage','GET'],'/hanamesh/market/discovery/list-fields':['fields','POST']};
-export const ROUTES=[...Object.keys(DISCOVERY_READS),'/hanamesh/market/catalog','/hanamesh/market/item','/hanamesh/market/search','/hanamesh/market/prepare','/hanamesh/market/confirm','/hanamesh/market/cancel','/hanamesh/market/versions','/hanamesh/market/document','/hanamesh/market/image','/hanamesh/market/settings','/hanamesh/market/suite','/hanamesh/market/suite-plan'];
+export const ROUTES=[...Object.keys(DISCOVERY_READS),'/hanamesh/market/catalog','/hanamesh/market/item','/hanamesh/market/search','/hanamesh/market/installed','/hanamesh/market/installed/updates','/hanamesh/market/installed/prepare','/hanamesh/market/prepare','/hanamesh/market/confirm','/hanamesh/market/cancel','/hanamesh/market/versions','/hanamesh/market/document','/hanamesh/market/image','/hanamesh/market/settings','/hanamesh/market/suite','/hanamesh/market/suite-plan'];
 export function send(res,status,value){res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});res.end(JSON.stringify(value));}
 async function body(req,maxBytes){ensure(req.headers['content-type']?.split(';')[0]==='application/json','CONTENT_TYPE_REQUIRED',415);let total=0;const chunks=[];for await(const chunk of req){total+=chunk.length;ensure(total<=maxBytes,'BODY_TOO_LARGE',413);chunks.push(chunk);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new MarketError('INVALID_JSON');}}
 export function createMarketHandler({service,connection,maxBodyBytes=65536}){
@@ -21,8 +21,11 @@ export function createMarketHandler({service,connection,maxBodyBytes=65536}){
   else if(read&&path.endsWith('/catalog')){ensure(input.official===undefined||input.official==='true'||input.official==='false','INVALID_QUERY');const query={...input,...(input.page!==undefined?{page:Number(input.page)}:{}),...(input.official!==undefined?{official:input.official==='true'}:{})};result=await service.list(query,{signal:controller.signal});}
   else if(read&&path.endsWith('/item')){ensure(Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT');result=await service.detail(input.itemId,{signal:controller.signal});}
   else if(!read&&path.endsWith('/search'))result=await service.search(input,{signal:controller.signal});
-  else if(!read&&path.endsWith('/prepare'))result=await service.prepare(input);
-  else if(!read&&path.endsWith('/confirm')){ensure(Object.keys(input).every(key=>key==='reviewId'),'INVALID_INPUT');result=await service.confirm({reviewId:input.reviewId});}
+  else if(read&&path.endsWith('/installed')){ensure(!url.search,'INVALID_INPUT');result=await service.installed();}
+  else if(!read&&path.endsWith('/installed/updates')){ensure(input&&typeof input==='object'&&!Array.isArray(input)&&!Object.keys(input).length,'INVALID_INPUT');result=await service.checkInstalledUpdates({signal:controller.signal});}
+  else if(!read&&path.endsWith('/installed/prepare'))result=await service.prepareInstalledUpdate(input);
+  else if(!read&&path==='/hanamesh/market/prepare')result=await service.prepare(input);
+  else if(!read&&path.endsWith('/confirm')){ensure(input&&typeof input==='object'&&Object.keys(input).length===1&&typeof input.reviewId==='string','INVALID_INPUT');result=await service.confirm({reviewId:input.reviewId});}
   else if(!read&&path.endsWith('/cancel')){ensure(Object.keys(input).length===1&&typeof input.reviewId==='string','INVALID_INPUT');result=service.cancel(input);}
   else if(read&&path.endsWith('/versions')){ensure(Object.keys(input).length===1&&typeof input.itemId==='string','INVALID_INPUT');result=await service.versions(input);}
   else if(read&&path.endsWith('/document')){ensure(Object.keys(input).every(key=>['itemId','version','language'].includes(key)),'INVALID_INPUT');result=await service.document(input,controller.signal);}

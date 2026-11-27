@@ -19,10 +19,57 @@ function ErrorNotice({error,retry}){return error?h('div',{role:'alert',className
 export function NativeMarketExternalActions({command,website,copy}){return h('div',{className:'hm-m-actions'},h('button',{type:'button',disabled:!command,onClick:()=>copy(command)},t('copy')),safeLink(website)?h('a',{href:safeLink(website),target:'_blank',rel:'noopener noreferrer'},t('website')):null);}
 export function NativeMarketResults({snapshot,card,onRetry,onMore}){return h('div',null,snapshot.status==='loading'?h('p',{role:'status'},t(snapshot.items.length?'loadingPrevious':'loading')):null,snapshot.semanticNotice?h('p',{role:'status'},snapshot.semanticNotice):null,snapshot.error?h('div',{role:'alert'},h('p',null,t('failurePrevious')),h('p',null,String(snapshot.error)),h('button',{type:'button',onClick:onRetry},t('retry'))):null,h('div',{className:'hm-m-grid','aria-busy':snapshot.status==='loading'},...snapshot.items.map(item=>card(item)),...(snapshot.status==='loading'&&!snapshot.items.length?Array.from({length:6},(_,key)=>h('article',{className:'hm-m-skeleton',key,'aria-hidden':true,'data-hanamesh-market-skeleton':true},h('span'),h('span'),h('span'))):[])),snapshot.status==='ready'&&!snapshot.items.length?h('p',{className:'hm-m-empty'},t('none')):null,snapshot.hasMore?h('button',{type:'button',disabled:snapshot.status!=='ready',onClick:onMore},t('more')):null);}
 export function NativeMarketConfirmation({review,actions,Modal:NativeModal=Modal,onClose,onConfirm}){
- const item=review.item??review.entry,manage=review.action==='openPackage',close=()=>{actions.cancel();onClose?.();};
- const title=manage?t('manage'):t('installTitle').replace('{name}',()=>item.displayName);
- const label=manage?t('manage'):t('confirm');
- return h(NativeModal,{open:true,title,closeLabel:t('close'),onClose:close,footer:h('div',{className:'hm-market hm-m-confirmation hm-m-actions'},h('button',{type:'button',onClick:close},t('cancel')),h('button',{type:'button',className:'pri',onClick:onConfirm??(()=>{actions.confirm(review);onClose?.();})},label))},h('section',{className:'hm-market hm-m-confirmation'},h('div',{className:'row'},h('img',{src:marketAssets.dsh,width:32,height:32,alt:''}),h('div',null,h('h3',null,item.displayName),h('p',{className:'fine'},review.install.version))),h('dl',null,h('dt',null,t('author')),h('dd',null,item.publisher?.name??'—'),h('dt',null,t('packageName')),h('dd',null,h('code',null,review.install.spec)),h('dt',null,t('origin')),h('dd',null,review.target?.source??'npm',' · ',review.install.registry??'—'),h('dt',null,t('version')),h('dd',null,h('code',null,review.install.version),t('exactVersion')),h('dt',null,t('compatibility')),h('dd',{className:review.compatibility?.compatible?'good':'warn'},review.compatibility?.runtimeVersion??'—',' · ',review.compatibility?.exempted?t('existingExemption'):review.compatibility?.compatible?t('compatible'):t('compatibilityUnknown'))),...(item.sourceLinks??[]).map((row,index)=>h('p',{key:index,className:'fine'},row.sourceId+' · '+row.sourceUrl)),h('p',{className:'smallnote warn'},t('installPermissions')),h('p',{className:'fine'},t('configure'))));
+ const item=review.item??review.entry,manage=review.action==='openPackage',upgrade=review.action==='updateInstalled',close=()=>{actions?.cancel();onClose?.();};
+ const title=manage?t('manage'):t(upgrade?'upgradeTitle':'installTitle').replace('{name}',()=>item.displayName);
+ const label=manage?t('manage'):t(upgrade?'update':'confirm');
+ return h(NativeModal,{open:true,title,closeLabel:t('close'),onClose:close,footer:h('div',{className:'hm-market hm-m-confirmation hm-m-actions'},h('button',{type:'button',onClick:close},t('cancel')),h('button',{type:'button',className:'pri',onClick:onConfirm??(()=>{actions.confirm(review);onClose?.();})},label))},h('section',{className:'hm-market hm-m-confirmation'},h('div',{className:'row'},h('img',{src:marketAssets.dsh,width:32,height:32,alt:''}),h('div',null,h('h3',null,item.displayName),h('p',{className:'fine'},upgrade?review.from+' → '+review.install.version:review.install.version))),h('dl',null,h('dt',null,t('author')),h('dd',null,item.publisher?.name??'—'),h('dt',null,t('packageName')),h('dd',null,h('code',null,review.install.spec)),h('dt',null,t('origin')),h('dd',null,review.target?.source??'npm',' · ',review.install.registry??'—'),h('dt',null,t('version')),h('dd',null,h('code',null,review.install.version),t('exactVersion')),review.compatibility?h('dt',null,t('compatibility')):null,review.compatibility?h('dd',{className:review.compatibility.compatible?'good':'warn'},review.compatibility.runtimeVersion??'—',' · ',review.compatibility.exempted?t('existingExemption'):review.compatibility.compatible?t('compatible'):t('compatibilityUnknown')):null),...(item.sourceLinks??[]).map((row,index)=>h('p',{key:index,className:'fine'},row.sourceId+' · '+row.sourceUrl)),h('p',{className:'smallnote warn'},t('installPermissions')),h('p',{className:'fine'},t('configure'))));
+}
+function InstalledPackageRow({pkg,busy,onOpen,onUpdate}){
+ const [selected,setSelected]=React.useState('');
+ const versions=pkg.versions??[];
+ const offered=versions.find(row=>row.version===selected)??versions.find(row=>row.version===pkg.latest);
+ return h('li',{className:'hm-m-panel'},h('strong',null,pkg.name),' · ',pkg.version??'—',
+  pkg.availability==='installation'?h('small',null,' · '+t('provided')):null,
+  pkg.status==='unavailable'?h('p',{role:'status'},t('updatesUnavailable')):null,
+  pkg.status==='listed'?h('p',{className:'fine'},t('latestVersion')+' · '+(pkg.latest??'—'),
+   versions.length?null:' · '+t('noUpdateTargets')):null,
+  pkg.omitted>0?h('small',null,t('additionalVersions').replace('{count}',()=>pkg.omitted)):null,
+  h('div',{className:'hm-m-actions'},
+   h('button',{type:'button',onClick:()=>onOpen(pkg.name)},t('manage')),
+   versions.length?h('select',{value:offered?.version??'','aria-label':t('upgradeVersion')+' · '+pkg.name,
+    disabled:busy,onChange:event=>setSelected(event.currentTarget.value)},
+   h('option',{value:'',disabled:true},t('upgradeVersion')),
+   ...versions.map(row=>h('option',{key:row.version,value:row.version},row.version+(row.deprecated?' · '+t('deprecatedVersion'):'')))):null,
+   versions.length?h('button',{type:'button',disabled:busy||!offered,onClick:()=>onUpdate(pkg.name,offered.version)},t('update')):null));
+}
+function InstalledPackages({onOpen,onUpdate,refreshKey,updating}){
+ const [open,setOpen]=React.useState(false);
+ const [view,setView]=React.useState({packages:null,loading:false});
+ const current=React.useRef(null);
+ const load=async check=>{
+  current.current?.abort();
+  const controller=new AbortController();
+  current.current=controller;
+  setView(previous=>({...previous,loading:true,error:null}));
+  try{
+   const result=await request(check?'installed/updates':'installed',check?{}:undefined,controller.signal);
+   if(!controller.signal.aborted)setView({packages:result.packages,loading:false});
+  }catch(error){
+   if(!controller.signal.aborted)setView(previous=>({...previous,loading:false,error}));
+  }
+ };
+ React.useEffect(()=>{
+  if(open)void load(false);
+  return()=>current.current?.abort();
+ },[open,refreshKey]);
+ return h('section',{className:'hm-m-panel'},
+  h('button',{type:'button','aria-expanded':open,onClick:()=>setOpen(!open)},t('installedPackages')),
+  open?h('div',{'aria-busy':view.loading},h(ErrorNotice,{error:view.error,retry:()=>void load(false)}),
+   h('button',{type:'button',disabled:view.loading||updating,onClick:()=>void load(true)},t('checkAllUpdates')),
+   view.loading?h('p',{role:'status'},t('loading')):null,
+   view.packages?.length?h('ul',null,...view.packages.map(pkg=>h(InstalledPackageRow,{
+    key:pkg.name+'@'+pkg.version,pkg,busy:view.loading||updating,onOpen,onUpdate,
+   }))):!view.loading&&view.packages!==null?h('p',{role:'status'},t('none')):null):null);
 }
 function OptionalFact({title,value}){let text;if(typeof value==='string'||typeof value==='number')text=String(value);else if(value&&typeof value==='object'){const summary=value.summary??value.label??value.text;text=typeof summary==='string'?summary:localized(summary);if(!text&&typeof value.score==='number')text=String(value.score);}return h('section',{className:'hm-m-panel'},h('h3',null,title),h('p',{className:typeof text==='string'?undefined:'hm-m-muted'},typeof text==='string'?text:t('optional')));}
 function Document({item,version}){
@@ -52,6 +99,9 @@ function renderMarketPage(owner,presentation,observeInstall){
  const{Frame=NativeMarketFrame,Card=NativeMarketCard,Results=NativeMarketResults,Confirmation=NativeMarketConfirmation,ExternalActions=NativeMarketExternalActions,Discovery=NativeMarketDiscovery,DomainFilters=NativeMarketDomainFilters}=presentation;
  useLocale();const[tab,setTab]=React.useState('recommend'),[query,setQuery]=React.useState(''),[filters,setFilters]=React.useState({category:'',channel:'',source:''}),[ai,setAI]=React.useState(false),[scene,setScene]=React.useState(''),[sceneRows,setSceneRows]=React.useState(null),[detail,setDetail]=React.useState(null),[review,setReview]=React.useState(null),[error,setError]=React.useState(null),[settings,setSettings]=React.useState(null),[facets,setFacets]=React.useState({}),[history,setHistory]=React.useState(null),[showPre,setShowPre]=React.useState(false),[suite,setSuite]=React.useState(null),[suitePlan,setSuitePlan]=React.useState(null),[browseOnly,setBrowseOnly]=React.useState(new Set()),[notice,setNotice]=React.useState('');
  const[factSelection,setFactSelection]=React.useState(null),[selectedVersion,setSelectedVersion]=React.useState(null);
+ const[installedRefresh,setInstalledRefresh]=React.useState(0),[updating,setUpdating]=React.useState(false);
+ const updatePrepare=React.useRef(null),actedReview=React.useRef(null);
+ React.useEffect(()=>()=>updatePrepare.current?.abort(),[]);
  const discoveryRef=React.useRef(null);
  if(!discoveryRef.current)discoveryRef.current=createMarketDiscoveryState({read:(kind,input,{signal})=>{
   const paths={domains:'discovery/domains',featured:'discovery/featured',detail:'discovery/detail',stage:'discovery/stage-config',fields:'discovery/list-fields'};
@@ -95,13 +145,25 @@ function renderMarketPage(owner,presentation,observeInstall){
   return readDetail(item.hanaId,true);
  };
  React.useEffect(()=>{
-  const stop=observeInstall?.(()=>{const {id,enrich}=detailRead.current;if(id!==null)void readDetail(id,enrich);});
+  const stop=observeInstall?.(()=>{setInstalledRefresh(value=>value+1);const {id,enrich}=detailRead.current;if(id!==null)void readDetail(id,enrich);});
   return()=>{stop?.();closeDetail();};
  },[observeInstall]);
  const saveFavorite=item=>{const next={...favorites};if(next[item.hanaId])delete next[item.hanaId];else next[item.hanaId]=withoutDiscoveryFields(item);try{globalThis.localStorage?.setItem('hanamesh.market.favorites',JSON.stringify(next));setFavorites(next);}catch(error){setError(error);}};
  const copy=async item=>{try{const command=(item.installMethods??[]).find(method=>typeof method.command==='string')?.command;if(!command)throw Error(t('copyMissing'));await globalThis.navigator.clipboard.writeText(command);setNotice(t('copyDone'));}catch(error){setError(error);}};
  const openPackage=item=>{try{native.current.openInstalled(nameOf(item));}catch(error){setError(error);}};
  const updatePackage=item=>{try{native.current.updateAvailable(item.nativeUpdate??{action:'openPackage',packageName:nameOf(item)});}catch(error){setError(error);}};
+ const prepareUpdate=async(packageName,version)=>{
+  if(updatePrepare.current||updating)return;
+  const controller=new AbortController();
+  updatePrepare.current=controller;
+  try{
+   setError(null);
+   const review=await request('installed/prepare',{packageName,version},controller.signal);
+   if(!controller.signal.aborted)setReview(review);
+  }catch(error){
+   if(!controller.signal.aborted)setError(error);
+  }finally{updatePrepare.current=null;}
+ };
  const inspect=(kind,item)=>setFactSelection({kind,item});
  const refreshDetail=async()=>{if(detail)await showDetail(detail);void storeRef.current.retry();};
  const card=(base,isDetail=false)=>{
@@ -114,7 +176,9 @@ function renderMarketPage(owner,presentation,observeInstall){
   if(!isDetail)return h(Card,{key:item.hanaId,item,summaryText:overviewText(item),actions,onInspect:inspect,onDetails:()=>void showDetail(base),onCategory:category=>{setTab('search');setAI(false);setFilters(old=>({...old,category}));}});
   const version=selectedVersion??target?.version;
   const versions=history?.filter(row=>showPre||!row.prerelease)??[];
-  const detailView=h('div',{className:'hm-m-detail'},h('div',{className:'detailhead'},h(RepositoryIcon,{native:Boolean(target)}),h('div',{className:'grow'},h('h2',null,item.displayName),h('p',{className:'fine'},[item.publisher?.name,item.githubRepo,item.license,version?'v'+version:null].filter(Boolean).join(' · ')),h('p',{className:'t2'},summary(item)),h(FactTags,{item}),h('div',{className:'row'},auxiliary)),h(NativeMarketDetailAction,{item,external,onInstall:()=>void prepare(item,version),onUpdate:()=>updatePackage(item),onOpen:()=>openPackage(item),onRefresh:()=>void refreshDetail(),externalActions},h('div',{className:'cta-row'},target?.source==='npm'?h('select',{'aria-label':'选择安装版本',value:version??'',onFocus:()=>void loadVersions(item),onChange:event=>setSelectedVersion(event.target.value)},...(!versions.some(row=>row.version===version)&&version?[h('option',{key:version,value:version},version)]:[]),...versions.map(row=>h('option',{key:row.version,value:row.version,disabled:!row.compatibility.compatible&&!row.compatibility.exempted},row.version))):null,h('a',{className:'cta-sub btn',href:link,target:'_blank',rel:'noopener noreferrer'},'在网站查看')))),h(NativeMarketDetailTrust,{item,onInspect:inspect}),h('div',{className:'detailgrid'},h('div',{className:'stack'},h(NativeMarketOverview,{item,onInspect:inspect}),h('details',{className:'panel readme',id:'hm-market-readme'},h('summary',null,h('span',null,'作者原文'),h('span',{className:'fine'},'README')),h('div',{className:'readmecopy'},h(Document,{item,version}))),item.similarGroup?h('section',{className:'panel'},h('h3',null,'同类插件'),h('details',{className:'similar'},h('summary',null,'相似插件 · 独立身份'),...item.similarGroup.members.map(id=>h('p',{key:id},h('button',{type:'button',className:'textbtn',onClick:()=>void showDetail({hanaId:id,displayName:id})},id))),h(Evidence,{sources:item.similarGroup.sources}))):null),h('aside',{className:'stack'},h(NativeMarketSignals,{item,stageConfig:discovery.stage}),h('section',{className:'panel'},h('h3',null,'版本与兼容'),target?h(React.Fragment,null,h('button',{type:'button',onClick:()=>void loadVersions(item)},t('history')),h('label',{className:'fine'},h('input',{type:'checkbox',checked:showPre,onChange:event=>setShowPre(event.target.checked)}),t('pre')),history?h('div',null,...versions.map(row=>h('div',{key:row.version,className:'hm-m-version'},h('code',null,row.version),h('span',{className:row.compatibility.compatible||row.compatibility.exempted?'good':'warn'},row.compatibility.exempted?'已豁免':row.compatibility.compatible?'兼容':'不兼容')))):null):h('p',{className:'fine'},'不支持在 DSH 安装')),h('section',{className:'panel'},h('h3',null,'来源与安装方式'),h('p',{className:'fine'},target?'精确版本 / 固定提交；确认后交给 DSH 原生安装管道。':'作者提供的安装命令；只可复制并前往网站。'),...(item.sourceLinks??[]).map((source,index)=>h('p',{key:index},safeLink(source.sourceUrl)?h('a',{href:safeLink(source.sourceUrl),target:'_blank',rel:'noopener noreferrer'},source.sourceId+' · '+source.sourceRef):source.sourceId)),...(item.installMethods??[]).map((method,index)=>h('details',{key:index},h('summary',null,method.channel),h('pre',{className:'command'},method.command??method.spec)))))));
+  const detailView=h('div',{className:'hm-m-detail'},h('div',{className:'detailhead'},h(RepositoryIcon,{native:Boolean(target)}),h('div',{className:'grow'},h('h2',null,item.displayName),h('p',{className:'fine'},[item.publisher?.name,item.githubRepo,item.license,version?'v'+version:null].filter(Boolean).join(' · ')),h('p',{className:'t2'},summary(item)),h(FactTags,{item}),h('div',{className:'row'},auxiliary)),h(NativeMarketDetailAction,{item,external,onInstall:()=>void prepare(item,version),onUpdate:()=>selectedVersion&&target?.source==='npm'?void prepareUpdate(target.name,selectedVersion):updatePackage(item),onOpen:()=>openPackage(item),onRefresh:()=>void refreshDetail(),externalActions},h('div',{className:'cta-row'},target?.source==='npm'?h('select',{'aria-label':'选择安装版本',value:version??'',onFocus:()=>void loadVersions(item),onChange:event=>setSelectedVersion(event.target.value)},...(!versions.some(row=>row.version===version)&&version?[h('option',{key:version,value:version},version)]:[]),...versions.map(row=>h('option',{key:row.version,value:row.version,disabled:!row.compatibility.compatible&&!row.compatibility.exempted},row.version))):null,selectedVersion&&target?.source==='npm'&&['installed','different-version'].includes(status)?
+   h('button',{className:'cta-sub',type:'button',disabled:updating,onClick:()=>void prepareUpdate(target.name,selectedVersion)},t('update')):null,
+   h('a',{className:'cta-sub btn',href:link,target:'_blank',rel:'noopener noreferrer'},'在网站查看')))),h(NativeMarketDetailTrust,{item,onInspect:inspect}),h('div',{className:'detailgrid'},h('div',{className:'stack'},h(NativeMarketOverview,{item,onInspect:inspect}),h('details',{className:'panel readme',id:'hm-market-readme'},h('summary',null,h('span',null,'作者原文'),h('span',{className:'fine'},'README')),h('div',{className:'readmecopy'},h(Document,{item,version}))),item.similarGroup?h('section',{className:'panel'},h('h3',null,'同类插件'),h('details',{className:'similar'},h('summary',null,'相似插件 · 独立身份'),...item.similarGroup.members.map(id=>h('p',{key:id},h('button',{type:'button',className:'textbtn',onClick:()=>void showDetail({hanaId:id,displayName:id})},id))),h(Evidence,{sources:item.similarGroup.sources}))):null),h('aside',{className:'stack'},h(NativeMarketSignals,{item,stageConfig:discovery.stage}),h('section',{className:'panel'},h('h3',null,'版本与兼容'),target?h(React.Fragment,null,h('button',{type:'button',onClick:()=>void loadVersions(item)},t('history')),h('label',{className:'fine'},h('input',{type:'checkbox',checked:showPre,onChange:event=>setShowPre(event.target.checked)}),t('pre')),history?h('div',null,...versions.map(row=>h('div',{key:row.version,className:'hm-m-version'},h('code',null,row.version),h('span',{className:row.compatibility.compatible||row.compatibility.exempted?'good':'warn'},row.compatibility.exempted?'已豁免':row.compatibility.compatible?'兼容':'不兼容')))):null):h('p',{className:'fine'},'不支持在 DSH 安装')),h('section',{className:'panel'},h('h3',null,'来源与安装方式'),h('p',{className:'fine'},target?'精确版本 / 固定提交；确认后交给 DSH 原生安装管道。':'作者提供的安装命令；只可复制并前往网站。'),...(item.sourceLinks??[]).map((source,index)=>h('p',{key:index},safeLink(source.sourceUrl)?h('a',{href:safeLink(source.sourceUrl),target:'_blank',rel:'noopener noreferrer'},source.sourceId+' · '+source.sourceRef):source.sourceId)),...(item.installMethods??[]).map((method,index)=>h('details',{key:index},h('summary',null,method.channel),h('pre',{className:'command'},method.command??method.spec)))))));
   return h(Card,{item,summaryText:overviewText(item),actions,onDetails:()=>void showDetail(base),onCategory:category=>{setTab('search');setFilters(old=>({...old,category}));},view:'detail'},detailView);
  };
  const loadVersions=async item=>{if(history)return;try{setHistory((await request('versions?'+new URLSearchParams({itemId:item.hanaId}))).versions);}catch(error){setError(error);}};
@@ -137,14 +201,23 @@ function renderMarketPage(owner,presentation,observeInstall){
    h('p',null,suitePlan.bundle.from+' → '+suitePlan.bundle.to),
    ...suitePlan.components.map(row=>h('p',{key:row.name},row.label+' · '+row.from+' → '+row.to)),
    h('button',{type:'button',onClick:()=>{try{owner.openPackage(suitePlan.bundle.name);}catch(error){setError(error);}}},t('manage'))):null):null;
- return h('section',{className:'hm-market','data-plugin-tab':'hanamesh','data-market-phase':discovery.stage?.phase??snapshot.phase??'early'},h(Frame,{detail:Boolean(detail),title:'HanaMesh',tagline:'Discover. Use. Own.',tabs:['recommend','search','packs','favorites','settings'].map(id=>({id,label:t(id)})),activeTab:tab,onNavigate:key=>{closeDetail();setTab(key);setDetail(null);},messages:h(React.Fragment,null,h(ErrorNotice,{error,retry:()=>{setError(null);void storeRef.current.retry();}}),notice?h('p',{role:'status'},notice):null,...Object.entries(discovery.errors).map(([kind,code])=>h(ErrorNotice,{key:kind,error:new Error(code),retry:()=>void discoveryRef.current.retry(kind)}))),suite:suitePanel,body}),factSelection?h(FactDialog,{selection:factSelection,onClose:()=>setFactSelection(null)}):null,review?h(Confirmation,{review,actions:native.current,onClose:()=>{void request('cancel',{reviewId:review.reviewId}).catch(setError);setReview(null);},onConfirm:async()=>{
+ return h('section',{className:'hm-market','data-plugin-tab':'hanamesh','data-market-phase':discovery.stage?.phase??snapshot.phase??'early'},h(Frame,{detail:Boolean(detail),title:'HanaMesh',tagline:'Discover. Use. Own.',tabs:['recommend','search','packs','favorites','settings'].map(id=>({id,label:t(id)})),activeTab:tab,onNavigate:key=>{closeDetail();setTab(key);setDetail(null);},messages:h(React.Fragment,null,h(ErrorNotice,{error,retry:()=>{setError(null);void storeRef.current.retry();}}),notice?h('p',{role:'status'},notice):null,...Object.entries(discovery.errors).map(([kind,code])=>h(ErrorNotice,{key:kind,error:new Error(code),retry:()=>void discoveryRef.current.retry(kind)}))),suite:suitePanel,body:detail?body:h(React.Fragment,null,h(InstalledPackages,{
+  refreshKey:installedRefresh,updating,onOpen:packageName=>{try{native.current.openInstalled(packageName);}catch(error){setError(error);}},
+  onUpdate:(packageName,version)=>void prepareUpdate(packageName,version),
+ }),body)}),factSelection?h(FactDialog,{selection:factSelection,onClose:()=>setFactSelection(null)}):null,review?h(Confirmation,{review,actions:native.current,onClose:()=>{void request('cancel',{reviewId:review.reviewId}).catch(setError);setReview(null);},onConfirm:async()=>{
   const selected=review;
+  if(actedReview.current===selected.reviewId)return;
+  actedReview.current=selected.reviewId;
   setReview(null);
   if(selected.action==='installApplication')setNotice(t('appInstalling'));
+  if(selected.action==='updateInstalled'){setUpdating(true);setNotice(t('updatingPackage'));}
   try{
    const current=await request('confirm',{reviewId:selected.reviewId});
    if(current.action==='installApplication'){
     setNotice(t('appReady')+(current.application.restartRequired?' '+t('appRestart'):''));
+   }else if(current.action==='updateInstalled'){
+    setNotice(current.update.packageName+' @ '+current.update.installedVersion+
+     (current.update.restartRequired?' · '+t('restartToApply'):''));
    }else if(current.action==='openPackage'){
     native.current.openInstalled(current.target.source==='npm'?current.target.name:current.target.packageName);
    }else{
@@ -152,8 +225,14 @@ function renderMarketPage(owner,presentation,observeInstall){
     native.current.confirm(reviewed);
    }
   }catch(error){
-   if(selected.action==='installApplication')setNotice('');
+   if(['installApplication','updateInstalled'].includes(selected.action))setNotice('');
    setError(error);
+  }finally{
+   if(selected.action==='updateInstalled'){
+    setUpdating(false);
+    setInstalledRefresh(value=>value+1);
+    if(detailRead.current.id!==null)void readDetail(detailRead.current.id,detailRead.current.enrich);
+   }
   }
  }}):null);
 }

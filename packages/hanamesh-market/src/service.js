@@ -10,6 +10,8 @@ import {catalogPackageTargets,sameInstallTarget,pinnedGithubSpec} from './librar
 const empty={schema:1,revision:0,settings:null};
 export const initialState=()=>structuredClone(empty);
 const installName=target=>target.source==='npm'?target.name:target.packageName;
+const registryUpdate=row=>row.installed===true&&row.availability==='profile'&&
+ (row.update==='registry'||row.update===undefined&&row.updatable===true)&&Boolean(semver.valid(row.version));
 export function nativeInstallation(name,version,bundles){
  if(bundles===null)return{status:'unknown'};const bundle=bundles.find(row=>row.name===name);
  if(!bundle||!bundle.installed&&bundle.availability!=='installation')return{status:'not-installed'};
@@ -29,6 +31,49 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
  const documents=createDocumentReader({fetchImpl:transport,timeoutMs:config.readTimeoutMs??8000,lifetime:lifetime.signal});
  let adapterRevision=-1,adapter;const suiteAdapter=()=>{if(adapterRevision!==state.revision){adapterRevision=state.revision;adapter=createCoreSuiteAdapter({core,registry:settings().registry??undefined,suiteSourceMode:()=>settings().suiteSourceMode,suiteSourceService:suiteSource,profileName:config.profileName});}return adapter;};
  async function bundles(){try{const native=manager();ensure(typeof native?.listBundles==='function','DSH_BUNDLES_UNAVAILABLE',503);const rows=await native.listBundles();ensure(manager()===native&&Array.isArray(rows),'DSH_BUNDLES_UNAVAILABLE',503);return rows;}catch(error){logger?.warn?.('hanamesh-market native installed facts unavailable: %s',error.code??'DSH_BUNDLES_UNAVAILABLE');return null;}}
+ async function installedPackages(){
+  const rows=await bundles();
+  ensure(rows!==null,'DSH_BUNDLES_UNAVAILABLE',503);
+  return rows.filter(row=>row.installed||row.availability==='installation').map(row=>({
+   name:row.name,version:row.version??null,availability:row.availability,updatable:registryUpdate(row),
+  }));
+ }
+ async function registryVersions(native,pkg){
+  const configured=settings().registry;
+  const answer=await native.listVersions(pkg.name,configured?{registry:configured}:{});
+  ensure(manager()===native,'DSH_UPDATE_UNAVAILABLE',503);
+  if(answer?.status!=='listed'||answer.installed!==pkg.version||
+   typeof answer.registry!=='string'||!answer.registry||!Array.isArray(answer.versions))return null;
+  const latest=answer.versions.find(row=>row.tags?.includes('latest'))?.version??null;
+  const versions=answer.versions.filter(row=>row.bundle===true&&!row.incompatible&&
+   semver.valid(row.version)===row.version&&semver.gt(row.version,pkg.version)).map(row=>({
+   version:row.version,prerelease:row.prerelease===true,deprecated:row.deprecated??null,
+  }));
+  return {registry:answer.registry,latest,omitted:answer.omitted,versions};
+ }
+ async function installedUpdateTarget({packageName,version}){
+  const native=manager();
+  ensure(typeof native?.listVersions==='function'&&typeof native.updateBundle==='function','DSH_UPDATE_UNAVAILABLE',503);
+  const pkg=(await installedPackages()).find(row=>row.name===packageName);
+  ensure(manager()===native&&pkg?.updatable,'DSH_UPDATE_UNAVAILABLE',409);
+  const listed=await registryVersions(native,pkg);
+  ensure(listed?.versions.some(row=>row.version===version),'DSH_UPDATE_VERSION_UNAVAILABLE',409);
+  return {native,packageName,version,from:pkg.version,registry:listed.registry};
+ }
+ async function confirmInstalledUpdate(review){
+  ensure(!lifetime.signal.aborted&&review.revision===state.revision,'CONFIRMATION_STALE',409);
+  const current=await installedUpdateTarget(review.input);
+  ensure(current.native===review.native&&current.from===review.from&&current.registry===review.install.registry,
+   'NATIVE_UPDATE_CHANGED',409);
+  ensure(!lifetime.signal.aborted&&review.revision===state.revision,'CONFIRMATION_STALE',409);
+  const result=await current.native.updateBundle(current.packageName,current.version,{registry:current.registry});
+  ensure(result?.from===current.from&&result.to===current.version&&result.step==='install'&&result.result?.changed&&
+   ['applied','restart-required'].includes(result.result.application),'NATIVE_UPDATE_FAILED',409);
+  const installed=(await installedPackages()).find(row=>row.name===current.packageName&&row.availability==='profile');
+  ensure(manager()===current.native&&installed?.version===current.version,'NATIVE_UPDATE_READBACK_INVALID',502);
+  return {action:'updateInstalled',update:{packageName:current.packageName,installedVersion:installed.version,
+   restartRequired:result.result.application==='restart-required'}};
+ }
  function project(item,rows){const targets=catalogPackageTargets(item),target=targets[0];return{...item,nativeInstallation:target?nativeInstallation(installName(target),target.source==='npm'?target.version:null,rows):{status:'not-installed'},...(target?{nativeUpdate:{action:'openPackage',packageName:installName(target)}}:{})};}
  async function resolveTarget(input){
   ensure(input&&typeof input==='object'&&Object.keys(input).every(key=>['itemId','version'].includes(key)),'INVALID_INPUT');
@@ -115,6 +160,35 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
    }
    ensure(revision===state.revision,'CATALOG_CHANGED',409);return value;
   },
+  async installed(){return {packages:await installedPackages()};},
+  async checkInstalledUpdates({signal}={}){
+   const revision=state.revision,native=manager();
+   ensure(typeof native?.listVersions==='function','DSH_UPDATE_UNAVAILABLE',503);
+   const packages=await installedPackages(),checked=[];
+   for(const pkg of packages){
+    signal?.throwIfAborted();
+    ensure(manager()===native&&revision===state.revision,'CATALOG_CHANGED',409);
+    if(!pkg.updatable){checked.push(pkg);continue;}
+    let listed;
+    try{listed=await registryVersions(native,pkg);}
+    catch(error){logger?.warn?.('hanamesh-market native version lookup failed: %s',error.code??'DSH_UPDATE_UNAVAILABLE');}
+    checked.push({...pkg,...(listed?{status:'listed',latest:listed.latest,omitted:listed.omitted,versions:listed.versions}:{status:'unavailable'})});
+   }
+   ensure(manager()===native&&revision===state.revision,'CATALOG_CHANGED',409);
+   return {packages:checked};
+  },
+  async prepareInstalledUpdate(input){
+   ensure(input&&typeof input==='object'&&Object.keys(input).length===2&&
+    typeof input.packageName==='string'&&typeof input.version==='string'&&semver.valid(input.version)===input.version,
+    'INVALID_INPUT');
+   const revision=state.revision,current=await installedUpdateTarget(input);
+   ensure(!lifetime.signal.aborted&&revision===state.revision,'CATALOG_CHANGED',409);
+   const title=current.packageName;
+   const review={reviewId:randomUUID(),action:'updateInstalled',item:{displayName:title},from:current.from,
+    target:{source:'npm'},install:{spec:title+'@'+current.version,version:current.version,registry:current.registry}};
+   reviews.set(review.reviewId,{...review,revision,input:structuredClone(input),native:current.native});
+   return review;
+  },
   async prepare(input){
    const revision=state.revision,{item,target,suite}=await resolveTarget(input);
    const native=await nativePlan(target,suite),facts=await manifestFor(target,native.metadataPlan);
@@ -135,6 +209,7 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
    const review=reviews.get(reviewId);
    ensure(review,'CONFIRMATION_STALE',409);
    reviews.delete(reviewId);ensure(review.revision===state.revision,'CATALOG_CHANGED',409);
+   if(review.action==='updateInstalled')return writer.run(()=>confirmInstalledUpdate(review));
    const current=await resolveTarget(review.input);
    ensure(sameInstallTarget(current.target,review.target),'CATALOG_CHANGED',409);
    if(review.suite){

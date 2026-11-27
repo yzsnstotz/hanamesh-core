@@ -20,3 +20,32 @@ test('Market registers its client suite read without the retired website bridge'
   assert.deepEqual(paths.filter(path=>!path.startsWith('/hanamesh/market/')||path.includes('handoff')),[]);
  }finally{for(const cleanup of cleanups.reverse())await cleanup();}
 });
+
+test('installed endpoints keep the native authorization and review gates',async t=>{
+ const calls=[];
+ const service={
+  installed(){calls.push('installed');return {packages:[]};},
+  checkInstalledUpdates(){calls.push('check');return {packages:[]};},
+  prepareInstalledUpdate(input){calls.push(input);return {reviewId:'review'};},
+  confirm(input){calls.push(input);return {action:'updateInstalled'};},
+ };
+ const server=createServer(createMarketHandler({service,connection:{requestRejection:req=>
+  req.headers.authorization==='Bearer fixture'?undefined:{status:401}}}));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const base='http://127.0.0.1:'+server.address().port+'/hanamesh/market/';
+ const auth={authorization:'Bearer fixture'};
+ const write=(path,input,headers={...auth,'x-hanamesh-client':'market-v1'})=>fetch(base+path,{
+  method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify(input),
+ });
+ const target={packageName:'fixture-package',version:'1.1.0'};
+ assert.equal((await fetch(base+'installed')).status,403);
+ assert.equal((await fetch(base+'installed',{headers:auth})).status,200);
+ assert.equal((await write('installed/updates',target)).status,400);
+ assert.equal((await write('installed/updates',{})).status,200);
+ assert.equal((await write('installed/prepare',target,auth)).status,403);
+ assert.equal((await write('installed/prepare',target)).status,200);
+ assert.equal((await write('confirm',{})).status,400);
+ assert.equal((await write('confirm',{reviewId:'review'})).status,200);
+ assert.deepEqual(calls,['installed','check',target,{reviewId:'review'}]);
+});
