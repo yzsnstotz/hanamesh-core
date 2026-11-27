@@ -96,7 +96,11 @@ export function createMarketService({config={},domain,manager=()=>undefined,core
    ensure(revision===state.revision,'CATALOG_CHANGED',409);return value;
   },
   async list(query,options){const revision=state.revision;const [page,rows]=await Promise.all([client().list(query,options),bundles()]);ensure(revision===state.revision,'CATALOG_CHANGED',409);return{...page,items:page.items.map(item=>project(item,rows)),nativeBundles:rows};},
-  async search(input,options){const revision=state.revision,source=client(),value=await source.search(input,options),rows=await bundles(),hydrated=new Array(value.candidates.length);let cursor=0;await Promise.all(Array.from({length:Math.min(4,hydrated.length)},async()=>{while(cursor<hydrated.length){const index=cursor++,candidate=value.candidates[index];try{let item=await source.detail(candidate.hanaId,options);if(item.mergedInto)item=await source.detail(item.mergedInto,options);hydrated[index]=item;}catch(error){if(error.status!==404)throw error;}}}));ensure(revision===state.revision,'CATALOG_CHANGED',409);const items=[],seen=new Set();for(const item of hydrated){if(!item||item.listingStatus==='delisted'||seen.has(item.hanaId))continue;seen.add(item.hanaId);items.push({...project(item,rows),matchKind:'meaning'});}return{...value,items,nativeBundles:rows};},
+  async search(input,options){
+   const revision=state.revision,[page,rows]=await Promise.all([client().search(input,options),bundles()]);
+   ensure(revision===state.revision,'CATALOG_CHANGED',409);
+   return {...page,items:page.items.map(item=>project(item,rows)),nativeBundles:rows};
+  },
   async detail(id,options){
    const revision=state.revision,[item,rows]=await Promise.all([client().detail(id,options),bundles()]);
    const value=project(item,rows),target=catalogPackageTargets(item)[0],bundle=target&&rows?.find(row=>row.name===installName(target));

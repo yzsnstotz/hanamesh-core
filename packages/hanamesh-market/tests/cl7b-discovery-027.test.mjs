@@ -67,11 +67,22 @@ test('AD27-08/10/11: failed next retains coherent snapshot; explicit retry and s
 });
 
 test('AD27-12: explicit stage flag alone controls platform signals; public signals always remain',async()=>{
- const m=await client(),item={signals:{stars:123,npmDownloads:456,dshInstalls:789,activeUsers:321}};
+ const m=await client(),item={signals:{stars:123,npmDownloads30d:456,dshInstalls:789,activeUsers:321}};
  const hidden=text(m.NativeMarketSignals({item,phase:'growth',stageConfig:{phase:'growth',showPlatformData:false}}));
  assert.match(hidden,/123/);assert.match(hidden,/456/);assert.doesNotMatch(hidden,/789|321|dshInstalls|activeUsers/);
  const shown=text(m.NativeMarketSignals({item,phase:'early',stageConfig:{phase:'early',showPlatformData:true}}));assert.match(shown,/789/);assert.match(shown,/321/);
  assert.doesNotMatch(text(m.NativeMarketSignals({item,phase:'growth'})),/789|321/);
+});
+
+test('detail displays attributed repository stars separately and leaves unobserved metrics unknown',async()=>{
+ const m=await client(),item={signals:{stars:0,repositoryStars:437,npmDownloads30d:null,storeInstalls30d:12,checkedAt:null},
+  popularity:{stars:987,npmDownloads:654}};
+ const values=text(m.NativeMarketSignals({item}));
+ assert.match(values,/Hana 星数.*0.*仓库星数（不计入排序）.*437/);
+ assert.match(values,/近 30 天 npm 下载.*—.*近 30 天商店安装.*12.*最后观测（UTC）.*—/);
+ assert.doesNotMatch(values,/987|654/);
+ delete item.signals.repositoryStars;
+ assert.doesNotMatch(text(m.NativeMarketSignals({item})),/仓库星数/);
 });
 
 test('AD27-13/14: exact formal featured sets render provider identities/ranks with no fill, reasons or executable targets',async()=>{

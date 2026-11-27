@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-const fixture=async name=>JSON.parse(await readFile(new URL('./fixtures/discovery-027/'+name+'.json',import.meta.url),'utf8'));
+import {discoveryFixture as fixture,legacyDiscoveryFixture} from './fixtures/discovery-031.mjs';
 
-test('AD27-15: formal 0.27.0 Schema validates six exact payloads and rejects malformed discovery fields without coercion or mutation',async()=>{
+test('AD27-15: formal 0.31.0 Schema validates localized fixtures with exact 0.27.0 provenance and rejects malformed discovery fields without coercion or mutation',async()=>{
  const {decodeDiscovery}=await import('../lib/discovery.js');
- const manifest=await fixture('SHA256');
+ const manifest=await legacyDiscoveryFixture('SHA256');
  for(const [name,record]of Object.entries(manifest))assert.equal(createHash('sha256').update(await readFile(new URL('./fixtures/discovery-027/'+name,import.meta.url))).digest('hex'),record.sha256);
  for(const [name,kind]of[['list','page'],['search','page'],['detail','detailItem'],['domain-directory','domainDirectory']]){const input=await fixture(name),before=structuredClone(input);assert.equal(decodeDiscovery(kind,input),input);assert.deepEqual(input,before);}
  const featured=await fixture('featured');for(const value of Object.values(featured.byDomain))decodeDiscovery('page',value);

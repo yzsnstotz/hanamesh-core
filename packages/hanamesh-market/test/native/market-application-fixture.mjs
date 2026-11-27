@@ -1,4 +1,5 @@
 // Serve an exact test bundle and a directory entry from an isolated loopback origin.
+import {catalogPage,unknownCatalogDetailSignals} from '../../tests/fixtures/catalog-u2.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
@@ -62,8 +63,8 @@ const server=createServer(async(req,res)=>{
     return;
   }
   const responses={
-    ['/api/v2/hanas']:{items:[item],page:1,totalPages:1,total:1,facets:{}},
-    ['/api/v2/hanas/'+hanaId]:item,
+    ['/hm/v1/host/catalog/query']:catalogPage([item]),
+    ['/v1/indexer/hanas/'+hanaId]:{...item,signals:unknownCatalogDetailSignals},
     ['/'+name]:{name,versions:{[version]:exact},'dist-tags':{latest:version},time:{created:published,modified:published,[version]:published}},
     ['/'+name+'/'+version]:exact,
   };

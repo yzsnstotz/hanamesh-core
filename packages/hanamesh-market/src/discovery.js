@@ -1,10 +1,12 @@
 /** Validate only the public discovery extension. HTTP paths and catalog metadata belong to providers. */
 import Ajv2020 from 'ajv/dist/2020.js';
 import {DISCOVERY_SCHEMA} from '@hanamesh/api-contracts/catalog/discovery';
+import {LOCALIZED_SCHEMA} from '@hanamesh/api-contracts/catalog/localized';
 import {MarketError,createCatalogClient,publicOrigin,readJson,ensure} from './catalog.js';
 const ajv=new Ajv2020({strict:false,coerceTypes:false,useDefaults:false,removeAdditional:false});
+ajv.addSchema(LOCALIZED_SCHEMA);
 ajv.addSchema(DISCOVERY_SCHEMA);
-const validators=Object.fromEntries(['page','item','detailItem','domainDirectory','stageConfig','query'].map(kind=>[kind,ajv.compile({$ref:DISCOVERY_SCHEMA.$id+'#/$defs/'+kind})]));
+const validators=Object.fromEntries(['page','item','listFields','detailItem','domainDirectory','stageConfig','query'].map(kind=>[kind,ajv.compile({$ref:DISCOVERY_SCHEMA.$id+'#/$defs/'+kind})]));
 /** Preserve provider ordering, identity, projection and nulls; never repair malformed data. */
 export function decodeDiscovery(kind,value){
  const validate=validators[kind];
@@ -22,7 +24,7 @@ const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)
 const boundedIds=ids=>Array.isArray(ids)&&ids.length<=200&&new Set(ids).size===ids.length&&ids.every(id=>typeof id==='string'&&id.length>0&&id.length<=160&&!/[\u0000-\u001f\u007f]/.test(id));
 /** The only new work here is transport/validation. Ranking, filtering and counts remain SQL-owned. */
 export function createDiscoveryHttpClient({serverOrigin,websiteOrigin,fetchImpl=fetch,timeoutMs=8000,maxBytes=2097152}){
- const server=publicOrigin(serverOrigin),semantic=createCatalogClient({serverOrigin,websiteOrigin,fetchImpl,timeoutMs,maxBytes});
+ const server=publicOrigin(serverOrigin),catalog=createCatalogClient({serverOrigin,websiteOrigin,fetchImpl,timeoutMs,maxBytes});
  const read=(path,options={})=>readJson(fetchImpl,new URL(path,server).href,{signal:options.signal,method:'GET'},{timeoutMs,maxBytes});
  const post=(path,value,options={})=>readJson(fetchImpl,new URL(path,server).href,{signal:options.signal,method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(value)},{timeoutMs,maxBytes});
  const query=input=>{ensure(object(input),'INVALID_QUERY');const value={limit:50,...input};ensure(validators.query(value),'INVALID_QUERY');return value;};
@@ -40,14 +42,17 @@ export function createDiscoveryHttpClient({serverOrigin,websiteOrigin,fetchImpl=
   async listFields(hanaIds,options={}){
    ensure(boundedIds(hanaIds),'INVALID_QUERY');const result=await post(DISCOVERY_HTTP_ROUTES.readListFields,{hanaIds},options);
    ensure(object(result)&&Object.keys(result).length===1&&Array.isArray(result.items)&&result.items.length<=200,'DISCOVERY_RESPONSE_INVALID',502);
-   for(const item of result.items)decodeDiscovery('item',item);return result;
+   for(const item of result.items){
+    const {hanaId,...fields}=item??{};
+    ensure(boundedIds([hanaId]),'DISCOVERY_RESPONSE_INVALID',502);
+    decodeDiscovery('listFields',fields);
+   }
+   return result;
   },
   async search(input,options={}){
    ensure(object(input)&&Object.keys(input).every(k=>['query','domain','subdivision','channel','includeInsufficient'].includes(k)),'INVALID_QUERY');
    const {query:text,...filters}=input;query(filters);
-   const found=await semantic.search({query:text},options),hanaIds=[...new Set(found.candidates.map(row=>row.hanaId))];
-   const page=await client.selected({hanaIds,...filters},options);
-   return {...page,retrieval:found.retrieval,...(found.requestId!==undefined?{requestId:found.requestId}:{})};
+   return catalog.search({query:text,...filters},options);
   },
  };
  return client;

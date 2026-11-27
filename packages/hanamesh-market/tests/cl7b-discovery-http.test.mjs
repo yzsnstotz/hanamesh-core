@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-const fixture=async n=>JSON.parse(await readFile(new URL('./fixtures/discovery-027/'+n+'.json',import.meta.url),'utf8'));
+import {discoveryFixture as fixture} from './fixtures/discovery-031.mjs';
+import {catalogPage} from './fixtures/catalog-u2.mjs';
 const factory=async()=>{const m=await import('../src/discovery.js');assert.equal(typeof m.createDiscoveryHttpClient,'function');return m.createDiscoveryHttpClient;};
 const origins={websiteOrigin:'https://website.example',serverOrigin:'https://host.example'};
 
@@ -33,12 +33,19 @@ test('HTTP27-03: selected and fields are bounded read POSTs; fields is not a pag
  await assert.rejects(c.selected({hanaIds:[...ids,ids[0]]}),/INVALID_QUERY/);await assert.rejects(c.listFields(Array.from({length:201},(_,i)=>String(i))),/INVALID_QUERY/);assert.equal(calls.length,2);
 });
 
-test('HTTP27-04: semantic stays explicit existing capability read then selected SQL filtering, no detail N+1 or local ranking',async()=>{
- const create=await factory(),page=await fixture('list'),ids=page.items.slice(0,2).map(x=>x.hanaId),calls=[];
- const c=create({...origins,fetchImpl:async(url,init)=>{const u=new URL(url);calls.push({url:u,init});return Response.json(u.pathname==='/v1/capabilities/search'?{requestId:'semantic-fixture',retrieval:{mode:'meaning'},candidates:[{hanaId:ids[1],objectId:'b'},{hanaId:ids[0],objectId:'a'},{hanaId:ids[1],objectId:'duplicate'}]}:{...page,items:[page.items[1],page.items[0]],next:null});}});
- const result=await c.search({query:'x'.repeat(500),domain:'office',includeInsufficient:true});assert.deepEqual(result.items.map(x=>x.hanaId),[ids[1],ids[0]]);assert.deepEqual(result.retrieval,{mode:'meaning'});
- assert.equal(calls[0].url.pathname,'/v1/capabilities/search');assert.deepEqual(JSON.parse(calls[0].init.body),{query:'x'.repeat(500),topK:50,telemetry:false});assert.equal(calls[0].init.headers.Origin,origins.websiteOrigin);
- assert.equal(calls[1].url.pathname,'/v1/indexer/discovery/selected');assert.deepEqual(JSON.parse(calls[1].init.body),{hanaIds:[ids[1],ids[0]],domain:'office',includeInsufficient:true});assert.equal(calls.length,2);
+test('HTTP27-04: semantic uses one unified catalog read, with no detail N+1 or local ranking',async()=>{
+ const create=await factory(),page=await fixture('list'),cards=[page.items[1],page.items[0]],calls=[];
+ const c=create({...origins,fetchImpl:async(url,init)=>{
+  calls.push({url:new URL(url),init});return Response.json(catalogPage(cards,{searchMode:'hybrid'}));
+ }});
+ const result=await c.search({query:'x'.repeat(500),domain:'office',includeInsufficient:true});
+ assert.deepEqual(result.items.map(x=>x.hanaId),cards.map(card=>card.hanaId));
+ assert.deepEqual(result.items.map(x=>x.matchKind),['meaning','meaning']);
+ assert.equal(calls.length,1);
+ const [{url,init}]=calls;
+ assert.equal(url.origin,origins.websiteOrigin);assert.equal(url.pathname,'/hm/v1/host/catalog/query');
+ assert.deepEqual(Object.fromEntries(url.searchParams),{domain:'office',includeInsufficient:'true',limit:'50',q:'x'.repeat(500),searchMode:'hybrid',sort:'relevance'});
+ assert.equal(init.method,'GET');assert.equal(init.headers.Origin,origins.websiteOrigin);assert.equal(init.body,undefined);
 });
 
 test('HTTP27-05: failures are explicit once, malformed/identity-changing DTOs fail, abort and byte budgets remain enforced',async()=>{
