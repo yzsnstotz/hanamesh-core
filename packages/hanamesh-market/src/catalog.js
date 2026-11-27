@@ -1,4 +1,9 @@
-import {CATALOG_QUERY_HTTP_PATH, encodeCatalogQueryParams, isCatalogQueryTextWithinBounds} from '@hanamesh/api-contracts/catalog/query';
+import Ajv2020 from 'ajv/dist/2020.js';
+import {CATALOG_QUERY_HTTP_PATH, CATALOG_QUERY_SCHEMA, encodeCatalogQueryParams, isCatalogQueryTextWithinBounds} from '@hanamesh/api-contracts/catalog/query';
+
+const detailSchema = new Ajv2020({strict:false,coerceTypes:false});
+detailSchema.addSchema(CATALOG_QUERY_SCHEMA);
+const validateDetailSignals = detailSchema.compile({$ref:CATALOG_QUERY_SCHEMA.$id+'#/$defs/detailSignals'});
 
 /** Bounded reads of the same public catalog and semantic endpoint used by the website. */
 export class MarketError extends Error{constructor(code,status=400){super(code);this.code=code;this.status=status;}}
@@ -82,6 +87,9 @@ export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,
    ensure(scalar(hanaId,160)&&hanaId.length>0,'INVALID_QUERY');
    const item=await read(server,'/v1/indexer/hanas/'+encodeURIComponent(hanaId),options);
    ensure(item?.hanaId===hanaId&&typeof item.displayName==='string','CATALOG_IDENTITY_CHANGED',502);
+   const signals=item.signals;
+   ensure(validateDetailSignals(signals)
+    &&(signals.checkedAt===null||Number.isFinite(Date.parse(signals.checkedAt))),'CATALOG_DETAIL_SIGNALS_INVALID',502);
    return item.canonicalHanaId?{...item,mergedInto:item.canonicalHanaId}:item;
   },
  };

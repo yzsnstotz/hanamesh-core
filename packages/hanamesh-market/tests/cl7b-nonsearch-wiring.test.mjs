@@ -6,7 +6,7 @@ import {createMarketHandler} from '../src/routes.js';
 import * as state from '../src/client-state.js';
 import {loadClient,settle} from './fixtures/client-loader.mjs';
 import {discoveryFixture as fixture} from './fixtures/discovery-031.mjs';
-import {catalogPage} from './fixtures/catalog-u2.mjs';
+import {catalogPage,unknownCatalogDetailSignals} from './fixtures/catalog-u2.mjs';
 const keys=['projection','domainIds','subdivisions','taxonomyVersion','overview','score','trustBadges','featured','similarGroup'];
 const pick=item=>Object.fromEntries(keys.map(k=>[k,item[k]]));
 const id='00000000-0000-4000-8000-000000000001';
@@ -21,7 +21,7 @@ async function serviceFixture(t){let saved=initialState();const calls=[],detail=
   if(u.pathname.endsWith('/stage-config'))return Response.json((await fixture('stage-config')).early);
   if(u.pathname.endsWith('/featured'))return Response.json({...page,items:[Object.fromEntries(Object.entries(detail).filter(([key])=>key!=='reasons'))]});
   if(u.pathname.endsWith('/list-fields'))return Response.json({items:[{hanaId:detail.hanaId,...pick(detail)}]});
-  if(u.pathname.includes('/hanas/'))return Response.json({...detail,displayName:'Cannot replace legacy identity'});
+  if(u.pathname.includes('/hanas/'))return Response.json({...detail,signals:unknownCatalogDetailSignals,displayName:'Cannot replace legacy identity'});
   assert.fail('unexpected upstream '+u.href);
  }});await s.init();t.after(()=>s.close());return{s,calls,detail,legacy};}
 test('NS27-01 only five non-search discovery reads are admitted; list and search use one catalog read and preserve provider identity and selectors',async t=>{

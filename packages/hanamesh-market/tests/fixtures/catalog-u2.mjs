@@ -1,3 +1,16 @@
+export const unknownCatalogDetailSignals = Object.freeze({
+  stars: null,
+  npmDownloads30d: null,
+  storeInstalls30d: null,
+  checkedAt: null,
+  unknownReasons: Object.freeze({
+    stars: 'not_observed',
+    npmDownloads30d: 'not_observed',
+    storeInstalls30d: 'history_unavailable',
+    checkedAt: 'not_observed',
+  }),
+});
+
 export function catalogPage(cards, {
   pageNumber = 1, total = cards.length, nextCursor = null,
   facets = {}, searchMode = 'keyword', semanticNotice = null, paginationReset = false,

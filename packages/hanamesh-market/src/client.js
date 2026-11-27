@@ -77,20 +77,25 @@ function renderMarketPage(owner,presentation,observeInstall){
  React.useEffect(()=>{const stop=storeRef.current.subscribe(next=>{setSnapshot(next);if(next.facets)setFacets(next.facets);});void request('settings').then(value=>setSettings(value.settings),setError);void request('suite').then(setSuite,error=>setSuite({status:'unknown',blocked:[{code:error.message}]}));return()=>{stop();storeRef.current.dispose();};},[]);
  React.useEffect(()=>{const timer=setTimeout(()=>{if(!ai)void storeRef.current.load({q:query,...filters});},300);return()=>clearTimeout(timer);},[query,filters,ai]);
  const prepare=async(item,version)=>{try{setError(null);const value=await request('prepare',{itemId:item.hanaId,...(version?{version}:{})});if(value.action==='install')native.current.review({entry:value.item,install:value.install,compatibility:value.compatibility});setReview(value);}catch(error){setError(error);if(['DSH_BUNDLE_REQUIRED','NOT_INSTALLABLE'].includes(error.message))setBrowseOnly(previous=>new Set([...previous,item.hanaId]));}};
- const detailRead=React.useRef({id:null,controller:null,enrich:false,signals:undefined});
- const closeDetail=()=>{detailRead.current.controller?.abort();detailRead.current={id:null,controller:null,enrich:false,signals:undefined};};
- const readDetail=async(id,enrich,signals)=>{
+ const detailRead=React.useRef({id:null,controller:null,enrich:false});
+ const closeDetail=()=>{detailRead.current.controller?.abort();detailRead.current={id:null,controller:null,enrich:false};};
+ const readDetail=async(id,enrich)=>{
   detailRead.current.controller?.abort();
-  const controller=new AbortController(),read={id,controller,enrich,signals};detailRead.current=read;
+  const controller=new AbortController(),read={id,controller,enrich};detailRead.current=read;
   try{const fresh=await request('item?'+new URLSearchParams({itemId:id}),undefined,controller.signal);
    if(detailRead.current!==read)return;
-   setDetail(signals&&fresh.signals===undefined?{...fresh,signals}:fresh);if(enrich)void discoveryRef.current.detail(fresh.hanaId);
+   setDetail(fresh);if(enrich)void discoveryRef.current.detail(fresh.hanaId);
   }catch(error){if(detailRead.current===read&&!controller.signal.aborted)setError(error);}
-  finally{if(detailRead.current===read)detailRead.current={id,controller:null,enrich:false,signals};}
+  finally{if(detailRead.current===read)detailRead.current={id,controller:null,enrich:false};}
  };
- const showDetail=item=>{setDetail(withoutDiscoveryFields(item));setHistory(null);setSelectedVersion(null);return readDetail(item.hanaId,true,item.signals);};
+ const showDetail=item=>{
+  const {signals,...base}=withoutDiscoveryFields(item);
+  setDetail(previous=>previous?.hanaId===item.hanaId?previous:base);
+  setHistory(null);setSelectedVersion(null);
+  return readDetail(item.hanaId,true);
+ };
  React.useEffect(()=>{
-  const stop=observeInstall?.(()=>{const {id,enrich,signals}=detailRead.current;if(id!==null)void readDetail(id,enrich,signals);});
+  const stop=observeInstall?.(()=>{const {id,enrich}=detailRead.current;if(id!==null)void readDetail(id,enrich);});
   return()=>{stop?.();closeDetail();};
  },[observeInstall]);
  const saveFavorite=item=>{const next={...favorites};if(next[item.hanaId])delete next[item.hanaId];else next[item.hanaId]=withoutDiscoveryFields(item);try{globalThis.localStorage?.setItem('hanamesh.market.favorites',JSON.stringify(next));setFavorites(next);}catch(error){setError(error);}};
@@ -220,7 +225,17 @@ export function NativeMarketDomainFilters({domains=[],subdivisions=[],domain='',
  return h(React.Fragment,null,h('div',{className:'domain-filter-tier ds1-domain-filter ds1-domain-tags',role:'group','aria-label':'领域筛选'},h('span',{className:'ds1-filter-label'},'领域'),h('button',{type:'button',className:'pill'+(!domain?' on':''),'aria-pressed':!domain,onClick:()=>onDomain?.('')},'全部领域'),...marketDomains.map(row=>h('button',{type:'button',key:row.id,className:'pill'+(domain===row.id?' on':''),'aria-pressed':domain===row.id,disabled:!onDomain||!domains.some(value=>value.id===row.id),onClick:()=>onDomain(row.id)},h('i',{style:{background:domainColor(row.id)}}),localized(domains.find(value=>value.id===row.id)?.name)||row.name))),domain?h('div',{className:'category-filter-tier ds1-subdivisions',role:'group','aria-label':'领域内分类'},h('span',{className:'ds1-filter-label'},'细分'),h('button',{type:'button',className:'pill'+(!subdivision?' on':''),'aria-pressed':!subdivision,onClick:()=>onSubdivision?.('')},'全部分类'),...subdivisions.map(row=>h('button',{type:'button',key:row.id,className:'pill'+(subdivision===row.id?' on':''),'aria-pressed':subdivision===row.id,disabled:!onSubdivision||(row.count===0&&row.capped!==true),onClick:()=>onSubdivision(row.id)},localized(row.name),h('span',null,formatDiscoveryCount(row.count,row.capped))))):null);
 }
 
-export function NativeMarketSignals({item,stageConfig}){return h('section',{className:'panel'},h('h3',null,'来源信号'),h('dl',{className:'facts'},...['stars','npmDownloads'].flatMap(key=>[h('dt',{key:key+'-k'},key==='stars'?'GitHub 星':'npm 下载'),h('dd',{key,className:'num'},item.signals?.[key]??item.popularity?.[key]??'—')]),...(stageConfig?.showPlatformData===true?['dshInstalls','activeUsers'].flatMap(key=>[h('dt',{key:key+'-k'},key),h('dd',{key},item.signals?.[key]??'—')]):[])),h('p',{className:'fine'},'外部公开信号不等于安全保证。'));}
+export function NativeMarketSignals({item,stageConfig}){
+ const signals=item.signals??{};
+ const fields=[['stars','Hana 星数']];
+ if(Object.hasOwn(signals,'repositoryStars'))fields.push(['repositoryStars','仓库星数（不计入排序）']);
+ fields.push(['npmDownloads30d','近 30 天 npm 下载'],['storeInstalls30d','近 30 天商店安装'],['checkedAt','最后观测（UTC）']);
+ if(stageConfig?.showPlatformData===true)fields.push(['dshInstalls','dshInstalls'],['activeUsers','activeUsers']);
+ return h('section',{className:'panel'},h('h3',null,'来源信号'),
+  h('dl',{className:'facts'},...fields.flatMap(([key,label])=>[
+   h('dt',{key:key+'-k'},label),h('dd',{key,className:'num'},signals[key]??'—'),
+  ])),h('p',{className:'fine'},'外部公开信号不等于安全保证。'));
+}
 
 /** Counts are independent provider facts; window/countsCapped never modifies these flags. */
 export function NativeMarketDiscoveryCounts({page,includeInsufficient=false,onIncludeInsufficient}){

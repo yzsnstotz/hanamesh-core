@@ -18,6 +18,8 @@ While the HanaMesh tab is mounted and DSH grants access to `pluginManager/listBu
 
 Details use official `@deepseek-ai/dsh-plugin-detail`: locale `meta.detail`, then package README; only absence proceeds to the repository README at a pinned commit. Read failures remain failures. Relative images use the official path resolver and a bounded same-origin image route. Markdown rendering uses official `DetailDocument` (raw HTML omitted).
 
+Exact-ID details validate the Host-composed Indexer `signals` against API Contracts 0.31.0. Hana stars and repository stars are shown separately when repository provenance exists. Each missing count or observation time appears as `—`. A measured zero remains visible. The card rank supplies list signals and the exact-ID read supplies detail signals.
+
 ## Plugin-owned authenticated adapter
 
 The DSH connection's `requestRejection()` guards every `/hanamesh/market/*` route. Iframe callers are refused; JSON writes require `X-HanaMesh-Client: market-v1`, no query string and a 64KiB body bound. Read adapters: `catalog`, `item`, `versions`, `document`, `image`, `settings`, `suite`, `suite-plan`. Writes: `search`, `prepare`, `confirm`, `cancel`, `settings`. Browser input cannot select arbitrary fetch destinations.

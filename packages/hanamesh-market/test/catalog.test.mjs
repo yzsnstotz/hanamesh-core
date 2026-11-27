@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createCatalogClient} from '../src/catalog.js';
-import {catalogPage} from '../tests/fixtures/catalog-u2.mjs';
+import {catalogPage,unknownCatalogDetailSignals} from '../tests/fixtures/catalog-u2.mjs';
 import {createNativeMarketListing} from '../src/client-state.js';
 
 const item={hanaId:'11111111-2222-4333-8444-555555555555',displayName:'Fixture plugin',summary:{zh:'公开简介',en:'Public summary'},categories:['tools'],channels:['dsh'],sourceLinks:[],installMethods:[],oneClickInstall:{allowed:false,reason:'no-install-method'}};
@@ -83,7 +83,7 @@ test('numbered navigation and opaque continuation are exclusive and a reset retu
 });
 
 test('Indexer detail preserves requested identity and canonical alias facts',async()=>{
- const calls=[],alias={...item,listingStatus:'delisted',canonicalHanaId:'11111111-2222-4333-8444-555555555556'};
+ const calls=[],alias={...item,signals:unknownCatalogDetailSignals,listingStatus:'delisted',canonicalHanaId:'11111111-2222-4333-8444-555555555556'};
  const reader=createCatalogClient({...origins,fetchImpl:async(url)=>{
   calls.push(new URL(url));return Response.json(alias);
  }});
@@ -94,6 +94,23 @@ test('Indexer detail preserves requested identity and canonical alias facts',asy
  assert.equal(result.mergedInto,alias.canonicalHanaId);
  await assert.rejects(reader.detail(alias.canonicalHanaId),/CATALOG_IDENTITY_CHANGED/);
  assert.equal(calls.length,2);
+});
+
+test('exact detail keeps Hana stars, repository stars, downloads and installs separate',async()=>{
+ const signals={
+  stars:0,repositoryStars:437,npmDownloads30d:119,storeInstalls30d:null,
+  checkedAt:'2026-11-27T07:31:20.412Z',unknownReasons:{storeInstalls30d:'history_unavailable'},
+ };
+ let body={...item,signals};
+ const reader=createCatalogClient({...origins,fetchImpl:async()=>Response.json(body)});
+ assert.deepEqual((await reader.detail(item.hanaId)).signals,signals);
+ body={...item,signals:unknownCatalogDetailSignals,popularity:{stars:123,npmDownloads:453}};
+ assert.deepEqual((await reader.detail(item.hanaId)).signals,unknownCatalogDetailSignals);
+ for(const invalid of [undefined,{...signals,unknownReasons:undefined},{...signals,stars:'0'},{...signals,checkedAt:'2026-13-27T07:31:20Z'},
+  {...signals,unknownReasons:{...signals.unknownReasons,stars:'not_observed'}}]){
+  body={...item,signals:invalid};
+  await assert.rejects(reader.detail(item.hanaId),/CATALOG_DETAIL_SIGNALS_INVALID/);
+ }
 });
 
 test('catalog discovery fields belong to the card identity and retain sparse language',async()=>{
