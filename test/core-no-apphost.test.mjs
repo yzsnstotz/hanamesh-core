@@ -17,12 +17,12 @@ const members=[
   ['@hanamesh/theme','0.1.0','hanamesh-theme',coreRepository],
 ];
 
-function fixture(omitted,bundleInventory=async()=>null){
-  const observed=new Map(members.map(([name,version,_id,repository])=>[name,{
+function fixture({omitted,bundleInventory=async()=>null,installedMembers=members}={}){
+  const observed=new Map(installedMembers.map(([name,version,_id,repository])=>[name,{
     kind:'present',phase:'active',version,repository,
     metadata:{name,version,repository,dsh:{bundle:{patch:'./cordis.patch.yml'}}},
   }]));
-  const entries=members.filter(([name])=>name!==omitted)
+  const entries=installedMembers.filter(([name])=>name!==omitted)
     .map(([name,_version,id])=>({id,options:{name},fiber:{state:2}}));
   const inventory=new LoaderObservationSource({entries:()=>entries},import.meta.url,async name=>observed.get(name));
   const service=new SuiteDeclarationService({
@@ -51,7 +51,7 @@ test('the direct desktop suite is complete and healthy with Core, Usage, Market 
 
 test('direct suite health and completeness still name each missing required component',async()=>{
   for(const [name] of members.slice(1)){
-    const {inventory,service}=fixture(name);
+    const {inventory,service}=fixture({omitted:name});
     const health=evaluate(profile,await inventory.observe(profile.components),1);
     assert.deepEqual(health.components.filter(row=>row.status==='missing').map(row=>row.moduleName),[name]);
     const suite=await service.read();
@@ -60,10 +60,28 @@ test('direct suite health and completeness still name each missing required comp
   }
 });
 
+test('the direct suite recognizes installed Market 0.2.0 and rejects unapproved adjacent versions',async()=>{
+  for (const [version, status, completeness, legacy] of [
+    ['0.2.0', 'satisfied', 'complete', 'installed'],
+    ['0.2.0-rc.1', 'incompatible', 'incomplete', 'incomplete'],
+    ['0.2.1', 'incompatible', 'incomplete', 'incomplete'],
+  ]) {
+    const installedMembers = members.map(row => row[0] === '@hanamesh/market'
+      ? [row[0], version, row[2], row[3]]
+      : row);
+    const suite = await fixture({installedMembers}).service.read();
+    assert.equal(suite.completeness, completeness, version);
+    const market = suite.installed.find(row => row.moduleName === '@hanamesh/market');
+    assert.equal(market.actualVersion, version);
+    assert.equal(market.status, status);
+    assert.equal(suite.legacy?.status, legacy);
+  }
+});
+
 test('the installed aggregate must contain exactly the current suite members',async()=>{
   const dependencies=Object.fromEntries(members.map(([name,version])=>[name,version]));
   const installed={...SUITE_MANIFEST.bundle,version:'1.0.0',dependencies,dsh:{bundle:{patch:'./cordis.patch.yml'}}};
-  const physical=await fixture(undefined,async()=>installed).service.read();
+  const physical=await fixture({bundleInventory:async()=>installed}).service.read();
   assert.equal(physical.completeness,'complete');
   assert.equal(physical.bundleVersion,installed.version);
   assert.equal(physical.legacy,undefined);
@@ -76,7 +94,7 @@ test('the installed aggregate must contain exactly the current suite members',as
     async()=>{throw Error('unreadable');},
     ...[missingMember,extraMember,replaceMember].map(dependencies=>async()=>({...installed,dependencies})),
   ]){
-    const invalid=await fixture(undefined,readBundle).service.read();
+    const invalid=await fixture({bundleInventory:readBundle}).service.read();
     assert.notEqual(invalid.completeness,'complete');
     assert.equal(invalid.legacy,undefined);
     assert.ok(invalid.blocked.some(row=>row.code==='CORE_SUITE_INSTALLED_METADATA_MISMATCH'));

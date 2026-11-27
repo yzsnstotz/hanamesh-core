@@ -21,6 +21,8 @@ The declaration contains `bundleVersion`, `installCommand: string | null`, `sche
 
 Core checks each installed component’s external peers from that component’s Loader entry. An unresolved entry yields an unknown peer fact. `peerFacts` reports a single version when the installed observations for a peer agree, and `unknown` when they differ. Compatibility still uses each component’s own observation and declared range. React uses the connected client lease, DSH peers use the running DSH version, and prospective registry tuples use the existing Core context for external peers.
 
+Core 0.3.42 admits the Market 0.2.0 release alongside the Market 0.1.x versions from 0.1.2. The suite still checks the package source, active Loader state and declared peers for each installed release.
+
 Each upgrade row has `bundle: SuiteTarget`, `registry`, and a `targets` array covering the exact declared members of `{id,moduleName,version,repository,metadataDigest}`. Default upgrades strictly increase the bundle version and do not decrease member versions. An explicit `bundleVersion` selects a different published version, including an older version, after the same compatibility checks. Build metadata alone is not an upgrade. The Core version is the core target's `version`; the bundle digest is `bundle.metadataDigest`. These are compatible candidates, not installation authorization.
 
 ## Candidate source and compatibility

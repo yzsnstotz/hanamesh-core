@@ -25,7 +25,10 @@ const seeds = [
 for (const [name, version, omittedEntry, expected] of [
   ['current seeds without an AppHost package', '0.1.2', false, 'satisfied'],
   ['compatible Market release', '0.1.3', false, 'satisfied'],
-  ['next line', '0.2.0', false, 'incompatible'],
+  ['approved Market release', '0.2.0', false, 'satisfied'],
+  ['unapproved Market prerelease', '0.2.0-rc.1', false, 'incompatible'],
+  ['unapproved Market patch', '0.2.1', false, 'incompatible'],
+  ['next line', '0.3.0', false, 'incompatible'],
   ['stale stable pin', '0.1.1', false, 'incompatible'],
   ['older prerelease is rejected', '0.1.0-rc.1', false, 'incompatible'],
   ['missing version', undefined, false, 'unreadable'],
@@ -64,11 +67,11 @@ for (const [name, version, omittedEntry, expected] of [
     assert.deepEqual(health.components.map(row => row.id), ['usage', 'market', 'theme']);
     assert.equal(health.components[0].status, 'satisfied');
     const market = health.components[1];
-    assert.equal(market.requiredRange, '>=0.1.2 <0.2.0');
+    assert.equal(market.requiredRange, '>=0.1.2 <0.2.0 || 0.2.0');
     assert.equal(market.status, expected);
     assert.equal(market.nextStep, expected === 'satisfied' ? null : 'restore-pinned-component');
     const state = await (await handle(new Request(`${origin}${ROUTES.state}`))).json();
     assert.equal(state.components[1].status, expected);
-    assert.equal(state.components[1].requiredRange, '>=0.1.2 <0.2.0');
+    assert.equal(state.components[1].requiredRange, '>=0.1.2 <0.2.0 || 0.2.0');
   });
 }

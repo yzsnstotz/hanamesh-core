@@ -20,7 +20,7 @@
       "moduleName": "@hanamesh/market",
       "loaderEntryId": "hanamesh-market",
       "label": "市场（Market）",
-      "versionRange": ">=0.1.2 <0.2.0",
+      "versionRange": ">=0.1.2 <0.2.0 || 0.2.0",
       "onFailure": "notice",
       "impact": "无法浏览或安装市场插件；设备身份与同意开关不受影响",
       "repository": "https://github.com/yzsnstotz/hanamesh-core"

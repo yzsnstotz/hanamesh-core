@@ -166,7 +166,7 @@
       {
         "id": "market",
         "moduleName": "@hanamesh/market",
-        "versionRange": ">=0.1.2 <0.2.0",
+        "versionRange": ">=0.1.2 <0.2.0 || 0.2.0",
         "repository": "https://github.com/yzsnstotz/hanamesh-core"
       },
       {
