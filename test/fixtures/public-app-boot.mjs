@@ -1,6 +1,7 @@
 // TEST-ONLY host observations. Compatibility delegates to the actual public npm API.
 import {readFileSync} from 'node:fs';
 import {evaluatePluginCompatibility as officialCompatibility,getDshRuntimeVersion as officialRuntimeVersion} from 'test:real-dsh-app-boot';
+export {resolvePluginResource} from 'test:real-dsh-app-boot';
 export const compatibilityCalls=[];
 export function evaluatePluginCompatibility(manifest,exemptions,runtimeVersion){
  compatibilityCalls.push({manifest,runtimeVersion});

@@ -3,10 +3,9 @@ import {assessLegacyInstallationWithManifest} from './legacy.js';
 import {createSuiteInstallRelease, suiteInstallArgs} from './install-command.js';
 import semver from 'semver';
 import {evaluate} from '../health/evaluate.js';
-import type {ComponentObservation} from '../health/types.js';
 import {CoreError} from '../errors.js';
 import {digest, frozen, repositoryIdentity, isPackageName, registryUrl} from './facts.js';
-import type {PackageMetadata, SuiteBlocked, SuiteDeclaration, SuiteDeclarationRequest, SuiteManifest, SuiteServiceOptions, SuiteUpgrade} from './types.js';
+import type {PackageMetadata, SuiteBlocked, SuiteDeclaration, SuiteDeclarationRequest, SuiteManifest, SuiteObservation, SuiteServiceOptions, SuiteUpgrade} from './types.js';
 
 function distributionDependencies(dependencies: Readonly<Record<string, string>> | undefined, members: readonly string[]): boolean {
   return !!dependencies && Object.keys(dependencies).length === members.length &&
@@ -20,10 +19,10 @@ export class SuiteDeclarationService {
     const clientAtStart = this.options.clientPeerFacts?.();
     const blocked: SuiteBlocked[] = [], upgrades: SuiteUpgrade[] = [];
     const peerFacts: Record<string, string | null> = {}, metadataDigests: Record<string, string> = {};
-    let observations: readonly ComponentObservation[];
+    let observations: readonly SuiteObservation[];
     try {observations = await inventory.observe(profile.components);} catch {observations = [];}
     const health = evaluate(profile, observations, 0);
-    let physicalCore: ComponentObservation;
+    let physicalCore: SuiteObservation;
     try {physicalCore = await this.options.coreInventory();} catch {physicalCore = {kind: 'unreadable'};}
     const coreMatches = physicalCore.kind === 'present' && physicalCore.phase === 'active' && physicalCore.version === manifest.core.version && core.version === manifest.core.version;
     const installed = [{id: 'core', moduleName: core.name, requiredRange: manifest.core.version, repository: manifest.core.repository, actualVersion: physicalCore.version ?? null, actualRepository: repositoryIdentity(physicalCore.repository), runningVersion: manifest.core.version, status: coreMatches ? 'satisfied' : 'running-physical-mismatch'}, ...health.components.map((row, i) => ({id: row.id, moduleName: row.moduleName, requiredRange: row.requiredRange, repository: manifest.components[i]!.repository, actualVersion: row.version, actualRepository: repositoryIdentity(observations[i]?.repository), status: row.status}))];
@@ -48,16 +47,36 @@ export class SuiteDeclarationService {
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH', moduleName: manifest.bundle.name});
     }
     if (physicalBundle) metadataDigests[`installed:${physicalBundle.name}`] = digest(physicalBundle);
-    // External peer facts are read from the current Core/Loader resolution context once per declaration.
-    const peer = async (name: string): Promise<string | null> => {
-      if (!Object.hasOwn(peerFacts, name)) {
-        try {const version = name === 'react' && clientAtStart ? clientAtStart.reactVersion ?? {status: 'unknown'} : await this.options.peerVersion(name); peerFacts[name] = version === null ? null : typeof version === 'string' && semver.valid(version) ? version : 'unknown';} catch {peerFacts[name] = 'unknown';}
+    const peerCache = new Map<string | null | undefined, Map<string, Promise<string | null>>>();
+    const installedPeerNames = new Set<string>();
+    const peer = async (name: string, component?: SuiteObservation): Promise<string | null> => {
+      const clientReact = name === 'react' && clientAtStart;
+      const parentURL = component && !clientReact ? component.entryURL ?? null : undefined;
+      let cache = peerCache.get(parentURL);
+      if (!cache) peerCache.set(parentURL, cache = new Map());
+      let result = cache.get(name);
+      if (!result) {
+        result = (async () => {
+          try {
+            const version = clientReact ? clientReact.reactVersion ?? {status: 'unknown'} : await this.options.peerVersion(name, parentURL);
+            return version === null ? null : typeof version === 'string' && semver.valid(version) ? version : 'unknown';
+          } catch { return 'unknown'; }
+        })();
+        cache.set(name, result);
       }
-      return peerFacts[name] ?? null;
+      const version = await result;
+      if (component) {
+        peerFacts[name] = !installedPeerNames.has(name) || peerFacts[name] === version ? version : 'unknown';
+        installedPeerNames.add(name);
+      } else if (!installedPeerNames.has(name)) {
+        peerFacts[name] = version;
+      }
+      return version;
     };
-    const compatible = async (tuple: readonly PackageMetadata[]): Promise<string | null> =>
-      (await compatibilityIssues(tuple, nodeVersion, peer))[0]?.code ?? null;
-    const currentRecords = [physicalCore.metadata, ...observations.map(row => row.metadata)];
+    const compatible = async (tuple: readonly PackageMetadata[], components: readonly SuiteObservation[] = []): Promise<string | null> =>
+      (await compatibilityIssues(tuple, nodeVersion, (name, record) => peer(name, components.find(component => component.metadata === record))))[0]?.code ?? null;
+    const currentComponents = [physicalCore, ...observations];
+    const currentRecords = currentComponents.map(row => row.metadata);
     for (const record of currentRecords) if (record) metadataDigests[`installed:${record.name}`] = digest(record);
     if (currentRecords.some(row => !row)) {
       if (completeness === 'complete') completeness = 'unknown';
@@ -65,7 +84,7 @@ export class SuiteDeclarationService {
     } else if (currentRecords.some((row, i) => !this.validRecord(row!, installed[i]!.moduleName, installed[i]!.actualVersion ?? '', installed[i]!.repository))) {
       blocked.push({code: 'CORE_SUITE_INSTALLED_METADATA_MISMATCH'}); if (completeness === 'complete') completeness = 'unknown';
     } else {
-      const reason = await compatible([...(physicalBundle ? [physicalBundle] : []), ...currentRecords as PackageMetadata[]]);
+      const reason = await compatible([...(physicalBundle ? [physicalBundle] : []), ...currentRecords as PackageMetadata[]], currentComponents);
       if (reason) {blocked.push({code: reason}); if (completeness === 'complete') completeness = reason === 'CORE_SUITE_PEER_UNKNOWN' ? 'unknown' : 'incomplete';}
     }
     let registry: string | null = null;
@@ -113,7 +132,7 @@ export class SuiteDeclarationService {
     let legacy = physicalBundle === null && !bundleReadFailed ? await assessLegacyInstallationWithManifest({nodeVersion,
       components: await Promise.all([physicalCore, ...profile.components.map((_, i) => observations[i] ?? {kind: 'unreadable' as const})].map(async (observation, i) => {
         const peers: Record<string, string | null | 'unknown'> = {};
-        for (const name of Object.keys(observation.metadata?.peerDependencies ?? {})) if (isPackageName(name)) peers[name] = await peer(name);
+        for (const name of Object.keys(observation.metadata?.peerDependencies ?? {})) if (isPackageName(name)) peers[name] = await peer(name, observation);
         return {moduleName: installed[i]!.moduleName, observation, peers, ...(i === 0 ? {runningVersion: manifest.core.version} : {})};
       }))}, manifest) : undefined;
     const clientPeerFacts = this.options.clientPeerFacts?.();

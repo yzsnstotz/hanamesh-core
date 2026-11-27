@@ -44,6 +44,9 @@ export const cases = [
  {id:'source-origin-guard-removed',file:'lib/routes.js',mutate:code=>code.replace("if (!admission || request.headers.has('origin'))\n                requireSameCarrierOrigin(request);","void 0;"),test:'test/suite-source-routes.test.mjs'},
 
  {id: 'renderer-context-not-rechecked', file: 'lib/suite/service.js', mutate: code => code.replaceAll('clientPeerFacts.contextId !== clientAtStart?.contextId', 'false'), test: 'test/suite-policy.test.mjs'},
+ {id: 'installed-peer-uses-core-entry', file: 'lib/dsh.mjs', mutate: code => code.replace('packageOf(name, parentURL ?? import.meta.url)', 'packageOf(name, import.meta.url)'), test: 'test/suite-adapter.test.mjs'},
+ {id: 'installed-peer-cache-shared-across-entries', file: 'lib/suite/service.js', mutate: code => code.replace('peerCache.get(parentURL)', 'peerCache.get(undefined)').replace('peerCache.set(parentURL,', 'peerCache.set(undefined,'), test: 'test/suite-adapter.test.mjs'},
+ {id: 'legacy-peer-uses-core-context', file: 'lib/suite/service.js', mutate: code => code.replace('peers[name] = await peer(name, observation)', 'peers[name] = await peer(name)'), test: 'test/suite-adapter.test.mjs'},
  {id: 'renderer-conflict-ignored', file: 'lib/suite/client-peers.js', mutate: code => code.replace('versions.size > 1', 'versions.size > 999'), test: 'test/suite-client-peers.test.mjs'},
  {id: 'archive-integrity-ignored', file: 'lib/suite/source-package.js', mutate: code => code.replace(' !== expected)', ' !== expected && false)'), test: 'test/suite-source.test.mjs'},
  {id: 'consent-prompt-ignores-refusal', file: 'lib/controller.js', mutate: code => code.replace("this.#state.consent.changedAt === null && shownAt === null", "shownAt === null"), test: 'test/first-consent.test.mjs'},

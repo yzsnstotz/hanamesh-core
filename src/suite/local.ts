@@ -1,10 +1,10 @@
 import {createRequire} from 'node:module';
 import {readFile, stat} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {inspectPackage} from '../health/loader.js';
 import {CORE_DEFAULTS} from '../validation.js';
-import type {ComponentObservation} from '../health/types.js';
-import type {PackageMetadata} from './types.js';
+import type {PackageMetadata, SuiteObservation} from './types.js';
 import {isPackageName} from './facts.js';
 
 /** Reads public package metadata only; resolving an entry never executes its module. */
@@ -26,11 +26,17 @@ export async function packageMetadata(name: string, baseUrl: string, entry = nam
     return value.name === name && typeof value.version === 'string' ? value : null;
   } catch {return null;}
 }
-export function suiteInspector(maxResponseBytes = CORE_DEFAULTS.maxResponseBytes): (name: string, baseUrl: string, entry?: string) => Promise<ComponentObservation> {
+export function suiteInspector(maxResponseBytes = CORE_DEFAULTS.maxResponseBytes, resolveEntry?: (entry: string, baseUrl: string) => string): (name: string, baseUrl: string, entry?: string) => Promise<SuiteObservation> {
   return async (name, baseUrl, entry = name) => {
     const observed = await inspectPackage(name, baseUrl, entry);
     const metadata = await packageMetadata(name, baseUrl, entry, maxResponseBytes);
-    return {...observed, ...(metadata ? {repository: metadata.repository, metadata} : {})};
+    if (!metadata) return observed;
+    let entryURL: string | undefined;
+    if (observed.kind === 'present' && resolveEntry) {
+      try { entryURL = pathToFileURL(resolveEntry(entry, baseUrl)).href; }
+      catch { /* Preserve the package observation; its peer resolution is unknown. */ }
+    }
+    return {...observed, repository: metadata.repository, metadata, ...(entryURL ? {entryURL} : {})};
   };
 }
 

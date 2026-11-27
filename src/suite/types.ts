@@ -1,4 +1,4 @@
-import type {ObservationSource, SuiteProfile} from '../health/types.js';
+import type {ComponentObservation, SuiteProfile} from '../health/types.js';
 
 export interface SuiteManifest {
   readonly schemaVersion: 1;
@@ -58,21 +58,26 @@ export interface SuiteDeclaration {
   readonly installed: readonly SuiteInstalled[];
   readonly upgrades: readonly SuiteUpgrade[];
   readonly blocked: readonly SuiteBlocked[];
-  /** External peers visible to the current Core/Loader resolution context, not a future installation tree. */
+  /** Summary of observed external peers. Different installed versions of the same peer yield "unknown". */
   readonly peerFacts: Readonly<Record<string, string | null | 'unknown'>>;
   readonly metadataDigests: Readonly<Record<string, string>>;
   readonly clientPeerFacts?: import('./client-peers.js').ClientPeerFacts;
+}
+export interface SuiteObservation extends ComponentObservation {
+  /** Internal resolver parent for the configured Loader entry. */
+  readonly entryURL?: string;
 }
 export interface SuiteServiceOptions {
   readonly profile: SuiteProfile;
   readonly core: PackageMetadata;
   readonly manifest: SuiteManifest;
-  readonly inventory: ObservationSource;
+  readonly inventory: {observe(requirements: SuiteProfile['components']): Promise<readonly SuiteObservation[]>};
   readonly bundleInventory: () => Promise<PackageMetadata | null>;
-  readonly coreInventory: () => Promise<import('../health/types.js').ComponentObservation>;
+  readonly coreInventory: () => Promise<SuiteObservation>;
   readonly registry: {normalize?(registry: string): string; read(registry: string, name: string): Promise<RegistryMetadata>};
   readonly nodeVersion: string;
-  readonly peerVersion: (name: string) => Promise<string | null | {readonly status: 'unknown'}>;
+  /** An absent parent is the candidate/bundle context; null is an unresolved installed entry. */
+  readonly peerVersion: (name: string, parentURL?: string | null) => Promise<string | null | {readonly status: 'unknown'}>;
   readonly clientPeerFacts?: () => import('./client-peers.js').ClientPeerFacts;
 }
 

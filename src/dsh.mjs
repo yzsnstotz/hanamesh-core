@@ -105,8 +105,8 @@ export async function apply(ctx, config) {
     });
     const ownedHealth = healthService;
     controller.attachHealth(ownedHealth);
-    const suiteInventory = new LoaderObservationSource(/** @type {any} */ (ctx).loader, import.meta.url, suiteInspector(config.maxResponseBytes));
-    const {getDshRuntimeVersion} = await import('@deepseek-ai/dsh-app-boot');
+    const {getDshRuntimeVersion, resolvePluginResource} = await import('@deepseek-ai/dsh-app-boot');
+    const suiteInventory = new LoaderObservationSource(/** @type {any} */ (ctx).loader, import.meta.url, suiteInspector(config.maxResponseBytes, resolvePluginResource));
     controller.attachSuite(new SuiteDeclarationService({
       profile: suiteProfile, core: OWN_PACKAGE, manifest: SUITE_MANIFEST,
       inventory: suiteInventory, nodeVersion: process.versions.node,
@@ -116,10 +116,14 @@ export async function apply(ctx, config) {
         const entry = [.../** @type {any} */ (ctx).loader.entries()].find(entry => entry.options.name === SUITE_MANIFEST.core.name);
         return bundleMetadata(SUITE_MANIFEST.bundle.name, entry?.parent?.tree?.ctx?.baseUrl ?? import.meta.url, config.maxResponseBytes);
       },
-      coreInventory: async () => (await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]))[0] ?? {kind: 'unreadable'},
-      peerVersion: async name => {
+      coreInventory: async () => {
+        const [observed] = await suiteInventory.observe([{id: 'core', moduleName: SUITE_MANIFEST.core.name, label: 'Core', versionRange: SUITE_MANIFEST.core.version, onFailure: 'block', impact: 'suite'}]);
+        return observed ? {...observed, entryURL: import.meta.url} : {kind: 'unreadable'};
+      },
+      peerVersion: async (name, parentURL) => {
         if (name === '@deepseek-ai/dsh' || name.startsWith('@deepseek-ai/dsh-')) return getDshRuntimeVersion();
-        const metadata = ctx.pluginPackages.packageOf(name, import.meta.url);
+        if (parentURL === null) return {status: 'unknown'};
+        const metadata = ctx.pluginPackages.packageOf(name, parentURL ?? import.meta.url);
         return metadata?.name === name ? metadata.version ?? {status: 'unknown'} : {status: 'unknown'};
       },
     }));
