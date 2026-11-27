@@ -1,4 +1,4 @@
-# HanaMesh Core 0.3.41
+# HanaMesh Core 0.3.42
 
 HanaMesh Desktop 使用 Core、Usage、Market 和 Theme 四个独立 DSH 插件。为自己的 desktop profile 安装或补齐组件时，在 DSH「插件 → 添加插件」输入对应的精确发行包规格，再在插件页启用。版本与来源由所用发行渠道提供。用户在工作台完成数据同意和账号绑定。
 

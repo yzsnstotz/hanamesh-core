@@ -1,6 +1,6 @@
 # Core suite declaration
 
-Core 0.3.41 declares Core, Usage, Market and Theme as the desktop suite. Each package loads through its own DSH patch. Core takes the required member list and version ranges from its owned profile. Independently installed members may satisfy the full suite.
+Core 0.3.42 declares Core, Usage, Market and Theme as the desktop suite. Each package loads through its own DSH patch. Core takes the required member list and version ranges from its owned profile. Independently installed members may satisfy the full suite.
 
 ## Public port and facts
 
