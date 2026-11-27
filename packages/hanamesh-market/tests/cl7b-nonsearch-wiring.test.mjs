@@ -1,32 +1,37 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import {createMarketService,initialState} from '../src/service.js';
 import {createMarketHandler} from '../src/routes.js';
 import * as state from '../src/client-state.js';
 import {loadClient,settle} from './fixtures/client-loader.mjs';
-const fixture=async name=>JSON.parse(await readFile(new URL('./fixtures/discovery-027/'+name+'.json',import.meta.url),'utf8'));
+import {discoveryFixture as fixture} from './fixtures/discovery-031.mjs';
+import {catalogPage} from './fixtures/catalog-u2.mjs';
 const keys=['projection','domainIds','subdivisions','taxonomyVersion','overview','score','trustBadges','featured','similarGroup'];
-const pick=item=>Object.fromEntries(['hanaId',...keys].map(k=>[k,item[k]]));
+const pick=item=>Object.fromEntries(keys.map(k=>[k,item[k]]));
 const id='00000000-0000-4000-8000-000000000001';
 async function serviceFixture(t){let saved=initialState();const calls=[],detail=await fixture('detail'),page=await fixture('list');
  const legacy={...detail,displayName:'Legacy identity',score:undefined,installMethods:[],oneClickInstall:{allowed:false},nativeInstallation:{status:'not-installed'}};
  const s=createMarketService({config:{websiteOrigin:'https://legacy.example',serverOrigin:'https://host.example'},domain:{global:{get:async()=>saved,set:async v=>saved=v}},manager:()=>({listBundles:async()=>[]}),anchor:new URL('../package.json',import.meta.url),fetchImpl:async(url,init)=>{const u=new URL(url);calls.push({url:u,init});
-  if(u.pathname==='/v1/capabilities/search')return Response.json({candidates:[{hanaId:id,objectId:'object'}],retrieval:{mode:'fixture'},requestId:'unchanged'});
-  if(u.hostname==='legacy.example')return Response.json(u.pathname==='/api/v2/hanas'?{items:[legacy],page:Number(u.searchParams.get('page')),totalPages:3,facets:{sources:[{id:'awesome',count:900}]}}:legacy);
+  if(u.pathname==='/hm/v1/host/catalog/query')return Response.json(catalogPage([{...legacy,discovery:pick(detail)}],{
+   pageNumber:Number(u.searchParams.get('page')??1),total:101,searchMode:u.searchParams.get('searchMode'),
+   facets:{sources:[{id:'awesome',count:900}]},
+  }));
   if(u.pathname.endsWith('/domains'))return Response.json(await fixture('domain-directory'));
   if(u.pathname.endsWith('/stage-config'))return Response.json((await fixture('stage-config')).early);
   if(u.pathname.endsWith('/featured'))return Response.json({...page,items:[Object.fromEntries(Object.entries(detail).filter(([key])=>key!=='reasons'))]});
-  if(u.pathname.endsWith('/list-fields'))return Response.json({items:[pick(detail)]});
+  if(u.pathname.endsWith('/list-fields'))return Response.json({items:[{hanaId:detail.hanaId,...pick(detail)}]});
   if(u.pathname.includes('/hanas/'))return Response.json({...detail,displayName:'Cannot replace legacy identity'});
   assert.fail('unexpected upstream '+u.href);
  }});await s.init();t.after(()=>s.close());return{s,calls,detail,legacy};}
-test('NS27-01 only five non-search discovery reads are admitted; old list/search semantics and metadata remain original',async t=>{
+test('NS27-01 only five non-search discovery reads are admitted; list and search use one catalog read and preserve provider identity and selectors',async t=>{
  const {s,calls}=await serviceFixture(t);assert.equal(typeof s.discovery,'function');
  const old=await s.list({q:'notes',category:'tools',source:'awesome',channel:'dsh',page:2});assert.equal(old.page,2);assert.equal(old.totalPages,3);assert.equal(old.facets.sources[0].count,900);
- assert.equal(calls.length,1);assert.equal(calls[0].url.hostname,'legacy.example');assert.equal(calls[0].url.searchParams.get('category'),'tools');
- const semantic=await s.search({query:'original query'});assert.equal(semantic.requestId,'unchanged');assert.deepEqual(semantic.items.map(i=>i.hanaId),[id]);assert.equal(calls.length,3);assert.equal(calls[1].url.pathname,'/v1/capabilities/search');assert.deepEqual(JSON.parse(calls[1].init.body),{query:'original query',topK:50,telemetry:false});
+ assert.equal(calls.length,1);assert.equal(calls[0].url.hostname,'legacy.example');assert.equal(calls[0].url.searchParams.get('categories'),'tools');
+ const semantic=await s.search({query:'original query'});
+ assert.equal(semantic.searchId,null);assert.deepEqual(semantic.items.map(i=>[i.hanaId,i.matchKind]),[[id,'meaning']]);assert.equal(calls.length,2);
+ assert.equal(calls[1].url.pathname,calls[0].url.pathname);assert.equal(calls[1].init.method,'GET');assert.equal(calls[1].init.body,undefined);
+ assert.equal(calls[1].url.searchParams.get('searchMode'),'hybrid');assert.equal(calls[1].url.searchParams.get('q'),'original query');
  assert.equal((await s.discovery('domains',{})).domains.length,10);assert.equal((await s.discovery('stage',{})).showPlatformData,false);
  const featured=await s.discovery('featured',{domain:'office'});assert.equal(featured.items[0].hanaId,id);assert.equal(featured.items[0].nativeInstallation.status,'not-installed');
  assert.equal((await s.discovery('detail',{hanaId:id})).hanaId,id);assert.deepEqual((await s.discovery('fields',{hanaIds:[id]})).items.map(i=>i.hanaId),[id]);
@@ -71,27 +76,41 @@ test('NS27-05 ID decoration covers bounded accepted batches without scanning, se
 const text=n=>n==null?'':Array.isArray(n)?n.map(text).join(' '):typeof n==='object'?text(n.children):String(n);
 function find(n,p){if(Array.isArray(n)){for(const c of n){const v=find(c,p);if(v)return v;}}else if(n&&typeof n==='object'){if(p(n))return n;return find(n.children,p);}}
 function hooks(){const v=[],effects=[],cleanups=[],setups=[];let cursor=0;return {React:{Fragment:Symbol.for('fragment'),createElement:(type,props,...children)=>({type,props:props??{},children}),useState(value){const i=cursor++;if(!(i in v))v[i]=typeof value==='function'?value():value;return [v[i],next=>v[i]=typeof next==='function'?next(v[i]):next];},useRef(value){const i=cursor++;return v[i]??(v[i]={current:value});},useEffect(fn,deps){const i=cursor++,old=v[i];if(!old||!deps||deps.some((x,n)=>!Object.is(x,old[n]))){v[i]=deps;setups[i]=fn;effects.push(()=>{cleanups[i]?.();cleanups[i]=fn();});}}},render(Component){cursor=0;const tree=Component({});while(effects.length)effects.shift()();return tree;},replay(){for(const fn of cleanups)fn?.();setups.forEach((fn,i)=>{if(fn)cleanups[i]=fn();});},close(){for(const fn of cleanups)fn?.();}};}
-test('NS27-06 actual MarketPage wires approved home/detail/ID fields and stages without changing old searches or activating paused result navigation',async t=>{
- const ui=hooks(),calls=[],detail=await fixture('detail'),directory=await fixture('domain-directory'),featured=(await fixture('featured')).byDomain.office;let failFields=false;
+test('NS27-06 actual MarketPage wires home/detail/stage and keeps list fields in the unified page',async t=>{
+ const ui=hooks(),calls=[],detail=await fixture('detail'),directory=await fixture('domain-directory'),featured=(await fixture('featured')).byDomain.office;let failPage=false;
  const base={...detail,displayName:'Original title',installMethods:[],oneClickInstall:{allowed:false},overview:undefined,score:undefined,trustBadges:[],nativeInstallation:{status:'not-installed'}};
  const scope={fetch:async(url,init)=>{const u=new URL(url,'http://127.0.0.1');calls.push({path:u.pathname,query:u.search,body:init.body});let value;
   if(u.pathname.endsWith('/settings'))value={settings:{websiteOrigin:'https://legacy.example',serverOrigin:'https://host.example'}};
   else if(u.pathname.endsWith('/suite'))value={status:'unknown'};
-  else if(u.pathname.endsWith('/catalog'))value={items:[base],page:Number(u.searchParams.get('page')),totalPages:2,nativeBundles:[],facets:{sources:[{id:'awesome',count:900}]}};
+  else if(u.pathname.endsWith('/catalog')){
+   if(failPage)return Response.json({error:{code:'INDEXER_CATALOG_CHANGED'}},{status:503});
+   const next=u.searchParams.has('after');
+   value={items:[{...base,discovery:{hanaId:base.hanaId,...pick(detail)}}],page:next?2:1,totalPages:2,nextCursor:next?null:'test_cursor',
+    paginationReset:false,nativeBundles:[],facets:{sources:[{id:'awesome',count:900}]}};
+  }
   else if(u.pathname.endsWith('/item'))value=base;
   else if(u.pathname.endsWith('/discovery/domains'))value=directory;
   else if(u.pathname.endsWith('/discovery/featured'))value=featured;
   else if(u.pathname.endsWith('/discovery/stage-config'))value={phase:'growth',showPlatformData:false};
   else if(u.pathname.endsWith('/discovery/detail'))value={...detail,displayName:'Not authoritative'};
-  else if(u.pathname.endsWith('/discovery/list-fields')){if(failFields)return Response.json({error:{code:'DISCOVERY_UNAVAILABLE'}},{status:503});value={items:JSON.parse(init.body).hanaIds.map(hanaId=>({...pick(detail),hanaId}))};}
   else assert.fail('unexpected adapter '+u.pathname);return Response.json(value);
  }};const m=await loadClient({React:ui.React,scope});const Frame=()=>{},Card=()=>{},Results=()=>{},Discovery=()=>{};const Page=m.createMarketPage({Frame,Card,Results,Discovery});t.after(()=>ui.close());
  let tree=ui.render(Page);for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}let frame=find(tree,n=>n.type===Frame),home=find(frame.props.body,n=>n.type===Discovery);assert.equal(home.props.domains.length,10);assert.equal(home.props.items.length,featured.items.length);assert.equal(home.props.onViewAll,undefined,'DM1 hold must leave result navigation inactive');
  home.props.onDomain('code');await settle();tree=ui.render(Page);assert(calls.some(c=>c.path.endsWith('/discovery/featured')&&c.query==='?domain=code'));
  frame=find(tree,n=>n.type===Frame);frame.props.onNavigate('search');tree=ui.render(Page);frame=find(tree,n=>n.type===Frame);const form=find(frame.props.body,n=>n.type==='form');form.props.onSubmit({preventDefault(){}});
  for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);let results=find(frame.props.body,n=>n.type===Results);assert.equal(results.props.snapshot.page,1);assert.equal(results.props.snapshot.facets.sources[0].count,900);let card=results.props.card(results.props.snapshot.items[0]);assert.equal(card.props.item.displayName,'Original title');assert.equal(card.props.item.score.displayTotal,detail.score.displayTotal);assert.equal(card.props.item.nativeInstallation.status,'not-installed');
- const oldCalls=calls.filter(c=>c.path.endsWith('/catalog')).length;failFields=true;await results.props.onMore();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);assert.equal(results.props.snapshot.page,2);assert.equal(results.props.snapshot.items.length,1);assert.equal(calls.filter(c=>c.path.endsWith('/catalog')).length,oldCalls+1);assert(find(frame.props.messages,n=>n.props?.error?.message==='DISCOVERY_UNAVAILABLE'),'failed decoration remains visible, not silently an empty score');
- const retry=find(frame.props.messages,n=>n.props?.error?.message==='DISCOVERY_UNAVAILABLE');const beforeRetry=calls.length;failFields=false;retry.props.retry();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}assert.equal(calls.length,beforeRetry+1);assert(calls.at(-1).path.endsWith('/discovery/list-fields'));
+ const oldCalls=calls.filter(c=>c.path.endsWith('/catalog')).length;
+ failPage=true;results.props.onMore();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}
+ frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);
+ assert.equal(results.props.snapshot.page,1);assert.equal(results.props.snapshot.items.length,1);
+ assert.equal(results.props.snapshot.error,'INDEXER_CATALOG_CHANGED');
+ assert.equal(calls.filter(c=>c.path.endsWith('/catalog')).length,oldCalls+1);
+ assert.equal(new URLSearchParams(calls.at(-1).query).get('after'),'test_cursor');
+ const beforeRetry=calls.length;failPage=false;results.props.onRetry();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}
+ assert.equal(calls.length,beforeRetry+1);assert(calls.at(-1).path.endsWith('/catalog'));
+ frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);
+ assert.equal(results.props.snapshot.page,2);assert.equal(results.props.snapshot.items.length,1);
+ assert(!calls.some(c=>c.path.endsWith('/discovery/list-fields')));
  frame=find(tree,n=>n.type===Frame);results=find(frame.props.body,n=>n.type===Results);card=results.props.card(results.props.snapshot.items[0]);await card.props.onDetails();for(let n=0;n<8;n++){await settle();tree=ui.render(Page);}frame=find(tree,n=>n.type===Frame);const detailCard=find(frame.props.body,n=>n.type===Card);assert.equal(detailCard.props.item.displayName,'Original title');assert.equal(detailCard.props.item.score.displayTotal,detail.score.displayTotal);assert.deepEqual(detailCard.props.item.reasons,detail.reasons);const signals=find(detailCard.children,n=>n.type===m.NativeMarketSignals);assert.equal(signals.props.stageConfig.showPlatformData,false);
  assert(!calls.some(c=>/\/(items|selected)$/.test(c.path)));assert(!calls.some(c=>c.path.endsWith('/search')));assert.equal(calls.filter(c=>c.path.endsWith('/discovery/domains')).length,1);
 });

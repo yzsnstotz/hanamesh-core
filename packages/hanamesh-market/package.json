@@ -1,6 +1,6 @@
 {
   "name": "@hanamesh/market",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "HanaMesh market tab for the native DSH Plugins page.",
   "type": "module",
   "license": "MIT",
@@ -41,7 +41,7 @@
   "dependencies": {
     "semver": "7.8.5",
     "zod": "4.4.3",
-    "@hanamesh/api-contracts": "^0.27.0",
+    "@hanamesh/api-contracts": "https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff",
     "ajv": "8.20.0"
   },
   "peerDependencies": {

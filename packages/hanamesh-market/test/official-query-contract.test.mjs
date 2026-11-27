@@ -5,20 +5,32 @@ import {createServer} from 'node:http';
 import {createCatalogClient} from '../src/catalog.js';
 import {createMarketHandler} from '../src/routes.js';
 import {createMarketService,initialState} from '../src/service.js';
+import {catalogPage} from '../tests/fixtures/catalog-u2.mjs';
 
 // Provider-owned examples: catalogPath at the recorded website commit. The gate
 // executes that exact provider function against these examples before this test.
 const contract=JSON.parse(await readFile(new URL('../tests/fixtures/catalog-official-contract.json',import.meta.url)));
 const example=name=>contract.cases.find(row=>row.name===name);
-const page=query=>({items:[],page:Number(query.page??1),limit:50,total:101,totalPages:3,facets:{
- categories:[{id:'tools',count:101}],channels:[{id:'dsh',count:101}],
- sources:['hanamesh-official','awesome','github','npm'].map(id=>({id,name:id==='hanamesh-official'?'官方':id,count:101})),
-}});
-function sameRequest(actual,name){
- const expected=new URL(example(name).catalogPath,'https://catalog.example');
- actual=new URL(actual,'https://catalog.example');
- assert.equal(actual.pathname,expected.pathname);
- assert.deepEqual([...actual.searchParams].sort(),[...expected.searchParams].sort(),`Market request must match website catalogPath: ${name}`);
+const page=query=>catalogPage([],{
+ pageNumber:query.after?2:Number(query.page??1),total:101,nextCursor:query.after?null:'fixture_cursor',
+ facets:{
+  categories:[{id:'tools',count:101}],channels:[{id:'dsh',count:101}],
+  sources:['hanamesh-official','awesome','github','npm'].map(id=>({id,name:id==='hanamesh-official'?'官方':id,count:101})),
+ },
+});
+function sameRequest(actual,name,{fromUi=false}={}){
+ const expected=new URL(example(name).catalogPath,'https://catalog.example').searchParams;
+ const category=expected.get('category');
+ expected.delete('category');if(category)expected.append('categories',category);
+ expected.set('searchMode','keyword');expected.set('sort','relevance');
+ if(fromUi){
+  expected.delete('page');
+  if(name==='official-more')expected.set('after','fixture_cursor');
+ }
+ actual=new URL(actual);
+ assert.equal(actual.origin,'https://catalog.example');
+ assert.equal(actual.pathname,'/hm/v1/host/catalog/query');
+ assert.deepEqual([...actual.searchParams].sort(),[...expected].sort(),`Unified catalog selectors: ${name}`);
 }
 async function fixture(t){
  const outbound=[];
@@ -99,12 +111,12 @@ async function pageFixture(t,f){
 test('official UI selection, combined filters, more and clear emit website catalogPath parameters through the real Market handler and service',async t=>{
  const f=await fixture(t),ui=await pageFixture(t,f);
  const official=find(ui.frame().props.body,node=>node.type==='option'&&node.props.value==='hanamesh-official');assert.equal(official.children[0],'官方');
- ui.choose('source',official.props.value);await ui.debounce();sameRequest(f.outbound.at(-1),'official');
+ ui.choose('source',official.props.value);await ui.debounce();sameRequest(f.outbound.at(-1),'official',{fromUi:true});
  assert.equal(new URL(f.outbound.at(-1)).searchParams.has('source'),false,'official is an attribute, not a source ID');
- ui.keyword('notes');ui.choose('category','tools');ui.choose('channel','dsh');await ui.submit();sameRequest(f.outbound.at(-1),'official-filtered');
- await ui.more();sameRequest(f.outbound.at(-1),'official-more');
- ui.keyword('');await ui.clear();sameRequest(f.outbound.at(-1),'all');
- for(const source of ['awesome','github','npm']){ui.choose('source',source);await ui.debounce();sameRequest(f.outbound.at(-1),source);}
+ ui.keyword('notes');ui.choose('category','tools');ui.choose('channel','dsh');await ui.submit();sameRequest(f.outbound.at(-1),'official-filtered',{fromUi:true});
+ await ui.more();sameRequest(f.outbound.at(-1),'official-more',{fromUi:true});
+ ui.keyword('');await ui.clear();sameRequest(f.outbound.at(-1),'all',{fromUi:true});
+ for(const source of ['awesome','github','npm']){ui.choose('source',source);await ui.debounce();sameRequest(f.outbound.at(-1),source,{fromUi:true});}
 });
 test('catalog official booleans match provider examples without changing literal source-ID semantics',async t=>{
  const f=await fixture(t);

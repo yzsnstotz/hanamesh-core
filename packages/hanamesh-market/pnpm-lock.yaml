@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hanamesh/api-contracts':
-        specifier: ^0.27.0
-        version: 0.27.0
+        specifier: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff
+        version: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -350,8 +350,9 @@ packages:
     resolution: {integrity: sha512-R76UKbvsqI68DJJVTVyqFKqU98CN4+B+acxNfEA2IFarSzP0SjtKf/3+fFiXzTyv5Fj3PxLkGHe2wnVWWMxobQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@hanamesh/api-contracts@0.27.0':
-    resolution: {integrity: sha512-qm4VJuo8c2rS5CsuYwiipORsCr24XedaQ6kg0DL2HAlG459YwTk4BzyI5ozIpt1O2wvOQXdKh+Aby0cet2sCWQ==}
+  '@hanamesh/api-contracts@https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff':
+    resolution: {tarball: https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff}
+    version: 0.31.0
     engines: {node: '>=20'}
     peerDependencies:
       viem: ^2.56.9
@@ -934,7 +935,7 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.3': {}
 
-  '@hanamesh/api-contracts@0.27.0': {}
+  '@hanamesh/api-contracts@https://codeload.github.com/yzsnstotz/hanamesh-api-contracts/tar.gz/2e1dcbb0f3eff49c0e727d088e352755bbdb85ff': {}
 
   '@hanamesh/devkit@0.2.6': {}
 

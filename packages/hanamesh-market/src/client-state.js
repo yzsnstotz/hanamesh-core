@@ -36,8 +36,8 @@ export function createNativeMarketActions(owner={}){
   // A bounded public-catalog page and an independent native listBundles read.
   // Like official Discover, previous data stays mounted while a read runs or fails.
 export function createNativeMarketListing({readPage,listBundles,pagination='page'}){
-    if(!['page','cursor'].includes(pagination))throw new Error('CATALOG_PAGINATION_INVALID');
-    const cursor=pagination==='cursor';
+    if(!['page','cursor','catalog'].includes(pagination))throw new Error('CATALOG_PAGINATION_INVALID');
+    const cursor=pagination!=='page',catalog=pagination==='catalog';
     const listeners=new Set();let generation=0,disposed=false,controller=null,attempt=null;
     let state=Object.freeze({status:'idle',items:[],bundles:null,error:null,page:0,hasMore:false,query:null,answered:null});
     const publish=update=>{if(disposed)return;state=Object.freeze({...state,...update});for(const listener of listeners)listener(state);};
@@ -55,22 +55,25 @@ export function createNativeMarketListing({readPage,listBundles,pagination='page
         publish({status:'error',bundles,error:String(pageResult.reason?.message??pageResult.reason)});return;
       }
       const page=pageResult.value;
-      const validPagination=cursor
+      const validPagination=catalog
+        ?page&&(page.nextCursor===null||typeof page.nextCursor==='string')&&typeof page.paginationReset==='boolean'
+          &&page.page===(request.more&&!page.paginationReset?state.page+1:1)
+        :cursor
         ?page&&(page.next===null||typeof page.next==='string')&&Number.isSafeInteger(page.total)&&page.total>=0&&typeof page.capped==='boolean'
         :page&&page.page===request.page&&Number.isSafeInteger(page.totalPages)&&page.totalPages>=0;
       if(!validPagination||!Array.isArray(page.items)||page.items.length>50||page.items.some(item=>typeof item?.hanaId!=='string'||!item.hanaId)){
         publish({status:'error',bundles,error:'CATALOG_PAGE_INVALID'});return;
       }
-      const unique=new Map((request.more?state.items:[]).map(item=>[item.hanaId,item]));
+      const unique=new Map((request.more&&!(catalog&&page.paginationReset)?state.items:[]).map(item=>[item.hanaId,item]));
       for(const item of page.items)unique.set(item.hanaId,item);
       const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):(!listBundles?'DSH_BUNDLES_UNAVAILABLE':'DSH_BUNDLES_INVALID'):null;
-      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:cursor?undefined:request.page,hasMore:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,acceptedBatch:page.items,acceptedRead:(state.acceptedRead??0)+1,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig'].map(key=>[key,page[key]]))});
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:catalog?page.page:cursor?undefined:request.page,hasMore:catalog?page.nextCursor!==null:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,acceptedBatch:page.items,acceptedRead:(state.acceptedRead??0)+1,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig','nextCursor','semanticNotice'].map(key=>[key,page[key]]))});
     };
     return{
       snapshot:()=>state,
       subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
       load(query){const first={...query};if(cursor){delete first.after;delete first.page;}return run({query:first,...(cursor?{}:{page:1}),more:false});},
-      more(){if(!state.hasMore||state.status!=='ready')return Promise.resolve();return run({query:state.answered,...(cursor?{after:state.next}:{page:state.page+1}),more:true});},
+      more(){if(!state.hasMore||state.status!=='ready')return Promise.resolve();return run({query:state.answered,...(cursor?{after:catalog?state.nextCursor:state.next}:{page:state.page+1}),more:true});},
       retry(){return attempt?run(attempt):Promise.resolve();},
       dispose(){disposed=true;generation++;controller?.abort();listeners.clear();},
     };
@@ -96,11 +99,11 @@ export function formatDiscoveryCount(value,capped){return String(value)+(capped=
 // Discovery is a separately validated, same-ID decoration. Base/native/query facts stay authoritative.
 const discoveryListKeys=['projection','domainIds','subdivisions','taxonomyVersion','overview','score','trustBadges','featured','similarGroup'];
 export function withoutDiscoveryFields(item){
- const base={...item};for(const key of [...discoveryListKeys,'reasons'])delete base[key];return base;
+ const base={...item};for(const key of [...discoveryListKeys,'discovery','reasons','rating'])delete base[key];return base;
 }
 export function withDiscoveryFields(item,fields,detail=false){
  if(!fields||fields.hanaId!==item.hanaId)return item;
- return {...item,...Object.fromEntries([...discoveryListKeys,...(detail?['reasons']:[])].filter(key=>Object.hasOwn(fields,key)).map(key=>[key,fields[key]]))};
+ return {...item,...Object.fromEntries([...discoveryListKeys,...(detail?['reasons','rating']:[])].filter(key=>Object.hasOwn(fields,key)).map(key=>[key,fields[key]]))};
 }
 /** Independent read resources; this controller has no items/selected/search operation. */
 export function createMarketDiscoveryState({read}){
