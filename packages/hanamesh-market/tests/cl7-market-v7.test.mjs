@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadClient} from './fixtures/client-loader.mjs';
+import {marketMessages} from '../src/client-locale.js';
 const text=node=>node==null?'':Array.isArray(node)?node.map(text).filter(Boolean).join(' '):typeof node==='object'?text(node.children):String(node);
 function find(node,predicate){if(!node)return;if(Array.isArray(node)){for(const child of node){const found=find(child,predicate);if(found)return found;}return;}if(typeof node==='object'){if(predicate(node))return node;return find(node.children,predicate);}}
 const item={hanaId:'fixture',displayName:'Fixture',publisher:{name:'Author'},overview:{does:{zh:'整理资料',en:'Organize sources',ja:'資料を整理する'},facts:{},evidence:[]},score:{status:'scored',displayTotal:8.4,displayScale:10,rulesVersion:'hanamesh-initial-v1',dimensions:{quality:80,popularity:null,maintenance:90},missing:[{key:'stars',reason:'没有观测'}],evidence:[]},trustBadges:[],featured:[]};
@@ -59,4 +60,23 @@ test('CL7 missing overview exposes an unscored state and author document rather 
   const tree=m.NativeMarketOverview({item:{...item,overview:null,score},onInspect(){}});assert.match(text(tree),new RegExp(label));
   assert(find(tree,n=>n.type==='button'&&text(n)==='查看作者原文'));
  }
+});
+
+test('Market discovery keeps the interface language and tags fallback text with the language actually displayed',async()=>{
+ const React={createElement:(type,props,...children)=>({type,props:props??{},children}),useState:value=>[value,()=>{}]};
+ const m=await loadClient({React});
+ m.apply({effect(){},slots:{},locale:{getSnapshot:()=>({active:'ko'}),bind:()=>key=>marketMessages.ko[key]}});
+ const overview=m.NativeMarketOverview({item:{
+  summary:{en:null,zh:'作者原文'},
+  overview:{does:{byLocale:{'pt-BR':'Organiza documentos'}},facts:{audience:{value:{byLocale:{en:'Researchers'}}}}},
+ }});
+ assert.match(text(overview),/플러그인 개요/);
+ const capability=find(overview,n=>n.type==='dd'&&text(n).includes('作者原文'));
+ assert.equal(capability.props.lang,'zh');
+ assert.equal(find(overview,n=>n.type==='dd'&&text(n)==='Researchers').props.lang,'en');
+ const domains=m.NativeMarketDomainFilters({
+  domains:[{id:'office',name:{byLocale:{zh:'办公写作'}}}],onDomain(){},
+ });
+ assert.equal(find(domains,n=>n.type==='span'&&text(n)==='办公写作').props.lang,'zh');
+ assert(find(domains,n=>n.props['aria-label']==='분야로 필터링'));
 });
