@@ -339,6 +339,6 @@ export function NativeMarketSignals({item,stageConfig}){
 }
 
 /** Counts are independent provider facts; window/countsCapped never modifies these flags. */
-export function NativeMarketDiscoveryCounts({page,includeInsufficient=false,onIncludeInsufficient}){
- return h(React.Fragment,null,Number.isSafeInteger(page.hiddenInsufficientCount)?h('div',{className:'quality'},h('span',null,t(includeInsufficient?'insufficientShown':'insufficientHidden').replace('{count}',()=>formatDiscoveryCount(page.hiddenInsufficientCount,page.hiddenInsufficientCountCapped))),onIncludeInsufficient?h('button',{type:'button',className:'textbtn',onClick:()=>onIncludeInsufficient(!includeInsufficient)},includeInsufficient?t('restoreDefault'):t('showAll')):null):null,Number.isSafeInteger(page.total)?h('p',{className:'fine'},t('resultCount').replace('{count}',()=>formatDiscoveryCount(page.total,page.capped))):null);
+export function NativeMarketDiscoveryCounts({page}){
+ return Number.isSafeInteger(page.total)?h('p',{className:'fine'},t('resultCount').replace('{count}',()=>formatDiscoveryCount(page.total,page.capped))):null;
 }

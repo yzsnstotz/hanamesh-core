@@ -67,7 +67,7 @@ export function createNativeMarketListing({readPage,listBundles,pagination='page
       const unique=new Map((request.more&&!(catalog&&page.paginationReset)?state.items:[]).map(item=>[item.hanaId,item]));
       for(const item of page.items)unique.set(item.hanaId,item);
       const error=bundles===null?bundleResult.status==='rejected'?String(bundleResult.reason?.message??bundleResult.reason):(!listBundles?'DSH_BUNDLES_UNAVAILABLE':'DSH_BUNDLES_INVALID'):null;
-      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:catalog?page.page:cursor?undefined:request.page,hasMore:catalog?page.nextCursor!==null:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,acceptedBatch:page.items,acceptedRead:(state.acceptedRead??0)+1,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','hiddenInsufficientCount','hiddenInsufficientCountCapped','stageConfig','nextCursor','semanticNotice'].map(key=>[key,page[key]]))});
+      publish({status:error?'error':'ready',items:[...unique.values()],bundles,error,page:catalog?page.page:cursor?undefined:request.page,hasMore:catalog?page.nextCursor!==null:cursor?page.next!==null:request.page<page.totalPages,answered:request.query,acceptedBatch:page.items,acceptedRead:(state.acceptedRead??0)+1,facets:page.facets??state.facets,...Object.fromEntries(['next','total','capped','projection','window','phase','domains','subdivisions','stageConfig','nextCursor','semanticNotice'].map(key=>[key,page[key]]))});
     };
     return{
       snapshot:()=>state,

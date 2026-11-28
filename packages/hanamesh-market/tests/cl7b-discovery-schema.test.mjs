@@ -16,4 +16,5 @@ test('AD27-15: formal 0.31.0 Schema validates localized fixtures with exact 0.27
  const detail=await fixture('detail');delete detail.projection;assert.throws(()=>decodeDiscovery('detailItem',detail),/DISCOVERY_RESPONSE_INVALID/);
  assert.throws(()=>decodeDiscovery('stageConfig',{phase:'growth',showPlatformData:'false'}),/DISCOVERY_RESPONSE_INVALID/);
  const wrong=await fixture('search');wrong.capped=true;wrong.total=42;assert.throws(()=>decodeDiscovery('page',wrong),/DISCOVERY_RESPONSE_INVALID/);
+ const legacyCount={...await fixture('list'),hiddenInsufficientCount:1};assert.throws(()=>decodeDiscovery('page',legacyCount),/DISCOVERY_RESPONSE_INVALID/);
 });

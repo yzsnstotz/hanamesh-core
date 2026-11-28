@@ -5,14 +5,17 @@ import {catalogPage} from './fixtures/catalog-u2.mjs';
 const factory=async()=>{const m=await import('../src/discovery.js');assert.equal(typeof m.createDiscoveryHttpClient,'function');return m.createDiscoveryHttpClient;};
 const origins={websiteOrigin:'https://website.example',serverOrigin:'https://host.example'};
 
-test('HTTP27-01: real discovery page path belongs to Host, cursor/boolean/limit pass unchanged and DTO is validated',async()=>{
+test('HTTP27-01: real discovery page path belongs to Host, cursor and limit pass unchanged and all listed items survive',async()=>{
  const create=await factory(),page=await fixture('list'),calls=[];
  const c=create({...origins,fetchImpl:async(url,init)=>{calls.push({url:new URL(url),init});return Response.json(page);}});
- const cursor='opaque+/=%?日本語',actual=await c.list({domain:'office',subdivision:'docs',channel:'dsh',search:'文档',limit:50,after:cursor,includeInsufficient:true});
+ const cursor='opaque+/=%?日本語',actual=await c.list({domain:'office',subdivision:'docs',channel:'dsh',search:'文档',limit:50,after:cursor});
  assert.deepEqual(actual,page);const {url,init}=calls[0];assert.equal(url.origin,origins.serverOrigin);assert.equal(url.pathname,'/v1/indexer/discovery/items');
- assert.deepEqual(Object.fromEntries(url.searchParams),{domain:'office',subdivision:'docs',channel:'dsh',search:'文档',limit:'50',after:cursor,includeInsufficient:'true'});
+ assert.equal(actual.total,actual.items.length);
+ assert.equal(actual.items.find(item=>item.score.status==='insufficient').score.total,null);
+ assert.deepEqual(Object.fromEntries(url.searchParams),{domain:'office',subdivision:'docs',channel:'dsh',search:'文档',limit:'50',after:cursor});
  assert.equal(init.credentials,'omit');assert.equal(init.redirect,'error');assert.equal(init.method,'GET');
  for(const key of ['q','category','source','page'])await assert.rejects(c.list({[key]:'legacy'}),/INVALID_QUERY/);
+ await assert.rejects(c.list({includeInsufficient:true}),/INVALID_QUERY/);
  assert.equal(calls.length,1,'invalid legacy filters cannot be silently forwarded or client-filtered');
 });
 
@@ -28,8 +31,9 @@ test('HTTP27-03: selected and fields are bounded read POSTs; fields is not a pag
  const create=await factory(),page=await fixture('list'),items=page.items.slice(0,2),ids=items.map(x=>x.hanaId),calls=[];
  const fields=items.map(({hanaId,domainIds,subdivisions,taxonomyVersion,overview,score,trustBadges,featured,similarGroup,projection})=>({hanaId,domainIds,subdivisions,taxonomyVersion,overview,score,trustBadges,featured,similarGroup,projection}));
  const c=create({...origins,fetchImpl:async(url,init)=>{calls.push({url:new URL(url),init});return Response.json(String(url).endsWith('/list-fields')?{items:fields}:page);}});
- assert.deepEqual(await c.selected({hanaIds:ids,domain:'office',includeInsufficient:true}),page);assert.deepEqual(await c.listFields(ids),{items:fields});
- assert.deepEqual(calls.map(x=>[x.init.method,x.url.pathname,JSON.parse(x.init.body)]),[['POST','/v1/indexer/discovery/selected',{hanaIds:ids,domain:'office',includeInsufficient:true}],['POST','/v1/indexer/discovery/list-fields',{hanaIds:ids}]]);
+ assert.deepEqual(await c.selected({hanaIds:ids,domain:'office'}),page);assert.deepEqual(await c.listFields(ids),{items:fields});
+ assert.deepEqual(calls.map(x=>[x.init.method,x.url.pathname,JSON.parse(x.init.body)]),[['POST','/v1/indexer/discovery/selected',{hanaIds:ids,domain:'office'}],['POST','/v1/indexer/discovery/list-fields',{hanaIds:ids}]]);
+ await assert.rejects(c.selected({hanaIds:ids,includeInsufficient:true}),/INVALID_QUERY/);
  await assert.rejects(c.selected({hanaIds:[...ids,ids[0]]}),/INVALID_QUERY/);await assert.rejects(c.listFields(Array.from({length:201},(_,i)=>String(i))),/INVALID_QUERY/);assert.equal(calls.length,2);
 });
 
@@ -38,14 +42,16 @@ test('HTTP27-04: semantic uses one unified catalog read, with no detail N+1 or l
  const c=create({...origins,fetchImpl:async(url,init)=>{
   calls.push({url:new URL(url),init});return Response.json(catalogPage(cards,{searchMode:'hybrid'}));
  }});
- const result=await c.search({query:'x'.repeat(500),domain:'office',includeInsufficient:true});
+ const result=await c.search({query:'x'.repeat(500),domain:'office'});
  assert.deepEqual(result.items.map(x=>x.hanaId),cards.map(card=>card.hanaId));
  assert.deepEqual(result.items.map(x=>x.matchKind),['meaning','meaning']);
  assert.equal(calls.length,1);
  const [{url,init}]=calls;
  assert.equal(url.origin,origins.websiteOrigin);assert.equal(url.pathname,'/hm/v1/host/catalog/query');
- assert.deepEqual(Object.fromEntries(url.searchParams),{domain:'office',includeInsufficient:'true',limit:'50',q:'x'.repeat(500),searchMode:'hybrid',sort:'relevance'});
+ assert.deepEqual(Object.fromEntries(url.searchParams),{domain:'office',limit:'50',q:'x'.repeat(500),searchMode:'hybrid',sort:'relevance'});
  assert.equal(init.method,'GET');assert.equal(init.headers.Origin,origins.websiteOrigin);assert.equal(init.body,undefined);
+ await assert.rejects(c.search({query:'task',includeInsufficient:false}),/INVALID_QUERY/);
+ assert.equal(calls.length,1);
 });
 
 test('HTTP27-05: failures are explicit once, malformed/identity-changing DTOs fail, abort and byte budgets remain enforced',async()=>{

@@ -61,10 +61,9 @@ export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,
  function request(input,hybrid,options) {
   const textKey=hybrid?'query':'q';
   ensure(object(input)&&Object.keys(input).every(key=>
-   [textKey,'category',...selectors,'official','includeInsufficient','page','after'].includes(key)),'INVALID_QUERY');
-  const {page,after,category,official,includeInsufficient}=input,text=input[textKey];
+   [textKey,'category',...selectors,'official','page','after'].includes(key)),'INVALID_QUERY');
+  const {page,after,category,official}=input,text=input[textKey];
   ensure((official===undefined||typeof official==='boolean')
-   &&(includeInsufficient===undefined||typeof includeInsufficient==='boolean')
    &&(page===undefined||Number.isSafeInteger(page)&&page>=1)
    &&(after===undefined||page===undefined&&cursor(after)),'INVALID_QUERY');
   for(const key of ['category',...selectors])if(input[key]!==undefined)ensure(scalar(input[key]),'INVALID_QUERY');
@@ -75,7 +74,7 @@ export function createCatalogClient({websiteOrigin,serverOrigin,fetchImpl=fetch,
    limit:50,sort:'relevance',searchMode:hybrid?'hybrid':'keyword',
    ...(keyword?{q:keyword}:{}),...(category?{categories:[category]}:{}),
    ...Object.fromEntries(selectors.filter(key=>input[key]).map(key=>[key,input[key]])),
-   ...(official?{official:true}:{}),includeInsufficient,after,
+   ...(official?{official:true}:{}),after,
   },page,options);
  }
 

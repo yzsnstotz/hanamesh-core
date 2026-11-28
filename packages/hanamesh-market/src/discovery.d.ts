@@ -9,7 +9,7 @@ export function decodeDiscovery(kind:'stageConfig',value:unknown):DiscoveryStage
 import type {DiscoveryQuery} from '@hanamesh/api-contracts/catalog/discovery';
 export interface DiscoveryHttpOptions {serverOrigin:string;websiteOrigin:string;fetchImpl?:typeof fetch;timeoutMs?:number;maxBytes?:number}
 export interface DiscoveryReadOptions {signal?:AbortSignal}
-export type DiscoverySelectedQuery={hanaIds:readonly string[]}&Pick<DiscoveryQuery,'domain'|'subdivision'|'channel'|'includeInsufficient'>;
+export type DiscoverySelectedQuery={hanaIds:readonly string[]}&Pick<DiscoveryQuery,'domain'|'subdivision'|'channel'>;
 export interface DiscoveryHttpClient {
  list(input?:Partial<DiscoveryQuery>,options?:DiscoveryReadOptions):Promise<DiscoveryPage>;
  detail(hanaId:string,options?:DiscoveryReadOptions):Promise<{hanaId:string}&DiscoveryDetailFields>;

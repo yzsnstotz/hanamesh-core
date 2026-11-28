@@ -14,5 +14,5 @@ void[DISCOVERY_SCHEMA,page,detail,directory,stage,next,projection,precision,disp
 
 import {createDiscoveryHttpClient} from '../src/discovery.js';
 const http=createDiscoveryHttpClient({serverOrigin:'https://host.example',websiteOrigin:'https://web.example'});
-const selected:Promise<DiscoveryPage>=http.selected({hanaIds:['00000000-0000-4000-8000-000000000001'],domain:'office',includeInsufficient:true});
+const selected:Promise<DiscoveryPage>=http.selected({hanaIds:['00000000-0000-4000-8000-000000000001'],domain:'office'});
 void[selected,http.list({after:'opaque',limit:50}),http.stage(),http.domains(),http.featured('office'),http.listFields([]),http.search({query:'task',domain:'office'})];

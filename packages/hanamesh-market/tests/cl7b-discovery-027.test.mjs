@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {loadClient} from './fixtures/client-loader.mjs';
+import {discoveryFixture} from './fixtures/discovery-031.mjs';
 const fixture=async name=>JSON.parse(await readFile(new URL('./fixtures/discovery-027/'+name+'.json',import.meta.url),'utf8'));
 const text=n=>n==null?'':Array.isArray(n)?n.map(text).join(' '):typeof n==='object'?text(n.children):String(n);
 function find(n,p){if(!n)return;if(Array.isArray(n)){for(const child of n){const found=find(child,p);if(found)return found;}}else if(typeof n==='object'){if(p(n))return n;return find(n.children,p);}}
@@ -23,14 +24,15 @@ test('AD27-01/02: score dialog uses only three provider display dimensions and n
  assert.doesNotMatch(text(m.NativeMarketScore({item})),/0\.0/);
 });
 
-test('AD27-03/04/06: totals and insufficient counts use their own flags, never the window flag',async()=>{
- const m=await client(),page=await fixture('search');
+test('AD27-03/04/06: the listed total uses its own capped flag and has no hide or show control',async()=>{
+ const m=await client(),page=await discoveryFixture('search');
  assert.equal(typeof m.NativeMarketDiscoveryCounts,'function');
- assert.match(text(m.NativeMarketDiscoveryCounts({page})),/1000\+/);
- page.capped=false;page.hiddenInsufficientCount=17;page.hiddenInsufficientCountCapped=true;
- const exact=text(m.NativeMarketDiscoveryCounts({page}));assert.match(exact,/1000(?!\+)/);assert.match(exact,/17\+/);
- page.capped=true;page.hiddenInsufficientCountCapped=false;
- const independent=text(m.NativeMarketDiscoveryCounts({page}));assert.match(independent,/1000\+/);assert.match(independent,/17(?!\+)/);
+ const capped=m.NativeMarketDiscoveryCounts({page:{...page,window:{...page.window,capped:false,countsCapped:false}}});
+ assert.match(text(capped),/1000\+/);
+ const exact=m.NativeMarketDiscoveryCounts({page:{...page,capped:false,window:{...page.window,capped:true,countsCapped:true}}});
+ assert.match(text(exact),/1000(?!\+)/);assert.equal(find(exact,n=>n.type==='button'),undefined);
+ const retired=m.NativeMarketDiscoveryCounts({page:{...page,hiddenInsufficientCount:17},onIncludeInsufficient:()=>assert.fail('retired control')});
+ assert.doesNotMatch(text(retired),/17/);assert.equal(find(retired,n=>n.type==='button'),undefined);
 });
 
 test('AD27-05: capped zero subdivision is a lower bound and remains selectable; exact zero is disabled',async()=>{
@@ -41,13 +43,13 @@ test('AD27-05: capped zero subdivision is a lower bound and remains selectable; 
 });
 
 test('AD27-07/09: cursor listing keeps all provider metadata and ordering, returns opaque next and resets after on a new query',async()=>{
- const m=await client(),page=await fixture('list'),calls=[],cursor='opaque +/%?日本語=';
+ const m=await client(),page=await discoveryFixture('list'),calls=[],cursor='opaque +/%?日本語=';
  page.next=cursor;page.items=[page.items[1],page.items[0]];
  const second={...page,next:null,items:[{...page.items[0],hanaId:'last'}]};
  const store=m.createNativeMarketListing({pagination:'cursor',readPage:async(query)=>{calls.push(query);return calls.length===2?second:page;},listBundles:async()=>[]});
  await store.load({domain:'office',after:'stale'});
  assert.equal(store.snapshot().status,'ready');
- for(const key of ['next','total','capped','hiddenInsufficientCount','hiddenInsufficientCountCapped','projection','window','domains','subdivisions','phase'])assert.deepEqual(store.snapshot()[key],page[key],key);
+ for(const key of ['next','total','capped','projection','window','domains','subdivisions','phase'])assert.deepEqual(store.snapshot()[key],page[key],key);
  assert.deepEqual(store.snapshot().items,page.items);assert.equal(store.snapshot().hasMore,true);
  assert.equal('after' in calls[0],false);assert.equal('page' in calls[0],false);
  await store.more();assert.equal(calls[1].after,cursor);assert.equal(store.snapshot().hasMore,false);

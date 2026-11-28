@@ -27,6 +27,8 @@ test('public catalog adapter uses the same API and server facets as the website,
 test('optional discovery facts remain absent and unknown filters cannot create client-owned ranking',async()=>{
  const reader=createCatalogClient({...origins,fetchImpl:async()=>Response.json(page)});
  await assert.rejects(reader.list({tags:['trusted']}),/INVALID_QUERY/);await assert.rejects(reader.list({kind:'skill'}),/INVALID_QUERY/);
+ await assert.rejects(reader.list({includeInsufficient:true}),/INVALID_QUERY/);
+ await assert.rejects(reader.search({query:'notes',includeInsufficient:false}),/INVALID_QUERY/);
  const result=await reader.list({});assert.equal(result.items[0].trusted,undefined);assert.equal(result.recommendations,undefined);
 });
 

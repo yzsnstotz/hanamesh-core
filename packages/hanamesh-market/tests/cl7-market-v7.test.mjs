@@ -42,9 +42,11 @@ test('CL7 v7 domain is the first tier and only server-provided subdivisions and 
  const subs=find(tree,n=>n.props['aria-label']==='领域内分类');assert(subs);assert.match(text(subs),/测试验证 7/);assert.doesNotMatch(text(subs),/数据库|文档处理/);
  find(subs,n=>n.type==='button'&&text(n)==='测试验证 7').props.onClick();assert.deepEqual(calls,[['subdivision','testing']]);
 });
-test('CL7 shared phase, domain/subdivision facets and insufficient count remain exact optional provider facts',async()=>{
- const m=await loadClient(),facts={phase:'growth',hiddenInsufficientCount:13,domains:[{id:'code',name:'编程开发',count:19}],subdivisions:[{id:'testing',name:'测试验证',count:7}]};
- const store=m.createNativeMarketListing({readPage:async()=>({items:[item],page:1,totalPages:1,nativeBundles:[],...facts})});await store.load({});
+test('CL7 shared phase, domain/subdivision facets and listed total remain exact optional provider facts',async()=>{
+ const m=await loadClient(),facts={phase:'growth',total:19,domains:[{id:'code',name:'编程开发',count:19}],subdivisions:[{id:'testing',name:'测试验证',count:7}]};
+ const insufficient={...item,hanaId:'unscored',score:{status:'insufficient',total:null}};
+ const store=m.createNativeMarketListing({readPage:async()=>({items:[item,insufficient],page:1,totalPages:1,nativeBundles:[],...facts})});await store.load({});
+ assert.deepEqual(store.snapshot().items,[item,insufficient]);
  for(const [key,value]of Object.entries(facts))assert.deepEqual(store.snapshot()[key],value,key);store.dispose();
 });
 

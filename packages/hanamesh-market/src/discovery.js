@@ -29,7 +29,7 @@ export function createDiscoveryHttpClient({serverOrigin,websiteOrigin,fetchImpl=
  const post=(path,value,options={})=>readJson(fetchImpl,new URL(path,server).href,{signal:options.signal,method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(value)},{timeoutMs,maxBytes});
  const query=input=>{ensure(object(input),'INVALID_QUERY');const value={limit:50,...input};ensure(validators.query(value),'INVALID_QUERY');return value;};
  const selectedInput=input=>{
-  ensure(object(input)&&Object.keys(input).every(k=>['hanaIds','domain','subdivision','channel','includeInsufficient'].includes(k))&&boundedIds(input.hanaIds),'INVALID_QUERY');
+  ensure(object(input)&&Object.keys(input).every(k=>['hanaIds','domain','subdivision','channel'].includes(k))&&boundedIds(input.hanaIds),'INVALID_QUERY');
   const {hanaIds,...filters}=input;query(filters);return input;
  };
  const client={
@@ -50,7 +50,7 @@ export function createDiscoveryHttpClient({serverOrigin,websiteOrigin,fetchImpl=
    return result;
   },
   async search(input,options={}){
-   ensure(object(input)&&Object.keys(input).every(k=>['query','domain','subdivision','channel','includeInsufficient'].includes(k)),'INVALID_QUERY');
+   ensure(object(input)&&Object.keys(input).every(k=>['query','domain','subdivision','channel'].includes(k)),'INVALID_QUERY');
    const {query:text,...filters}=input;query(filters);
    return catalog.search({query:text,...filters},options);
   },

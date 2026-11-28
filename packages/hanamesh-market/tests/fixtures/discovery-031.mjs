@@ -9,6 +9,9 @@ export function localizeDiscoveryFixture(fixture) {
   const localized=text=>typeof text==='string'?{byLocale:{zh:text}}:{byLocale:text};
   function visit(node) {
     if (!node||typeof node!=='object')return;
+    // Project the frozen 0.27.0 evidence onto the current test wire shape.
+    delete node.hiddenInsufficientCount;
+    delete node.hiddenInsufficientCountCapped;
     if (node.overview?.does)node.overview.does=localized(node.overview.does);
     for (const key of ['audience','difficultyReason']) {
       const fact=node.overview?.facts?.[key];

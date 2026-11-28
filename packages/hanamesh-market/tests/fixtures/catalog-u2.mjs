@@ -25,7 +25,7 @@ export function catalogPage(cards, {
         npmDownloads30d: null, updatedAt: '2026-11-27T00:00:00Z',
         ...(searchMode === 'hybrid' ? {matchKind: 'meaning'} : {}),
       })),
-      total, capped: false, hiddenInsufficientCount: 0, hiddenInsufficientCountCapped: false,
+      total, capped: false,
       facets: {categories: [], channels: [], sources: [], domains: [], subdivisions: [], ...facets},
       nextCursor, snapshot: 'fixture', policyVersion: 1, searchMode, indexReady: true,
     },
