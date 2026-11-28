@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hanamesh/api-contracts':
-        specifier: git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a
-        version: git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a
+        specifier: 0.31.0
+        version: 0.31.0
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -350,9 +350,8 @@ packages:
     resolution: {integrity: sha512-R76UKbvsqI68DJJVTVyqFKqU98CN4+B+acxNfEA2IFarSzP0SjtKf/3+fFiXzTyv5Fj3PxLkGHe2wnVWWMxobQ==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@hanamesh/api-contracts@git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a':
-    resolution: {commit: 42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a, repo: https://github.com/yzsnstotz/hanamesh-api-contracts.git, type: git}
-    version: 0.31.0
+  '@hanamesh/api-contracts@0.31.0':
+    resolution: {integrity: sha512-Do+n+Mvi3gSi4EUrfH/JNf5wL6jvNxHdxg6t7DY0/66vqEhk/BXsGJmG+MeD4Ml5NRlOn4Cg+ylbhD2FIzJJKQ==}
     engines: {node: '>=20'}
     peerDependencies:
       viem: ^2.56.9
@@ -935,7 +934,7 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.3': {}
 
-  '@hanamesh/api-contracts@git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a': {}
+  '@hanamesh/api-contracts@0.31.0': {}
 
   '@hanamesh/devkit@0.2.6': {}
 

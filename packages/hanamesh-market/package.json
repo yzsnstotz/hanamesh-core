@@ -41,7 +41,7 @@
   "dependencies": {
     "semver": "7.8.5",
     "zod": "4.4.3",
-    "@hanamesh/api-contracts": "git+https://github.com/yzsnstotz/hanamesh-api-contracts.git#42e20b4dff4ccb744c7be3cbbdac9b4efe83ce9a",
+    "@hanamesh/api-contracts": "0.31.0",
     "ajv": "8.20.0"
   },
   "peerDependencies": {
