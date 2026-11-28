@@ -15,8 +15,8 @@ test('the shipped profile verifies the supported component release lines',()=>{
   const at=(index,version)=>evaluate(profile,active.map((row,i)=>i===index?{...row,version}:row),1).components[index].status;
   for(const version of ['0.2.0-rc.26','0.2.0-rc.27','0.2.0','0.2.5','0.3.0-rc.1','0.3.0'])assert.equal(at(0,version),'satisfied',version);
   for(const version of ['0.2.0-rc.25','0.2.0-rc.10','0.3.1-rc.1','0.4.0'])assert.equal(at(0,version),'incompatible',version);
-  for(const version of ['0.1.2','0.1.3'])assert.equal(at(1,version),'satisfied',version);
-  for(const version of ['0.1.1','0.2.0'])assert.equal(at(1,version),'incompatible',version);
+  for(const version of ['0.1.2','0.1.3','0.2.0'])assert.equal(at(1,version),'satisfied',version);
+  for(const version of ['0.1.1','0.2.0-rc.1','0.2.1','0.3.0'])assert.equal(at(1,version),'incompatible',version);
   assert.equal(at(2,'0.1.0'),'satisfied');
   assert.equal(at(2,'0.2.0'),'incompatible');
 });
