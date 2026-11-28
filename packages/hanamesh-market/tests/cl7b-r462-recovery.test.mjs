@@ -24,7 +24,7 @@ async function favoriteHarness(t,storage={}){
  const scope={localStorage:{getItem:key=>storage[key]??null,setItem:(key,value)=>storage[key]=value},fetch:async(url,init)=>{const path=new URL(url,'http://127.0.0.1').pathname;calls.push(path);let value;
   if(path.endsWith('/settings'))value={settings:{websiteOrigin:'https://old.example',serverOrigin:'https://old-host.example'}};
   else if(path.endsWith('/suite'))value={status:'unknown'};
-  else if(path.endsWith('/catalog'))value={items:emptyLegacy?[]:[base],page:1,totalPages:1,nativeBundles:[],facets:{}};
+  else if(path.endsWith('/catalog'))value={items:emptyLegacy?[]:[base],page:1,totalPages:1,nextCursor:null,paginationReset:false,nativeBundles:[],facets:{}};
   else if(path.endsWith('/item')){if(newSource)return Response.json({error:{code:'NEW_SOURCE_OFFLINE'}},{status:503});value=base;}
   else if(path.endsWith('/discovery/domains'))value={domains:[]};
   else if(path.endsWith('/discovery/featured'))value={items:[]};
